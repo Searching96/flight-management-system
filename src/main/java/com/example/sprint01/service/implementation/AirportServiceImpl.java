@@ -48,4 +48,12 @@ public class AirportServiceImpl implements AirportService {
 
         return AirportMapper.mapToDto(updatedAirportObj);
     }
+
+    @Override
+    public void deleteAirport(Long id) {
+        Airport existingAirport = airportRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Airport not found with id: " + id));
+
+        airportRepository.deleteById(id);
+    }
 }

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin("*")
 @AllArgsConstructor
 @RestController
 @RequestMapping("api/airports")
@@ -43,5 +44,12 @@ public class AirportController {
                                                     @RequestBody AirportDto updatedAirport) {
         AirportDto updatedAirportDto = airportService.updateAirport(id, updatedAirport);
         return ResponseEntity.ok(updatedAirportDto);
+    }
+
+    // Build Delete Airport REST API
+    @DeleteMapping("{id}")
+    public ResponseEntity<String> deleteAirport(@PathVariable("id") Long id) {
+        airportService.deleteAirport(id);
+        return ResponseEntity.ok("Airport deleted successfully, id: " + id);
     }
 }
