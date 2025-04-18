@@ -36,4 +36,12 @@ public class AirportController {
         List<AirportDto> airports = airportService.getAllAirports();
         return ResponseEntity.ok(airports);
     }
+
+    // Build Update Airport REST API
+    @PutMapping("{id}")
+    public ResponseEntity<AirportDto> updateAirport(@PathVariable("id") Long id,
+                                                    @RequestBody AirportDto updatedAirport) {
+        AirportDto updatedAirportDto = airportService.updateAirport(id, updatedAirport);
+        return ResponseEntity.ok(updatedAirportDto);
+    }
 }

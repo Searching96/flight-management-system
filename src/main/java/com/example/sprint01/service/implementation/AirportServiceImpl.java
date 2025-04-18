@@ -37,4 +37,15 @@ public class AirportServiceImpl implements AirportService {
                 .map(AirportMapper::mapToDto)
                 .toList();
     }
+
+    @Override
+    public AirportDto updateAirport(Long id, AirportDto updatedAirport) {
+        Airport existingAirport = airportRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Airport not found with id: " + id));
+
+        existingAirport.setName(updatedAirport.getName());
+        Airport updatedAirportObj = airportRepository.save(existingAirport);
+
+        return AirportMapper.mapToDto(updatedAirportObj);
+    }
 }

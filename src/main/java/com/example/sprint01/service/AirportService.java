@@ -6,10 +6,10 @@ import java.util.List;
 
 public interface AirportService {
     AirportDto createAirport(AirportDto airportDto);
+
     AirportDto getAirportById(Long id);
+
     List<AirportDto> getAllAirports();
-//    AirportDto getAirportById(Long id);
-//    List<AirportDto> getAllAirports();
-//    AirportDto updateAirport(Long id, AirportDto airportDto);
-//    void deleteAirport(Long id);
+
+    AirportDto updateAirport(Long id, AirportDto updatedAirport);
 }
