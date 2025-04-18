@@ -7,10 +7,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @AllArgsConstructor
 @RestController
 @RequestMapping("api/airports")
-public class EmployeeController {
+public class AirportController {
     private AirportService airportService;
 
     // Build Add Airport REST API
@@ -26,5 +28,12 @@ public class EmployeeController {
     public ResponseEntity<AirportDto> getAirportById(@PathVariable("id") Long id) {
         AirportDto airportDto = airportService.getAirportById(id);
         return ResponseEntity.ok(airportDto);
+    }
+
+    // Build Get All Airports REST API
+    @GetMapping
+    public ResponseEntity<List<AirportDto>> getAllAirports() {
+        List<AirportDto> airports = airportService.getAllAirports();
+        return ResponseEntity.ok(airports);
     }
 }

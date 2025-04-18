@@ -9,6 +9,8 @@ import com.example.sprint01.service.AirportService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
 public class AirportServiceImpl implements AirportService {
@@ -26,5 +28,13 @@ public class AirportServiceImpl implements AirportService {
         Airport airport = airportRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Airport not found with id: " + id));
         return AirportMapper.mapToDto(airport);
+    }
+
+    @Override
+    public List<AirportDto> getAllAirports() {
+        List<Airport> airports = airportRepository.findAll();
+        return airports.stream()
+                .map(AirportMapper::mapToDto)
+                .toList();
     }
 }
