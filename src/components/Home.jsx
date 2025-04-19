@@ -8,9 +8,14 @@ const Home = () => {
       navigator('/airports');
    }
 
+   function viewListSeatClasses() {
+      navigator('/seat-classes')
+   }
+
    return (
       <div className='container'>
          <button className='btn btn-info' onClick={viewListAirports}>View List Airports</button>
+         <button className='btn btn-info' onClick={viewListSeatClasses}>View List Seat Classes</button>
       </div>
    )
 }

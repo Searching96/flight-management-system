@@ -3,11 +3,9 @@ import { addAirport, getAirport, updateAirport } from '../services/AirportServic
 import { useNavigate, useParams } from 'react-router-dom';
 
 const Airport = () => {
-
    const [airportName, setAirportName] = useState('');
 
-
-   const { id } = useParams()
+   const { id } = useParams();
    const [errors, setErrors] = useState({
       airportName: ''
    })
