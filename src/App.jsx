@@ -2,6 +2,7 @@ import './App.css'
 import Airport from './components/Airport'
 import Footer from './components/Footer'
 import Header from './components/Header'
+import Home from './components/Home'
 import ListAirport from './components/ListAirport'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
@@ -12,7 +13,7 @@ function App() {
         <Header />
         <Routes>
           {/* // http://localhost:3000 */}
-          <Route path='/' element={<ListAirport />}></Route>
+          <Route path='/' element={<Home />}></Route>
           {/* // http://localhost:3000/airports */}
           <Route path='/airports' element={<ListAirport />}></Route>
           {/* // http://localhost:3000/add-airport */}
