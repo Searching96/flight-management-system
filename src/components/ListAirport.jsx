@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { listAirports } from '../services/AirportService'
+import { deleteAirport, listAirports } from '../services/AirportService'
 import { useNavigate } from 'react-router-dom';
 
 const ListAirport = () => {
@@ -8,13 +8,16 @@ const ListAirport = () => {
    const navigator = useNavigate();
 
    useEffect(() => {
+      getAllAirports();
+   }, [])
+
+   function getAllAirports() {
       listAirports().then((response) => {
          setAirports(response.data);
       }).catch(error => {
          console.error("Error fetching airports:", error);
       })
-
-   }, [])
+   }
 
    function addNewAirport() {
       navigator('/add-airport')
@@ -22,6 +25,17 @@ const ListAirport = () => {
 
    function updateAirport(id) {
       navigator(`/edit-airport/${id}`)
+   }
+
+   function removeAirport(id) {
+      console.log(id);
+
+      deleteAirport(id).then((response) => {
+         console.log(response.data);
+         getAllAirports(); // New list after delete
+      }).catch(error => {
+         console.error(error);
+      })
    }
 
    return (
@@ -44,6 +58,7 @@ const ListAirport = () => {
                         <td>{airport.name}</td>
                         <td>
                            <button className='btn btn-info' onClick={() => updateAirport(airport.id)}>Update</button>
+                           <button className='btn btn-danger' onClick={() => removeAirport(airport.id)}>Delete</button>
                         </td>
                      </tr>)
                }
