@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { addAirport, getAirport } from '../services/AirportService';
+import { addAirport, getAirport, updateAirport } from '../services/AirportService';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const Airport = () => {
@@ -29,16 +29,29 @@ const Airport = () => {
       setAirportName(e.target.value);
    }
 
-   function saveAirport(e) {
+   function saveOrUpdateAirport(e) {
       e.preventDefault();
+      console.log(id);
 
       if (validateForm()) {
          const airport = { name: airportName };
+         console.log(airport);
 
-         addAirport(airport).then((response) => {
-            console.log(response.data);
-            navigator('/airports');
-         })
+         if (id) { // Update
+            updateAirport(id, airport).then((response) => {
+               console.log(response.data);
+               navigator('/airports')
+            }).catch(error => {
+               console.error(error);
+            })
+         } else { // Add
+            addAirport(airport).then((response) => {
+               console.log(response.data);
+               navigator('/airports');
+            }).catch(error => {
+               console.error(error);
+            })
+         }
       }
    }
 
@@ -91,7 +104,7 @@ const Airport = () => {
                         {errors.airportName && <div className='invalid-feedback'> {errors.airportName} </div>}
                      </div>
 
-                     <button className='btn btn-success' onClick={saveAirport}>Submit</button>
+                     <button className='btn btn-success' onClick={saveOrUpdateAirport}>Submit</button>
                   </form>
                </div>
             </div>
