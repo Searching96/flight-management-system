@@ -20,6 +20,10 @@ const ListAirport = () => {
       navigator('/add-airport')
    }
 
+   function updateAirport(id) {
+      navigator(`/edit-airport/${id}`)
+   }
+
    return (
       <div className="container">
          <h1 className='text-center'>List of Airports</h1>
@@ -29,6 +33,7 @@ const ListAirport = () => {
                <tr>
                   <th>Airport ID</th>
                   <th>Airport Name</th>
+                  <th>Actions</th>
                </tr>
             </thead>
             <tbody>
@@ -37,6 +42,9 @@ const ListAirport = () => {
                      <tr key={airport.id}>
                         <td>{airport.id}</td>
                         <td>{airport.name}</td>
+                        <td>
+                           <button className='btn btn-info' onClick={() => updateAirport(airport.id)}>Update</button>
+                        </td>
                      </tr>)
                }
             </tbody>

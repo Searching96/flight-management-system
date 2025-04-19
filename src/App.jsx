@@ -17,6 +17,8 @@ function App() {
           <Route path='/airports' element={<ListAirport />}></Route>
           {/* // http://localhost:3000/add-airport */}
           <Route path='/add-airport' element={<Airport />}></Route>
+          {/* // http://localhost:3000/edit-airport/1 */}
+          <Route path='/edit-airport/:id' element={<Airport />}></Route>
         </Routes>
         <Footer />
       </BrowserRouter>
