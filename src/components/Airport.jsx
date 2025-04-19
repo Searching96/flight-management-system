@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { addAirport } from '../services/AirportService';
+import React, { useState, useEffect } from 'react'
+import { addAirport, getAirport } from '../services/AirportService';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const Airport = () => {
@@ -13,6 +13,17 @@ const Airport = () => {
    })
 
    const navigator = useNavigate();
+
+   // Populate airport data with the id into the update form
+   useEffect(() => {
+      if (id) {
+         getAirport(id).then((response) => {
+            setAirportName(response.data.name); // the var name is the same as API structure (Spring) (name not airportName)
+         }).catch(error => {
+            console.error(error);
+         })
+      }
+   }, [id])
 
    function handleAirportName(e) {
       setAirportName(e.target.value);
