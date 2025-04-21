@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("api/flight-details")
 public class FlightDetailsController {
-    private final FlightDetailsService flightDetailsService;
+    private FlightDetailsService flightDetailsService;
 
     @PostMapping
     public ResponseEntity<FlightDetailsDto> createFlightDetails(@RequestBody FlightDetailsDto flightDetailsDto) {
