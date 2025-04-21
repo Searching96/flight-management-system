@@ -10,4 +10,4 @@ export const getSeatClass = (id) => axios.get(`${REST_API_BASE_URL}/${id}`);
 
 export const updateSeatClass = (id, seatClass) => axios.put(`${REST_API_BASE_URL}/${id}`, seatClass);
 
-export const deleteSeatClass = (id) => axios.delete(`${REST_API_BASE_URL}/${id}`);
+//export const deleteSeatClass = (id) => axios.delete(`${REST_API_BASE_URL}/${id}`);

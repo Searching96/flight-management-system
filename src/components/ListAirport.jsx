@@ -27,16 +27,16 @@ const ListAirport = () => {
       navigator(`/edit-airport/${id}`)
    }
 
-   function removeAirport(id) {
-      console.log(id);
+   // function removeAirport(id) {
+   //    console.log(id);
 
-      deleteAirport(id).then((response) => {
-         console.log(response.data);
-         getAllAirports(); // New list after delete
-      }).catch(error => {
-         console.error(error);
-      })
-   }
+   //    deleteAirport(id).then((response) => {
+   //       console.log(response.data);
+   //       getAllAirports(); // New list after delete
+   //    }).catch(error => {
+   //       console.error(error);
+   //    })
+   // }
 
    return (
       <div className="container">
@@ -58,7 +58,7 @@ const ListAirport = () => {
                         <td>{airport.name}</td>
                         <td>
                            <button className='btn btn-info' onClick={() => updateAirport(airport.id)}>Update</button>
-                           <button className='btn btn-danger' onClick={() => removeAirport(airport.id)}>Delete</button>
+                           {/* <button className='btn btn-danger' onClick={() => removeAirport(airport.id)}>Delete</button> */}
                         </td>
                      </tr>)
                }

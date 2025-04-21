@@ -30,17 +30,17 @@ const ListFlight = () => {
       console.log('Update flight');
    }
 
-   function removeFlight(id) {
-      // deleteFlight(id)
-      //    .then((response) => {
-      //       console.log(response.data);
-      //       getAllFlights(); // Refresh the list after deletion
-      //    })
-      //    .catch((error) => {
-      //       console.error('Error deleting flight:', error);
-      //    });
-      console.log('Delete flight')
-   }
+   // function removeFlight(id) {
+   //    // deleteFlight(id)
+   //    //    .then((response) => {
+   //    //       console.log(response.data);
+   //    //       getAllFlights(); // Refresh the list after deletion
+   //    //    })
+   //    //    .catch((error) => {
+   //    //       console.error('Error deleting flight:', error);
+   //    //    });
+   //    console.log('Delete flight')
+   // }
 
    return (
       <div className="container">
@@ -80,12 +80,12 @@ const ListFlight = () => {
                         >
                            Update
                         </button>
-                        <button
+                        {/* <button
                            className="btn btn-danger"
                            onClick={() => removeFlight(flight.id)}
                         >
                            Delete
-                        </button>
+                        </button> */}
                      </td>
                   </tr>
                ))}

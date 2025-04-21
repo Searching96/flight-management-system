@@ -27,16 +27,16 @@ const ListSeatClass = () => {
       navigator(`/edit-seat-class/${id}`)
    }
 
-   function removeSeatClass(id) {
-      console.log(id);
+   // function removeSeatClass(id) {
+   //    console.log(id);
 
-      deleteSeatClass(id).then((response) => {
-         console.log(response.data);
-         getAllSeatClasses(); // new list after delete
-      }).catch(error => {
-         console.log(error);
-      })
-   }
+   //    deleteSeatClass(id).then((response) => {
+   //       console.log(response.data);
+   //       getAllSeatClasses(); // new list after delete
+   //    }).catch(error => {
+   //       console.log(error);
+   //    })
+   // }
 
    return (
       <div className="container">
@@ -58,7 +58,7 @@ const ListSeatClass = () => {
                         <td>{seatClass.seatName}</td>
                         <td>
                            <button className='btn btn-info' onClick={() => updateSeatClass(seatClass.id)}>Update</button>
-                           <button className='btn btn-danger' onClick={() => removeSeatClass(seatClass.id)}>Delete</button>
+                           {/* <button className='btn btn-danger' onClick={() => removeSeatClass(seatClass.id)}>Delete</button> */}
                         </td>
                      </tr>)
                }
