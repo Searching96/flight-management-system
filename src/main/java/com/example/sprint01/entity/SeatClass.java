@@ -20,4 +20,3 @@ public class SeatClass {
     @Column(name = "seat_name", nullable = false)
     private String seatName;
 }
-
