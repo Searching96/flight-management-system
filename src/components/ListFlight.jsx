@@ -74,12 +74,12 @@ const ListFlight = () => {
                      <td>{flight.flightTime}</td>
                      <td>{flight.duration}</td>
                      <td>
-                        <button
+                        {/* <button
                            className="btn btn-info"
                            onClick={() => updateFlight(flight.id)}
                         >
                            Update
-                        </button>
+                        </button> */}
                         {/* <button
                            className="btn btn-danger"
                            onClick={() => removeFlight(flight.id)}

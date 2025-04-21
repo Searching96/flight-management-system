@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { deleteAirport, listAirports } from '../services/AirportService'
+import { listAirports } from '../services/AirportService'
 import { useNavigate } from 'react-router-dom';
 
 const ListAirport = () => {

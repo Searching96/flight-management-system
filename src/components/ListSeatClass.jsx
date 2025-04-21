@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { deleteSeatClass, listSeatClasses } from '../services/SeatClassService';
+import { listSeatClasses } from '../services/SeatClassService';
 import { useNavigate } from 'react-router-dom'
 
 const ListSeatClass = () => {
