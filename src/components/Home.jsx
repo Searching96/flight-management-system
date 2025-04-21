@@ -9,13 +9,17 @@ const Home = () => {
    }
 
    function viewListSeatClasses() {
-      navigator('/seat-classes')
+      navigator('/seat-classes');
    }
 
+   function viewListFlights() {
+      navigator('/flights');
+   }
    return (
       <div className='container'>
          <button className='btn btn-info' onClick={viewListAirports}>View List Airports</button>
          <button className='btn btn-info' onClick={viewListSeatClasses}>View List Seat Classes</button>
+         <button className='btn btn-info' onClick={viewListFlights}>View List Flights</button>
       </div>
    )
 }

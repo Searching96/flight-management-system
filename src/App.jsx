@@ -7,6 +7,8 @@ import ListAirport from './components/ListAirport'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import ListSeatClass from './components/ListSeatClass'
 import SeatClass from './components/SeatClass'
+import Flight from './components/Flight'
+import ListFlight from './components/ListFlight'
 
 function App() {
   return (
@@ -34,6 +36,12 @@ function App() {
 
           {/* // http://localhost:3000/edit-seat-class/1 */}
           <Route path='/edit-seat-class/:id' element={<SeatClass />}></Route>
+
+          {/* // http://localhost:3000/flights */}
+          <Route path='/flights' element={<ListFlight />}></Route>
+
+          {/* // http://localhost:3000/add-flight */}
+          <Route path='/add-flight' element={<Flight />}></Route>
         </Routes>
         <Footer />
       </BrowserRouter>
