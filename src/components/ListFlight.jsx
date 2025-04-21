@@ -64,8 +64,12 @@ const ListFlight = () => {
                {flights.map((flight) => (
                   <tr key={flight.id}>
                      <td>{flight.id}</td>
-                     <td>{getAirport(flight.departureAirportName)}</td>
-                     <td>{getAirport(flight.arrivalAirportName)}</td>
+                     <td>
+                        {
+                           getAirport(flight.departureAirportId).name
+                        }
+                     </td>
+                     <td>{getAirport(flight.arrivalAirportId).name}</td>
                      <td>{flight.flightDate}</td>
                      <td>{flight.flightTime}</td>
                      <td>{flight.duration}</td>
