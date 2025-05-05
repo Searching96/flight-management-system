@@ -42,6 +42,8 @@ function App() {
 
           {/* // http://localhost:3000/add-flight */}
           <Route path='/add-flight' element={<Flight />}></Route>
+
+          {/* // http://localhost:3000/parameters */}
         </Routes>
         <Footer />
       </BrowserRouter>

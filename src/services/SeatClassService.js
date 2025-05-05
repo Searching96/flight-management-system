@@ -1,13 +1,14 @@
 import axios from "axios";
 
-const REST_API_BASE_URL = 'http://localhost:8080/api/seat-classes';
+import { DOMAIN_URL_DEFAULT, API_URL } from "./config";
 
-export const listSeatClasses = () => axios.get(REST_API_BASE_URL);
+const BASE_URL = `${DOMAIN_URL_DEFAULT}${API_URL.SEAT_CLASSES}`;
 
-export const addSeatClass = (seatClass) => axios.post(REST_API_BASE_URL, seatClass);
+export const listSeatClasses = () => axios.get(BASE_URL);
 
-export const getSeatClass = (id) => axios.get(`${REST_API_BASE_URL}/${id}`);
+export const addSeatClass = (seatClass) => axios.post(BASE_URL, seatClass);
 
-export const updateSeatClass = (id, seatClass) => axios.put(`${REST_API_BASE_URL}/${id}`, seatClass);
+export const getSeatClass = (id) => axios.get(`${BASE_URL}/${id}`);
 
-//export const deleteSeatClass = (id) => axios.delete(`${REST_API_BASE_URL}/${id}`);
+export const updateSeatClass = (id, seatClass) => axios.put(`${BASE_URL}/${id}`, seatClass);
+

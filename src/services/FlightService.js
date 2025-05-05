@@ -1,14 +1,16 @@
 import axios from "axios";
 
-const REST_API_BASE_URL = 'http://localhost:8080/api/flights';
+import { DOMAIN_URL_DEFAULT, API_URL } from "./config";
 
-const REST_API_BASE_URL_FLIGHT_DETAILS = 'http://localhost:8080/api/flight-details';
+const BASE_URL_FLIGHTS = `${DOMAIN_URL_DEFAULT}${API_URL.FLIGHTS}`;
 
-export const getListFlights = () => axios.get(REST_API_BASE_URL);
+const BASE_URL_FLIGHT_DETAILS = `${DOMAIN_URL_DEFAULT}${API_URL.FLIGHT_DETAILS}`;
 
-export const addFlight = (airport) => axios.post(REST_API_BASE_URL, airport);
+export const getListFlights = () => axios.get(BASE_URL_FLIGHTS);
 
-export const addFlightDetails = (flightDetails) => axios.post(REST_API_BASE_URL_FLIGHT_DETAILS, flightDetails);
+export const addFlight = (airport) => axios.post(BASE_URL_FLIGHTS, airport);
 
-export const getFlightDetails = (flightId, mediumAirportId) => axios.get(`${REST_API_BASE_URL_FLIGHT_DETAILS}/${flightId}/${mediumAirportId}`);
+export const addFlightDetails = (flightDetails) => axios.post(BASE_URL_FLIGHT_DETAILS, flightDetails);
+
+export const getFlightDetails = (flightId, mediumAirportId) => axios.get(`${BASE_URL_FLIGHT_DETAILS}/${flightId}/${mediumAirportId}`);
 
