@@ -23,8 +23,8 @@ public class FlightDetailsServiceImpl implements FlightDetailsService {
 
     @Override
     public FlightDetailsDto createFlightDetails(FlightDetailsDto flightDetailsDto) {
-        Flight flight = flightRepository.findById(flightDetailsDto.getFlightId()).
-                orElseThrow(() -> new ResourceNotFoundException("Flight not found with id: " + flightDetailsDto.getFlightId()));
+        Flight flight = flightRepository.findById(flightDetailsDto.getFlightId())
+                .orElseThrow(() -> new ResourceNotFoundException("Flight not found with id: " + flightDetailsDto.getFlightId()));
 
         Airport mediumAirport = airportRepository.findById(flightDetailsDto.getMediumAirportId())
                 .orElseThrow(() -> new ResourceNotFoundException("Medium airport not found with id: " + flightDetailsDto.getMediumAirportId()));
@@ -47,16 +47,16 @@ public class FlightDetailsServiceImpl implements FlightDetailsService {
     }
 
     @Override
-    public FlightDetailsDto updateFlightDetails(Long flightId, Long mediumAirportId, FlightDetailsDto updatedFlightDetails) {
+    public FlightDetailsDto updateFlightDetails(Long flightId, Long mediumAirportId, FlightDetailsDto updatedFlightDetailsDto) {
         FlightDetailsId flightDetailsId = new FlightDetailsId(flightId, mediumAirportId);
         FlightDetails existingFlightDetails = flightDetailsRepository.findById(flightDetailsId)
                 .orElseThrow(() -> new ResourceNotFoundException("Flight details not found with id: " + flightDetailsId));
 
-        existingFlightDetails.setStopTime(updatedFlightDetails.getStopTime());
-        existingFlightDetails.setNote(updatedFlightDetails.getNote());
+        existingFlightDetails.setStopTime(updatedFlightDetailsDto.getStopTime());
+        existingFlightDetails.setNote(updatedFlightDetailsDto.getNote());
 
-        FlightDetails updatedFlightDetailsObj = flightDetailsRepository.save(existingFlightDetails);
-        return FlightDetailsMapper.mapToDto(updatedFlightDetailsObj);
+        FlightDetails updatedFlightDetails = flightDetailsRepository.save(existingFlightDetails);
+        return FlightDetailsMapper.mapToDto(updatedFlightDetails);
     }
 
     @Override
