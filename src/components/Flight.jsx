@@ -61,21 +61,26 @@ const Flight = () => {
          .catch((error) => console.error('Error fetching maxStopDuration: ', error));
    }, []);
 
-   const handleFlightDurationChange = (e) => {
-      const value = e.target.value;
+   const handleFlightDurationChange = (value) => {
 
-      // Validate that the input is a number
-      if (!/^\d*$/.test(value)) {
+      // Validate that the input is a number and within the allowed range
+      if (value !== '' && !/^\d*$/.test(value)) {
          setErrors({ ...errors, flightDuration: 'Flight duration must be a number' });
-      } else if (value < minFlightDuration || value > maxFlightDuration) {
+      } else if (value > maxFlightDuration) {
          setErrors({
             ...errors,
-            flightDuration: `Flight duration must be between ${minFlightDuration} and ${maxFlightDuration} minutes`,
+            flightDuration: `Flight duration must not exceed ${maxFlightDuration} minutes`,
+         });
+      } else if (value < minFlightDuration) {
+         setErrors({
+            ...errors,
+            flightDuration: `Flight duration must be at least ${minFlightDuration} minutes`,
          });
       } else {
          setErrors({ ...errors, flightDuration: '' });
-         setFlightDuration(value);
       }
+
+      setFlightDuration(value);
    };
 
    const handleMediumAirportChange = (index, field, value) => {
@@ -238,7 +243,9 @@ const Flight = () => {
                   id="flightDuration"
                   className={`form-control ${errors.flightDuration ? 'is-invalid' : ''}`}
                   value={flightDuration}
-                  onChange={handleFlightDurationChange}
+                  onChange={(e) =>
+                     handleFlightDurationChange(e.target.value)
+                  }
                />
                {errors.flightDuration && (
                   <div className="invalid-feedback">{errors.flightDuration}</div>
