@@ -9,6 +9,7 @@ import ListSeatClass from './components/ListSeatClass'
 import SeatClass from './components/SeatClass'
 import Flight from './components/Flight'
 import ListFlight from './components/ListFlight'
+import Parameters from './components/Parameters'
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
           <Route path='/add-flight' element={<Flight />}></Route>
 
           {/* // http://localhost:3000/parameters */}
+          <Route path='/parameters' element={<Parameters />}></Route>
         </Routes>
         <Footer />
       </BrowserRouter>

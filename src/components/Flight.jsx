@@ -1,6 +1,12 @@
-import React, { useState, useEffect } from 'react'
-import { listAirports } from '../services/AirportService'
+import React, { useState, useEffect } from 'react';
+import { listAirports } from '../services/AirportService';
 import { addFlight, addFlightDetails } from '../services/FlightService';
+import {
+   getMaxMediumAirport,
+   getMinFlightDuration,
+   getMaxFlightDuration,
+   getMaxStopDuration,
+} from '../services/ParameterService'; // Import the services
 import { useNavigate } from 'react-router-dom';
 
 const Flight = () => {
@@ -10,25 +16,49 @@ const Flight = () => {
    const [flightDate, setFlightDate] = useState('');
    const [flightTime, setFlightTime] = useState('');
    const [flightDuration, setFlightDuration] = useState('');
-
-   //const [errors, setErrors] = useState({ flightDuration: '', airports: '' });
-
-   const navigator = useNavigate();
-
-   const [mediumAirports, setMediumAirports] = useState([
-      { airportId: '', stopTime: '', note: '' },
-      { airportId: '', stopTime: '', note: '' },
-   ]);
-
+   const [mediumAirports, setMediumAirports] = useState([]);
    const [errors, setErrors] = useState({});
+   const [minFlightDuration, setMinFlightDuration] = useState(0);
+   const [maxFlightDuration, setMaxFlightDuration] = useState(0);
+   const [maxStopDuration, setMaxStopDuration] = useState(0);
+   const navigator = useNavigate();
 
    useEffect(() => {
       // Fetch airports data
-      listAirports().then((response) => {
-         setAirports(response.data);
-      }).catch((error) => {
-         console.error('Error fetching airports: ', error);
-      })
+      listAirports()
+         .then((response) => {
+            setAirports(response.data);
+         })
+         .catch((error) => {
+            console.error('Error fetching airports: ', error);
+         });
+
+      // Fetch parameters for validation
+      getMaxMediumAirport()
+         .then((response) => {
+            const maxMediumAirport = response.data; // Assuming the API returns the number directly
+            const initialMediumAirports = Array.from({ length: maxMediumAirport }, () => ({
+               airportId: '',
+               stopTime: '',
+               note: '',
+            }));
+            setMediumAirports(initialMediumAirports);
+         })
+         .catch((error) => {
+            console.error('Error fetching maxMediumAirport: ', error);
+         });
+
+      getMinFlightDuration()
+         .then((response) => setMinFlightDuration(response.data))
+         .catch((error) => console.error('Error fetching minFlightDuration: ', error));
+
+      getMaxFlightDuration()
+         .then((response) => setMaxFlightDuration(response.data))
+         .catch((error) => console.error('Error fetching maxFlightDuration: ', error));
+
+      getMaxStopDuration()
+         .then((response) => setMaxStopDuration(response.data))
+         .catch((error) => console.error('Error fetching maxStopDuration: ', error));
    }, []);
 
    const handleFlightDurationChange = (e) => {
@@ -37,6 +67,11 @@ const Flight = () => {
       // Validate that the input is a number
       if (!/^\d*$/.test(value)) {
          setErrors({ ...errors, flightDuration: 'Flight duration must be a number' });
+      } else if (value < minFlightDuration || value > maxFlightDuration) {
+         setErrors({
+            ...errors,
+            flightDuration: `Flight duration must be between ${minFlightDuration} and ${maxFlightDuration} minutes`,
+         });
       } else {
          setErrors({ ...errors, flightDuration: '' });
          setFlightDuration(value);
@@ -47,9 +82,14 @@ const Flight = () => {
       const updatedMediumAirports = [...mediumAirports];
       updatedMediumAirports[index][field] = value;
 
-      // Validate stop time to ensure it's a number
+      // Validate stop time to ensure it's a number and within maxStopDuration
       if (field === 'stopTime' && field !== '' && !/^\d*$/.test(value)) {
          setErrors({ ...errors, [`stopTime${index}`]: 'Stop time must be a number' });
+      } else if (field === 'stopTime' && value > maxStopDuration) {
+         setErrors({
+            ...errors,
+            [`stopTime${index}`]: `Stop time must not exceed ${maxStopDuration} minutes`,
+         });
       } else {
          setErrors({ ...errors, [`stopTime${index}`]: '' });
       }
@@ -80,8 +120,11 @@ const Flight = () => {
          return;
       }
 
-      if (!mediumAirports[0].stopTime || !mediumAirports[1].stopTime
-         || isNaN(mediumAirports[0].stopTime) || isNaN(mediumAirports[1].stopTime)
+      if (
+         mediumAirports.some(
+            (mediumAirport) =>
+               !mediumAirport.stopTime || isNaN(mediumAirport.stopTime) || mediumAirport.stopTime > maxStopDuration
+         )
       ) {
          return;
       }
@@ -108,7 +151,7 @@ const Flight = () => {
                   flightId: flightId,
                   mediumAirportId: parseInt(mediumAirport.airportId),
                   stopTime: parseInt(mediumAirport.stopTime),
-                  note: mediumAirport.note
+                  note: mediumAirport.note,
                };
 
                console.log('FlightDetail: ', flightDetail);
@@ -125,9 +168,6 @@ const Flight = () => {
       } catch (flightError) {
          console.error('Error creating flight: ', flightError);
       }
-
-      //console.log('Flight: ', flight);
-
    };
 
    return (
@@ -205,7 +245,6 @@ const Flight = () => {
                )}
             </div>
 
-
             {/* Medium Airports Table */}
             <h3 className="text-center">List of Medium Airports</h3>
             <table className="table table-bordered text-center">
@@ -244,10 +283,11 @@ const Flight = () => {
                               onChange={(e) =>
                                  handleMediumAirportChange(index, 'stopTime', e.target.value)
                               }
-
                            />
                            {errors[`stopTime${index}`] && (
-                              <div className="invalid-feedback">{errors[`stopTime${index}`]}</div>
+                              <div className="invalid-feedback">
+                                 {errors[`stopTime${index}`]}
+                              </div>
                            )}
                         </td>
                         <td>
@@ -265,13 +305,12 @@ const Flight = () => {
                </tbody>
             </table>
 
-
             <button type="submit" className="btn btn-primary" onClick={handleSubmit}>
                Submit
             </button>
          </form>
       </div>
-   )
-}
+   );
+};
 
-export default Flight
+export default Flight;

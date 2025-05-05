@@ -10,3 +10,11 @@ export const getMinFlightDuration = () => axios.get(`${BASE_URL}/min-flight-dura
 export const getMaxFlightDuration = () => axios.get(`${BASE_URL}/max-flight-duration`);
 
 export const getMaxStopDuration = () => axios.get(`${BASE_URL}/max-stop-duration`);
+
+export const updateMaxMediumAirport = (maxMediumAirport) => axios.put(`${BASE_URL}/max-medium-airport`, maxMediumAirport);
+
+export const updateMinFlightDuration = (minFlightDuration) => axios.put(`${BASE_URL}/min-flight-duration`, minFlightDuration);
+
+export const updateMaxFlightDuration = (maxFlightDuration) => axios.put(`${BASE_URL}/max-flight-duration`, maxFlightDuration);
+
+export const updateMaxStopDuration = (maxStopDuration) => axios.put(`${BASE_URL}/max-stop-duration`, maxStopDuration);
