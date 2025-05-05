@@ -5,8 +5,8 @@ import { useNavigate } from 'react-router-dom';
 
 const Flight = () => {
    const [airports, setAirports] = useState([]);
-   const [departureAirport, setDepartureAirport] = useState('');
-   const [arrivalAirport, setArrivalAirport] = useState('');
+   const [departureAirportId, setDepartureAirport] = useState('');
+   const [arrivalAirportId, setArrivalAirport] = useState('');
    const [flightDate, setFlightDate] = useState('');
    const [flightTime, setFlightTime] = useState('');
    const [flightDuration, setFlightDuration] = useState('');
@@ -19,6 +19,7 @@ const Flight = () => {
       { airportId: '', stopTime: '', note: '' },
       { airportId: '', stopTime: '', note: '' },
    ]);
+
    const [errors, setErrors] = useState({});
 
    useEffect(() => {
@@ -65,13 +66,13 @@ const Flight = () => {
          return;
       }
 
-      if (departureAirport === arrivalAirport) {
+      if (departureAirportId === arrivalAirportId) {
          setErrors({ ...errors, airports: 'Departure and arrival airports cannot be the same' });
          return;
       }
 
       const mediumAirportIds = mediumAirports.map((mediumAirport) => mediumAirport.airportId);
-      const allAirports = [departureAirport, arrivalAirport, ...mediumAirportIds];
+      const allAirports = [departureAirportId, arrivalAirportId, ...mediumAirportIds];
 
       const uniqueAirports = new Set(allAirports.filter((id) => id !== ''));
       if (uniqueAirports.size !== allAirports.length) {
@@ -86,8 +87,8 @@ const Flight = () => {
       }
 
       const flight = {
-         departureAirportId: departureAirport,
-         arrivalAirportId: arrivalAirport,
+         departureAirportId: departureAirportId,
+         arrivalAirportId: arrivalAirportId,
          flightDate: flightDate,
          flightTime: flightTime,
          duration: parseInt(flightDuration),
@@ -138,7 +139,7 @@ const Flight = () => {
                <select
                   id="departureAirport"
                   className={`form-control ${errors.airports ? 'is-invalid' : ''}`}
-                  value={departureAirport}
+                  value={departureAirportId}
                   onChange={(e) => setDepartureAirport(e.target.value)}
                >
                   <option value="">Select Departure Airport</option>
@@ -155,7 +156,7 @@ const Flight = () => {
                <select
                   id="arrivalAirport"
                   className={`form-control ${errors.airports ? 'is-invalid' : ''}`}
-                  value={arrivalAirport}
+                  value={arrivalAirportId}
                   onChange={(e) => setArrivalAirport(e.target.value)}
                >
                   <option value="">Select Arrival Airport</option>

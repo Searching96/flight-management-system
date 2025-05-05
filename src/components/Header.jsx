@@ -5,7 +5,7 @@ const Header = () => {
       <div>
          <header className='header'>
             <nav className='navbar navbar-dark bg-dark'>
-               <a className='navbar-brand' href='https://github.com/OctGuy'>Demo Java Sprint01</a>
+               <a className='navbar-brand' href='https://github.com/OctGuy'>Demo Java Sprint02</a>
             </nav>
          </header>
       </div>

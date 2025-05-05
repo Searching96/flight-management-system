@@ -4,7 +4,7 @@ const REST_API_BASE_URL = 'http://localhost:8080/api/flights';
 
 const REST_API_BASE_URL_FLIGHT_DETAILS = 'http://localhost:8080/api/flight-details';
 
-export const listFlights = () => axios.get(REST_API_BASE_URL);
+export const getListFlights = () => axios.get(REST_API_BASE_URL);
 
 export const addFlight = (airport) => axios.post(REST_API_BASE_URL, airport);
 

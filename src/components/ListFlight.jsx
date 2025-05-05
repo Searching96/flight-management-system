@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { listFlights } from '../services/FlightService';
+import { getListFlights } from '../services/FlightService';
 import { getAirport } from '../services/AirportService';
 
 const ListFlight = () => {
@@ -12,7 +12,7 @@ const ListFlight = () => {
    }, []);
 
    function getAllFlights() {
-      listFlights()
+      getListFlights()
          .then((response) => {
             setFlights(response.data);
          })
@@ -25,10 +25,10 @@ const ListFlight = () => {
       navigator('/add-flight');
    }
 
-   function updateFlight(id) {
-      //navigator(`/edit-flight/${id}`);
-      console.log('Update flight');
-   }
+   // function updateFlight(id) {
+   //    //navigator(`/edit-flight/${id}`);
+   //    console.log('Update flight');
+   // }
 
    // function removeFlight(id) {
    //    // deleteFlight(id)
