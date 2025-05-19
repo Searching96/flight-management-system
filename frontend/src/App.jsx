@@ -10,6 +10,7 @@ import SeatClass from './components/SeatClass'
 import Flight from './components/Flight'
 import ListFlight from './components/ListFlight'
 import Parameters from './components/Parameters'
+import FlightForm from './components/FlightForm'
 
 function App() {
   return (
@@ -46,6 +47,10 @@ function App() {
 
           {/* // http://localhost:3000/parameters */}
           <Route path='/parameters' element={<Parameters />}></Route>
+
+          {/* // http://localhost:3000/insert-flights */}
+          <Route path='/insert-flights' element={<FlightForm />}></Route>
+
         </Routes>
         <Footer />
       </BrowserRouter>
