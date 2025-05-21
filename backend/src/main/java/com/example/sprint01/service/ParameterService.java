@@ -1,9 +1,9 @@
 package com.example.sprint01.service;
 
-import com.example.sprint01.entity.Parameter;
+import com.example.sprint01.dto.ParameterDto;
 
 public interface ParameterService {
-    Parameter getParameterSet();
+    ParameterDto getParameterSet();
 
     int getMaxMediumAirports();
 

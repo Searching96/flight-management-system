@@ -1,6 +1,7 @@
 package com.example.sprint01.controller;
 
 import com.example.sprint01.service.ParameterService;
+import com.example.sprint01.dto.ParameterDto;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +34,7 @@ public class ParameterController {
     }
 
     @PutMapping("/max-medium-airport")
-    public ResponseEntity<String> updateMaxMediumAirport(@RequestParam Integer maxMediumAirport) {
+    public ResponseEntity<String> updateMaxMediumAirport(@RequestBody Integer maxMediumAirport) {
         parameterService.updateMaxMediumAirports(maxMediumAirport);
         return ResponseEntity.ok("Max medium airport updated successfully");
     }
@@ -55,4 +56,22 @@ public class ParameterController {
         parameterService.updateMaxStopDuration(maxStopDuration);
         return ResponseEntity.ok("Max stop duration updated successfully");
     }
+
+    @PutMapping("")
+    public ResponseEntity<String> updateParameters(@RequestBody ParameterDto dto) {
+        if (dto.getMaxMediumAirport() != null) {
+            parameterService.updateMaxMediumAirports(dto.getMaxMediumAirport());
+        }
+        if (dto.getMinFlightDuration() != null) {
+            parameterService.updateMinFlightDuration(dto.getMinFlightDuration());
+        }
+        if (dto.getMaxFlightDuration() != null) {
+            parameterService.updateMaxFlightDuration(dto.getMaxFlightDuration());
+        }
+        if (dto.getMaxStopDuration() != null) {
+            parameterService.updateMaxStopDuration(dto.getMaxStopDuration());
+        }
+        return ResponseEntity.ok("Parameters updated successfully");
+    }
 }
+

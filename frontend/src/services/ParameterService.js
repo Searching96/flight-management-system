@@ -21,3 +21,5 @@ export const updateMinFlightDuration = (minFlightDuration) => axios.put(`${BASE_
 export const updateMaxFlightDuration = (maxFlightDuration) => axios.put(`${BASE_URL}/max-flight-duration`, maxFlightDuration);
 
 export const updateMaxStopDuration = (maxStopDuration) => axios.put(`${BASE_URL}/max-stop-duration`, maxStopDuration);
+
+export const updateParameters = (params) => axios.put(BASE_URL, params);
