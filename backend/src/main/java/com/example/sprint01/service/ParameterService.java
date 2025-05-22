@@ -5,14 +5,6 @@ import com.example.sprint01.dto.ParameterDto;
 public interface ParameterService {
     ParameterDto getParameterSet();
 
-    int getMaxMediumAirports();
-
-    int getMinFlightDuration();
-
-    int getMaxFlightDuration();
-
-    int getMaxStopDuration();
-
     void updateMaxMediumAirports(int maxMediumAirports);
 
     void updateMinFlightDuration(int minFlightDuration);

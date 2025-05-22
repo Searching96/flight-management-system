@@ -14,14 +14,14 @@ const Header = () => {
                   <li className='nav-item mx-2'>
                      <NavLink className='nav-link' to='/airports'>Airport List</NavLink>
                   </li>
-                  {/* <li className='nav-item mx-2'>
+                  <li className='nav-item mx-2'>
                      <NavLink className='nav-link' to='/flights'>Flight List</NavLink>
-                  </li> */}
+                  </li>
                   <li className='nav-item mx-2'>
                      <NavLink className='nav-link' to='/seat-classes'>Seat Class List</NavLink>
                   </li>
-                                    <li className='nav-item mx-2'>
-                     <NavLink className='nav-link' to='/insert-flights'>Flight Add</NavLink>
+                  <li className='nav-item mx-2'>
+                     <NavLink className='nav-link' to='/parameter'>Parameter</NavLink>
                   </li>
                </ul>
             </nav>

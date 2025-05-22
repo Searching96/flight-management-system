@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
-import { addFlight, getFlight, updateFlight } from "../services/FlightService";
-import { FlightDto } from "../models/Flight";
 import { listAirports } from "../services/AirportService";
+import { addFlight, getFlight, updateFlight } from "../services/FlightService";
+import { getParameter } from "../services/ParameterService";
 import { AirportDto } from "../models/Airport";
+import { FlightDto } from "../models/Flight";
+import { ParameterDto } from "../models/Parameter";
 import { Form, Button, Container, Card, Col, Spinner } from "react-bootstrap";
 import { Typeahead } from 'react-bootstrap-typeahead';
-import 'react-bootstrap-typeahead/css/Typeahead.css';
+import "react-bootstrap-typeahead/css/Typeahead.css";
+import "react-bootstrap-typeahead/css/Typeahead.bs5.css";
 
 type FlightFormInputs = Omit<FlightDto, "id">;
 
@@ -15,6 +18,7 @@ const FlightForm: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [airports, setAirports] = useState<AirportDto[]>([]);
+    const [parameter, setParameter] = useState<ParameterDto>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
     const {
@@ -22,6 +26,7 @@ const FlightForm: React.FC = () => {
         handleSubmit,
         reset,
         control,
+        getValues,
         formState: { errors, isSubmitting },
     } = useForm<FlightFormInputs>({
         defaultValues: {
@@ -34,16 +39,22 @@ const FlightForm: React.FC = () => {
     });
 
     useEffect(() => {
-        listAirports().then(setAirports);
-        if (id) {
-            getFlight(Number(id)).then((data) => {
-                const { id: _, ...flightData } = data;
-                reset(flightData);
+        let isMounted = true;
+        Promise.all([listAirports(), getParameter(), id ? getFlight(Number(id)) : Promise.resolve(null)])
+            .then(([airportsData, parameterData, flightData]) => {
+                if (!isMounted) return;
+                setAirports(airportsData);
+                setParameter(parameterData);
+                if (flightData) {
+                    const { id: _, ...flightFormData } = flightData;
+                    reset(flightFormData);
+                }
+                setLoading(false);
+            }).catch(err => {
+                // Optionally handle error
                 setLoading(false);
             });
-        } else {
-            setLoading(false);
-        }
+        return () => { isMounted = false };
     }, [id, reset]);
 
     const onSubmit: SubmitHandler<FlightFormInputs> = async (data) => {
@@ -68,7 +79,18 @@ const FlightForm: React.FC = () => {
                 name={fieldName as any}
                 rules={{
                     required: `${label} is required`,
-                    validate: value => value !== 0 || `Select an airport`
+                    validate: value => {
+                        if (value === 0) return `Select an airport`;
+                        const otherField =
+                            fieldName === "departureAirportId"
+                                ? "arrivalAirportId"
+                                : "departureAirportId";
+                        const otherValue = getValues(otherField);
+                        if (value === otherValue && value !== 0) {
+                            return "Arrival and departure airports must be different";
+                        }
+                        return true;
+                    }
                 }}
                 render={({ field }) => (
                     <Typeahead
@@ -119,18 +141,47 @@ const FlightForm: React.FC = () => {
                         <Form.Label>Flight Date</Form.Label>
                         <Form.Control
                             type="date"
-                            {...register("flightDate", { required: "Flight date is required" })}
+                            {...register("flightDate", {
+                                required: "Flight date is required",
+                                validate: (value) => {
+                                    if (!value || value.trim() === "") return "Flight date is required";
+                                    // Compare only dates, not times
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    const selected = new Date(value);
+                                    if (selected < today) {
+                                        return "Flight date must be today or later";
+                                    }
+                                    return true;
+                                }
+                            })}
                             isInvalid={!!errors.flightDate}
                         />
                         <Form.Control.Feedback type="invalid">
                             {errors.flightDate?.message}
                         </Form.Control.Feedback>
                     </Form.Group>
+
                     <Form.Group className="mb-3" controlId="flightTime">
                         <Form.Label>Flight Time</Form.Label>
                         <Form.Control
                             type="time"
-                            {...register("flightTime", { required: "Flight time is required" })}
+                            {...register("flightTime", {
+                                required: "Flight time is required",
+                                validate: (value) => {
+                                    const date = getValues("flightDate");
+                                    if (!date || date.trim() === "") return "Select a flight date first";
+                                    if (!value || value.trim() === "") return "Flight time is required";
+
+                                    // Combine flightDate and flightTime for full validation
+                                    const flightDateTime = new Date(`${date}T${value}`);
+                                    if (isNaN(flightDateTime.getTime())) return "Invalid date/time combination";
+                                    if (flightDateTime <= new Date()) {
+                                        return "Flight schedule must be later than the current time";
+                                    }
+                                    return true;
+                                }
+                            })}
                             isInvalid={!!errors.flightTime}
                         />
                         <Form.Control.Feedback type="invalid">
@@ -145,7 +196,7 @@ const FlightForm: React.FC = () => {
                             {...register("duration", {
                                 required: "Duration is required",
                                 valueAsNumber: true,
-                                min: { value: 1, message: "Duration must be at least 1 minute" },
+                                min: { value: parameter.minFlightDuration, message: `Duration must be at least ${parameter.minFlightDuration} minutes` },
                             })}
                             isInvalid={!!errors.duration}
                         />

@@ -26,26 +26,6 @@ public class ParameterServiceImpl implements ParameterService {
     }
 
     @Override
-    public int getMaxMediumAirports() {
-        return getParameterSet().getMaxMediumAirport();
-    }
-
-    @Override
-    public int getMinFlightDuration() {
-        return getParameterSet().getMinFlightDuration();
-    }
-
-    @Override
-    public int getMaxFlightDuration() {
-        return getParameterSet().getMaxFlightDuration();
-    }
-
-    @Override
-    public int getMaxStopDuration() {
-        return getParameterSet().getMaxStopDuration();
-    }
-
-    @Override
     public void updateMaxMediumAirports(int maxMediumAirports) {
         ParameterDto parameter = getParameterSet();
         parameter.setMaxMediumAirport(maxMediumAirports);

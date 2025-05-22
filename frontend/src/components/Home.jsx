@@ -17,7 +17,7 @@ const Home = () => {
    }
 
    function viewParameters() {
-      navigator('/parameters');
+      navigator('/parameter');
    }
 
    return (

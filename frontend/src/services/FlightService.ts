@@ -30,6 +30,13 @@ export const updateFlight = async (
   return response.data;
 };
 
+export const deleteFlight = async (
+  id: number
+): Promise<string> => {
+  const response = await axios.delete(`${BASE_URL}/${id}`);
+  return response.data;
+};
+
 // Add types for flightDetails as needed
 export const addFlightDetails = async (flightDetails: any) =>
   axios.post(BASE_URL_FLIGHT_DETAILS, flightDetails);

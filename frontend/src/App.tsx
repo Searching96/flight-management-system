@@ -9,7 +9,7 @@ import ListSeatClass from './components/ListSeatClass'
 import SeatClass from './components/SeatClass'
 import Flight from './components/Flight'
 import ListFlight from './components/ListFlight'
-import Parameters from './components/Parameters'
+import ParameterForm from './components/Parameter'
 import FlightForm from './components/FlightForm'
 
 function App() {
@@ -36,20 +36,20 @@ function App() {
           {/* // http://localhost:3000/add-seat-class */}
           <Route path='/add-seat-class' element={<SeatClass />}></Route>
 
-          {/* // http://localhost:3000/edit-seat-class/1 */}
+          {/* // http://localhost:3000/edit-seat-class/id */}
           <Route path='/edit-seat-class/:id' element={<SeatClass />}></Route>
 
           {/* // http://localhost:3000/flights */}
           <Route path='/flights' element={<ListFlight />}></Route>
 
           {/* // http://localhost:3000/add-flight */}
-          <Route path='/add-flight' element={<Flight />}></Route>
+          <Route path='/add-flight' element={<FlightForm />}></Route>
 
-          {/* // http://localhost:3000/parameters */}
-          <Route path='/parameters' element={<Parameters />}></Route>
+          {/* // http://localhost:3000/edit-flight/id */}
+          <Route path="/edit-flight/:id" element={<FlightForm />} />
 
-          {/* // http://localhost:3000/insert-flights */}
-          <Route path='/insert-flights' element={<FlightForm />}></Route>
+          {/* // http://localhost:3000/parameter */}
+          <Route path='/parameter' element={<ParameterForm />}></Route>
 
         </Routes>
         <Footer />
