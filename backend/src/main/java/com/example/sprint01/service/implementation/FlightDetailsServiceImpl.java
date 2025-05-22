@@ -14,6 +14,8 @@ import com.example.sprint01.service.FlightDetailsService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @AllArgsConstructor
 public class FlightDetailsServiceImpl implements FlightDetailsService {
@@ -23,11 +25,9 @@ public class FlightDetailsServiceImpl implements FlightDetailsService {
 
     @Override
     public FlightDetailsDto createFlightDetails(FlightDetailsDto flightDetailsDto) {
-        Flight flight = flightRepository.findById(flightDetailsDto.getFlightId())
-                .orElseThrow(() -> new ResourceNotFoundException("Flight not found with id: " + flightDetailsDto.getFlightId()));
+        Flight flight = flightRepository.findById(flightDetailsDto.getFlightId()).orElseThrow(() -> new ResourceNotFoundException("Flight not found with id: " + flightDetailsDto.getFlightId()));
 
-        Airport mediumAirport = airportRepository.findById(flightDetailsDto.getMediumAirportId())
-                .orElseThrow(() -> new ResourceNotFoundException("Medium airport not found with id: " + flightDetailsDto.getMediumAirportId()));
+        Airport mediumAirport = airportRepository.findById(flightDetailsDto.getMediumAirportId()).orElseThrow(() -> new ResourceNotFoundException("Medium airport not found with id: " + flightDetailsDto.getMediumAirportId()));
 
         FlightDetails flightDetails = FlightDetailsMapper.mapToFlightDetails(flightDetailsDto);
 
@@ -39,18 +39,9 @@ public class FlightDetailsServiceImpl implements FlightDetailsService {
     }
 
     @Override
-    public FlightDetailsDto getFlightDetailsById(Long flightId, Long mediumAirportId) {
-        FlightDetailsId flightDetailsId = new FlightDetailsId(flightId, mediumAirportId);
-        FlightDetails flightDetails = flightDetailsRepository.findById(flightDetailsId)
-                .orElseThrow(() -> new ResourceNotFoundException("Flight details not found with id: " + flightDetailsId));
-        return FlightDetailsMapper.mapToDto(flightDetails);
-    }
-
-    @Override
     public FlightDetailsDto updateFlightDetails(Long flightId, Long mediumAirportId, FlightDetailsDto updatedFlightDetailsDto) {
         FlightDetailsId flightDetailsId = new FlightDetailsId(flightId, mediumAirportId);
-        FlightDetails existingFlightDetails = flightDetailsRepository.findById(flightDetailsId)
-                .orElseThrow(() -> new ResourceNotFoundException("Flight details not found with id: " + flightDetailsId));
+        FlightDetails existingFlightDetails = flightDetailsRepository.findById(flightDetailsId).orElseThrow(() -> new ResourceNotFoundException("Flight details not found with id: " + flightDetailsId));
 
         existingFlightDetails.setStopTime(updatedFlightDetailsDto.getStopTime());
         existingFlightDetails.setNote(updatedFlightDetailsDto.getNote());
@@ -62,8 +53,17 @@ public class FlightDetailsServiceImpl implements FlightDetailsService {
     @Override
     public void deleteFlightDetails(Long flightId, Long mediumAirportId) {
         FlightDetailsId flightDetailsId = new FlightDetailsId(flightId, mediumAirportId);
-        FlightDetails existingFlightDetails = flightDetailsRepository.findById(flightDetailsId)
-                .orElseThrow(() -> new ResourceNotFoundException("Flight details not found with id: " + flightDetailsId));
-        flightDetailsRepository.deleteById(flightDetailsId);
+        FlightDetails existingFlightDetails = flightDetailsRepository.findById(flightDetailsId).orElseThrow(() -> new ResourceNotFoundException("Flight details not found with id: " + flightDetailsId));
+
+        // Use the current timestamp
+        existingFlightDetails.setDeletedAt(LocalDateTime.now());
+        flightDetailsRepository.save(existingFlightDetails);
+    }
+
+    @Override
+    public FlightDetailsDto getFlightDetailsById(Long flightId, Long mediumAirportId) {
+        FlightDetailsId flightDetailsId = new FlightDetailsId(flightId, mediumAirportId);
+        FlightDetails flightDetails = flightDetailsRepository.findActiveById(flightId, mediumAirportId).orElseThrow(() -> new ResourceNotFoundException("Flight details not found with id: " + flightDetailsId));
+        return FlightDetailsMapper.mapToDto(flightDetails);
     }
 }

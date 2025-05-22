@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,7 +22,7 @@ public class FlightDetails {
     @Column(name = "stop_time", nullable = false)
     private int stopTime;
 
-    @Column(name="note", length = 255)
+    @Column(name = "note", length = 255)
     private String note;
 
     @ManyToOne
@@ -32,4 +34,7 @@ public class FlightDetails {
     @MapsId("mediumAirportId")
     @JoinColumn(name = "medium_airport_id", nullable = false)
     private Airport mediumAirport;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

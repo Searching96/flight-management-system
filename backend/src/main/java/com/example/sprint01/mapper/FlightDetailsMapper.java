@@ -20,6 +20,7 @@ public class FlightDetailsMapper {
                 flightDetailsDto.getStopTime(),
                 flightDetailsDto.getNote(),
                 null,
+                null,
                 null
         );
     }

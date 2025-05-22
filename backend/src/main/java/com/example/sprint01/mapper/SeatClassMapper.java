@@ -14,7 +14,8 @@ public class SeatClassMapper {
     public static SeatClass mapToSeatClass(SeatClassDto seatClassDtoDto) {
         return new SeatClass(
                 seatClassDtoDto.getId(),
-                seatClassDtoDto.getSeatName()
+                seatClassDtoDto.getSeatName(),
+                null
         );
     }
 }

@@ -14,7 +14,8 @@ public class AirportMapper {
     public static Airport mapToAirport(AirportDto airportDto) {
         return new Airport(
                 airportDto.getId(),
-                airportDto.getName()
+                airportDto.getName(),
+                null
         );
     }
 }

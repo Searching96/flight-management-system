@@ -11,6 +11,7 @@ import com.example.sprint01.service.FlightService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -30,22 +31,6 @@ public class FlightServiceImpl implements FlightService {
         Flight savedFlight = flightRepository.save(flight);
 
         return FlightMapper.mapToDto(savedFlight);
-    }
-
-    @Override
-    public FlightDto getFlightById(Long id) {
-        Flight flight = flightRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Flight not found with id: " + id));
-
-        return FlightMapper.mapToDto(flight);
-    }
-
-    @Override
-    public List<FlightDto> getAllFlights() {
-        List<Flight> flights = flightRepository.findAll();
-        return flights.stream()
-                .map(FlightMapper::mapToDto)
-                .toList();
     }
 
     @Override
@@ -70,8 +55,26 @@ public class FlightServiceImpl implements FlightService {
 
     @Override
     public void deleteFlight(Long id) {
-        Flight existingFlight = flightRepository.findById(id)
+        Flight existingFlight = flightRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Flight not found with id: " + id));
-        flightRepository.deleteById(id);
+
+        // Use the current timestamp
+        existingFlight.setDeletedAt(LocalDateTime.now());
+        flightRepository.save(existingFlight);
+    }
+
+    @Override
+    public FlightDto getFlightById(Long id) {
+        Flight flight = flightRepository.findActiveById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Flight not found with id: " + id));
+        return FlightMapper.mapToDto(flight);
+    }
+
+    @Override
+    public List<FlightDto> getAllFlights() {
+        List<Flight> flights = flightRepository.findAllActive();
+        return flights.stream()
+                .map(FlightMapper::mapToDto)
+                .toList();
     }
 }

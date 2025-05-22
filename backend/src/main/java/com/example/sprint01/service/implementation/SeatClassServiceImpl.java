@@ -9,6 +9,7 @@ import com.example.sprint01.service.SeatClassService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -24,21 +25,6 @@ public class SeatClassServiceImpl implements SeatClassService {
     }
 
     @Override
-    public SeatClassDto getAirportById(Long id) {
-        SeatClass seatClass = seatClassRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Seat class not found with id: " + id));
-        return SeatClassMapper.mapToDto(seatClass);
-    }
-
-    @Override
-    public List<SeatClassDto> getAllAirports() {
-        List<SeatClass> seatClasses = seatClassRepository.findAll();
-        return seatClasses.stream()
-                .map(SeatClassMapper::mapToDto)
-                .toList();
-    }
-
-    @Override
     public SeatClassDto updateAirport(Long id, SeatClassDto updatedSeatClass) {
         SeatClass existingSeatClass = seatClassRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Seat class not found with id: " + id));
@@ -51,9 +37,26 @@ public class SeatClassServiceImpl implements SeatClassService {
 
     @Override
     public void deleteAirport(Long id) {
-        SeatClass existingSeatClass = seatClassRepository.findById(id)
+        SeatClass existingSeatClass = seatClassRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Seat class not found with id: " + id));
 
-        seatClassRepository.deleteById(id);
+        // Use the current timestamp
+        existingSeatClass.setDeletedAt(LocalDateTime.now());
+        seatClassRepository.save(existingSeatClass);
+    }
+
+    @Override
+    public SeatClassDto getAirportById(Long id) {
+        SeatClass seatClass = seatClassRepository.findActiveById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Seat class not found with id: " + id));
+        return SeatClassMapper.mapToDto(seatClass);
+    }
+
+    @Override
+    public List<SeatClassDto> getAllAirports() {
+        List<SeatClass> seatClasses = seatClassRepository.findAllActive();
+        return seatClasses.stream()
+                .map(SeatClassMapper::mapToDto)
+                .toList();
     }
 }

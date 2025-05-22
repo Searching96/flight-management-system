@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,4 +30,7 @@ public class Parameter {
 
     @Column(name = "max_stop_duration", nullable = false)
     private int maxStopDuration;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

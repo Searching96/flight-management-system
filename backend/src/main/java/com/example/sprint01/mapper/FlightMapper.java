@@ -12,7 +12,8 @@ public class FlightMapper {
                 arrivalAirport,
                 flightDto.getFlightDate(),
                 flightDto.getFlightTime(),
-                flightDto.getDuration()
+                flightDto.getDuration(),
+                null
         );
     }
 

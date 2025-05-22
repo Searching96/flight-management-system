@@ -9,6 +9,8 @@ import com.example.sprint01.service.AirportService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -24,21 +26,6 @@ public class AirportServiceImpl implements AirportService {
     }
 
     @Override
-    public AirportDto getAirportById(Long id) {
-        Airport airport = airportRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Airport not found with id: " + id));
-        return AirportMapper.mapToDto(airport);
-    }
-
-    @Override
-    public List<AirportDto> getAllAirports() {
-        List<Airport> airports = airportRepository.findAll();
-        return airports.stream()
-                .map(AirportMapper::mapToDto)
-                .toList();
-    }
-
-    @Override
     public AirportDto updateAirport(Long id, AirportDto updatedAirport) {
         Airport existingAirport = airportRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Airport not found with id: " + id));
@@ -51,9 +38,25 @@ public class AirportServiceImpl implements AirportService {
 
     @Override
     public void deleteAirport(Long id) {
-        Airport existingAirport = airportRepository.findById(id)
+        Airport existingAirport = airportRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Airport not found with id: " + id));
 
-        airportRepository.deleteById(id);
+        existingAirport.setDeletedAt(LocalDateTime.now());
+        airportRepository.save(existingAirport);
+    }
+
+    @Override
+    public AirportDto getAirportById(Long id) {
+        Airport airport = airportRepository.findActiveById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Airport not found with id: " + id));
+        return AirportMapper.mapToDto(airport);
+    }
+
+    @Override
+    public List<AirportDto> getAllAirports() {
+        List<Airport> airports = airportRepository.findAllActive();
+        return airports.stream()
+                .map(AirportMapper::mapToDto)
+                .toList();
     }
 }

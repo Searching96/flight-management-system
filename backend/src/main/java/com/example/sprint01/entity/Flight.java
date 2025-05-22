@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Getter
@@ -36,4 +37,7 @@ public class Flight {
 
     @Column(name = "flight_duration", nullable = false)
     private int duration; // Duration in minutes
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,4 +21,7 @@ public class Airport {
 
     @Column(name = "name", nullable = false)
     private String name;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }
