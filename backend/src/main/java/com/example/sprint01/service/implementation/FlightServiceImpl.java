@@ -3,9 +3,11 @@ package com.example.sprint01.service.implementation;
 import com.example.sprint01.dto.FlightDto;
 import com.example.sprint01.entity.Airport;
 import com.example.sprint01.entity.Flight;
+import com.example.sprint01.entity.FlightDetails;
 import com.example.sprint01.exception.ResourceNotFoundException;
 import com.example.sprint01.mapper.FlightMapper;
 import com.example.sprint01.repository.AirportRepository;
+import com.example.sprint01.repository.FlightDetailsRepository;
 import com.example.sprint01.repository.FlightRepository;
 import com.example.sprint01.service.FlightService;
 import lombok.AllArgsConstructor;
@@ -18,6 +20,7 @@ import java.util.List;
 @AllArgsConstructor
 public class FlightServiceImpl implements FlightService {
     private FlightRepository flightRepository;
+    private FlightDetailsRepository flightDetailsRepository;
     private AirportRepository airportRepository;
 
     @Override
@@ -61,6 +64,12 @@ public class FlightServiceImpl implements FlightService {
         // Use the current timestamp
         existingFlight.setDeletedAt(LocalDateTime.now());
         flightRepository.save(existingFlight);
+
+        List<FlightDetails> detailsList = flightDetailsRepository.findAllActiveByFlightId(id);
+        for (FlightDetails details : detailsList) {
+            details.setDeletedAt(LocalDateTime.now());
+            flightDetailsRepository.save(details);
+        }
     }
 
     @Override

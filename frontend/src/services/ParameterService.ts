@@ -6,7 +6,6 @@ const BASE_URL = `${DOMAIN_URL_DEFAULT}${API_URL.PARAMETERS}`;
 
 export const getParameter = async (): Promise<ParameterDto> => {
   const response = await axios.get<ParameterDto>(BASE_URL);
-  console.log(response.data);
   return response.data;
 };
 

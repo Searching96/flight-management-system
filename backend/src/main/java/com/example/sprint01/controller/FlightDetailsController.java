@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @CrossOrigin("*")
 @AllArgsConstructor
 @RestController
@@ -18,6 +20,12 @@ public class FlightDetailsController {
     public ResponseEntity<FlightDetailsDto> createFlightDetails(@RequestBody FlightDetailsDto flightDetailsDto) {
         FlightDetailsDto savedFlightDetails = flightDetailsService.createFlightDetails(flightDetailsDto);
         return new ResponseEntity<>(savedFlightDetails, HttpStatus.CREATED);
+    }
+
+    @GetMapping("{flightId}")
+    public ResponseEntity<List<FlightDetailsDto>> getFlightDetailsByFlightId(@PathVariable Long flightId) {
+        List<FlightDetailsDto> flightDetails = flightDetailsService.getFlightDetailsByFlightId(flightId);
+        return ResponseEntity.ok(flightDetails);
     }
 
     @GetMapping("{flightId}/{mediumAirportId}")

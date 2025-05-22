@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -65,5 +66,25 @@ public class FlightDetailsServiceImpl implements FlightDetailsService {
         FlightDetailsId flightDetailsId = new FlightDetailsId(flightId, mediumAirportId);
         FlightDetails flightDetails = flightDetailsRepository.findActiveById(flightId, mediumAirportId).orElseThrow(() -> new ResourceNotFoundException("Flight details not found with id: " + flightDetailsId));
         return FlightDetailsMapper.mapToDto(flightDetails);
+    }
+
+    @Override
+    public void deleteFlightDetailsByFlightId(Long flightId) {
+        List<FlightDetails> detailsList = flightDetailsRepository.findAllActiveByFlightId(flightId);
+        for (FlightDetails details : detailsList) {
+            details.setDeletedAt(LocalDateTime.now());
+            flightDetailsRepository.save(details);
+        }
+    }
+
+    @Override
+    public List<FlightDetailsDto> getFlightDetailsByFlightId(Long flightId) {
+        List<FlightDetails> flightDetailsList = flightDetailsRepository.findAllActiveByFlightId(flightId);
+        if (flightDetailsList.isEmpty()) {
+            throw new ResourceNotFoundException("No flight details found for flightId: " + flightId);
+        }
+        return flightDetailsList.stream()
+                .map(FlightDetailsMapper::mapToDto)
+                .toList();
     }
 }

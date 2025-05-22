@@ -38,6 +38,7 @@ const ListFlight: React.FC = () => {
         alert('Failed to delete flight');
         console.error(err);
       });
+      alert(`Deleted flight ${id} successfully.`);
   }
 
   return (

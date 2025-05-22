@@ -14,4 +14,7 @@ public interface FlightDetailsRepository extends JpaRepository<FlightDetails, Fl
 
     @Query("SELECT fd FROM FlightDetails fd WHERE fd.id.flightId = ?1 AND fd.id.mediumAirportId = ?2 AND fd.deletedAt IS NULL")
     Optional<FlightDetails> findActiveById(Long flightId, Long mediumAirportId);
+
+    @Query("SELECT fd FROM FlightDetails fd WHERE fd.flight.id = ?1 AND fd.deletedAt IS NULL")
+    List<FlightDetails> findAllActiveByFlightId(Long flightId);
 }

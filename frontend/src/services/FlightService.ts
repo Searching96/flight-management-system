@@ -1,6 +1,7 @@
 import axios from "axios";
 import { FlightDto } from "../models/Flight";
 import { DOMAIN_URL_DEFAULT, API_URL } from "./config";
+import { FlightDetailDto } from "../models/FlightDetail";
 
 const BASE_URL = `${DOMAIN_URL_DEFAULT}${API_URL.FLIGHTS}`;
 const BASE_URL_FLIGHT_DETAILS = `${DOMAIN_URL_DEFAULT}${API_URL.FLIGHT_DETAILS}`;
@@ -38,8 +39,16 @@ export const deleteFlight = async (
 };
 
 // Add types for flightDetails as needed
-export const addFlightDetails = async (flightDetails: any) =>
-  axios.post(BASE_URL_FLIGHT_DETAILS, flightDetails);
+export const addFlightDetails = async (flightDetails: FlightDetailDto): Promise<FlightDetailDto> =>{
+    const response = await axios.post(BASE_URL_FLIGHT_DETAILS, flightDetails);
+    return response.data;
+}
+export const getFlightDetailsByFlightId = async (flightId: number): Promise<FlightDetailDto[]> => {
+  const response = await axios.get(`${BASE_URL_FLIGHT_DETAILS}/${flightId}`);
+  return response.data;
+}
 
-export const getFlightDetails = async (flightId: number, mediumAirportId: number) =>
-  axios.get(`${BASE_URL_FLIGHT_DETAILS}/${flightId}/${mediumAirportId}`);
+export const getFlightDetails = async (flightId: number, mediumAirportId: number): Promise<FlightDetailDto> => {
+  const response = await axios.get(`${BASE_URL_FLIGHT_DETAILS}/${flightId}/${mediumAirportId}`);
+  return response.data;
+}
