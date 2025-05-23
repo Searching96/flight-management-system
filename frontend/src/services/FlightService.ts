@@ -39,9 +39,9 @@ export const deleteFlight = async (
 };
 
 // Add types for flightDetails as needed
-export const addFlightDetails = async (flightDetails: FlightDetailDto): Promise<FlightDetailDto> =>{
-    const response = await axios.post(BASE_URL_FLIGHT_DETAILS, flightDetails);
-    return response.data;
+export const addFlightDetails = async (flightDetails: FlightDetailDto): Promise<FlightDetailDto> => {
+  const response = await axios.post(BASE_URL_FLIGHT_DETAILS, flightDetails);
+  return response.data;
 }
 export const getFlightDetailsByFlightId = async (flightId: number): Promise<FlightDetailDto[]> => {
   const response = await axios.get(`${BASE_URL_FLIGHT_DETAILS}/${flightId}`);
@@ -50,5 +50,23 @@ export const getFlightDetailsByFlightId = async (flightId: number): Promise<Flig
 
 export const getFlightDetails = async (flightId: number, mediumAirportId: number): Promise<FlightDetailDto> => {
   const response = await axios.get(`${BASE_URL_FLIGHT_DETAILS}/${flightId}/${mediumAirportId}`);
+  return response.data;
+}
+
+export const updateFlightDetail = async (
+  flightId: number,
+  mediumAirportId: number,
+  detail: Omit<FlightDetailDto, "flightId">
+): Promise<FlightDetailDto> => {
+  const response = await axios.put(`${BASE_URL_FLIGHT_DETAILS}/${flightId}/${mediumAirportId}`, detail);
+  return response.data;
+}
+
+// Delete a flight detail
+export const deleteFlightDetail = async (
+  flightId: number,
+  mediumAirportId: number
+): Promise<void> => {
+  const response = await axios.delete(`${BASE_URL_FLIGHT_DETAILS}/${flightId}/${mediumAirportId}`);
   return response.data;
 }

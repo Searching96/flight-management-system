@@ -3,15 +3,15 @@ package com.example.sprint01.service.implementation;
 import com.example.sprint01.dto.FlightDto;
 import com.example.sprint01.entity.Airport;
 import com.example.sprint01.entity.Flight;
-import com.example.sprint01.entity.FlightDetails;
 import com.example.sprint01.exception.ResourceNotFoundException;
 import com.example.sprint01.mapper.FlightMapper;
 import com.example.sprint01.repository.AirportRepository;
-import com.example.sprint01.repository.FlightDetailsRepository;
 import com.example.sprint01.repository.FlightRepository;
 import com.example.sprint01.service.FlightService;
+import com.example.sprint01.service.FlightDetailsService; // Add this import
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // Add this import
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,7 +20,7 @@ import java.util.List;
 @AllArgsConstructor
 public class FlightServiceImpl implements FlightService {
     private FlightRepository flightRepository;
-    private FlightDetailsRepository flightDetailsRepository;
+    private FlightDetailsService flightDetailsService; // Change this line
     private AirportRepository airportRepository;
 
     @Override
@@ -38,7 +38,7 @@ public class FlightServiceImpl implements FlightService {
 
     @Override
     public FlightDto updateFlight(Long id, FlightDto updatedFlight) {
-        Flight existingFlight = flightRepository.findById(id)
+        Flight existingFlight = flightRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Flight not found with id: " + id));
 
         Airport departureAirport = airportRepository.findById(updatedFlight.getDepartureAirportId())
@@ -57,19 +57,17 @@ public class FlightServiceImpl implements FlightService {
     }
 
     @Override
+    @Transactional // Add transaction management
     public void deleteFlight(Long id) {
         Flight existingFlight = flightRepository.findActiveById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Flight not found with id: " + id));
 
-        // Use the current timestamp
+        // First, soft delete all associated flight details using the service
+        flightDetailsService.deleteFlightDetailsByFlightId(id);
+
+        // Then, soft delete the flight
         existingFlight.setDeletedAt(LocalDateTime.now());
         flightRepository.save(existingFlight);
-
-        List<FlightDetails> detailsList = flightDetailsRepository.findAllActiveByFlightId(id);
-        for (FlightDetails details : detailsList) {
-            details.setDeletedAt(LocalDateTime.now());
-            flightDetailsRepository.save(details);
-        }
     }
 
     @Override
