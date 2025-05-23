@@ -3,7 +3,6 @@ import { NavLink } from 'react-router-dom'
 
 const Header = () => {
    return (
-      <div>
          <header className='header'>
             <nav className='navbar navbar-dark bg-dark d-flex justify-content-start w-100 px-4'>
                <NavLink className='navbar-brand' href='https://github.com/OctGuy'>Demo Java Sprint01</NavLink>
@@ -26,7 +25,6 @@ const Header = () => {
                </ul>
             </nav>
          </header>
-      </div>
    )
 }
 

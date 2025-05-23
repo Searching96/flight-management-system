@@ -27,3 +27,9 @@ html, body {
   width: 100%;
   border-top: 1px solid #e7e7e7;
 }
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1040; /* higher than main content */
+}
