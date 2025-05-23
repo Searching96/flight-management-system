@@ -5,6 +5,8 @@ import { FlightDetailDto } from "../models/FlightDetail";
 
 const BASE_URL = `${DOMAIN_URL_DEFAULT}${API_URL.FLIGHTS}`;
 const BASE_URL_FLIGHT_DETAILS = `${DOMAIN_URL_DEFAULT}${API_URL.FLIGHT_DETAILS}`;
+const BASE_URL_FLIGHT_SEATCLASS = `${DOMAIN_URL_DEFAULT}${API_URL.FLIGHT_SEAT_CLASS}`;
+
 
 export const listFlights = async (): Promise<FlightDto[]> => {
   const response = await axios.get<FlightDto[]>(BASE_URL);
@@ -56,7 +58,7 @@ export const getFlightDetails = async (flightId: number, mediumAirportId: number
 export const updateFlightDetail = async (
   flightId: number,
   mediumAirportId: number,
-  detail: Omit<FlightDetailDto, "flightId">
+  detail: Omit<FlightDetailDto, "flightId" | "mediumAirportId">
 ): Promise<FlightDetailDto> => {
   const response = await axios.put(`${BASE_URL_FLIGHT_DETAILS}/${flightId}/${mediumAirportId}`, detail);
   return response.data;
@@ -67,6 +69,48 @@ export const deleteFlightDetail = async (
   flightId: number,
   mediumAirportId: number
 ): Promise<void> => {
-  const response = await axios.delete(`${BASE_URL_FLIGHT_DETAILS}/${flightId}/${mediumAirportId}`);
-  return response.data;
+  await axios.delete(`${BASE_URL_FLIGHT_DETAILS}/${flightId}/${mediumAirportId}`);
 }
+
+// Add a flight seat class
+export const addFlightSeatClass = async (data: {
+  flightId: number;
+  seatClassId: number;
+  currentPrice: number;
+  totalTickets: number;
+}): Promise<void> => {
+  await axios.post(`${BASE_URL_FLIGHT_SEATCLASS}`, data);
+};
+
+// Get all seat classes for a flight
+export const getFlightSeatClassesByFlightId = async (
+  flightId: number
+): Promise<{
+  flightId: number;
+  seatClassId: number;
+  currentPrice: number;
+  totalTickets: number;
+}[]> => {
+  const response = await axios.get(`${BASE_URL_FLIGHT_SEATCLASS}/${flightId}`);
+  return response.data;
+};
+
+// Update a flight seat class
+export const updateFlightSeatClass = async (
+  flightId: number,
+  seatClassId: number,
+  data: {
+    currentPrice: number;
+    totalTickets: number;
+  }
+): Promise<void> => {
+  await axios.put(`${BASE_URL_FLIGHT_SEATCLASS}/${flightId}/${seatClassId}`, data);
+};
+
+// Delete a flight seat class
+export const deleteFlightSeatClass = async (
+  flightId: number,
+  seatClassId: number
+): Promise<void> => {
+  await axios.delete(`${BASE_URL_FLIGHT_SEATCLASS}/${flightId}/${seatClassId}`);
+};

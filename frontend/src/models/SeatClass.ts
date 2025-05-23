@@ -1,4 +1,4 @@
-export interface SeatClasstDto {
+export interface SeatClassDto {
     id: number;
     seatName: string;
 }

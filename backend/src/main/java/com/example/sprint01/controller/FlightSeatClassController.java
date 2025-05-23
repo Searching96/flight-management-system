@@ -12,7 +12,7 @@ import java.util.List;
 @CrossOrigin("*")
 @AllArgsConstructor
 @RestController
-@RequestMapping("api/flight-details")
+@RequestMapping("api/flight-seat-class")
 public class FlightSeatClassController {
     private FlightSeatClassService FlightSeatClassService;
 

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { listSeatClasses } from '../services/SeatClassService';
+import { SeatClassDto } from '../models/SeatClass';
 import { useNavigate } from 'react-router-dom'
 
 const ListSeatClass = () => {
-   const [seatClasses, setSeatClasses] = useState([]);
+   const [seatClasses, setSeatClasses] = useState<SeatClassDto[]>([]);
 
    const navigator = useNavigate();
 
@@ -13,7 +14,7 @@ const ListSeatClass = () => {
 
    function getAllSeatClasses() {
       listSeatClasses().then((response) => {
-         setSeatClasses(response.data);
+         setSeatClasses(response);
       }).catch(error => {
          console.error("Error fetching seat classes: ", error);
       })

@@ -10,12 +10,19 @@ import {
     getFlightDetailsByFlightId,
     updateFlightDetail,
     deleteFlightDetail,
+    addFlightSeatClass,
+    getFlightSeatClassesByFlightId,
+    updateFlightSeatClass,
+    deleteFlightSeatClass
 } from "../services/FlightService";
+import { listSeatClasses } from "../services/SeatClassService";
 import { getParameter } from "../services/ParameterService";
 import { AirportDto } from "../models/Airport";
 import { FlightDto } from "../models/Flight";
 import { ParameterDto } from "../models/Parameter";
 import { FlightDetailDto } from "../models/FlightDetail";
+import { SeatClassDto } from "../models/SeatClass";
+import { FlightSeatClassDto } from "../models/FlightSeatClass";
 import {
     Form,
     Button,
@@ -32,6 +39,7 @@ import "react-bootstrap-typeahead/css/Typeahead.bs5.css";
 
 type FlightFormInputs = Omit<FlightDto, "id">;
 type FlightDetailInput = Omit<FlightDetailDto, "flightId"> & { flightId?: number };
+type FlightSeatClassInput = Omit<FlightSeatClassDto, "flightId" | "remainingTickets" | "deletedAt" | "id"> & { flightId?: number };
 
 const FlightForm: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -40,6 +48,10 @@ const FlightForm: React.FC = () => {
     const [parameter, setParameter] = useState<ParameterDto | undefined>(undefined);
     const [flightDetails, setFlightDetails] = useState<FlightDetailInput[]>([]);
     const [originalFlightDetails, setOriginalFlightDetails] = useState<FlightDetailInput[]>([]);
+    const [seatClasses, setSeatClasses] = useState<SeatClassDto[]>([]);
+    const [flightSeatClasses, setFlightSeatClasses] = useState<FlightSeatClassInput[]>([]);
+    const [originalFlightSeatClasses, setOriginalFlightSeatClasses] = useState<FlightSeatClassInput[]>([]);
+    const [seatClassErrors, setSeatClassErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState<boolean>(true);
     const [detailErrors, setDetailErrors] = useState<Record<string, string>>({});
 
@@ -103,13 +115,40 @@ const FlightForm: React.FC = () => {
         return errors;
     };
 
-    // Live validation effect for flight details
+    // Centralized validation for flight seat classes
+    const validateFlightSeatClasses = (
+        flightSeatClasses: FlightSeatClassInput[]
+    ): Record<string, string> => {
+        const errors: Record<string, string> = {};
+        flightSeatClasses.forEach((item, idx) => {
+            if (!item.seatClassId || item.seatClassId === 0) {
+                errors[`seatClassId-${idx}`] = "Seat class is required";
+            } else if (
+                flightSeatClasses.filter(
+                    (c, i) => c.seatClassId === item.seatClassId && i !== idx
+                ).length > 0
+            ) {
+                errors[`seatClassId-${idx}`] = "Seat class must be unique";
+            }
+            if (item.currentPrice == null || item.currentPrice < 0)
+                errors[`currentPrice-${idx}`] = "Price must be >= 0";
+            if (item.totalTickets == null || item.totalTickets < 1)
+                errors[`totalTickets-${idx}`] = "Quantity must be > 0";
+        });
+        return errors;
+    };
+
     useEffect(() => {
         setDetailErrors(
             validateFlightDetails(flightDetails, departureAirportId, arrivalAirportId, parameter)
         );
     }, [flightDetails, departureAirportId, arrivalAirportId, parameter]);
 
+    useEffect(() => {
+        setSeatClassErrors(validateFlightSeatClasses(flightSeatClasses));
+    }, [flightSeatClasses]);
+
+    // ADD medium airport row
     const handleAddFlightDetail = () => {
         if (flightDetails.length >= (parameter?.maxMediumAirport || 0)) return;
         const defaultStopDuration = parameter?.maxStopDuration || 30;
@@ -119,13 +158,32 @@ const FlightForm: React.FC = () => {
         ]);
     };
 
+    // DELETE medium airport row
     const handleDeleteFlightDetail = (idx: number) => {
         setFlightDetails((prev) => prev.filter((_, i) => i !== idx));
-        // Clear any errors for this detail
+        // Remove errors for this row
         const newDetailErrors = { ...detailErrors };
         delete newDetailErrors[`mediumAirportId-${idx}`];
         delete newDetailErrors[`stopTime-${idx}`];
         setDetailErrors(newDetailErrors);
+    };
+
+    // ADD seat class row
+    const handleAddSeatClass = () => {
+        setFlightSeatClasses((prev) => [
+            ...prev,
+            { seatClassId: 0, currentPrice: 0, totalTickets: 1 }
+        ]);
+    };
+
+    // DELETE seat class row
+    const handleDeleteSeatClass = (idx: number) => {
+        setFlightSeatClasses((prev) => prev.filter((_, i) => i !== idx));
+        const newErrors = { ...seatClassErrors };
+        delete newErrors[`seatClassId-${idx}`];
+        delete newErrors[`currentPrice-${idx}`];
+        delete newErrors[`totalTickets-${idx}`];
+        setSeatClassErrors(newErrors);
     };
 
     useEffect(() => {
@@ -133,21 +191,23 @@ const FlightForm: React.FC = () => {
 
         Promise.all([
             listAirports(),
+            listSeatClasses(),
             getParameter(),
             id ? getFlight(Number(id)) : Promise.resolve(null),
         ])
-            .then(([airportsData, parameterData, flightData]) => {
+            .then(([airportsData, seatClassesData, parameterData, flightData]) => {
                 if (!isMounted) return;
 
                 setAirports(airportsData);
+                setSeatClasses(seatClassesData);
                 setParameter(parameterData);
 
                 if (flightData) {
                     const { id: _, ...flightFormData } = flightData;
                     reset(flightFormData);
 
-                    // Now get the flight details separately
                     if (id) {
+                        // Get flight details
                         getFlightDetailsByFlightId(Number(id))
                             .then((detailsData) => {
                                 if (!isMounted) return;
@@ -161,18 +221,24 @@ const FlightForm: React.FC = () => {
                                     setFlightDetails(mapped);
                                     setOriginalFlightDetails(mapped);
                                 }
-                                setLoading(false);
                             })
                             .catch((err) => {
                                 console.error("Error loading flight details:", err);
-                                setLoading(false);
                             });
-                    } else {
-                        setLoading(false);
+
+                        // Get flight seat classes
+                        getFlightSeatClassesByFlightId(Number(id))
+                            .then((seatClassRows) => {
+                                if (!isMounted) return;
+                                setFlightSeatClasses(seatClassRows);
+                                setOriginalFlightSeatClasses(seatClassRows);
+                            })
+                            .catch((err) => {
+                                console.error("Error loading flight seat classes:", err);
+                            });
                     }
-                } else {
-                    setLoading(false);
                 }
+                setLoading(false);
             })
             .catch((err) => {
                 console.error("Error loading form data:", err);
@@ -215,6 +281,11 @@ const FlightForm: React.FC = () => {
         );
         setDetailErrors(errors);
         if (Object.keys(errors).length > 0) valid = false;
+
+        const seatErrors = validateFlightSeatClasses(flightSeatClasses);
+        setSeatClassErrors(seatErrors);
+        if (Object.keys(seatErrors).length > 0) valid = false;
+
         return valid;
     };
 
@@ -230,8 +301,7 @@ const FlightForm: React.FC = () => {
                 flightId = created.id;
             }
 
-            // 1. Compute add, update, delete
-            // Key is flightId + mediumAirportId (composite)
+            // --- Flight Details ---
             const detailsWithFlightId = flightDetails.map((d) => ({
                 ...d,
                 flightId: flightId,
@@ -241,7 +311,6 @@ const FlightForm: React.FC = () => {
                 flightId: flightId,
             }));
 
-            // Find deleted: in original but not in new
             const deletedDetails = originalsWithFlightId.filter(
                 (od) =>
                     !detailsWithFlightId.some(
@@ -249,8 +318,6 @@ const FlightForm: React.FC = () => {
                             fd.flightId === od.flightId && fd.mediumAirportId === od.mediumAirportId
                     )
             );
-
-            // Find added: in new but not in original
             const addedDetails = detailsWithFlightId.filter(
                 (fd) =>
                     !originalsWithFlightId.some(
@@ -258,8 +325,6 @@ const FlightForm: React.FC = () => {
                             fd.flightId === od.flightId && fd.mediumAirportId === od.mediumAirportId
                     )
             );
-
-            // Find updated: in both, but changed
             const updatedDetails = detailsWithFlightId.filter((fd) =>
                 originalsWithFlightId.some(
                     (od) =>
@@ -269,8 +334,25 @@ const FlightForm: React.FC = () => {
                 )
             );
 
-            // 2. Call APIs
+            // --- Flight Seat Classes ---
+            const seatWithFlightId = flightSeatClasses.map(s => ({ ...s, flightId }));
+            const originalWithFlightId = originalFlightSeatClasses.map(s => ({ ...s, flightId }));
+
+            const deletedSeatClasses = originalWithFlightId.filter(
+                (o) => !seatWithFlightId.some(s => s.seatClassId === o.seatClassId)
+            );
+            const addedSeatClasses = seatWithFlightId.filter(
+                (s) => !originalWithFlightId.some(o => o.seatClassId === s.seatClassId)
+            );
+            const updatedSeatClasses = seatWithFlightId.filter(s =>
+                originalWithFlightId.some(o =>
+                    o.seatClassId === s.seatClassId &&
+                    (o.currentPrice !== s.currentPrice || o.totalTickets !== s.totalTickets)
+                )
+            );
+
             await Promise.all([
+                // Flight Details
                 ...deletedDetails.map((detail) =>
                     deleteFlightDetail(detail.flightId!, detail.mediumAirportId)
                 ),
@@ -287,6 +369,26 @@ const FlightForm: React.FC = () => {
                         stopTime: detail.stopTime,
                         note: detail.note,
                     })
+                ),
+                // Seat Classes
+                ...deletedSeatClasses.map(s => deleteFlightSeatClass(flightId, s.seatClassId!)),
+                ...addedSeatClasses.map(s =>
+                    addFlightSeatClass({
+                        flightId,
+                        seatClassId: s.seatClassId!,
+                        currentPrice: s.currentPrice!,
+                        totalTickets: s.totalTickets!
+                    })
+                ),
+                ...updatedSeatClasses.map(s =>
+                    updateFlightSeatClass(
+                        flightId,
+                        s.seatClassId!,
+                        {
+                            currentPrice: s.currentPrice!,
+                            totalTickets: s.totalTickets!
+                        }
+                    )
                 ),
             ]);
 
@@ -612,10 +714,137 @@ const FlightForm: React.FC = () => {
                                 )}
                         </div>
                     </div>
+                    {/* Seat Classes Section */}
+                    <div className="mb-4">
+                        <h5>Seat Classes</h5>
+                        {flightSeatClasses.map((item, idx) => {
+                            const seatClassError = seatClassErrors[`seatClassId-${idx}`];
+                            const currentPriceError = seatClassErrors[`currentPrice-${idx}`];
+                            const totalTicketsError = seatClassErrors[`totalTickets-${idx}`];
+                            return (
+                                <Row
+                                    key={idx}
+                                    className="p-3 border rounded align-items-start mb-3"
+                                >
+                                    {/* Seat Class Dropdown */}
+                                    <Col>
+                                        <Form.Label>Seat Class {idx + 1}</Form.Label>
+                                        <Form.Select
+                                            value={item.seatClassId}
+                                            onChange={e => {
+                                                const val = Number(e.target.value);
+                                                setFlightSeatClasses(list =>
+                                                    list.map((c, i) =>
+                                                        i === idx ? { ...c, seatClassId: val } : c
+                                                    )
+                                                );
+                                            }}
+                                            isInvalid={!!seatClassError}
+                                            disabled={isSubmitting}
+                                        >
+                                            <option value={0}>Select Seat Class</option>
+                                            {seatClasses.map(sc => (
+                                                <option key={sc.id} value={sc.id}>{sc.seatName}</option>
+                                            ))}
+                                        </Form.Select>
+                                        <Form.Control.Feedback
+                                            type="invalid"
+                                            className={seatClassError ? "d-block" : ""}
+                                        >
+                                            {seatClassError}
+                                        </Form.Control.Feedback>
+                                    </Col>
+                                    {/* Price */}
+                                    <Col xs="auto">
+                                        <Form.Label>Price</Form.Label>
+                                        <InputGroup className="mb-2">
+                                            <Form.Control
+                                                type="number"
+                                                min={0}
+                                                value={item.currentPrice}
+                                                onChange={e => {
+                                                    const val = Number(e.target.value);
+                                                    setFlightSeatClasses(list =>
+                                                        list.map((c, i) =>
+                                                            i === idx ? { ...c, currentPrice: val } : c
+                                                        )
+                                                    );
+                                                }}
+                                                isInvalid={!!currentPriceError}
+                                                disabled={isSubmitting}
+                                                placeholder="Price"
+                                            />
+                                            <InputGroup.Text>$</InputGroup.Text>
+                                        </InputGroup>
+                                        <Form.Control.Feedback
+                                            type="invalid"
+                                            className={currentPriceError ? "d-block" : ""}
+                                        >
+                                            {currentPriceError}
+                                        </Form.Control.Feedback>
+                                    </Col>
+                                    {/* Quantity */}
+                                    <Col xs="auto">
+                                        <Form.Label>Quantity</Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            min={1}
+                                            value={item.totalTickets}
+                                            onChange={e => {
+                                                const val = Number(e.target.value);
+                                                setFlightSeatClasses(list =>
+                                                    list.map((c, i) =>
+                                                        i === idx ? { ...c, totalTickets: val } : c
+                                                    )
+                                                );
+                                            }}
+                                            isInvalid={!!totalTicketsError}
+                                            disabled={isSubmitting}
+                                            placeholder="Quantity"
+                                        />
+                                        <Form.Control.Feedback
+                                            type="invalid"
+                                            className={totalTicketsError ? "d-block" : ""}
+                                        >
+                                            {totalTicketsError}
+                                        </Form.Control.Feedback>
+                                    </Col>
+                                    {/* Delete Button */}
+                                    <Col xs="auto">
+                                        <Form.Group className="h-100">
+                                            <Row>
+                                                <Form.Label>Action</Form.Label>
+                                                <Button
+                                                    variant="danger"
+                                                    type="button"
+                                                    onClick={() => handleDeleteSeatClass(idx)}
+                                                    disabled={isSubmitting}
+                                                >
+                                                    Delete
+                                                </Button>
+                                            </Row>
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
+                            );
+                        })}
+                        {/* Add button for seat classes */}
+                        <div className="mt-2">
+                            <Button
+                                variant="outline-primary"
+                                type="button"
+                                disabled={isSubmitting}
+                                onClick={handleAddSeatClass}
+                                className="d-flex align-items-center"
+                            >
+                                <i className="bi bi-plus-circle me-2"></i> Add Seat Class
+                            </Button>
+                        </div>
+                    </div>
                     {/* Status message if needed */}
-                    {Object.keys(detailErrors).length > 0 && (
+                    {(Object.keys(detailErrors).length > 0 || Object.keys(seatClassErrors).length > 0) && (
                         <div className="alert alert-danger">
-                            Please fix the errors in flight details before submitting
+                            Please fix the errors in flight details and seat classes before submitting
                         </div>
                     )}
                     {/* Action buttons */}
