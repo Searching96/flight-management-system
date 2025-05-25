@@ -1,28 +1,35 @@
 {
-  "name": "sprint01-frontend",
+  "name": "flight-management-system-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest"
   },
   "dependencies": {
     "axios": "^1.8.4",
     "bootstrap": "^5.3.5",
+    "bootstrap-icons": "^1.11.2",
+    "date-fns": "^3.3.1",
+    "lodash": "^4.17.21",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.10",
     "react-bootstrap-typeahead": "^6.4.1",
     "react-clock": "^5.1.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.4",
+    "react-router-bootstrap": "^0.26.3",
     "react-router-dom": "^7.5.1",
-    "react-time-picker": "^7.0.0"
+    "react-time-picker": "^7.0.0",
+    "react-toastify": "^10.0.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
+    "@types/lodash": "^4.14.202",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
@@ -30,6 +37,8 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
-    "vite": "^6.3.1"
+    "typescript": "^5.6.3",
+    "vite": "^6.3.1",
+    "vitest": "^1.6.0"
   }
 }

@@ -1,30 +1,40 @@
-import axios from "axios";
-import { AirportDto } from "../models/Airport";
-import { DOMAIN_URL_DEFAULT, API_URL } from "./config";
+import { apiClient } from './api';
+import { Airport } from '../models';
 
-const BASE_URL = `${DOMAIN_URL_DEFAULT}${API_URL.AIRPORTS}`;
+export class AirportService {
+  private readonly baseUrl = '/airports';
 
-export const listAirports = async (): Promise<AirportDto[]> => {
-  const response = await axios.get<AirportDto[]>(BASE_URL);
-  return response.data;
-};
+  async getAllAirports(): Promise<Airport[]> {
+    return apiClient.get(this.baseUrl);
+  }
 
-export const addAirport = async (
-  airport: Omit<AirportDto, "id">
-): Promise<AirportDto> => {
-  const response = await axios.post<AirportDto>(BASE_URL, airport);
-  return response.data;
-};
+  async getAirportById(id: number): Promise<Airport> {
+    return apiClient.get(`${this.baseUrl}/${id}`);
+  }
 
-export const getAirport = async (id: number): Promise<AirportDto> => {
-  const response = await axios.get<AirportDto>(`${BASE_URL}/${id}`);
-  return response.data;
-};
+  async getAirportsByCity(cityName: string): Promise<Airport[]> {
+    return apiClient.get(`${this.baseUrl}/city/${cityName}`);
+  }
 
-export const updateAirport = async (
-  id: number,
-  airport: Omit<AirportDto, "id">
-): Promise<AirportDto> => {
-  const response = await axios.put<AirportDto>(`${BASE_URL}/${id}`, airport);
-  return response.data;
-};
+  async getAirportsByCountry(countryName: string): Promise<Airport[]> {
+    return apiClient.get(`${this.baseUrl}/country/${countryName}`);
+  }
+
+  async searchAirportsByName(name: string): Promise<Airport[]> {
+    return apiClient.get(`${this.baseUrl}/search/${name}`);
+  }
+
+  async createAirport(airport: Omit<Airport, 'airportId'>): Promise<Airport> {
+    return apiClient.post(this.baseUrl, airport);
+  }
+
+  async updateAirport(id: number, airport: Partial<Airport>): Promise<Airport> {
+    return apiClient.put(`${this.baseUrl}/${id}`, airport);
+  }
+
+  async deleteAirport(id: number): Promise<void> {
+    return apiClient.delete(`${this.baseUrl}/${id}`);
+  }
+}
+
+export const airportService = new AirportService();

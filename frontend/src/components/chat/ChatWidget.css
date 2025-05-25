@@ -1,0 +1,155 @@
+.chat-widget {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 350px;
+  max-height: 500px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.chat-widget.open {
+  height: 450px;
+}
+
+.chat-header {
+  background: #007bff;
+  color: white;
+  padding: 16px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 500;
+}
+
+.chat-header:hover {
+  background: #0056b3;
+}
+
+.chat-icon {
+  font-size: 18px;
+}
+
+.chat-title {
+  flex: 1;
+  margin-left: 8px;
+}
+
+.toggle-icon {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.chat-body {
+  height: 440px;
+  display: flex;
+  flex-direction: column;
+}
+
+.messages-container {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background: #f8f9fa;
+}
+
+.message {
+  margin-bottom: 12px;
+  max-width: 80%;
+}
+
+.message.customer {
+  margin-left: auto;
+}
+
+.message.customer .message-content {
+  background: #007bff;
+  color: white;
+  margin-left: auto;
+}
+
+.message.employee .message-content {
+  background: white;
+  color: #333;
+  border: 1px solid #e5e5e5;
+}
+
+.message-content {
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.message-time {
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.message.employee .message-time {
+  text-align: left;
+}
+
+.message-input {
+  display: flex;
+  padding: 12px;
+  border-top: 1px solid #e5e5e5;
+  background: white;
+}
+
+.message-input input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 14px;
+  outline: none;
+}
+
+.message-input input:focus {
+  border-color: #007bff;
+}
+
+.message-input button {
+  margin-left: 8px;
+  padding: 10px 16px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.message-input button:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.message-input button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .chat-widget {
+    width: calc(100% - 40px);
+    right: 20px;
+    left: 20px;
+  }
+}

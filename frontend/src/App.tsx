@@ -1,62 +1,71 @@
-import './App.css'
-import Airport from './components/Airport'
-import Footer from './components/Footer'
-import Header from './components/Header'
-import Home from './components/Home'
-import ListAirport from './components/ListAirport'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import ListSeatClass from './components/ListSeatClass'
-import SeatClass from './components/SeatClass'
-import ListFlight from './components/ListFlight'
-import ParameterForm from './components/Parameter'
-import FlightForm from './components/FlightForm'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './hooks/useAuth';
+import Layout from './components/layout/Layout';
+import ProtectedRoute from './components/routes/ProtectedRoute';
+import HomePage from './components/home/HomePage';
+import LoginForm from './components/auth/LoginForm';
+import RegisterForm from './components/auth/RegisterForm';
+import FlightSearch from './components/flights/FlightSearch';
+import Dashboard from './components/dashboard/Dashboard';
+import BookingForm from './components/booking/BookingForm';
+import AdminPanel from './components/admin/AdminPanel';
+import ChatWidget from './components/chat/ChatWidget';
+import './App.css';
 
-function App() {
+const App: React.FC = () => {
   return (
-    <>
-      <BrowserRouter>
-        <Header />
-        <main className="container py-4">
-          <Routes>
-            {/* // http://localhost:3000 */}
-            <Route path='/' element={<Home />}></Route>
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <Layout>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginForm />} />
+              <Route path="/register" element={<RegisterForm />} />
+              <Route path="/search" element={<FlightSearch />} />
+              <Route path="/flights" element={<FlightSearch />} />
 
-            {/* // http://localhost:3000/airports */}
-            <Route path='/airports' element={<ListAirport />}></Route>
+              {/* Protected Routes */}
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/book/:flightId" 
+                element={
+                  <ProtectedRoute>
+                    <BookingForm />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Admin Routes */}
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute requiredAccountType={1}>
+                    <AdminPanel />
+                  </ProtectedRoute>
+                } 
+              />
 
-            {/* // http://localhost:3000/add-airport */}
-            <Route path='/add-airport' element={<Airport />}></Route>
+              {/* Fallback Route */}
+              <Route path="*" element={<div>Page not found</div>} />
+            </Routes>
+          </Layout>
+          
+          {/* Chat Widget - Available on all pages for logged-in users */}
+          <ChatWidget />
+        </div>
+      </Router>
+    </AuthProvider>
+  );
+};
 
-            {/* // http://localhost:3000/edit-airport/1 */}
-            <Route path='/edit-airport/:id' element={<Airport />}></Route>
-
-            {/* // http://localhost:3000/seat-classes */}
-            <Route path='/seat-classes' element={<ListSeatClass />}></Route>
-
-            {/* // http://localhost:3000/add-seat-class */}
-            <Route path='/add-seat-class' element={<SeatClass />}></Route>
-
-            {/* // http://localhost:3000/edit-seat-class/id */}
-            <Route path='/edit-seat-class/:id' element={<SeatClass />}></Route>
-
-            {/* // http://localhost:3000/flights */}
-            <Route path='/flights' element={<ListFlight />}></Route>
-
-            {/* // http://localhost:3000/add-flight */}
-            <Route path='/add-flight' element={<FlightForm />}></Route>
-
-            {/* // http://localhost:3000/edit-flight/id */}
-            <Route path="/edit-flight/:id" element={<FlightForm />} />
-
-            {/* // http://localhost:3000/parameter */}
-            <Route path='/parameter' element={<ParameterForm />}></Route>
-
-          </Routes>
-        </main>
-        <Footer />
-      </BrowserRouter>
-    </>
-  )
-}
-
-export default App
+export default App;

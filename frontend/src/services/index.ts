@@ -1,0 +1,12 @@
+export * from './accountService';
+export { flightService, FlightService } from './FlightService';
+export { airportService, AirportService } from './AirportService';
+export { ticketService, TicketService } from './TicketService';
+export { ticketClassService, TicketClassService } from './ticketClassService';
+export { chatService, ChatService } from './chatService';
+export { customerService, CustomerService } from './customerService';
+export { parameterService, ParameterService } from './ParameterService';
+export { passengerService, PassengerService } from './PassengerService';
+export { planeService, PlaneService } from './PlaneService';
+export { demoService, DemoService } from './demoService';
+export { apiClient } from './api';
