@@ -1,12 +1,34 @@
 import { apiClient } from './api';
-import { Flight, FlightSearch, FlightDetail } from '../models';
+import { API_URL } from './config';
+import { Flight, FlightSearch } from '../models';
+
+export interface FlightRequest {
+  flightCode: string;
+  departureTime: string;
+  arrivalTime: string;
+  planeId: number;
+  departureAirportId: number;
+  arrivalAirportId: number;
+}
+
+export interface TicketClassAssignment {
+  ticketClassId: number;
+  ticketQuantity: number;
+  specifiedFare: number;
+}
+
+export interface FlightSearchCriteria {
+  departureAirportId: number;
+  arrivalAirportId: number;
+  departureDate: string;
+  returnDate?: string;
+  passengerCount: number;
+  ticketClassId: number; // Keep this required to match backend
+}
 
 export class FlightService {
-  private readonly baseUrl = '/flights';
-  private readonly flightDetailsUrl = '/flight-details';
-  private readonly flightTicketClassUrl = '/flight-ticket-classes';
+  private readonly baseUrl = API_URL.FLIGHTS;
 
-  // Core Flight operations
   async getAllFlights(): Promise<Flight[]> {
     return apiClient.get(this.baseUrl);
   }
@@ -15,137 +37,89 @@ export class FlightService {
     return apiClient.get(`${this.baseUrl}/${id}`);
   }
 
-  async getFlightByCode(code: string): Promise<Flight> {
-    return apiClient.get(`${this.baseUrl}/code/${code}`);
+  async getFlightByCode(flightCode: string): Promise<Flight> {
+    return apiClient.get(`${this.baseUrl}/code/${flightCode}`);
+  }
+  async searchFlights(criteria: FlightSearchCriteria): Promise<Flight[]> {
+    const params: any = {
+      departureAirportId: criteria.departureAirportId,
+      arrivalAirportId: criteria.arrivalAirportId,
+      departureDate: criteria.departureDate,
+      passengerCount: criteria.passengerCount
+    };
+
+    // Only include ticketClassId if specified and > 0 to avoid 500 errors
+    if (criteria.ticketClassId && criteria.ticketClassId > 0) {
+      params.ticketClassId = criteria.ticketClassId;
+    }
+
+    // Only include returnDate if provided
+    if (criteria.returnDate) {
+      params.returnDate = criteria.returnDate;
+    }
+
+    return apiClient.get(`${this.baseUrl}/search`, { params });
   }
 
-  async createFlight(flight: Omit<Flight, 'flightId'>): Promise<Flight> {
-    return apiClient.post(this.baseUrl, flight);
+  async getFlightsByRoute(
+    departureAirportId: number,
+    arrivalAirportId: number
+  ): Promise<Flight[]> {
+    return apiClient.get(`${this.baseUrl}/route`, { 
+      params: { departureAirportId, arrivalAirportId } 
+    });
   }
 
-  async updateFlight(id: number, flight: Partial<Flight>): Promise<Flight> {
-    return apiClient.put(`${this.baseUrl}/${id}`, flight);
+  async createFlight(flightData: FlightRequest): Promise<Flight> {
+    return apiClient.post(this.baseUrl, flightData);
+  }
+
+  async updateFlight(id: number, flightData: Partial<FlightRequest>): Promise<Flight> {
+    return apiClient.put(`${this.baseUrl}/${id}`, flightData);
   }
 
   async deleteFlight(id: number): Promise<void> {
     return apiClient.delete(`${this.baseUrl}/${id}`);
   }
 
-  // Flight search operations
-  async searchFlights(searchCriteria: FlightSearch): Promise<Flight[]> {
-    return apiClient.post(`${this.baseUrl}/search`, searchCriteria);
+  async getFlightsByAirport(airportId: number): Promise<Flight[]> {
+    return apiClient.get(`${this.baseUrl}/airport/${airportId}`);
   }
 
-  async getFlightsByRoute(
-    departureAirportId: number,
-    arrivalAirportId: number,
-    departureDate: string
-  ): Promise<Flight[]> {
-    return apiClient.get(`${this.baseUrl}/route`, {
-      departureAirportId,
-      arrivalAirportId,
-      departureDate,
-    });
+  async getFlightsByPlane(planeId: number): Promise<Flight[]> {
+    return apiClient.get(`${this.baseUrl}/plane/${planeId}`);
   }
 
   async getFlightsByDateRange(startDate: string, endDate: string): Promise<Flight[]> {
-    return apiClient.get(`${this.baseUrl}/date-range`, { startDate, endDate });
-  }
-
-  async searchFlightsByDate(departureDate: string): Promise<Flight[]> {
-    try {
-      const response = await apiClient.get<Flight[]>('/flights/search/date', {
-        departureDate: departureDate
-      });
-      return response;
-    } catch (error) {
-      console.error('Error searching flights by date:', error);
-      throw error;
-    }
-  }
-
-  // Flight Details operations
-  async getFlightDetailsByFlightId(flightId: number): Promise<FlightDetail[]> {
-    return apiClient.get(`${this.flightDetailsUrl}/flight/${flightId}`);
-  }
-
-  async addFlightDetail(flightDetail: FlightDetail): Promise<FlightDetail> {
-    return apiClient.post(this.flightDetailsUrl, flightDetail);
-  }
-
-  async updateFlightDetail(
-    flightId: number,
-    mediumAirportId: number,
-    detail: Partial<FlightDetail>
-  ): Promise<FlightDetail> {
-    return apiClient.put(`${this.flightDetailsUrl}/${flightId}/${mediumAirportId}`, detail);
-  }
-
-  async deleteFlightDetail(flightId: number, mediumAirportId: number): Promise<void> {
-    return apiClient.delete(`${this.flightDetailsUrl}/${flightId}/${mediumAirportId}`);
-  }
-
-  // Flight Ticket Class operations
-  async getFlightTicketClassesByFlightId(flightId: number): Promise<any[]> {
-    return apiClient.get(`${this.flightTicketClassUrl}/flight/${flightId}`);
-  }
-
-  async addFlightTicketClass(data: {
-    flightId: number;
-    ticketClassId: number;
-    specifiedFare: number;
-    ticketQuantity: number;
-  }): Promise<void> {
-    return apiClient.post(this.flightTicketClassUrl, data);
-  }
-
-  async updateFlightTicketClass(
-    flightId: number,
-    ticketClassId: number,
-    data: {
-      specifiedFare: number;
-      ticketQuantity: number;
-    }
-  ): Promise<void> {
-    return apiClient.put(`${this.flightTicketClassUrl}/${flightId}/${ticketClassId}`, data);
-  }
-
-  async deleteFlightTicketClass(flightId: number, ticketClassId: number): Promise<void> {
-    return apiClient.delete(`${this.flightTicketClassUrl}/${flightId}/${ticketClassId}`);
-  }
-
-  // Additional operations
-  async checkFlightAvailability(
-    flightId: number,
-    ticketClassId: number,
-    requestedSeats: number
-  ): Promise<{ available: boolean; remainingSeats: number; ticketClassName: string }> {
-    return apiClient.get(`${this.baseUrl}/${flightId}/availability/${ticketClassId}`, {
-      seats: requestedSeats
+    return apiClient.get(`${this.baseUrl}/date-range`, {
+      params: { startDate, endDate }
     });
   }
+  async getFlightTicketClassesByFlightId(flightId: number): Promise<any[]> {
+    return apiClient.get(API_URL.FLIGHT_TICKET_CLASS + `/flight/${flightId}`);
+  }
 
-  async getFlightSchedule(
-    startDate: string,
-    endDate: string,
-    airportId?: number
-  ): Promise<Flight[]> {
-    const params: any = { startDate, endDate };
-    if (airportId) params.airportId = airportId;
-    return apiClient.get(`${this.baseUrl}/schedule`, params);
+  async checkFlightAvailability(flightId: number): Promise<any> {
+    return apiClient.get(API_URL.FLIGHT_TICKET_CLASS + `/flight/${flightId}`);
+  }
+
+  async assignTicketClassesToFlight(
+    flightId: number,
+    assignments: TicketClassAssignment[]
+  ): Promise<any[]> {
+    return apiClient.put(API_URL.FLIGHT_TICKET_CLASS + `/flight/${flightId}/bulk`, assignments);
+  }
+
+  async cancelFlight(id: number): Promise<Flight> {
+    return apiClient.patch(`${this.baseUrl}/${id}/cancel`);
+  }
+
+  async delayFlight(id: number, newDepartureTime: string, newArrivalTime: string): Promise<Flight> {
+    return apiClient.patch(`${this.baseUrl}/${id}/delay`, {
+      newDepartureTime,
+      newArrivalTime,
+    });
   }
 }
 
 export const flightService = new FlightService();
-
-export const searchFlightsByDate = async (departureDate: string): Promise<Flight[]> => {
-  try {
-    const response = await apiClient.get<Flight[]>('/flights/search/date', {
-      departureDate: departureDate
-    });
-    return response;
-  } catch (error) {
-    console.error('Error searching flights by date:', error);
-    throw error;
-  }
-};

@@ -1,31 +1,43 @@
 import { Ticket } from './Ticket';
 
 // Account related
-export type { Account, LoginRequest, RegisterRequest, AuthResponse } from './Account';
+export type { Account, LoginRequest, LoginResponse, RegisterRequest } from './Account';
 
 // Flight related
 export type { Flight, FlightSearch } from './Flight';
-export type { FlightDetail } from './FlightDetail';
+export type { FlightDetail, SeatAvailability, BookSeatRequest, SeatMap } from './FlightDetail';
+export type { FlightTicketClass, CreateFlightTicketClassRequest, UpdateFlightTicketClassRequest } from './FlightTicketClass';
 
 // Airport related
-export type { Airport, AirportSearchResult } from './Airport';
+export type { Airport } from './Airport';
 
 // Ticket related
-export type { TicketClass, FlightTicketClass } from './TicketClass';
-export type { Ticket, TicketRequest } from './Ticket';
+export type { TicketClass, TicketClassRequest } from './TicketClass';
+export type { Ticket, TicketRequest, BookingRequest } from './Ticket';
 
 // User related
-export type { Customer, Employee } from './Customer';
+export type { Customer } from './Customer';
+export type { 
+  Employee, 
+  CreateEmployeeRequest, 
+  UpdateEmployeeRequest, 
+  EmployeeLoginRequest, 
+  EmployeeLoginResponse, 
+  ChangePasswordRequest, 
+  EmployeeSearchFilters 
+} from './Employee';
 
 // Chat related
 export type { Chatbox, Message, SendMessageRequest } from './Chat';
-export { MessageType } from './Chat';
 
 // Plane related
 export type { Plane } from './Plane';
 
+// Passenger related
+export type { Passenger, CreatePassengerRequest, UpdatePassengerRequest, Gender } from './Passenger';
+
 // System related
-export type { Parameter, ParameterUpdate } from './Parameter';
+export type { Parameter } from './Parameter';
 
 // Common types
 export interface ApiResponse<T> {
@@ -60,10 +72,6 @@ export interface SearchFilters {
   sortOrder?: 'asc' | 'desc';
 }
 
-// Passenger related
-export type { Passenger, PassengerRequest } from './Passenger';
-
-// Flight Detail related  
 // Demo and utility types
 export interface DemoInfo {
   application: string;
@@ -101,5 +109,3 @@ export interface PaymentResponse {
   transactionId: string;
   message?: string;
 }
-
-export * from './LoginResponse';

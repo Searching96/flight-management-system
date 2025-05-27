@@ -21,49 +21,64 @@ public class ParameterController {
     
     @PutMapping
     public ResponseEntity<ParameterDto> updateParameters(@RequestBody ParameterDto parameterDto) {
+        // This will delete old records and create a new one
         ParameterDto updatedParameters = parameterService.updateParameters(parameterDto);
         return ResponseEntity.ok(updatedParameters);
     }
     
     @PutMapping("/max-medium-airports/{value}")
-    public ResponseEntity<Void> updateMaxMediumAirports(@PathVariable int value) {
+    public ResponseEntity<ParameterDto> updateMaxMediumAirports(@PathVariable int value) {
         parameterService.updateMaxMediumAirports(value);
-        return ResponseEntity.noContent().build();
+        // Return the latest parameters after update
+        ParameterDto latestParameters = parameterService.getParameterSet();
+        return ResponseEntity.ok(latestParameters);
     }
     
     @PutMapping("/min-flight-duration/{value}")
-    public ResponseEntity<Void> updateMinFlightDuration(@PathVariable int value) {
+    public ResponseEntity<ParameterDto> updateMinFlightDuration(@PathVariable int value) {
         parameterService.updateMinFlightDuration(value);
-        return ResponseEntity.noContent().build();
+        // Return the latest parameters after update
+        ParameterDto latestParameters = parameterService.getParameterSet();
+        return ResponseEntity.ok(latestParameters);
     }
     
     @PutMapping("/max-layover-duration/{value}")
-    public ResponseEntity<Void> updateMaxLayoverDuration(@PathVariable int value) {
+    public ResponseEntity<ParameterDto> updateMaxLayoverDuration(@PathVariable int value) {
         parameterService.updateMaxLayoverDuration(value);
-        return ResponseEntity.noContent().build();
+        // Return the latest parameters after update
+        ParameterDto latestParameters = parameterService.getParameterSet();
+        return ResponseEntity.ok(latestParameters);
     }
     
     @PutMapping("/min-layover-duration/{value}")
-    public ResponseEntity<Void> updateMinLayoverDuration(@PathVariable int value) {
+    public ResponseEntity<ParameterDto> updateMinLayoverDuration(@PathVariable int value) {
         parameterService.updateMinLayoverDuration(value);
-        return ResponseEntity.noContent().build();
+        // Return the latest parameters after update
+        ParameterDto latestParameters = parameterService.getParameterSet();
+        return ResponseEntity.ok(latestParameters);
     }
     
     @PutMapping("/min-booking-advance/{value}")
-    public ResponseEntity<Void> updateMinBookingInAdvanceDuration(@PathVariable int value) {
+    public ResponseEntity<ParameterDto> updateMinBookingInAdvanceDuration(@PathVariable int value) {
         parameterService.updateMinBookingInAdvanceDuration(value);
-        return ResponseEntity.noContent().build();
+        // Return the latest parameters after update
+        ParameterDto latestParameters = parameterService.getParameterSet();
+        return ResponseEntity.ok(latestParameters);
     }
     
     @PutMapping("/max-booking-hold/{value}")
-    public ResponseEntity<Void> updateMaxBookingHoldDuration(@PathVariable int value) {
+    public ResponseEntity<ParameterDto> updateMaxBookingHoldDuration(@PathVariable int value) {
         parameterService.updateMaxBookingHoldDuration(value);
-        return ResponseEntity.noContent().build();
+        // Return the latest parameters after update
+        ParameterDto latestParameters = parameterService.getParameterSet();
+        return ResponseEntity.ok(latestParameters);
     }
     
     @PostMapping("/initialize")
-    public ResponseEntity<Void> initializeDefaultParameters() {
+    public ResponseEntity<ParameterDto> initializeDefaultParameters() {
         parameterService.initializeDefaultParameters();
-        return ResponseEntity.noContent().build();
+        // Return the newly created parameters
+        ParameterDto newParameters = parameterService.getParameterSet();
+        return ResponseEntity.ok(newParameters);
     }
 }

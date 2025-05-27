@@ -40,8 +40,8 @@ class ApiClient {
     );
   }
 
-  async get<T = any>(url: string, params?: any): Promise<T> {
-    return this.client.get(url, { params });
+  async get<T = any>(url: string, options?: { params?: any }): Promise<T> {
+    return this.client.get(url, options);
   }
 
   async post<T = any>(url: string, data?: any): Promise<T> {
@@ -52,8 +52,12 @@ class ApiClient {
     return this.client.put(url, data);
   }
 
-  async delete<T = any>(url: string): Promise<T> {
-    return this.client.delete(url);
+  async patch<T = any>(url: string, data?: any): Promise<T> {
+    return this.client.patch(url, data);
+  }
+
+  async delete<T = any>(url: string, config?: any): Promise<T> {
+    return this.client.delete(url, config);
   }
 }
 

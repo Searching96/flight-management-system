@@ -1,7 +1,8 @@
 package com.flightmanagement.service;
 
 import com.flightmanagement.dto.FlightDto;
-import com.flightmanagement.dto.FlightSearchDto;
+import com.flightmanagement.dto.FlightSearchCriteria;
+import com.flightmanagement.dto.FlightTicketClassDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,11 +21,13 @@ public interface FlightService {
     
     FlightDto getFlightByCode(String flightCode);
     
-    List<FlightDto> searchFlights(FlightSearchDto searchDto);
+    List<FlightDto> searchFlights(FlightSearchCriteria searchDto);
     
     List<FlightDto> getFlightsByRoute(Integer departureAirportId, Integer arrivalAirportId, LocalDateTime departureDate);
     
     List<FlightDto> getFlightsByDateRange(LocalDateTime startDate, LocalDateTime endDate);
     
     List<FlightDto> searchFlightsByDate(String departureDate);
+    
+    List<FlightTicketClassDto> checkFlightAvailability(Integer flightId);
 }

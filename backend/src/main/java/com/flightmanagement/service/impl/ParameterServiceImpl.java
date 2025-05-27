@@ -26,7 +26,12 @@ public class ParameterServiceImpl implements ParameterService {
     
     @Override
     public ParameterDto updateParameters(ParameterDto parameterDto) {
+        // Delete all existing parameters first
+        deleteAllExistingParameters();
+        
+        // Create new parameter record
         Parameter parameter = parameterMapper.toEntity(parameterDto);
+        parameter.setId(null); // Ensure new record is created
         parameter.setDeletedAt(null);
         Parameter savedParameter = parameterRepository.save(parameter);
         return parameterMapper.toDto(savedParameter);
@@ -34,48 +39,58 @@ public class ParameterServiceImpl implements ParameterService {
     
     @Override
     public void updateMaxMediumAirports(int maxMediumAirports) {
-        Parameter parameter = getCurrentParameter();
-        parameter.setMaxMediumAirport(maxMediumAirports);
-        parameterRepository.save(parameter);
+        // Delete all existing parameters and create new one
+        ParameterDto currentParams = getParameterSet();
+        currentParams.setMaxMediumAirport(maxMediumAirports);
+        updateParameters(currentParams);
     }
     
     @Override
     public void updateMinFlightDuration(int minFlightDuration) {
-        Parameter parameter = getCurrentParameter();
-        parameter.setMinFlightDuration(minFlightDuration);
-        parameterRepository.save(parameter);
+        // Delete all existing parameters and create new one
+        ParameterDto currentParams = getParameterSet();
+        currentParams.setMinFlightDuration(minFlightDuration);
+        updateParameters(currentParams);
     }
     
     @Override
     public void updateMaxLayoverDuration(int maxLayoverDuration) {
-        Parameter parameter = getCurrentParameter();
-        parameter.setMaxLayoverDuration(maxLayoverDuration);
-        parameterRepository.save(parameter);
+        // Delete all existing parameters and create new one
+        ParameterDto currentParams = getParameterSet();
+        currentParams.setMaxLayoverDuration(maxLayoverDuration);
+        updateParameters(currentParams);
     }
     
     @Override
     public void updateMinLayoverDuration(int minLayoverDuration) {
-        Parameter parameter = getCurrentParameter();
-        parameter.setMinLayoverDuration(minLayoverDuration);
-        parameterRepository.save(parameter);
+        // Delete all existing parameters and create new one
+        ParameterDto currentParams = getParameterSet();
+        currentParams.setMinLayoverDuration(minLayoverDuration);
+        updateParameters(currentParams);
     }
     
     @Override
     public void updateMinBookingInAdvanceDuration(int minBookingInAdvanceDuration) {
-        Parameter parameter = getCurrentParameter();
-        parameter.setMinBookingInAdvanceDuration(minBookingInAdvanceDuration);
-        parameterRepository.save(parameter);
+        // Delete all existing parameters and create new one
+        ParameterDto currentParams = getParameterSet();
+        currentParams.setMinBookingInAdvanceDuration(minBookingInAdvanceDuration);
+        updateParameters(currentParams);
     }
     
     @Override
     public void updateMaxBookingHoldDuration(int maxBookingHoldDuration) {
-        Parameter parameter = getCurrentParameter();
-        parameter.setMaxBookingHoldDuration(maxBookingHoldDuration);
-        parameterRepository.save(parameter);
+        // Delete all existing parameters and create new one
+        ParameterDto currentParams = getParameterSet();
+        currentParams.setMaxBookingHoldDuration(maxBookingHoldDuration);
+        updateParameters(currentParams);
     }
     
     @Override
     public void initializeDefaultParameters() {
+        // Delete all existing parameters first
+        deleteAllExistingParameters();
+        
+        // Create new default parameter record
         Parameter parameter = new Parameter();
         parameter.setMaxMediumAirport(2);
         parameter.setMinFlightDuration(30);
@@ -87,8 +102,8 @@ public class ParameterServiceImpl implements ParameterService {
         parameterRepository.save(parameter);
     }
     
-    private Parameter getCurrentParameter() {
-        return parameterRepository.findLatestParameter()
-            .orElseThrow(() -> new RuntimeException("No parameters found"));
+    private void deleteAllExistingParameters() {
+        // Hard delete all existing parameter records
+        parameterRepository.deleteAll();
     }
 }

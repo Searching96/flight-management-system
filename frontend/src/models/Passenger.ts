@@ -1,20 +1,20 @@
 export interface Passenger {
   passengerId?: number;
-  firstName: string;
-  lastName: string;
-  dateOfBirth: string;
-  gender: 'Male' | 'Female' | 'Other';
+  passengerName: string;
+  email: string;
   citizenId: string;
   phoneNumber: string;
-  email: string;
 }
 
-export interface PassengerRequest {
-  firstName: string;
-  lastName: string;
-  dateOfBirth: string;
-  gender: string;
+export interface CreatePassengerRequest {
+  passengerName: string;
+  email: string;
   citizenId: string;
   phoneNumber: string;
-  email: string;
+}
+
+export interface UpdatePassengerRequest {
+  passengerName?: string;
+  email?: string;
+  phoneNumber?: string;
 }

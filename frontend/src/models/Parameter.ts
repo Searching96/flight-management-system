@@ -1,16 +1,18 @@
 export interface Parameter {
-  parameterId?: number;
+  id?: number;
   maxMediumAirport: number;
   minFlightDuration: number;
-  maxLayoverDuration: number;
   minLayoverDuration: number;
+  maxLayoverDuration: number;
   minBookingInAdvanceDuration: number;
   maxBookingHoldDuration: number;
-  deleted_at?: Date | null;
 }
 
-export interface ParameterUpdate {
-  parameterName: string;
-  value: number;
-  description?: string;
+export interface ParameterUpdateRequest {
+  maxMediumAirport?: number;
+  minFlightDuration?: number;
+  minLayoverDuration?: number;
+  maxLayoverDuration?: number;
+  minBookingInAdvanceDuration?: number;
+  maxBookingHoldDuration?: number;
 }

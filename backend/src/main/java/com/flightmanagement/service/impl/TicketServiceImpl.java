@@ -4,12 +4,13 @@ import com.flightmanagement.dto.BookingDto;
 import com.flightmanagement.dto.FlightTicketClassDto;
 import com.flightmanagement.dto.PassengerDto;
 import com.flightmanagement.dto.TicketDto;
-import com.flightmanagement.entity.Ticket;
+import com.flightmanagement.entity.*;
 import com.flightmanagement.mapper.TicketMapper;
-import com.flightmanagement.repository.TicketRepository;
+import com.flightmanagement.repository.*;
 import com.flightmanagement.service.FlightTicketClassService;
 import com.flightmanagement.service.PassengerService;
 import com.flightmanagement.service.TicketService;
+import com.flightmanagement.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,23 @@ public class TicketServiceImpl implements TicketService {
     @Autowired
     private PassengerService passengerService;
     
+    @Autowired
+    private FlightRepository flightRepository;
+    
+    @Autowired
+    private TicketClassRepository ticketClassRepository;
+    
+    @Autowired
+    private CustomerRepository customerRepository;
+      @Autowired
+    private PassengerRepository passengerRepository;
+    
+    @Autowired
+    private AccountService accountService;
+    
+    @Autowired
+    private AccountRepository accountRepository;
+    
     @Override
     public List<TicketDto> getAllTickets() {
         List<Ticket> tickets = ticketRepository.findAllActive();
@@ -47,11 +65,39 @@ public class TicketServiceImpl implements TicketService {
             .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
         return ticketMapper.toDto(ticket);
     }
-    
-    @Override
+      @Override
     public TicketDto createTicket(TicketDto ticketDto) {
-        Ticket ticket = ticketMapper.toEntity(ticketDto);
+        Ticket ticket = new Ticket();
+        ticket.setSeatNumber(ticketDto.getSeatNumber());
+        ticket.setTicketStatus(ticketDto.getTicketStatus());
+        ticket.setPaymentTime(ticketDto.getPaymentTime());
+        ticket.setFare(ticketDto.getFare());
         ticket.setDeletedAt(null);
+        
+        // Set entity relationships
+        if (ticketDto.getFlightId() != null) {
+            Flight flight = flightRepository.findById(ticketDto.getFlightId())
+                .orElseThrow(() -> new RuntimeException("Flight not found with id: " + ticketDto.getFlightId()));
+            ticket.setFlight(flight);
+        }
+        
+        if (ticketDto.getTicketClassId() != null) {
+            TicketClass ticketClass = ticketClassRepository.findById(ticketDto.getTicketClassId())
+                .orElseThrow(() -> new RuntimeException("TicketClass not found with id: " + ticketDto.getTicketClassId()));
+            ticket.setTicketClass(ticketClass);
+        }
+          if (ticketDto.getBookCustomerId() != null) {
+            Customer customer = customerRepository.findById(ticketDto.getBookCustomerId())
+                .orElseGet(() -> createCustomerFromAccount(ticketDto.getBookCustomerId()));
+            ticket.setBookCustomer(customer);
+        }
+        
+        if (ticketDto.getPassengerId() != null) {
+            Passenger passenger = passengerRepository.findById(ticketDto.getPassengerId())
+                .orElseThrow(() -> new RuntimeException("Passenger not found with id: " + ticketDto.getPassengerId()));
+            ticket.setPassenger(passenger);
+        }
+        
         Ticket savedTicket = ticketRepository.save(ticket);
         return ticketMapper.toDto(savedTicket);
     }
@@ -109,15 +155,29 @@ public class TicketServiceImpl implements TicketService {
         
         List<TicketDto> bookedTickets = new ArrayList<>();
         
+        // Log booking attempt for debugging
+        System.out.println("Booking attempt - Flight: " + bookingDto.getFlightId() + 
+                          ", Class: " + bookingDto.getTicketClassId() + 
+                          ", Passengers: " + bookingDto.getPassengers().size());
+        
         // Check availability first
-        if (!isFlightAvailable(bookingDto.getFlightId(), bookingDto.getTicketClassId(), bookingDto.getPassengers().size())) {
-            throw new RuntimeException("Not enough tickets available for this flight and class");
+        FlightTicketClassDto flightTicketClass = flightTicketClassService.getFlightTicketClassById(
+            bookingDto.getFlightId(), bookingDto.getTicketClassId());
+        
+        System.out.println("Available seats: " + flightTicketClass.getRemainingTicketQuantity());
+        
+        if (flightTicketClass.getRemainingTicketQuantity() < bookingDto.getPassengers().size()) {
+            throw new RuntimeException("Not enough tickets available. Requested: " + 
+                                     bookingDto.getPassengers().size() + 
+                                     ", Available: " + flightTicketClass.getRemainingTicketQuantity());
         }
         
         // Create tickets for each passenger
         for (int i = 0; i < bookingDto.getPassengers().size(); i++) {
             PassengerDto passengerDto = bookingDto.getPassengers().get(i);
-            String seatNumber = bookingDto.getSeatNumbers().get(i);
+            String seatNumber = (bookingDto.getSeatNumbers() != null && i < bookingDto.getSeatNumbers().size()) 
+                               ? bookingDto.getSeatNumbers().get(i) 
+                               : generateSeatNumber(flightTicketClass.getTicketClassName(), i);
             
             // Ensure passenger exists or create new one
             PassengerDto existingPassenger = getOrCreatePassenger(passengerDto);
@@ -129,8 +189,8 @@ public class TicketServiceImpl implements TicketService {
             ticketDto.setBookCustomerId(bookingDto.getCustomerId());
             ticketDto.setPassengerId(existingPassenger.getPassengerId());
             ticketDto.setSeatNumber(seatNumber);
-            ticketDto.setFare(calculateFare(bookingDto.getFlightId(), bookingDto.getTicketClassId()));
-            ticketDto.setTicketStatus((byte) 0); // 0: booked, not paid
+            ticketDto.setFare(flightTicketClass.getSpecifiedFare());
+            ticketDto.setTicketStatus((byte) 2); // 2: unpaid (default)
             
             TicketDto createdTicket = createTicket(ticketDto);
             bookedTickets.add(createdTicket);
@@ -143,7 +203,15 @@ public class TicketServiceImpl implements TicketService {
             bookingDto.getPassengers().size()
         );
         
+        System.out.println("Booking successful - Created " + bookedTickets.size() + " tickets");
+        
         return bookedTickets;
+    }
+
+    private String generateSeatNumber(String className, int index) {
+        String prefix = className.equals("Economy") ? "E" : 
+                       className.equals("Business") ? "B" : "F";
+        return prefix + String.format("%02d", index + 1);
     }
     
     private void validateBookingRequest(BookingDto bookingDto) {
@@ -151,16 +219,23 @@ public class TicketServiceImpl implements TicketService {
             throw new IllegalArgumentException("At least one passenger is required");
         }
         
-        if (bookingDto.getSeatNumbers() == null || 
-            bookingDto.getSeatNumbers().size() != bookingDto.getPassengers().size()) {
-            throw new IllegalArgumentException("Number of seat numbers must match number of passengers");
+        // Only validate seat numbers if they are provided
+        if (bookingDto.getSeatNumbers() != null && !bookingDto.getSeatNumbers().isEmpty()) {
+            if (bookingDto.getSeatNumbers().size() != bookingDto.getPassengers().size()) {
+                throw new IllegalArgumentException("Number of seat numbers must match number of passengers");
+            }
+            
+            // Check seat availability only for provided seat numbers
+            for (String seatNumber : bookingDto.getSeatNumbers()) {
+                if (!isSeatAvailable(bookingDto.getFlightId(), seatNumber)) {
+                    throw new IllegalArgumentException("Seat " + seatNumber + " is already taken");
+                }
+            }
         }
         
-        // Check seat availability
-        for (String seatNumber : bookingDto.getSeatNumbers()) {
-            if (!isSeatAvailable(bookingDto.getFlightId(), seatNumber)) {
-                throw new IllegalArgumentException("Seat " + seatNumber + " is already taken");
-            }
+        // Validate flight and ticket class availability
+        if (!isFlightAvailable(bookingDto.getFlightId(), bookingDto.getTicketClassId(), bookingDto.getPassengers().size())) {
+            throw new IllegalArgumentException("Flight or ticket class not available for the requested number of passengers");
         }
     }
     
@@ -206,9 +281,29 @@ public class TicketServiceImpl implements TicketService {
         ticket.setTicketStatus((byte) 3); // 3: canceled
         ticketRepository.save(ticket);
     }
-    
-    @Override
+      @Override
     public boolean isSeatAvailable(Integer flightId, String seatNumber) {
         return ticketRepository.findByFlightIdAndSeatNumber(flightId, seatNumber).isEmpty();
+    }
+    
+    /**
+     * Creates a Customer entity from an existing Account
+     */
+    private Customer createCustomerFromAccount(Integer accountId) {
+        Account account = accountRepository.findById(accountId)
+            .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
+        
+        // Verify this is a customer account (accountType = 1)
+        if (account.getAccountType() != 1) {
+            throw new RuntimeException("Account " + accountId + " is not a customer account");
+        }
+        
+        Customer customer = new Customer();
+        customer.setCustomerId(accountId);
+        customer.setAccount(account);
+        customer.setScore(0); // Default score
+        customer.setDeletedAt(null);
+        
+        return customerRepository.save(customer);
     }
 }

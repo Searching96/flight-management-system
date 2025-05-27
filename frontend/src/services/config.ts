@@ -1,4 +1,5 @@
-export const DOMAIN_URL_DEFAULT = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+export const DOMAIN_URL_DEFAULT = 'http://localhost:8080';
+// process.env.REACT_APP_API_URL || ;
 
 export const API_URL = {
   // Authentication

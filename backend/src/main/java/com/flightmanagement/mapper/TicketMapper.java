@@ -42,8 +42,7 @@ public class TicketMapper implements BaseMapper<Ticket, TicketDto> {
         
         return dto;
     }
-    
-    @Override
+      @Override
     public Ticket toEntity(TicketDto dto) {
         if (dto == null) return null;
         
@@ -53,6 +52,10 @@ public class TicketMapper implements BaseMapper<Ticket, TicketDto> {
         entity.setTicketStatus(dto.getTicketStatus());
         entity.setPaymentTime(dto.getPaymentTime());
         entity.setFare(dto.getFare());
+        
+        // Set entity relationships based on IDs (these will be populated by the service layer)
+        // The service layer should handle setting the actual entity references
+        
         return entity;
     }
     

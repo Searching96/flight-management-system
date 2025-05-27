@@ -1,7 +1,8 @@
 package com.flightmanagement.service.impl;
 
 import com.flightmanagement.dto.FlightDto;
-import com.flightmanagement.dto.FlightSearchDto;
+import com.flightmanagement.dto.FlightSearchCriteria;
+import com.flightmanagement.dto.FlightTicketClassDto;
 import com.flightmanagement.dto.ParameterDto;
 import com.flightmanagement.entity.Flight;
 import com.flightmanagement.mapper.FlightMapper;
@@ -83,13 +84,38 @@ public class FlightServiceImpl implements FlightService {
     }
     
     @Override
-    public List<FlightDto> searchFlights(FlightSearchDto searchDto) {
-        List<Flight> flights = flightRepository.findFlights(
-            searchDto.getDepartureAirportId(),
-            searchDto.getArrivalAirportId(),
-            searchDto.getDepartureDate()
-        );
-        return flightMapper.toDtoList(flights);
+    public List<FlightDto> searchFlights(FlightSearchCriteria criteria) {
+        System.out.println("FlightService.searchFlights called with criteria: " + criteria);
+        
+        try {
+            List<Flight> flights;
+            
+            if (criteria.getTicketClassId() != null && criteria.getTicketClassId() > 0) {
+                // Search flights with specific ticket class availability
+                flights = flightRepository.findFlightsWithTicketClass(
+                    criteria.getDepartureAirportId(),
+                    criteria.getArrivalAirportId(),
+                    criteria.getDepartureDate(),
+                    criteria.getTicketClassId(),
+                    criteria.getPassengerCount()
+                );
+            } else {
+                // Search all flights on route regardless of ticket class
+                flights = flightRepository.findFlightsByRoute(
+                    criteria.getDepartureAirportId(),
+                    criteria.getArrivalAirportId(),
+                    criteria.getDepartureDate()
+                );
+            }
+            
+            System.out.println("Found " + flights.size() + " flights in database");
+            return flightMapper.toDtoList(flights);
+            
+        } catch (Exception e) {
+            System.err.println("Error in searchFlights: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to search flights", e);
+        }
     }
     
     @Override
@@ -144,6 +170,27 @@ public class FlightServiceImpl implements FlightService {
             throw new IllegalArgumentException("Flight code already exists: " + flightDto.getFlightCode());
         } catch (RuntimeException e) {
             // Flight code doesn't exist, which is good
+        }
+    }
+    
+    private boolean hasAvailableSeats(Integer flightId, Integer ticketClassId, Integer passengerCount) {
+        // Check if flight has enough available seats for the specified class
+        return flightRepository.checkSeatAvailability(flightId, ticketClassId, passengerCount);
+    }
+    
+    @Override
+    public List<FlightTicketClassDto> checkFlightAvailability(Integer flightId) {
+        // Get flight ticket class information for the given flight
+        try {
+            Flight flight = flightRepository.findActiveById(flightId)
+                .orElseThrow(() -> new RuntimeException("Flight not found with id: " + flightId));
+            
+            // Return the flight ticket class information - this would be implemented 
+            // once we have the FlightTicketClassService properly set up
+            // For now, return empty list to allow compilation
+            return List.of();
+        } catch (Exception e) {
+            throw new RuntimeException("Error checking flight availability: " + e.getMessage());
         }
     }
 }

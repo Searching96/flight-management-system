@@ -1,16 +1,9 @@
 package com.flightmanagement.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 public class PassengerDto {
-    
     private Integer passengerId;
     private String passengerName;
     private String email;

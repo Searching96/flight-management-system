@@ -3,7 +3,6 @@ export interface Airport {
   airportName: string;
   cityName: string;
   countryName: string;
-  deleted_at?: Date | null;
 }
 
 export interface AirportSearchResult extends Airport {

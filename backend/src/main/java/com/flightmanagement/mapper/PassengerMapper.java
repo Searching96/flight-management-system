@@ -8,24 +8,26 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-public class PassengerMapper implements BaseMapper<Passenger, PassengerDto> {
+public class PassengerMapper {
     
-    @Override
     public PassengerDto toDto(Passenger entity) {
-        if (entity == null) return null;
+        if (entity == null) {
+            return null;
+        }
         
-        return new PassengerDto(
-            entity.getPassengerId(),
-            entity.getPassengerName(),
-            entity.getEmail(),
-            entity.getCitizenId(),
-            entity.getPhoneNumber()
-        );
+        PassengerDto dto = new PassengerDto();
+        dto.setPassengerId(entity.getPassengerId());
+        dto.setPassengerName(entity.getPassengerName());
+        dto.setEmail(entity.getEmail());
+        dto.setCitizenId(entity.getCitizenId());
+        
+        return dto;
     }
     
-    @Override
     public Passenger toEntity(PassengerDto dto) {
-        if (dto == null) return null;
+        if (dto == null) {
+            return null;
+        }
         
         Passenger entity = new Passenger();
         entity.setPassengerId(dto.getPassengerId());
@@ -36,13 +38,23 @@ public class PassengerMapper implements BaseMapper<Passenger, PassengerDto> {
         return entity;
     }
     
-    @Override
-    public List<PassengerDto> toDtoList(List<Passenger> entityList) {
-        return entityList.stream().map(this::toDto).collect(Collectors.toList());
+    public List<PassengerDto> toDtoList(List<Passenger> entities) {
+        if (entities == null) {
+            return null;
+        }
+        
+        return entities.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
     
-    @Override
-    public List<Passenger> toEntityList(List<PassengerDto> dtoList) {
-        return dtoList.stream().map(this::toEntity).collect(Collectors.toList());
+    public List<Passenger> toEntityList(List<PassengerDto> dtos) {
+        if (dtos == null) {
+            return null;
+        }
+        
+        return dtos.stream()
+                .map(this::toEntity)
+                .collect(Collectors.toList());
     }
 }

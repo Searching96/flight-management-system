@@ -13,9 +13,6 @@ export interface Plane {
   planeCode: string;
   planeType: string;
   seatQuantity: number;
-  manufacturer?: string;
-  yearManufactured?: number;
-  status?: 'ACTIVE' | 'MAINTENANCE' | 'RETIRED';
 }
 
 // Keep legacy interface for backward compatibility

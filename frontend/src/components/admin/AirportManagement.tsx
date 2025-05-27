@@ -3,6 +3,8 @@ import { useForm } from 'react-hook-form';
 import { airportService } from '../../services';
 import { Airport } from '../../models';
 import './AirportManagement.css';
+import TypeAhead from '../common/TypeAhead';
+import { usePermissions } from '../../hooks/useAuth';
 
 interface AirportFormData {
   airportName: string;
@@ -11,11 +13,22 @@ interface AirportFormData {
 }
 
 const AirportManagement: React.FC = () => {
+  const { canViewAdmin } = usePermissions();
+  if (!canViewAdmin) {
+    return (
+      <div className="unauthorized">
+        <h2>Access Denied</h2>
+        <p>You do not have permission to access airport management.</p>
+      </div>
+    );
+  }
+
   const [airports, setAirports] = useState<Airport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingAirport, setEditingAirport] = useState<Airport | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<string>('');
 
   const {
     register,
@@ -23,6 +36,25 @@ const AirportManagement: React.FC = () => {
     reset,
     formState: { errors }
   } = useForm<AirportFormData>();
+
+  // Country options for TypeAhead
+  const countryOptions = [
+    { value: 'Vietnam', label: 'Vietnam' },
+    { value: 'United States', label: 'United States' },
+    { value: 'United Kingdom', label: 'United Kingdom' },
+    { value: 'China', label: 'China' },
+    { value: 'Japan', label: 'Japan' },
+    { value: 'South Korea', label: 'South Korea' },
+    { value: 'Singapore', label: 'Singapore' },
+    { value: 'Thailand', label: 'Thailand' },
+    { value: 'Malaysia', label: 'Malaysia' },
+    { value: 'Indonesia', label: 'Indonesia' },
+    { value: 'Philippines', label: 'Philippines' },
+    { value: 'Australia', label: 'Australia' },
+    { value: 'France', label: 'France' },
+    { value: 'Germany', label: 'Germany' },
+    { value: 'Canada', label: 'Canada' }
+  ];
 
   useEffect(() => {
     loadAirports();
@@ -57,6 +89,7 @@ const AirportManagement: React.FC = () => {
 
   const handleEdit = (airport: Airport) => {
     setEditingAirport(airport);
+    setSelectedCountry(airport.countryName || '');
     reset({
       airportName: airport.airportName,
       cityName: airport.cityName,
@@ -79,6 +112,7 @@ const AirportManagement: React.FC = () => {
   const handleCancel = () => {
     setShowForm(false);
     setEditingAirport(null);
+    setSelectedCountry('');
     reset();
     setError('');
   };
@@ -105,26 +139,26 @@ const AirportManagement: React.FC = () => {
         <div className="form-modal">
           <div className="form-container">
             <h3>{editingAirport ? 'Edit Airport' : 'Add New Airport'}</h3>
-            
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <div className="form-group">
-                <label>Airport Name</label>
-                <input
-                  type="text"
-                  {...register('airportName', {
-                    required: 'Airport name is required'
-                  })}
-                  className={errors.airportName ? 'error' : ''}
-                  placeholder="e.g., John F. Kennedy International Airport"
-                />
-                {errors.airportName && (
-                  <span className="field-error">{errors.airportName.message}</span>
-                )}
-              </div>
 
+            <form onSubmit={handleSubmit(onSubmit)}>
               <div className="form-row">
                 <div className="form-group">
-                  <label>City</label>
+                  <label>Airport Name</label>
+                  <input
+                    type="text"
+                    {...register('airportName', {
+                      required: 'Airport name is required'
+                    })}
+                    className={errors.airportName ? 'error' : ''}
+                    placeholder="e.g., John F. Kennedy International Airport"
+                  />
+                  {errors.airportName && (
+                    <span className="field-error">{errors.airportName.message}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>City Name</label>
                   <input
                     type="text"
                     {...register('cityName', {
@@ -140,13 +174,22 @@ const AirportManagement: React.FC = () => {
 
                 <div className="form-group">
                   <label>Country</label>
+                  <TypeAhead
+                    options={countryOptions}
+                    value={selectedCountry}
+                    onChange={(option) => {
+                      const country = option?.value || '';
+                      setSelectedCountry(String(country));
+                    }}
+                    placeholder="Search country..."
+                    error={!!errors.countryName}
+                  />
                   <input
-                    type="text"
+                    type="hidden"
                     {...register('countryName', {
-                      required: 'Country name is required'
+                      required: 'Country is required'
                     })}
-                    className={errors.countryName ? 'error' : ''}
-                    placeholder="e.g., United States"
+                    value={selectedCountry}
                   />
                   {errors.countryName && (
                     <span className="field-error">{errors.countryName.message}</span>

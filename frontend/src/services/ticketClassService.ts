@@ -1,40 +1,38 @@
 import { apiClient } from './api';
-import { TicketClass } from '../models';
+import { TicketClass, TicketClassRequest } from '../models';
 
 export class TicketClassService {
   private readonly baseUrl = '/ticket-classes';
 
+  // Get all ticket classes
   async getAllTicketClasses(): Promise<TicketClass[]> {
     return apiClient.get(this.baseUrl);
   }
 
+  // Get ticket class by ID
   async getTicketClassById(id: number): Promise<TicketClass> {
     return apiClient.get(`${this.baseUrl}/${id}`);
   }
 
-  async createTicketClass(ticketClass: Omit<TicketClass, 'ticketClassId'>): Promise<TicketClass> {
-    return apiClient.post(this.baseUrl, ticketClass);
+  // Create new ticket class
+  async createTicketClass(ticketClassData: TicketClassRequest): Promise<TicketClass> {
+    return apiClient.post(this.baseUrl, ticketClassData);
   }
 
-  async updateTicketClass(id: number, ticketClass: Partial<TicketClass>): Promise<TicketClass> {
-    return apiClient.put(`${this.baseUrl}/${id}`, ticketClass);
+  // Update ticket class
+  async updateTicketClass(id: number, ticketClassData: Partial<TicketClass>): Promise<TicketClass> {
+    return apiClient.put(`${this.baseUrl}/${id}`, ticketClassData);
   }
 
+  // Delete ticket class
   async deleteTicketClass(id: number): Promise<void> {
     return apiClient.delete(`${this.baseUrl}/${id}`);
+  }
+
+  // Search ticket classes
+  async searchTicketClasses(query: string): Promise<TicketClass[]> {
+    return apiClient.get(`${this.baseUrl}/search`, { params: { q: query } });
   }
 }
 
 export const ticketClassService = new TicketClassService();
-
-// Legacy exports for backward compatibility
-export const addTicketClass = (data: Omit<TicketClass, 'ticketClassId'>) => 
-  ticketClassService.createTicketClass(data);
-export const getTicketClass = (id: number) => 
-  ticketClassService.getTicketClassById(id);
-export const updateTicketClass = (id: number, data: Partial<TicketClass>) => 
-  ticketClassService.updateTicketClass(id, data);
-export const listTicketClasses = () => 
-  ticketClassService.getAllTicketClasses();
-export const deleteTicketClass = (id: number) => 
-  ticketClassService.deleteTicketClass(id);

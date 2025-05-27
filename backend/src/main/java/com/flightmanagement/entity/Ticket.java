@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "ticket")
 public class Ticket {
-    
-    @Id
+      @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ticket_id")
     private Integer ticketId;
     

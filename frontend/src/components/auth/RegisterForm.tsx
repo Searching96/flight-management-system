@@ -32,12 +32,11 @@ const RegisterForm: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      
-      const { confirmPassword, ...registerData } = data;
-      // Set account type to customer (type 2)
+        const { confirmPassword, ...registerData } = data;
+      // Set account type to customer (type 1) - matches backend schema
       const registerRequest = {
         ...registerData,
-        accountType: 2
+        accountType: 1
       };
       
       await registerUser(registerRequest);

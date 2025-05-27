@@ -46,7 +46,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(false);
     }
   };
-
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
@@ -54,14 +53,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Map the response to match frontend Account interface
       const userAccount: Account = {
-        accountId: response.user.id,
-        accountName: response.user.accountName,
-        email: response.user.email,
-        accountType: response.user.accountType
+        accountId: response.accountId,
+        accountName: response.accountName,
+        email: response.email,
+        accountType: response.accountType
       };
       
       setUser(userAccount);
-      localStorage.setItem('authToken', response.token);
+      if (response.token) {
+        localStorage.setItem('authToken', response.token);
+      }
       localStorage.setItem('userAccount', JSON.stringify(userAccount));
     } catch (error) {
       throw error;
@@ -73,9 +74,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (registerRequest: RegisterRequest) => {
     await accountService.register(registerRequest);
   };
-
   const logout = () => {
     localStorage.removeItem('userAccount');
+    localStorage.removeItem('authToken');
     setUser(null);
   };
 
@@ -92,4 +93,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
+};
+
+// Fix permission checking to match database schema
+export const usePermissions = () => {
+  const { user } = useAuth();
+  
+  return {
+    canViewAdmin: user?.accountType === 2,        // Employee per database schema
+    canManageFlights: user?.accountType === 2,    // Employee per database schema
+    canBookTickets: user?.accountType === 1,      // Customer per database schema
+    canViewOwnBookings: !!user,
+    canManageEmployees: user?.accountType === 2,
+    canManageCustomers: user?.accountType === 2,
+    canViewReports: user?.accountType === 2
+  };
 };

@@ -26,10 +26,10 @@ const Header: React.FC = () => {
             <span>FlightMS</span>
           </Link>
 
-          <nav className={`nav ${mobileMenuOpen ? 'nav-open' : ''}`}>
-            <ul className="nav-list">
+          <nav className={`nav ${mobileMenuOpen ? 'nav-open' : ''}`}>            <ul className="nav-list">
               <li><Link to="/" className="nav-link">Home</Link></li>
               <li><Link to="/search" className="nav-link">Search Flights</Link></li>
+              <li><Link to="/booking-lookup" className="nav-link">Manage Booking</Link></li>
               
               {user ? (
                 <>

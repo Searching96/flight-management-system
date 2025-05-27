@@ -38,14 +38,14 @@ public class TicketController {
             return ResponseEntity.badRequest().body("Invalid date format. Please use yyyy-MM-ddTHH:mm:ss format for datetime fields.");
         }
     }
-    
-    @PostMapping("/book")
+      @PostMapping("/book")
     public ResponseEntity<?> bookTickets(@RequestBody BookingDto bookingDto) {
         try {
             List<TicketDto> bookedTickets = ticketService.bookTickets(bookingDto);
             return new ResponseEntity<>(bookedTickets, HttpStatus.CREATED);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Invalid date format. Please use yyyy-MM-ddTHH:mm:ss format for datetime fields.");
+            e.printStackTrace(); // For debugging
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
     

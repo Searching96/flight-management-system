@@ -1,10 +1,8 @@
 export interface LoginResponseDto {
-  token: string;
-  user: {
-    id: number;
-    email: string;
-    accountName: string;
-    accountType: number;
-  };
+  accountId: number;
+  accountName: string;
+  email: string;
+  accountType: number;
+  token: string | null;
   message?: string;
 }

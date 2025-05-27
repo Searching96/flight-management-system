@@ -1,19 +1,20 @@
 export interface Chatbox {
   chatboxId?: number;
-  customerId: number;
+  customerId?: number;
   customerName?: string;
-  employeeId: number;
+  employeeId?: number;
   employeeName?: string;
   lastMessageTime?: string;
+  lastMessageContent?: string;
   unreadCount?: number;
 }
 
 export interface Message {
   messageId?: number;
-  chatboxId: number;
-  messageType: number;
+  chatboxId?: number;
+  messageType: number; // 1: customer to employee, 2: employee to customer
   content: string;
-  sendTime: string;
+  sendTime?: string;
   senderName?: string;
   isFromCustomer?: boolean;
 }
@@ -22,9 +23,4 @@ export interface SendMessageRequest {
   chatboxId: number;
   content: string;
   messageType: number;
-}
-
-export enum MessageType {
-  CUSTOMER = 1,
-  EMPLOYEE = 2
 }

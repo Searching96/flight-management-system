@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import com.flightmanagement.entity.composite.FlightTicketClassId;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,15 +34,39 @@ public class FlightTicketClass {
     @JoinColumn(name = "ticket_class_id", insertable = false, updatable = false)
     private TicketClass ticketClass;
     
-    @Column(name = "ticket_quantity", nullable = false)
+    @Column(name = "ticket_quantity")
     private Integer ticketQuantity;
     
-    @Column(name = "remaining_ticket_quantity", nullable = false)
+    @Column(name = "remaining_ticket_quantity")
     private Integer remainingTicketQuantity;
     
-    @Column(name = "specified_fare", nullable = false, precision = 10, scale = 2)
+    @Column(name = "specified_fare", precision = 10, scale = 2)
     private BigDecimal specifiedFare;
     
     @Column(name = "deletedAt")
     private LocalDateTime deletedAt;
+}
+
+// Composite key class
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+class FlightTicketClassId implements java.io.Serializable {
+    private Integer flightId;
+    private Integer ticketClassId;
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FlightTicketClassId that = (FlightTicketClassId) o;
+        return java.util.Objects.equals(flightId, that.flightId) && 
+               java.util.Objects.equals(ticketClassId, that.ticketClassId);
+    }
+    
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(flightId, ticketClassId);
+    }
 }

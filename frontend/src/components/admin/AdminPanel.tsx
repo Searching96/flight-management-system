@@ -2,22 +2,44 @@ import React, { useState } from 'react';
 import FlightManagement from './FlightManagement';
 import AirportManagement from './AirportManagement';
 import ParameterSettings from './ParameterSettings';
+import PlaneManagement from './PlaneManagement';
+import TicketClassManagement from './TicketClassManagement';
+import FlightTicketClassManagement from './FlightTicketClassManagement';
 import './AdminPanel.css';
+import { usePermissions } from '../../hooks/useAuth';
 
-type AdminTab = 'flights' | 'airports' | 'parameters' | 'overview';
+type AdminTab = 'overview' | 'flights' | 'airports' | 'planes' | 'ticket-classes' | 'flight-ticket-classes' | 'parameters';
 
-const AdminPanel: React.FC = () => {
+export const AdminPanel: React.FC = () => {
+  const { canViewAdmin, canManageFlights } = usePermissions();
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
 
-  const renderTabContent = () => {
+  // Redirect if user doesn't have admin permissions (accountType should be 2 for employees)
+  if (!canViewAdmin) {
+    return (
+      <div className="unauthorized">
+        <h2>Access Denied</h2>
+        <p>You do not have permission to access the admin panel.</p>
+      </div>
+    );
+  }
+
+  const renderContent = () => {
     switch (activeTab) {
+      case 'overview':
+        return <AdminOverview />;
       case 'flights':
         return <FlightManagement />;
       case 'airports':
         return <AirportManagement />;
+      case 'planes':
+        return <PlaneManagement />;
+      case 'ticket-classes':
+        return <TicketClassManagement />;
+      case 'flight-ticket-classes':
+        return <FlightTicketClassManagement />;
       case 'parameters':
         return <ParameterSettings />;
-      case 'overview':
       default:
         return <AdminOverview />;
     }
@@ -30,7 +52,7 @@ const AdminPanel: React.FC = () => {
         <p>Manage flights, airports, and system settings</p>
       </div>
 
-      <div className="admin-navigation">
+      <nav className="admin-nav">
         <button
           className={activeTab === 'overview' ? 'active' : ''}
           onClick={() => setActiveTab('overview')}
@@ -50,15 +72,33 @@ const AdminPanel: React.FC = () => {
           🏢 Airports
         </button>
         <button
+          className={activeTab === 'planes' ? 'active' : ''}
+          onClick={() => setActiveTab('planes')}
+        >
+          🛩️ Aircraft Fleet
+        </button>
+        <button
+          className={activeTab === 'ticket-classes' ? 'active' : ''}
+          onClick={() => setActiveTab('ticket-classes')}
+        >
+          🎟️ Ticket Classes
+        </button>
+        <button
+          className={activeTab === 'flight-ticket-classes' ? 'active' : ''}
+          onClick={() => setActiveTab('flight-ticket-classes')}
+        >
+          ✈️🎟️ Flight Class Assignment
+        </button>
+        <button
           className={activeTab === 'parameters' ? 'active' : ''}
           onClick={() => setActiveTab('parameters')}
         >
           ⚙️ Settings
         </button>
-      </div>
+      </nav>
 
       <div className="admin-content">
-        {renderTabContent()}
+        {renderContent()}
       </div>
     </div>
   );

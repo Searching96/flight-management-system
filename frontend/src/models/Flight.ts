@@ -1,25 +1,44 @@
+import { FlightTicketClass } from './FlightTicketClass';
+
 export interface Flight {
-  flightId?: number;
+  flightId: number;
   flightCode: string;
   departureTime: string; // ISO string format
   arrivalTime: string; // ISO string format
   planeId: number;
   planeCode?: string;
-  planeModel?: string;
   departureAirportId: number;
   departureAirportName?: string;
   departureCityName?: string;
-  departureCountryName?: string;
   arrivalAirportId: number;
   arrivalAirportName?: string;
   arrivalCityName?: string;
-  arrivalCountryName?: string;
+  flightTicketClasses?: FlightTicketClass[];
+}
+
+export interface FlightRequest {
+  flightCode: string;
+  departureTime: string;
+  arrivalTime: string;
+  planeId: number;
+  departureAirportId: number;
+  arrivalAirportId: number;
 }
 
 export interface FlightSearch {
   departureAirportId: number;
   arrivalAirportId: number;
-  departureDate: string; // YYYY-MM-DD format
-  passengerCount?: number;
-  ticketClassId?: number;
+  departureDate: string;
+  returnDate?: string;
+  passengers: number;
+  ticketClassId: number;
+  isRoundTrip?: boolean;
+}
+
+// Additional interfaces
+export interface FlightDetail {
+  flightId: number;
+  mediumAirportId: number;
+  arrivalTime: string;
+  departureTime: string;
 }

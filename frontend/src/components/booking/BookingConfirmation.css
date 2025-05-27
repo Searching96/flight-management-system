@@ -1,0 +1,300 @@
+/* BookingConfirmation.css */
+.booking-confirmation {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.confirmation-header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  border-radius: 12px;
+}
+
+.success-icon {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+.confirmation-header h1 {
+  margin: 0 0 10px 0;
+  font-size: 2.5rem;
+  font-weight: 600;
+}
+
+.success-message {
+  margin: 0;
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.confirmation-details {
+  margin-bottom: 30px;
+}
+
+.confirmation-code-section {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px solid #e9ecef;
+}
+
+.confirmation-code-section h2 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.confirmation-code {
+  font-family: 'Courier New', monospace;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #007bff;
+  background: white;
+  padding: 15px 25px;
+  border: 2px dashed #007bff;
+  border-radius: 8px;
+  margin: 15px 0;
+  letter-spacing: 2px;
+}
+
+.code-warning {
+  margin: 15px 0 0 0;
+  padding: 10px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  color: #856404;
+  font-size: 0.9rem;
+}
+
+.booking-summary {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.booking-summary h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 1.4rem;
+  border-bottom: 2px solid #dee2e6;
+  padding-bottom: 10px;
+}
+
+.detail-section {
+  margin-bottom: 25px;
+}
+
+.detail-section h4 {
+  margin: 0 0 15px 0;
+  color: #495057;
+  font-size: 1.2rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.detail-item.total-amount {
+  grid-column: 1 / -1;
+  background: #e8f5e8;
+  border-color: #4CAF50;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.detail-item .label {
+  font-weight: 500;
+  color: #666;
+}
+
+.detail-item .value {
+  font-weight: 600;
+  color: #333;
+}
+
+.passenger-list {
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  overflow: hidden;
+}
+
+.passenger-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 15px;
+  align-items: center;
+  padding: 12px 15px;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.passenger-item:last-child {
+  border-bottom: none;
+}
+
+.passenger-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.seat-number {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.ticket-fare {
+  font-weight: 600;
+  color: #007bff;
+}
+
+.confirmation-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.confirmation-actions .btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #545b62;
+}
+
+.next-steps {
+  background: #e7f3ff;
+  border: 1px solid #b3d9ff;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.next-steps h3 {
+  margin: 0 0 15px 0;
+  color: #004085;
+  font-size: 1.3rem;
+}
+
+.next-steps ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.next-steps li {
+  margin-bottom: 8px;
+  color: #004085;
+  line-height: 1.5;
+}
+
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #f5c6cb;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .booking-confirmation {
+    margin: 10px;
+    padding: 15px;
+  }
+  
+  .confirmation-header h1 {
+    font-size: 2rem;
+  }
+  
+  .confirmation-code {
+    font-size: 1.5rem;
+    padding: 12px 20px;
+  }
+  
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .passenger-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: center;
+  }
+  
+  .confirmation-actions {
+    flex-direction: column;
+  }
+  
+  .confirmation-actions .btn {
+    width: 100%;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .booking-confirmation {
+    box-shadow: none;
+    margin: 0;
+    padding: 20px;
+  }
+  
+  .confirmation-actions {
+    display: none;
+  }
+  
+  .confirmation-header {
+    background: #f8f9fa !important;
+    color: #333 !important;
+  }
+  
+  .success-icon {
+    display: none;
+  }
+}

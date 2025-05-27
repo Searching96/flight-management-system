@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredAccountType?: number; // 1 for admin, 2 for customer
+  requiredAccountType?: number; // 1 for customer, 2 for employee (matches backend)
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
@@ -35,12 +35,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       />
     );
   }
-
   if (requiredAccountType && user.accountType !== requiredAccountType) {
     // Redirect to appropriate dashboard if wrong account type
+    // accountType: 1 = customer, 2 = employee (corrected to match backend database)
     return (
       <Navigate 
-        to={user.accountType === 1 ? '/admin' : '/dashboard'} 
+        to={user.accountType === 2 ? '/admin' : '/dashboard'} 
         state={{ 
           message: 'You do not have permission to access that page' 
         }} 

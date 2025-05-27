@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { flightService, airportService, planeService } from '../../services';
-import { Flight, Airport, Plane } from '../../models';
+import { flightService, airportService, planeService, ticketClassService, flightTicketClassService } from '../../services';
+import { Flight, Airport, Plane, TicketClass, FlightTicketClass } from '../../models';
 import './FlightManagement.css';
+import TypeAhead from '../common/TypeAhead';
+import { usePermissions } from '../../hooks/useAuth';
 
 interface FlightFormData {
     flightCode: string;
@@ -13,19 +15,44 @@ interface FlightFormData {
     arrivalAirportId: number;
 }
 
+interface TicketClassAssignment {
+    ticketClassId: number;
+    ticketQuantity: number;
+    specifiedFare: number;
+}
+
 const FlightManagement: React.FC = () => {
+    const { canViewAdmin } = usePermissions();
+    if (!canViewAdmin) {
+        return (
+            <div className="unauthorized">
+                <h2>Access Denied</h2>
+                <p>You do not have permission to access flight management.</p>
+            </div>
+        );
+    }
+
     const [flights, setFlights] = useState<Flight[]>([]);
     const [airports, setAirports] = useState<Airport[]>([]);
     const [planes, setPlanes] = useState<Plane[]>([]);
+    const [ticketClasses, setTicketClasses] = useState<TicketClass[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [showForm, setShowForm] = useState(false);
     const [editingFlight, setEditingFlight] = useState<Flight | null>(null);
+    const [showTicketClassModal, setShowTicketClassModal] = useState(false);
+    const [selectedFlightForClasses, setSelectedFlightForClasses] = useState<Flight | null>(null);
+    const [flightTicketClasses, setFlightTicketClasses] = useState<FlightTicketClass[]>([]);
+    const [ticketClassAssignments, setTicketClassAssignments] = useState<TicketClassAssignment[]>([]);
+    const [selectedDepartureAirport, setSelectedDepartureAirport] = useState<number | ''>('');
+    const [selectedArrivalAirport, setSelectedArrivalAirport] = useState<number | ''>('');
+    const [selectedPlane, setSelectedPlane] = useState<number | ''>('');
 
     const {
         register,
         handleSubmit,
         reset,
+        setValue,
         formState: { errors }
     } = useForm<FlightFormData>();
 
@@ -36,15 +63,17 @@ const FlightManagement: React.FC = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [flightData, airportData, planeData] = await Promise.all([
+            const [flightData, airportData, planeData, ticketClassData] = await Promise.all([
                 flightService.getAllFlights(),
                 airportService.getAllAirports(),
-                planeService.getAllPlanes()
+                planeService.getAllPlanes(),
+                ticketClassService.getAllTicketClasses()
             ]);
 
             setFlights(flightData);
             setAirports(airportData);
             setPlanes(planeData);
+            setTicketClasses(ticketClassData);
         } catch (err: any) {
             setError('Failed to load data');
         } finally {
@@ -67,8 +96,27 @@ const FlightManagement: React.FC = () => {
         }
     };
 
+    // Transform airports for TypeAhead
+    const airportOptions = airports.map(airport => ({
+        value: airport.airportId!,
+        label: `${airport.cityName} - ${airport.airportName}`,
+        city: airport.cityName,
+        name: airport.airportName
+    }));
+
+    // Transform planes for TypeAhead
+    const planeOptions = planes.map(plane => ({
+        value: plane.planeId!,
+        label: `${plane.planeCode} - ${plane.planeType}`,
+        code: plane.planeCode,
+        type: plane.planeType
+    }));
+
     const handleEdit = (flight: Flight) => {
         setEditingFlight(flight);
+        setSelectedDepartureAirport(flight.departureAirportId);
+        setSelectedArrivalAirport(flight.arrivalAirportId);
+        setSelectedPlane(flight.planeId);
         reset({
             flightCode: flight.flightCode,
             departureTime: flight.departureTime.slice(0, 16),
@@ -94,7 +142,73 @@ const FlightManagement: React.FC = () => {
     const handleCancel = () => {
         setShowForm(false);
         setEditingFlight(null);
+        setSelectedDepartureAirport('');
+        setSelectedArrivalAirport('');
+        setSelectedPlane('');
         reset();
+        setError('');
+    };
+
+    const handleManageTicketClasses = async (flight: Flight) => {
+        try {
+            setSelectedFlightForClasses(flight);
+            const flightClasses = await flightTicketClassService.getFlightTicketClassesByFlightId(flight.flightId!);
+            setFlightTicketClasses(flightClasses);
+            
+            // Initialize assignments for existing classes
+            const assignments = ticketClasses.map(tc => {
+                const existing = flightClasses.find(ftc => ftc.ticketClassId === tc.ticketClassId);
+                return {
+                    ticketClassId: tc.ticketClassId!,
+                    ticketQuantity: existing?.ticketQuantity || 0,
+                    specifiedFare: existing?.specifiedFare ? Number(existing.specifiedFare) : 0
+                };
+            });
+            
+            setTicketClassAssignments(assignments);
+            setShowTicketClassModal(true);
+        } catch (err: any) {
+            setError('Failed to load ticket class data');
+        }
+    };
+
+    const handleTicketClassChange = (classId: number, field: 'ticketQuantity' | 'specifiedFare', value: number) => {
+        setTicketClassAssignments(prev => 
+            prev.map(assignment => 
+                assignment.ticketClassId === classId 
+                    ? { ...assignment, [field]: value }
+                    : assignment
+            )
+        );
+    };
+
+    const handleSaveTicketClasses = async () => {
+        if (!selectedFlightForClasses) return;
+
+        try {
+            // Filter out assignments with zero quantity
+            const validAssignments = ticketClassAssignments.filter(
+                assignment => assignment.ticketQuantity > 0 && assignment.specifiedFare > 0
+            );
+
+            // Use the flightService to replace all ticket class assignments
+            await flightService.assignTicketClassesToFlight(
+                selectedFlightForClasses.flightId!,
+                validAssignments
+            );
+
+            setShowTicketClassModal(false);
+            setSelectedFlightForClasses(null);
+            setError('');
+        } catch (err: any) {
+            setError('Failed to save ticket class assignments');
+        }
+    };
+
+    const handleCancelTicketClasses = () => {
+        setShowTicketClassModal(false);
+        setSelectedFlightForClasses(null);
+        setTicketClassAssignments([]);
         setError('');
     };
 
@@ -142,20 +256,24 @@ const FlightManagement: React.FC = () => {
                             <div className="form-row">
                                 <div className="form-group">
                                     <label>Departure Airport</label>
-                                    <select
+                                    <TypeAhead
+                                        options={airportOptions}
+                                        value={selectedDepartureAirport}
+                                        onChange={(option) => {
+                                            const airportId = option?.value as number || '';
+                                            setSelectedDepartureAirport(airportId);
+                                            setValue('departureAirportId', Number(airportId));
+                                        }}
+                                        placeholder="Search departure airport..."
+                                        error={!!errors.departureAirportId}
+                                    />
+                                    <input
+                                        type="hidden"
                                         {...register('departureAirportId', {
                                             required: 'Departure airport is required',
                                             valueAsNumber: true
                                         })}
-                                        className={errors.departureAirportId ? 'error' : ''}
-                                    >
-                                        <option value="">Select departure airport</option>
-                                        {airports.map(airport => (
-                                            <option key={airport.airportId} value={airport.airportId}>
-                                                {airport.cityName} - {airport.airportName}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    />
                                     {errors.departureAirportId && (
                                         <span className="field-error">{errors.departureAirportId.message}</span>
                                     )}
@@ -163,20 +281,24 @@ const FlightManagement: React.FC = () => {
 
                                 <div className="form-group">
                                     <label>Arrival Airport</label>
-                                    <select
+                                    <TypeAhead
+                                        options={airportOptions}
+                                        value={selectedArrivalAirport}
+                                        onChange={(option) => {
+                                            const airportId = option?.value as number || '';
+                                            setSelectedArrivalAirport(airportId);
+                                            setValue('arrivalAirportId', Number(airportId));
+                                        }}
+                                        placeholder="Search arrival airport..."
+                                        error={!!errors.arrivalAirportId}
+                                    />
+                                    <input
+                                        type="hidden"
                                         {...register('arrivalAirportId', {
                                             required: 'Arrival airport is required',
                                             valueAsNumber: true
                                         })}
-                                        className={errors.arrivalAirportId ? 'error' : ''}
-                                    >
-                                        <option value="">Select arrival airport</option>
-                                        {airports.map(airport => (
-                                            <option key={airport.airportId} value={airport.airportId}>
-                                                {airport.cityName} - {airport.airportName}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    />
                                     {errors.arrivalAirportId && (
                                         <span className="field-error">{errors.arrivalAirportId.message}</span>
                                     )}
@@ -216,20 +338,24 @@ const FlightManagement: React.FC = () => {
                             <div className="form-row">
                                 <div className="form-group">
                                     <label>Aircraft</label>
-                                    <select
+                                    <TypeAhead
+                                        options={planeOptions}
+                                        value={selectedPlane}
+                                        onChange={(option) => {
+                                            const planeId = option?.value as number || '';
+                                            setSelectedPlane(planeId);
+                                            setValue('planeId', Number(planeId));
+                                        }}
+                                        placeholder="Search aircraft..."
+                                        error={!!errors.planeId}
+                                    />
+                                    <input
+                                        type="hidden"
                                         {...register('planeId', {
                                             required: 'Aircraft is required',
                                             valueAsNumber: true
                                         })}
-                                        className={errors.planeId ? 'error' : ''}
-                                    >
-                                        <option value="">Select aircraft</option>
-                                        {planes.map(plane => (
-                                            <option key={plane.planeId} value={plane.planeId}>
-                                                {plane.planeCode} - {plane.planeType}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    />
                                     {errors.planeId && (
                                         <span className="field-error">{errors.planeId.message}</span>
                                     )}
@@ -249,6 +375,85 @@ const FlightManagement: React.FC = () => {
                 </div>
             )}
 
+            {showTicketClassModal && selectedFlightForClasses && (
+                <div className="form-modal">
+                    <div className="form-container ticket-class-modal">
+                        <h3>Manage Ticket Classes for Flight {selectedFlightForClasses.flightCode}</h3>
+                        
+                        <div className="ticket-class-assignments">
+                            {ticketClasses.map(ticketClass => {
+                                const assignment = ticketClassAssignments.find(
+                                    a => a.ticketClassId === ticketClass.ticketClassId
+                                );
+                                
+                                return (
+                                    <div key={ticketClass.ticketClassId} className="ticket-class-row">
+                                        <div className="class-info">
+                                            <span 
+                                                className="class-badge" 
+                                                style={{ backgroundColor: (ticketClass as any).color || '#ccc' }}
+                                            >
+                                                {ticketClass.ticketClassName}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="class-inputs">
+                                            <div className="input-group">
+                                                <label>Seats</label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={assignment?.ticketQuantity || 0}
+                                                    onChange={(e) => handleTicketClassChange(
+                                                        ticketClass.ticketClassId!,
+                                                        'ticketQuantity',
+                                                        parseInt(e.target.value) || 0
+                                                    )}
+                                                    placeholder="Number of seats"
+                                                />
+                                            </div>
+                                            
+                                            <div className="input-group">
+                                                <label>Price (VND)</label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="1000"
+                                                    value={assignment?.specifiedFare || 0}
+                                                    onChange={(e) => handleTicketClassChange(
+                                                        ticketClass.ticketClassId!,
+                                                        'specifiedFare',
+                                                        parseFloat(e.target.value) || 0
+                                                    )}
+                                                    placeholder="Price per ticket"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="form-actions">
+                            <button 
+                                type="button" 
+                                className="btn btn-secondary" 
+                                onClick={handleCancelTicketClasses}
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="button" 
+                                className="btn btn-primary" 
+                                onClick={handleSaveTicketClasses}
+                            >
+                                Save Ticket Classes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="flights-table">
                 <table>
                     <thead>
@@ -264,42 +469,30 @@ const FlightManagement: React.FC = () => {
                     <tbody>
                         {flights.map(flight => (
                             <tr key={flight.flightId}>
-                                <td className="flight-code">{flight.flightCode}</td>
-                                <td>
-                                    <div className="route">
-                                        <span>{flight.departureCityName}</span>
-                                        <span className="arrow">→</span>
-                                        <span>{flight.arrivalCityName}</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="datetime">
-                                        <div>{new Date(flight.departureTime).toLocaleDateString()}</div>
-                                        <div>{new Date(flight.departureTime).toLocaleTimeString()}</div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="datetime">
-                                        <div>{new Date(flight.arrivalTime).toLocaleDateString()}</div>
-                                        <div>{new Date(flight.arrivalTime).toLocaleTimeString()}</div>
-                                    </div>
-                                </td>
+                                <td>{flight.flightCode}</td>
+                                <td>{flight.departureCityName} → {flight.arrivalCityName}</td>
+                                <td>{new Date(flight.departureTime).toLocaleString()}</td>
+                                <td>{new Date(flight.arrivalTime).toLocaleString()}</td>
                                 <td>{flight.planeCode}</td>
                                 <td>
-                                    <div className="actions">
-                                        <button 
-                                            className="btn btn-sm btn-secondary"
-                                            onClick={() => handleEdit(flight)}
-                                        >
-                                            Edit
-                                        </button>
-                                        <button 
-                                            className="btn btn-sm btn-danger"
-                                            onClick={() => handleDelete(flight.flightId!)}
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
+                                    <button 
+                                        className="btn btn-sm btn-secondary"
+                                        onClick={() => handleEdit(flight)}
+                                    >
+                                        Edit
+                                    </button>
+                                    <button 
+                                        className="btn btn-sm btn-primary"
+                                        onClick={() => handleManageTicketClasses(flight)}
+                                    >
+                                        Manage Classes
+                                    </button>
+                                    <button 
+                                        className="btn btn-sm btn-danger"
+                                        onClick={() => handleDelete(flight.flightId!)}
+                                    >
+                                        Delete
+                                    </button>
                                 </td>
                             </tr>
                         ))}
@@ -317,3 +510,4 @@ const FlightManagement: React.FC = () => {
 };
 
 export default FlightManagement;
+

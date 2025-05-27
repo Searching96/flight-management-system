@@ -50,4 +50,46 @@ public interface FlightRepository extends JpaRepository<Flight, Integer> {
     
     @Query("SELECT f FROM Flight f WHERE DATE(f.departureTime) = DATE(:departureDate) AND f.deletedAt IS NULL")
     List<Flight> findByDepartureDate(@Param("departureDate") LocalDate departureDate);
+    
+    @Query("SELECT f FROM Flight f WHERE f.departureAirport.airportId = :departureAirportId AND f.arrivalAirport.airportId = :arrivalAirportId AND f.deletedAt IS NULL")
+    List<Flight> findByDepartureAirportIdAndArrivalAirportId(
+        @Param("departureAirportId") Integer departureAirportId, 
+        @Param("arrivalAirportId") Integer arrivalAirportId
+    );
+    
+    @Query("SELECT f FROM Flight f WHERE f.departureAirport.airportId = ?1 AND f.arrivalAirport.airportId = ?2 AND f.departureTime BETWEEN ?3 AND ?4 AND f.deletedAt IS NULL")
+    List<Flight> findFlightsByRouteAndDate(Integer departureAirportId, Integer arrivalAirportId, LocalDateTime startDate, LocalDateTime endDate);
+    
+    @Query("SELECT f FROM Flight f WHERE f.departureTime BETWEEN ?1 AND ?2 AND f.deletedAt IS NULL")
+    List<Flight> findFlightsByDateRange(LocalDateTime startDate, LocalDateTime endDate);
+    
+    @Query("SELECT CASE WHEN COUNT(ftc) > 0 AND ftc.remainingTicketQuantity >= ?3 THEN true ELSE false END " +
+           "FROM FlightTicketClass ftc WHERE ftc.flightId = ?1 AND ftc.ticketClassId = ?2")
+    boolean checkSeatAvailability(Integer flightId, Integer ticketClassId, Integer passengerCount);
+
+    @Query("SELECT DISTINCT f FROM Flight f " +
+           "WHERE f.departureAirport.airportId = :departureAirportId " +
+           "AND f.arrivalAirport.airportId = :arrivalAirportId " +
+           "AND DATE(f.departureTime) = DATE(:departureDate) " +
+           "AND f.deletedAt IS NULL " +
+           "ORDER BY f.departureTime")
+    List<Flight> findFlightsByRoute(@Param("departureAirportId") Integer departureAirportId,
+                                   @Param("arrivalAirportId") Integer arrivalAirportId,
+                                   @Param("departureDate") LocalDateTime departureDate);
+
+    @Query("SELECT DISTINCT f FROM Flight f " +
+           "JOIN FlightTicketClass ftc ON f.flightId = ftc.flightId " +
+           "WHERE f.departureAirport.airportId = :departureAirportId " +
+           "AND f.arrivalAirport.airportId = :arrivalAirportId " +
+           "AND DATE(f.departureTime) = DATE(:departureDate) " +
+           "AND ftc.ticketClassId = :ticketClassId " +
+           "AND ftc.remainingTicketQuantity >= :passengerCount " +
+           "AND f.deletedAt IS NULL " +
+           "AND ftc.deletedAt IS NULL " +
+           "ORDER BY f.departureTime")
+    List<Flight> findFlightsWithTicketClass(@Param("departureAirportId") Integer departureAirportId,
+                                           @Param("arrivalAirportId") Integer arrivalAirportId,
+                                           @Param("departureDate") LocalDateTime departureDate,
+                                           @Param("ticketClassId") Integer ticketClassId,
+                                           @Param("passengerCount") Integer passengerCount);
 }

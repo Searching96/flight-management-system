@@ -1,52 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Flight, FlightTicketClass } from '../../models';
-import { flightService } from '../../services';
-import { useAuth } from '../../hooks/useAuth';
+import React, { useState } from 'react';
+import { Flight, TicketClass } from '../../models';
 import './FlightCard.css';
 
 interface FlightCardProps {
   flight: Flight;
-  passengerCount?: number;
-  onSelect?: (flight: Flight) => void;
+  onBookFlight: (flightId: number, ticketClassId: number) => void;
+  searchContext?: {
+    passengerCount: number;
+    allTicketClasses: TicketClass[];
+    availability: any[];
+    selectedTicketClass?: number | null;
+    searchedForAllClasses?: boolean;
+  };
 }
 
 const FlightCard: React.FC<FlightCardProps> = ({ 
   flight, 
-  passengerCount = 1, 
-  onSelect 
+  onBookFlight, 
+  searchContext 
 }) => {
-  const [ticketClasses, setTicketClasses] = useState<FlightTicketClass[]>([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const [selectedClassForBooking, setSelectedClassForBooking] = useState<number | null>(
+    searchContext?.selectedTicketClass || null
+  );
 
-  useEffect(() => {
-    loadTicketClasses();
-  }, [flight.flightId]);
-
-  const loadTicketClasses = async () => {
-    try {
-      if (flight.flightId) {
-        const classes = await flightService.getFlightTicketClassesByFlightId(flight.flightId);
-        setTicketClasses(classes);
-      }
-    } catch (error) {
-      console.error('Failed to load ticket classes:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatTime = (dateTime: string) => {
-    return new Date(dateTime).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+  const formatTime = (dateTimeString: string) => {
+    return new Date(dateTimeString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
     });
   };
 
-  const formatDate = (dateTime: string) => {
-    return new Date(dateTime).toLocaleDateString();
+  const formatDate = (dateTimeString: string) => {
+    return new Date(dateTimeString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   const calculateDuration = () => {
@@ -58,126 +47,185 @@ const FlightCard: React.FC<FlightCardProps> = ({
     return `${hours}h ${minutes}m`;
   };
 
-  const handleBookFlight = (ticketClassId?: number) => {
-    if (!user) {
-      navigate('/login', { 
-        state: { 
-          message: 'Please sign in to book flights',
-          returnTo: `/book/${flight.flightId}` 
-        }
-      });
-      return;
+  const getAvailableTicketClasses = () => {
+    if (!flight.flightTicketClasses || !searchContext?.allTicketClasses) {
+      return [];
     }
 
-    if (onSelect) {
-      onSelect(flight);
-    } else {
-      navigate(`/book/${flight.flightId}`, {
-        state: { flight, ticketClassId, passengerCount }
-      });
+    const requestedSeats = searchContext.passengerCount || 1;
+
+    return flight.flightTicketClasses
+      .filter(ftc => ftc.remainingTicketQuantity && ftc.remainingTicketQuantity >= requestedSeats)
+      .map(ftc => {
+        const ticketClass = searchContext.allTicketClasses.find(
+          tc => tc.ticketClassId === ftc.ticketClassId
+        );
+        return {
+          ...ftc,
+          ticketClass,
+          price: Number(ftc.specifiedFare)
+        };
+      })
+      .sort((a, b) => a.price - b.price); // Sort by price
+  };
+
+  const getLowestPrice = () => {
+    const availableClasses = getAvailableTicketClasses();
+    return availableClasses.length > 0 ? availableClasses[0].price : null;
+  };
+
+  const isFlightAvailable = () => {
+    return getAvailableTicketClasses().length > 0;
+  };
+
+  const handleClassSelection = (ticketClassId: number) => {
+    setSelectedClassForBooking(ticketClassId);
+  };
+
+  const handleBooking = () => {
+    if (selectedClassForBooking) {
+      onBookFlight(flight.flightId!, selectedClassForBooking);
     }
   };
 
+  const availableClasses = getAvailableTicketClasses();
+  const isAvailable = isFlightAvailable();
+  const lowestPrice = getLowestPrice();
+  const showAllClasses = searchContext?.searchedForAllClasses || availableClasses.length > 1;
+
   return (
-    <div className="flight-card">
+    <div className={`flight-card ${!isAvailable ? 'unavailable' : ''}`}>
       <div className="flight-header">
-        <div className="flight-code">
-          <span className="code">{flight.flightCode}</span>
-          <span className="plane">✈️ {flight.planeCode}</span>
+        <div className="flight-number">
+          <span className="airline-code">{flight.flightCode}</span>
+          <span className="plane-type">{flight.planeCode}</span>
         </div>
-        <div className="flight-price">
-          <span className="from">from</span>
-          <span className="amount">$299</span>
-          <span className="per">per person</span>
+        <div className="flight-date">
+          {formatDate(flight.departureTime)}
         </div>
       </div>
 
       <div className="flight-route">
         <div className="departure">
           <div className="time">{formatTime(flight.departureTime)}</div>
-          <div className="airport">{flight.departureCityName}</div>
-          <div className="airport-name">{flight.departureAirportName}</div>
-          <div className="date">{formatDate(flight.departureTime)}</div>
+          <div className="airport">
+            <div className="city">{flight.departureCityName}</div>
+            <div className="airport-name">{flight.departureAirportName}</div>
+          </div>
         </div>
 
         <div className="flight-duration">
-          <div className="duration">{calculateDuration()}</div>
-          <div className="line">
-            <div className="line-path"></div>
-            <div className="airplane-icon">✈️</div>
+          <div className="duration-line">
+            <span className="duration-text">{calculateDuration()}</span>
           </div>
-          <div className="direct">Direct flight</div>
+          <div className="flight-info">Direct</div>
         </div>
 
         <div className="arrival">
           <div className="time">{formatTime(flight.arrivalTime)}</div>
-          <div className="airport">{flight.arrivalCityName}</div>
-          <div className="airport-name">{flight.arrivalAirportName}</div>
-          <div className="date">{formatDate(flight.arrivalTime)}</div>
+          <div className="airport">
+            <div className="city">{flight.arrivalCityName}</div>
+            <div className="airport-name">{flight.arrivalAirportName}</div>
+          </div>
         </div>
       </div>
 
-      <div className="ticket-classes">
-        {loading ? (
-          <div className="loading">Loading ticket classes...</div>
-        ) : ticketClasses.length > 0 ? (
-          ticketClasses.map(ticketClass => (
-            <div key={ticketClass.ticketClassId} className="ticket-class">
-              <div className="class-info">
-                <span className="class-name">
-                  {ticketClass.ticketClassName}
-                </span>
-                <span className="remaining-seats">
-                  {ticketClass.remainingTickets || 0} seats left
-                </span>
-              </div>
-              <div className="class-price">
-                <span className="price">
-                  ${ticketClass.specifiedFare?.toLocaleString() || '299'}
-                </span>
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => handleBookFlight(ticketClass.ticketClassId)}
-                  disabled={(ticketClass.remainingTickets || 0) < passengerCount}
+      <div className="flight-details">
+        {searchContext?.selectedTicketClass && !searchContext?.searchedForAllClasses && (
+          <div className="selected-class">
+            <span className="class-name">
+              {searchContext.allTicketClasses?.find(tc => tc.ticketClassId === searchContext.selectedTicketClass)?.ticketClassName}
+            </span>
+            {searchContext.passengerCount > 1 && (
+              <span className="passenger-count">{searchContext.passengerCount} passengers</span>
+            )}
+          </div>
+        )}
+
+        {/* Ticket Class Options */}
+        {showAllClasses && availableClasses.length > 0 && (
+          <div className="ticket-classes">
+            <h4>Available Classes:</h4>
+            <div className="class-options">
+              {availableClasses.map(classInfo => (
+                <div 
+                  key={classInfo.ticketClassId}
+                  className={`class-option ${selectedClassForBooking === classInfo.ticketClassId ? 'selected' : ''}`}
+                  onClick={() => handleClassSelection(classInfo.ticketClassId!)}
                 >
-                  Book
-                </button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="ticket-class">
-            <div className="class-info">
-              <span className="class-name">Economy</span>
-              <span className="remaining-seats">Available</span>
-            </div>
-            <div className="class-price">
-              <span className="price">$299</span>
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() => handleBookFlight()}
-              >
-                Book
-              </button>
+                  <div className="class-info">
+                    <span 
+                      className="class-name"
+                      style={{ color: classInfo.ticketClass?.color || '#333' }}
+                    >
+                      {classInfo.ticketClass?.ticketClassName}
+                    </span>
+                    <span className="available-seats">
+                      {classInfo.remainingTicketQuantity} seats
+                    </span>
+                  </div>
+                  <div className="class-price">
+                    <span className="amount">{classInfo.price.toLocaleString()}</span>
+                    <span className="currency">VND</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
+
+        <div className="available-seats">
+          {isAvailable ? (
+            <span className="seats-available">
+              {flight.flightTicketClasses?.reduce(
+                (total, ftc) => total + (ftc.remainingTicketQuantity || 0), 
+                0
+              )} total seats available
+            </span>
+          ) : (
+            <span className="seats-unavailable">Not enough seats available</span>
+          )}
+        </div>
       </div>
 
       <div className="flight-footer">
-        <div className="flight-details">
-          <span className="passengers">
-            {passengerCount} {passengerCount === 1 ? 'passenger' : 'passengers'}
-          </span>
-          <span className="class">Economy Class</span>
+        <div className="price-section">
+          {!showAllClasses && lowestPrice && (
+            <>
+              <div className="price">
+                <span className="amount">{lowestPrice.toLocaleString()}</span>
+                <span className="currency">VND</span>
+              </div>
+              {searchContext?.passengerCount && searchContext.passengerCount > 1 && (
+                <div className="price-per-person">per person</div>
+              )}
+            </>
+          )}
+          {showAllClasses && (
+            <div className="price-range">
+              <span className="from-price">From {lowestPrice?.toLocaleString()} VND</span>
+              {searchContext?.passengerCount && searchContext.passengerCount > 1 && (
+                <div className="price-per-person">per person</div>
+              )}
+            </div>
+          )}
         </div>
-        
-        <button 
-          className="book-btn"
-          onClick={() => handleBookFlight()}
-        >
-          {user ? 'Book Flight' : 'Sign in to Book'}
-        </button>
+
+        <div className="book-section">
+          {isAvailable ? (
+            <button 
+              className={`book-button ${showAllClasses && !selectedClassForBooking ? 'disabled' : ''}`}
+              onClick={handleBooking}
+              disabled={showAllClasses && !selectedClassForBooking}
+            >
+              {showAllClasses && !selectedClassForBooking ? 'Select Class' : 'Book Flight'}
+            </button>
+          ) : (
+            <button className="book-button disabled" disabled>
+              Unavailable
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -106,28 +106,51 @@ public class DataInitializer implements CommandLineRunner {
     
     private void initializeDemoAccounts() {
         try {
-            if (accountService.getAllAccounts().isEmpty()) {
-                // Create admin account
+            if (accountService.getAllAccounts().isEmpty()) {                // Create admin account
                 RegisterDto admin = new RegisterDto();
                 admin.setAccountName("System Administrator");
-                admin.setEmail("admin@flightmanagement.com");
+                admin.setEmail("admin@flightms.com");
                 admin.setPassword("admin123");
                 admin.setCitizenId("999999999");
                 admin.setPhoneNumber("0123456789");
-                admin.setAccountType(1); // Admin
+                admin.setAccountType(2); // Admin
                 accountService.createAccount(admin);
+                
+                // Create employee account
+                RegisterDto employee = new RegisterDto();
+                employee.setAccountName("Flight Operations Employee");
+                employee.setEmail("employee@flightms.com");
+                employee.setPassword("employee123");
+                employee.setCitizenId("888888888");
+                employee.setPhoneNumber("0123456788");
+                employee.setAccountType(2); // Employee/Admin
+                accountService.createAccount(employee);
                 
                 // Create demo customer
                 RegisterDto customer = new RegisterDto();
                 customer.setAccountName("John Doe");
-                customer.setEmail("customer@demo.com");
-                customer.setPassword("demo123");
+                customer.setEmail("customer@flightms.com");
+                customer.setPassword("customer123");
                 customer.setCitizenId("123456789");
                 customer.setPhoneNumber("0987654321");
-                customer.setAccountType(2); // Customer
+                customer.setAccountType(1); // Customer
                 accountService.createAccount(customer);
                 
-                System.out.println("✓ Demo accounts created (admin@flightmanagement.com / customer@demo.com)");
+                // Create additional test customer
+                RegisterDto testCustomer = new RegisterDto();
+                testCustomer.setAccountName("Jane Smith");
+                testCustomer.setEmail("john.doe@email.com");
+                testCustomer.setPassword("password123");
+                testCustomer.setCitizenId("987654321");
+                testCustomer.setPhoneNumber("0987654322");
+                testCustomer.setAccountType(1); // Customer
+                accountService.createAccount(testCustomer);
+                
+                System.out.println("✓ Demo accounts created with correct email addresses");
+                System.out.println("  - Admin: admin@flightms.com / admin123");
+                System.out.println("  - Employee: employee@flightms.com / employee123");
+                System.out.println("  - Customer: customer@flightms.com / customer123");
+                System.out.println("  - Test Customer: john.doe@email.com / password123");
             }
         } catch (Exception e) {
             System.err.println("⚠️ Error creating demo accounts: " + e.getMessage());

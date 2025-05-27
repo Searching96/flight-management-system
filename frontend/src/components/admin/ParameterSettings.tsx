@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { parameterService } from '../../services';
 import { Parameter } from '../../models';
 import './ParameterSettings.css';
+import { usePermissions } from '../../hooks/useAuth';
 
 interface ParameterFormData {
     maxMediumAirport: number;
@@ -13,11 +14,21 @@ interface ParameterFormData {
     maxBookingHoldDuration: number;
 }
 
-const ParameterSettings: React.FC = () => {
+export const ParameterSettings: React.FC = () => {
+    const { canViewAdmin } = usePermissions();
+    if (!canViewAdmin) {
+        return (
+            <div className="unauthorized">
+                <h2>Access Denied</h2>
+                <p>You do not have permission to access system parameter settings.</p>
+            </div>
+        );
+    }
+
     const [parameters, setParameters] = useState<Parameter | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
+    const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState('');
 
     const {
@@ -27,14 +38,17 @@ const ParameterSettings: React.FC = () => {
         formState: { errors }
     } = useForm<ParameterFormData>();
 
+    // Load parameters on component mount
     useEffect(() => {
         loadParameters();
     }, []);
 
     const loadParameters = async () => {
+        setLoading(true);
+        setError(null);
         try {
-            setLoading(true);
-            const data = await parameterService.getParameters();
+            const dataArr = await parameterService.getAllParameters();
+            const data = Array.isArray(dataArr) ? dataArr[0] : dataArr;
             setParameters(data);
             reset(data);
         } catch (err: any) {
@@ -49,29 +63,13 @@ const ParameterSettings: React.FC = () => {
             setSaving(true);
             setError('');
             setSuccess('');
-
-            await parameterService.updateParameters(data);
-            setSuccess('Parameters updated successfully');
-            loadParameters();
+            if (parameters && parameters.id) {
+                await parameterService.updateParameter(parameters.id, data);
+                setSuccess('Parameters updated successfully');
+                loadParameters();
+            }
         } catch (err: any) {
             setError(err.message || 'Failed to update parameters');
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleInitializeDefaults = async () => {
-        if (!window.confirm('Are you sure you want to initialize default parameters? This will reset all current values.')) {
-            return;
-        }
-
-        try {
-            setSaving(true);
-            await parameterService.initializeDefaultParameters();
-            setSuccess('Default parameters initialized successfully');
-            loadParameters();
-        } catch (err: any) {
-            setError(err.message || 'Failed to initialize default parameters');
         } finally {
             setSaving(false);
         }
@@ -231,19 +229,7 @@ const ParameterSettings: React.FC = () => {
                 </div>
 
                 <div className="form-actions">
-                    <button
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={handleInitializeDefaults}
-                        disabled={saving}
-                    >
-                        Reset to Defaults
-                    </button>
-                    <button
-                        type="submit"
-                        className="btn btn-primary"
-                        disabled={saving}
-                    >
+                    <button type="submit" className="btn btn-primary" disabled={saving}>
                         {saving ? 'Saving...' : 'Save Parameters'}
                     </button>
                 </div>

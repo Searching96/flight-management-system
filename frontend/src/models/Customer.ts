@@ -4,7 +4,7 @@ export interface Customer {
   email?: string;
   citizenId?: string;
   phoneNumber?: string;
-  score: number;
+  score?: number;
 }
 
 export interface Employee {

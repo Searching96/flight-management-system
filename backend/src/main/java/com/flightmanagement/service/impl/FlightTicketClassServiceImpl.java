@@ -2,16 +2,22 @@ package com.flightmanagement.service.impl;
 
 import com.flightmanagement.dto.FlightTicketClassDto;
 import com.flightmanagement.entity.FlightTicketClass;
+import com.flightmanagement.entity.Flight;
+import com.flightmanagement.entity.TicketClass;
 import com.flightmanagement.mapper.FlightTicketClassMapper;
 import com.flightmanagement.repository.FlightTicketClassRepository;
+import com.flightmanagement.repository.FlightRepository;
+import com.flightmanagement.repository.TicketClassRepository;
 import com.flightmanagement.service.FlightTicketClassService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional
 public class FlightTicketClassServiceImpl implements FlightTicketClassService {
     
     @Autowired
@@ -19,6 +25,12 @@ public class FlightTicketClassServiceImpl implements FlightTicketClassService {
     
     @Autowired
     private FlightTicketClassMapper flightTicketClassMapper;
+    
+    @Autowired
+    private FlightRepository flightRepository;
+    
+    @Autowired
+    private TicketClassRepository ticketClassRepository;
     
     @Override
     public List<FlightTicketClassDto> getAllFlightTicketClasses() {
@@ -29,38 +41,8 @@ public class FlightTicketClassServiceImpl implements FlightTicketClassService {
     @Override
     public FlightTicketClassDto getFlightTicketClassById(Integer flightId, Integer ticketClassId) {
         FlightTicketClass flightTicketClass = flightTicketClassRepository.findByFlightIdAndTicketClassId(flightId, ticketClassId)
-            .orElseThrow(() -> new RuntimeException("FlightTicketClass not found"));
+            .orElseThrow(() -> new RuntimeException("FlightTicketClass not found for flight: " + flightId + " and class: " + ticketClassId));
         return flightTicketClassMapper.toDto(flightTicketClass);
-    }
-    
-    @Override
-    public FlightTicketClassDto createFlightTicketClass(FlightTicketClassDto flightTicketClassDto) {
-        FlightTicketClass flightTicketClass = flightTicketClassMapper.toEntity(flightTicketClassDto);
-        flightTicketClass.setDeletedAt(null);
-        FlightTicketClass savedFlightTicketClass = flightTicketClassRepository.save(flightTicketClass);
-        return flightTicketClassMapper.toDto(savedFlightTicketClass);
-    }
-    
-    @Override
-    public FlightTicketClassDto updateFlightTicketClass(Integer flightId, Integer ticketClassId, FlightTicketClassDto flightTicketClassDto) {
-        FlightTicketClass existingFlightTicketClass = flightTicketClassRepository.findByFlightIdAndTicketClassId(flightId, ticketClassId)
-            .orElseThrow(() -> new RuntimeException("FlightTicketClass not found"));
-        
-        existingFlightTicketClass.setTicketQuantity(flightTicketClassDto.getTicketQuantity());
-        existingFlightTicketClass.setRemainingTicketQuantity(flightTicketClassDto.getRemainingTicketQuantity());
-        existingFlightTicketClass.setSpecifiedFare(flightTicketClassDto.getSpecifiedFare());
-        
-        FlightTicketClass updatedFlightTicketClass = flightTicketClassRepository.save(existingFlightTicketClass);
-        return flightTicketClassMapper.toDto(updatedFlightTicketClass);
-    }
-    
-    @Override
-    public void deleteFlightTicketClass(Integer flightId, Integer ticketClassId) {
-        FlightTicketClass flightTicketClass = flightTicketClassRepository.findByFlightIdAndTicketClassId(flightId, ticketClassId)
-            .orElseThrow(() -> new RuntimeException("FlightTicketClass not found"));
-        
-        flightTicketClass.setDeletedAt(LocalDateTime.now());
-        flightTicketClassRepository.save(flightTicketClass);
     }
     
     @Override
@@ -70,28 +52,72 @@ public class FlightTicketClassServiceImpl implements FlightTicketClassService {
     }
     
     @Override
-    public List<FlightTicketClassDto> getFlightTicketClassesByTicketClassId(Integer ticketClassId) {
-        List<FlightTicketClass> flightTicketClasses = flightTicketClassRepository.findByTicketClassId(ticketClassId);
-        return flightTicketClassMapper.toDtoList(flightTicketClasses);
+    public FlightTicketClassDto createFlightTicketClass(FlightTicketClassDto flightTicketClassDto) {
+        FlightTicketClass flightTicketClass = new FlightTicketClass();
+        flightTicketClass.setSpecifiedFare(flightTicketClassDto.getSpecifiedFare());
+        flightTicketClass.setTicketQuantity(flightTicketClassDto.getTicketQuantity());
+        flightTicketClass.setRemainingTicketQuantity(flightTicketClassDto.getRemainingTicketQuantity());
+        flightTicketClass.setDeletedAt(null);
+        
+        // Set entity relationships
+        if (flightTicketClassDto.getFlightId() != null) {
+            Flight flight = flightRepository.findById(flightTicketClassDto.getFlightId())
+                .orElseThrow(() -> new RuntimeException("Flight not found with id: " + flightTicketClassDto.getFlightId()));
+            flightTicketClass.setFlight(flight);
+            flightTicketClass.setFlightId(flight.getFlightId());
+        }
+        
+        if (flightTicketClassDto.getTicketClassId() != null) {
+            TicketClass ticketClass = ticketClassRepository.findById(flightTicketClassDto.getTicketClassId())
+                .orElseThrow(() -> new RuntimeException("TicketClass not found with id: " + flightTicketClassDto.getTicketClassId()));
+            flightTicketClass.setTicketClass(ticketClass);
+            flightTicketClass.setTicketClassId(ticketClass.getTicketClassId());
+        }
+        
+        FlightTicketClass savedFlightTicketClass = flightTicketClassRepository.save(flightTicketClass);
+        return flightTicketClassMapper.toDto(savedFlightTicketClass);
     }
     
     @Override
-    public List<FlightTicketClassDto> getAvailableFlightTicketClasses() {
-        List<FlightTicketClass> flightTicketClasses = flightTicketClassRepository.findAvailableTickets();
-        return flightTicketClassMapper.toDtoList(flightTicketClasses);
+    public FlightTicketClassDto updateFlightTicketClass(Integer flightId, Integer ticketClassId, FlightTicketClassDto flightTicketClassDto) {
+        FlightTicketClass existingFlightTicketClass = flightTicketClassRepository.findByFlightIdAndTicketClassId(flightId, ticketClassId)
+            .orElseThrow(() -> new RuntimeException("FlightTicketClass not found for flight: " + flightId + " and class: " + ticketClassId));
+        
+        existingFlightTicketClass.setSpecifiedFare(flightTicketClassDto.getSpecifiedFare());
+        existingFlightTicketClass.setTicketQuantity(flightTicketClassDto.getTicketQuantity());
+        existingFlightTicketClass.setRemainingTicketQuantity(flightTicketClassDto.getRemainingTicketQuantity());
+        
+        FlightTicketClass updatedFlightTicketClass = flightTicketClassRepository.save(existingFlightTicketClass);
+        return flightTicketClassMapper.toDto(updatedFlightTicketClass);
+    }
+    
+    @Override
+    public void deleteFlightTicketClass(Integer flightId, Integer ticketClassId) {
+        FlightTicketClass flightTicketClass = flightTicketClassRepository.findByFlightIdAndTicketClassId(flightId, ticketClassId)
+            .orElseThrow(() -> new RuntimeException("FlightTicketClass not found for flight: " + flightId + " and class: " + ticketClassId));
+        
+        flightTicketClass.setDeletedAt(LocalDateTime.now());
+        flightTicketClassRepository.save(flightTicketClass);
     }
     
     @Override
     public void updateRemainingTickets(Integer flightId, Integer ticketClassId, Integer quantity) {
         FlightTicketClass flightTicketClass = flightTicketClassRepository.findByFlightIdAndTicketClassId(flightId, ticketClassId)
-            .orElseThrow(() -> new RuntimeException("FlightTicketClass not found"));
+            .orElseThrow(() -> new RuntimeException("FlightTicketClass not found for flight: " + flightId + " and class: " + ticketClassId));
         
-        int newRemaining = flightTicketClass.getRemainingTicketQuantity() - quantity;
-        if (newRemaining < 0) {
-            throw new RuntimeException("Not enough tickets available");
+        int newRemainingQuantity = flightTicketClass.getRemainingTicketQuantity() - quantity;
+        if (newRemainingQuantity < 0) {
+            throw new RuntimeException("Not enough tickets available. Requested: " + quantity + 
+                                     ", Available: " + flightTicketClass.getRemainingTicketQuantity());
         }
         
-        flightTicketClass.setRemainingTicketQuantity(newRemaining);
+        flightTicketClass.setRemainingTicketQuantity(newRemainingQuantity);
         flightTicketClassRepository.save(flightTicketClass);
+    }
+    
+    @Override
+    public List<FlightTicketClassDto> getAvailableFlightTicketClasses() {
+        List<FlightTicketClass> available = flightTicketClassRepository.findAvailable();
+        return flightTicketClassMapper.toDtoList(available);
     }
 }
