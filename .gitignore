@@ -2,6 +2,7 @@
 *.log
 .DS_Store
 
+
 # Frontend
 frontend/logs
 frontend/npm-debug.log*
@@ -10,6 +11,7 @@ frontend/yarn-error.log*
 frontend/pnpm-debug.log*
 frontend/lerna-debug.log*
 frontend/node_modules/
+frontend/src/node_modules/
 frontend/dist/
 frontend/dist-ssr/
 frontend/*.local
