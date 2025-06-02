@@ -1,57 +1,87 @@
 import React from 'react';
-import './Footer.css';
+import { Container, Row, Col, Nav } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="footer">
-      <div className="container">
-        <div className="footer-content">
-          <div className="footer-section">
-            <h3>Flight Management System</h3>
-            <p>Your trusted partner for flight booking and management.</p>
-            <div className="social-links">
-              <a href="#" aria-label="Facebook">📘</a>
-              <a href="#" aria-label="Twitter">🐦</a>
-              <a href="#" aria-label="Instagram">📷</a>
-              <a href="#" aria-label="LinkedIn">💼</a>
+    <footer className="bg-dark text-light py-5 mt-auto">
+      <Container>
+        <Row>
+          <Col lg={4} md={6} className="mb-4">
+            <h5 className="mb-3">Flight Management System</h5>
+            <p className="text-muted mb-3">Your trusted partner for flight booking and management.</p>
+            <div className="d-flex gap-3">
+              <a href="#" className="text-light fs-4" aria-label="Facebook">
+                <i className="bi bi-facebook"></i>
+              </a>
+              <a href="#" className="text-light fs-4" aria-label="Twitter">
+                <i className="bi bi-twitter"></i>
+              </a>
+              <a href="#" className="text-light fs-4" aria-label="Instagram">
+                <i className="bi bi-instagram"></i>
+              </a>
+              <a href="#" className="text-light fs-4" aria-label="LinkedIn">
+                <i className="bi bi-linkedin"></i>
+              </a>
             </div>
-          </div>
-
-          <div className="footer-section">
-            <h4>Quick Links</h4>
-            <ul>
-              <li><a href="/search">Search Flights</a></li>
-              <li><a href="/dashboard">My Bookings</a></li>
-              <li><a href="/support">Customer Support</a></li>
-              <li><a href="/about">About Us</a></li>
+          </Col>          <Col lg={2} md={6} className="mb-4">
+            <h6 className="mb-3">Quick Links</h6>
+            <Nav className="flex-column">
+              <Nav.Link as={Link} to="/search" className="text-muted text-decoration-none p-1">
+                Search Flights
+              </Nav.Link>
+              <Nav.Link as={Link} to="/dashboard" className="text-muted text-decoration-none p-1">
+                My Bookings
+              </Nav.Link>
+              <Nav.Link as={Link} to="/support" className="text-muted text-decoration-none p-1">
+                Customer Support
+              </Nav.Link>
+              <Nav.Link as={Link} to="/about" className="text-muted text-decoration-none p-1">
+                About Us
+              </Nav.Link>
+            </Nav>
+          </Col>          <Col lg={3} md={6} className="mb-4">
+            <h6 className="mb-3">Support</h6>
+            <Nav className="flex-column">
+              <Nav.Link href="/help" className="text-muted text-decoration-none p-1">
+                Help Center
+              </Nav.Link>
+              <Nav.Link href="/contact" className="text-muted text-decoration-none p-1">
+                Contact Us
+              </Nav.Link>
+              <Nav.Link href="/faq" className="text-muted text-decoration-none p-1">
+                FAQ
+              </Nav.Link>
+              <Nav.Link href="/terms" className="text-muted text-decoration-none p-1">
+                Terms of Service
+              </Nav.Link>
+            </Nav>
+          </Col>          <Col lg={3} md={6} className="mb-4">
+            <h6 className="mb-3">Contact Info</h6>
+            <ul className="list-unstyled">
+              <li className="mb-2 text-muted">
+                <i className="bi bi-telephone me-2"></i>+1 (555) 123-4567
+              </li>
+              <li className="mb-2 text-muted">
+                <i className="bi bi-envelope me-2"></i>support@flightms.com
+              </li>
+              <li className="mb-2 text-muted">
+                <i className="bi bi-geo-alt me-2"></i>123 Aviation Street, Sky City
+              </li>
+              <li className="mb-2 text-muted">
+                <i className="bi bi-clock me-2"></i>24/7 Customer Support
+              </li>
             </ul>
-          </div>
+          </Col>
+        </Row>
 
-          <div className="footer-section">
-            <h4>Support</h4>
-            <ul>
-              <li><a href="/help">Help Center</a></li>
-              <li><a href="/contact">Contact Us</a></li>
-              <li><a href="/faq">FAQ</a></li>
-              <li><a href="/terms">Terms of Service</a></li>
-            </ul>
-          </div>
-
-          <div className="footer-section">
-            <h4>Contact Info</h4>
-            <ul>
-              <li>📞 +1 (555) 123-4567</li>
-              <li>✉️ support@flightms.com</li>
-              <li>📍 123 Aviation Street, Sky City</li>
-              <li>🕒 24/7 Customer Support</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="footer-bottom">
-          <p>&copy; 2024 Flight Management System. All rights reserved.</p>
-        </div>
-      </div>
+        <hr className="my-4" />
+          <Row>
+          <Col className="text-center">
+            <p className="text-muted mb-0">&copy; {new Date().getFullYear()} Flight Management System. All rights reserved.</p>
+          </Col>
+        </Row>
+      </Container>
     </footer>
   );
 };

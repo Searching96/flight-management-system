@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Modal } from 'react-bootstrap';
 import { planeService } from '../../services';
 import { Plane } from '../../models';
-import './PlaneManagement.css';
 import TypeAhead from '../common/TypeAhead';
 import { usePermissions } from '../../hooks/useAuth';
 
@@ -16,10 +16,16 @@ const PlaneManagement: React.FC = () => {
     const { canViewAdmin } = usePermissions();
     if (!canViewAdmin) {
         return (
-            <div className="unauthorized">
-                <h2>Access Denied</h2>
-                <p>You do not have permission to access aircraft management.</p>
-            </div>
+            <Container className="py-5">
+                <Row className="justify-content-center">
+                    <Col md={8}>
+                        <Alert variant="danger" className="text-center">
+                            <Alert.Heading>Access Denied</Alert.Heading>
+                            <p>You do not have permission to access aircraft management.</p>
+                        </Alert>
+                    </Col>
+                </Row>
+            </Container>
         );
     }
 
@@ -142,77 +148,109 @@ const PlaneManagement: React.FC = () => {
     const allPlaneTypes = [...new Set([...existingPlaneTypes, ...predefinedTypes])].sort();
 
     if (loading) {
-        return <div className="loading">Loading plane data...</div>;
+        return (
+            <Container className="py-5 text-center">
+                <Spinner animation="border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </Spinner>
+                <p className="mt-3">Loading aircraft data...</p>
+            </Container>
+        );
     }
 
     return (
-        <div className="plane-management">
-            <div className="management-header">
-                <h2>Aircraft Fleet Management</h2>
-                <button
-                    className="btn btn-primary"
-                    onClick={() => setShowForm(true)}
-                >
-                    Add New Aircraft
-                </button>
-            </div>
+        <Container fluid className="py-4">
+            <Row className="mb-4">
+                <Col>
+                    <Card>
+                        <Card.Header className="d-flex justify-content-between align-items-center">
+                            <Card.Title className="mb-0">✈️ Aircraft Fleet Management</Card.Title>
+                            <Button
+                                variant="primary"
+                                onClick={() => setShowForm(true)}
+                            >
+                                Add New Aircraft
+                            </Button>
+                        </Card.Header>
+                    </Card>
+                </Col>
+            </Row>
 
-            {error && <div className="error-message">{error}</div>}
+            {error && (
+                <Row className="mb-4">
+                    <Col>
+                        <Alert variant="danger" className="text-center">
+                            {error}
+                        </Alert>
+                    </Col>
+                </Row>
+            )}
 
             {/* Search and Filter Controls */}
-            <div className="controls-section">
-                <div className="search-controls">
-                    <div className="search-group">
-                        <label>Search Aircraft</label>
-                        <input
-                            type="text"
-                            placeholder="Search by code or type..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="search-input"
-                        />
-                    </div>
-                    
-                    <div className="filter-group">
-                        <label>Filter by Type</label>
-                        <select
-                            value={filterType}
-                            onChange={(e) => setFilterType(e.target.value)}
-                            className="filter-select"
-                        >
-                            <option value="">All Types</option>
-                            {allPlaneTypes.map(type => (
-                                <option key={type} value={type}>{type}</option>
-                            ))}
-                        </select>
-                    </div>
+            <Row className="mb-4">
+                <Col>
+                    <Card>
+                        <Card.Header>
+                            <Card.Title className="mb-0">Search & Filter</Card.Title>
+                        </Card.Header>
+                        <Card.Body>
+                            <Row className="align-items-end">
+                                <Col md={4}>
+                                    <Form.Group>
+                                        <Form.Label>Search Aircraft</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            placeholder="Search by code or type..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                        />
+                                    </Form.Group>
+                                </Col>
+                                <Col md={3}>
+                                    <Form.Group>
+                                        <Form.Label>Filter by Type</Form.Label>
+                                        <Form.Select
+                                            value={filterType}
+                                            onChange={(e) => setFilterType(e.target.value)}
+                                        >
+                                            <option value="">All Types</option>
+                                            {allPlaneTypes.map(type => (
+                                                <option key={type} value={type}>{type}</option>
+                                            ))}
+                                        </Form.Select>
+                                    </Form.Group>
+                                </Col>
+                                <Col md={5}>
+                                    <Row className="text-center">
+                                        <Col>
+                                            <Badge bg="primary" className="p-2">
+                                                Total Aircraft: <strong>{planes.length}</strong>
+                                            </Badge>
+                                        </Col>
+                                        <Col>
+                                            <Badge bg="info" className="p-2">
+                                                Total Seats: <strong>{planes.reduce((sum, plane) => sum + plane.seatQuantity, 0)}</strong>
+                                            </Badge>
+                                        </Col>
+                                    </Row>
+                                </Col>
+                            </Row>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
 
-                    <div className="stats-group">
-                        <div className="stat-item">
-                            <span className="stat-label">Total Aircraft:</span>
-                            <span className="stat-value">{planes.length}</span>
-                        </div>
-                        <div className="stat-item">
-                            <span className="stat-label">Total Seats:</span>
-                            <span className="stat-value">
-                                {planes.reduce((sum, plane) => sum + plane.seatQuantity, 0)}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Add/Edit Form Modal */}
-            {showForm && (
-                <div className="form-modal">
-                    <div className="form-container">
-                        <h3>{editingPlane ? 'Edit Aircraft' : 'Add New Aircraft'}</h3>
-
-                        <form onSubmit={handleSubmit(onSubmit)}>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Aircraft Code</label>
-                                    <input
+            <Modal show={showForm} onHide={handleCancel} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>{editingPlane ? 'Edit Aircraft' : 'Add New Aircraft'}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form id="plane-form" onSubmit={handleSubmit(onSubmit)}>
+                        <Row className="mb-3">
+                            <Col>
+                                <Form.Group>
+                                    <Form.Label>Aircraft Code</Form.Label>
+                                    <Form.Control
                                         type="text"
                                         {...register('planeCode', {
                                             required: 'Aircraft code is required',
@@ -221,22 +259,26 @@ const PlaneManagement: React.FC = () => {
                                                 message: 'Use only uppercase letters, numbers, and hyphens'
                                             }
                                         })}
-                                        className={errors.planeCode ? 'error' : ''}
+                                        isInvalid={!!errors.planeCode}
                                         placeholder="e.g., VN-A001, B737-001"
                                     />
-                                    {errors.planeCode && (
-                                        <span className="field-error">{errors.planeCode.message}</span>
-                                    )}
-                                </div>
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.planeCode?.message}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                        </Row>
 
-                                <div className="form-group">
-                                    <label>Aircraft Type</label>
+                        <Row className="mb-3">
+                            <Col md={8}>
+                                <Form.Group>
+                                    <Form.Label>Aircraft Type</Form.Label>
                                     <TypeAhead
                                         options={aircraftTypeOptions}
                                         value={selectedPlaneType}
                                         onChange={handlePlaneTypeChange}
                                         placeholder="Search aircraft type..."
-                                        className={errors.planeType ? 'error' : ''}
+                                        error={!!errors.planeType}
                                     />
                                     <input
                                         type="hidden"
@@ -246,13 +288,14 @@ const PlaneManagement: React.FC = () => {
                                         value={selectedPlaneType}
                                     />
                                     {errors.planeType && (
-                                        <span className="field-error">{errors.planeType.message}</span>
+                                        <div className="text-danger small mt-1">{errors.planeType.message}</div>
                                     )}
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Seat Capacity</label>
-                                    <input
+                                </Form.Group>
+                            </Col>
+                            <Col md={4}>
+                                <Form.Group>
+                                    <Form.Label>Seat Capacity</Form.Label>
+                                    <Form.Control
                                         type="number"
                                         min="1"
                                         max="850"
@@ -268,101 +311,129 @@ const PlaneManagement: React.FC = () => {
                                             },
                                             valueAsNumber: true
                                         })}
-                                        className={errors.seatQuantity ? 'error' : ''}
+                                        isInvalid={!!errors.seatQuantity}
                                         placeholder="e.g., 180"
                                     />
-                                    {errors.seatQuantity && (
-                                        <span className="field-error">{errors.seatQuantity.message}</span>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="form-actions">
-                                <button type="button" className="btn btn-secondary" onClick={handleCancel}>
-                                    Cancel
-                                </button>
-                                <button type="submit" className="btn btn-primary">
-                                    {editingPlane ? 'Update Aircraft' : 'Add Aircraft'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.seatQuantity?.message}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCancel}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={handleSubmit(onSubmit)}>
+                        {editingPlane ? 'Update Aircraft' : 'Add Aircraft'}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
             {/* Aircraft Grid */}
-            <div className="planes-grid">
-                {filteredPlanes.map(plane => (
-                    <div key={plane.planeId} className="plane-card">
-                        <div className="plane-header">
-                            <div className="plane-code">{plane.planeCode}</div>
-                            <div className="plane-actions">
-                                <button 
-                                    className="btn btn-sm btn-secondary"
-                                    onClick={() => handleEdit(plane)}
-                                >
-                                    Edit
-                                </button>
-                                <button 
-                                    className="btn btn-sm btn-danger"
-                                    onClick={() => handleDelete(plane.planeId!)}
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="plane-content">
-                            <div className="plane-type">{plane.planeType}</div>
-                            
-                            <div className="plane-details">
-                                <div className="detail-row">
-                                    <span className="label">Total Seats:</span>
-                                    <span className="value">{plane.seatQuantity}</span>
-                                </div>
-                                
-                                <div className="detail-row">
-                                    <span className="label">Capacity Category:</span>
-                                    <span className="value">
-                                        {plane.seatQuantity < 100 ? 'Regional' : 
-                                         plane.seatQuantity < 200 ? 'Narrow-body' : 
-                                         plane.seatQuantity < 350 ? 'Wide-body' : 'Large Wide-body'}
-                                    </span>
-                                </div>
-
-                                <div className="seat-layout">
-                                    <div className="seat-layout-label">Estimated Layout:</div>
-                                    <div className="seat-breakdown">
-                                        <div className="class-breakdown">
-                                            <span className="class-name">Economy:</span>
-                                            <span className="class-seats">~{Math.floor(plane.seatQuantity * 0.8)}</span>
-                                        </div>
-                                        <div className="class-breakdown">
-                                            <span className="class-name">Business:</span>
-                                            <span className="class-seats">~{Math.floor(plane.seatQuantity * 0.15)}</span>
-                                        </div>
-                                        <div className="class-breakdown">
-                                            <span className="class-name">First:</span>
-                                            <span className="class-seats">~{Math.floor(plane.seatQuantity * 0.05)}</span>
-                                        </div>
+            <Row>
+                {filteredPlanes.length === 0 ? (
+                    <Col>
+                        <Card>
+                            <Card.Body className="text-center py-5">
+                                <p className="text-muted mb-0">
+                                    {searchTerm || filterType ? 
+                                        'No aircraft found matching your search criteria.' : 
+                                        'No aircraft in the fleet. Add your first aircraft to get started.'
+                                    }
+                                </p>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                ) : (
+                    filteredPlanes.map(plane => (
+                        <Col key={plane.planeId} md={6} lg={4} className="mb-4">
+                            <Card className="h-100">
+                                <Card.Header className="d-flex justify-content-between align-items-center">
+                                    <Badge bg="primary" className="fs-6">{plane.planeCode}</Badge>
+                                    <div>
+                                        <Button
+                                            size="sm"
+                                            variant="outline-secondary"
+                                            className="me-2"
+                                            onClick={() => handleEdit(plane)}
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline-danger"
+                                            onClick={() => handleDelete(plane.planeId!)}
+                                        >
+                                            Delete
+                                        </Button>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
+                                </Card.Header>
+                                <Card.Body>
+                                    <Card.Title className="text-center mb-3">{plane.planeType}</Card.Title>
+                                    
+                                    <Row className="mb-3">
+                                        <Col xs={6}>
+                                            <strong>Total Seats:</strong>
+                                        </Col>
+                                        <Col xs={6} className="text-end">
+                                            <Badge bg="info">{plane.seatQuantity}</Badge>
+                                        </Col>
+                                    </Row>
+                                    
+                                    <Row className="mb-3">
+                                        <Col xs={6}>
+                                            <strong>Category:</strong>
+                                        </Col>
+                                        <Col xs={6} className="text-end">
+                                            <Badge bg="secondary">
+                                                {plane.seatQuantity < 100 ? 'Regional' : 
+                                                 plane.seatQuantity < 200 ? 'Narrow-body' : 
+                                                 plane.seatQuantity < 350 ? 'Wide-body' : 'Large Wide-body'}
+                                            </Badge>
+                                        </Col>
+                                    </Row>
 
-            {filteredPlanes.length === 0 && (
-                <div className="no-data">
-                    {searchTerm || filterType ? (
-                        <p>No aircraft found matching your search criteria.</p>
-                    ) : (
-                        <p>No aircraft in the fleet. Add your first aircraft to get started.</p>
-                    )}
-                </div>
-            )}
-        </div>
+                                    <Card className="mt-3">
+                                        <Card.Header as="h6" className="bg-light">
+                                            Estimated Layout
+                                        </Card.Header>
+                                        <Card.Body className="py-2">
+                                            <Row className="small">
+                                                <Col xs={6}>
+                                                    <strong>Economy:</strong>
+                                                </Col>
+                                                <Col xs={6} className="text-end">
+                                                    ~{Math.floor(plane.seatQuantity * 0.8)}
+                                                </Col>
+                                            </Row>
+                                            <Row className="small">
+                                                <Col xs={6}>
+                                                    <strong>Business:</strong>
+                                                </Col>
+                                                <Col xs={6} className="text-end">
+                                                    ~{Math.floor(plane.seatQuantity * 0.15)}
+                                                </Col>
+                                            </Row>
+                                            <Row className="small">
+                                                <Col xs={6}>
+                                                    <strong>First:</strong>
+                                                </Col>
+                                                <Col xs={6} className="text-end">
+                                                    ~{Math.floor(plane.seatQuantity * 0.05)}
+                                                </Col>
+                                            </Row>
+                                        </Card.Body>
+                                    </Card>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                    ))
+                )}
+            </Row>
+        </Container>
     );
 };
 

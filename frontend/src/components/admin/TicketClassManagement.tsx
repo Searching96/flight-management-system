@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Modal } from 'react-bootstrap';
 import { ticketClassService } from '../../services';
 import { TicketClass } from '../../models';
-import './TicketClassManagement.css';
 import { usePermissions } from '../../hooks/useAuth';
 
 interface TicketClassFormData {
@@ -14,10 +14,16 @@ const TicketClassManagement: React.FC = () => {
   const { canViewAdmin } = usePermissions();
   if (!canViewAdmin) {
     return (
-      <div className="unauthorized">
-        <h2>Access Denied</h2>
-        <p>You do not have permission to access ticket class management.</p>
-      </div>
+      <Container className="py-5">
+        <Row className="justify-content-center">
+          <Col md={8}>
+            <Alert variant="danger" className="text-center">
+              <Alert.Heading>Access Denied</Alert.Heading>
+              <p>You do not have permission to access ticket class management.</p>
+            </Alert>
+          </Col>
+        </Row>
+      </Container>
     );
   }
 
@@ -93,128 +99,179 @@ const TicketClassManagement: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="loading">Loading ticket classes...</div>;
+    return (
+      <Container className="py-5 text-center">
+        <Spinner animation="border" variant="primary" />
+        <p className="mt-3">Loading ticket classes...</p>
+      </Container>
+    );
   }
 
   return (
-    <div className="ticket-class-management">
-      <div className="management-header">
-        <h2>Ticket Class Management</h2>
-        <button
-          className="btn btn-primary"
-          onClick={() => setShowForm(true)}
-        >
-          Add New Ticket Class
-        </button>
-      </div>
+    <Container fluid className="py-4">
+      {/* Header */}
+      <Row className="mb-4">
+        <Col>
+          <Card>
+            <Card.Body>
+              <Row className="align-items-center">
+                <Col>
+                  <h2 className="mb-0">Ticket Class Management</h2>
+                </Col>
+                <Col xs="auto">
+                  <Button
+                    variant="primary"
+                    onClick={() => setShowForm(true)}
+                  >
+                    Add New Ticket Class
+                  </Button>
+                </Col>
+              </Row>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
-      {error && <div className="error-message">{error}</div>}
+      {/* Error Alert */}
+      {error && (
+        <Row className="mb-4">
+          <Col>
+            <Alert variant="danger" onClose={() => setError('')} dismissible>
+              {error}
+            </Alert>
+          </Col>
+        </Row>
+      )}
 
-      {showForm && (
-        <div className="form-modal">
-          <div className="form-container">
-            <h3>{editingClass ? 'Edit Ticket Class' : 'Add New Ticket Class'}</h3>
-
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Class Name</label>
-                  <input
+      {/* Form Modal */}
+      <Modal show={showForm} onHide={handleCancel} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {editingClass ? 'Edit Ticket Class' : 'Add New Ticket Class'}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleSubmit(onSubmit)}>
+            <Row>
+              <Col md={8}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Class Name</Form.Label>
+                  <Form.Control
                     type="text"
                     {...register('ticketClassName', {
                       required: 'Class name is required'
                     })}
-                    className={errors.ticketClassName ? 'error' : ''}
+                    isInvalid={!!errors.ticketClassName}
                     placeholder="e.g., Economy, Business, First Class"
                   />
-                  {errors.ticketClassName && (
-                    <span className="field-error">{errors.ticketClassName.message}</span>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label>Color</label>
-                  <input
+                  <Form.Control.Feedback type="invalid">
+                    {errors.ticketClassName?.message}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Color</Form.Label>
+                  <Form.Control
                     type="color"
                     {...register('color', {
                       required: 'Color is required'
                     })}
-                    className={errors.color ? 'error' : ''}
+                    isInvalid={!!errors.color}
                   />
-                  {errors.color && (
-                    <span className="field-error">{errors.color.message}</span>
-                  )}
+                  <Form.Control.Feedback type="invalid">
+                    {errors.color?.message}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+            </Row>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleSubmit(onSubmit)}>
+            {editingClass ? 'Update Class' : 'Create Class'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Ticket Classes Grid */}
+      {ticketClasses.length > 0 ? (
+        <Row>
+          {ticketClasses.map(ticketClass => (
+            <Col lg={4} md={6} key={ticketClass.ticketClassId} className="mb-4">
+              <Card className="h-100">
+                <Card.Header className="d-flex justify-content-between align-items-center">
+                  <Badge 
+                    style={{ backgroundColor: ticketClass.color, color: '#fff' }}
+                    className="px-3 py-2 fs-6"
+                  >
+                    {ticketClass.ticketClassName}
+                  </Badge>
+                  <div>
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      className="me-2"
+                      onClick={() => handleEdit(ticketClass)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={() => handleDelete(ticketClass.ticketClassId!)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </Card.Header>
+                <Card.Body>
+                  <Row className="mb-2">
+                    <Col xs={4} className="text-muted">ID:</Col>
+                    <Col xs={8}>{ticketClass.ticketClassId}</Col>
+                  </Row>
+                  <Row className="mb-2">
+                    <Col xs={4} className="text-muted">Name:</Col>
+                    <Col xs={8}>{ticketClass.ticketClassName}</Col>
+                  </Row>
+                  <Row className="mb-2">
+                    <Col xs={4} className="text-muted">Color:</Col>
+                    <Col xs={8} className="d-flex align-items-center">
+                      <div
+                        className="me-2 rounded"
+                        style={{
+                          backgroundColor: ticketClass.color,
+                          width: '20px',
+                          height: '20px',
+                          border: '1px solid #dee2e6'
+                        }}
+                      ></div>
+                      <span>{ticketClass.color}</span>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      ) : (
+        <Row>
+          <Col>
+            <Card>
+              <Card.Body className="text-center py-5">
+                <div className="text-muted">
+                  <h4>No ticket classes found</h4>
+                  <p>Add your first ticket class to get started.</p>
                 </div>
-              </div>
-
-              <div className="form-actions">
-                <button type="button" className="btn btn-secondary" onClick={handleCancel}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  {editingClass ? 'Update Class' : 'Create Class'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       )}
-
-      <div className="ticket-classes-grid">
-        {ticketClasses.map(ticketClass => (
-          <div key={ticketClass.ticketClassId} className="ticket-class-card">
-            <div className="class-header">
-              <span 
-                className="class-badge" 
-                style={{ backgroundColor: ticketClass.color }}
-              >
-                {ticketClass.ticketClassName}
-              </span>
-              <div className="class-actions">
-                <button 
-                  className="btn btn-sm btn-secondary"
-                  onClick={() => handleEdit(ticketClass)}
-                >
-                  Edit
-                </button>
-                <button 
-                  className="btn btn-sm btn-danger"
-                  onClick={() => handleDelete(ticketClass.ticketClassId!)}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-            <div className="class-details">
-              <div className="detail-row">
-                <span className="label">ID:</span>
-                <span className="value">{ticketClass.ticketClassId}</span>
-              </div>
-              <div className="detail-row">
-                <span className="label">Name:</span>
-                <span className="value">{ticketClass.ticketClassName}</span>
-              </div>
-              <div className="detail-row">
-                <span className="label">Color:</span>
-                <div className="color-display">
-                  <span 
-                    className="color-swatch"
-                    style={{ backgroundColor: ticketClass.color }}
-                  ></span>
-                  <span className="value">{ticketClass.color}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {ticketClasses.length === 0 && (
-        <div className="no-data">
-          <p>No ticket classes found. Add your first ticket class to get started.</p>
-        </div>
-      )}
-    </div>
+    </Container>
   );
 };
 

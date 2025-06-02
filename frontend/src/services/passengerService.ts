@@ -25,9 +25,8 @@ class PassengerService {
   async deletePassenger(id: number): Promise<void> {
     return apiClient.delete(`/passengers/${id}`);
   }
-
   async searchPassengersByName(name: string): Promise<Passenger[]> {
-    return apiClient.get(`/passengers/search?name=${encodeURIComponent(name)}`);
+    return apiClient.get(`/passengers/search/${encodeURIComponent(name)}`);
   }
   async getPassengersByEmail(email: string): Promise<Passenger[]> {
     return apiClient.get(`/passengers/email/${encodeURIComponent(email)}`);

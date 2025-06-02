@@ -41,9 +41,8 @@ export class TicketService {
   async updateTicket(id: number, ticketData: Partial<Ticket>): Promise<Ticket> {
     return apiClient.put(`${this.baseUrl}/${id}`, ticketData);
   }
-
   async cancelTicket(ticketId: number): Promise<void> {
-    return apiClient.patch(`${this.baseUrl}/${ticketId}/cancel`);
+    return apiClient.put(`${this.baseUrl}/${ticketId}/cancel`);
   }
 
   async deleteTicket(id: number): Promise<void> {
@@ -55,7 +54,7 @@ export class TicketService {
   }
 
   async payTicket(ticketId: number): Promise<Ticket> {
-    return apiClient.patch(`${this.baseUrl}/${ticketId}/pay`);
+    return apiClient.put(`${this.baseUrl}/${ticketId}/pay`);
   }
 
   async searchTickets(query: string): Promise<Ticket[]> {

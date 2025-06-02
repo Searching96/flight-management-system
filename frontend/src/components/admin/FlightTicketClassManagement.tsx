@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge } from 'react-bootstrap';
 import { flightService, ticketClassService, flightTicketClassService } from '../../services';
 import { Flight, TicketClass, FlightTicketClass } from '../../models';
-import './FlightTicketClassManagement.css';
 import TypeAhead from '../common/TypeAhead';
 import { usePermissions } from '../../hooks/useAuth';
 
@@ -9,10 +9,16 @@ const FlightTicketClassManagement: React.FC = () => {
     const { canViewAdmin } = usePermissions();
     if (!canViewAdmin) {
         return (
-            <div className="unauthorized">
-                <h2>Access Denied</h2>
-                <p>You do not have permission to access flight ticket class management.</p>
-            </div>
+            <Container className="py-5">
+                <Row className="justify-content-center">
+                    <Col md={8}>
+                        <Alert variant="danger" className="text-center">
+                            <Alert.Heading>Access Denied</Alert.Heading>
+                            <p>You do not have permission to access flight ticket class management.</p>
+                        </Alert>
+                    </Col>
+                </Row>
+            </Container>
         );
     }
 
@@ -24,7 +30,6 @@ const FlightTicketClassManagement: React.FC = () => {
     const [selectedFlight, setSelectedFlight] = useState<number | ''>('');
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [editingAssociation, setEditingAssociation] = useState<FlightTicketClass | null>(null);
-    const [selectedFlightForTypeAhead, setSelectedFlightForTypeAhead] = useState<number | ''>('');
 
     useEffect(() => {
         loadInitialData();
@@ -154,97 +159,125 @@ const FlightTicketClassManagement: React.FC = () => {
         route: `${flight.departureCityName} → ${flight.arrivalCityName}`
     }));
 
-    // Transform ticket classes for TypeAhead
-    const ticketClassOptions = ticketClasses.map(tc => ({
-        value: tc.ticketClassId!,
-        label: tc.ticketClassName,
-        color: tc.color
-    }));
-
     if (loading) {
-        return <div className="loading">Loading flight ticket class data...</div>;
+        return (
+            <Container className="py-5">
+                <Row className="justify-content-center">
+                    <Col md={8} className="text-center">
+                        <Spinner animation="border" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                        </Spinner>
+                        <p className="mt-3">Loading flight ticket class data...</p>
+                    </Col>
+                </Row>
+            </Container>
+        );
     }
 
     return (
-        <div className="flight-ticket-class-management">
-            <div className="management-header">
-                <h2>Flight Class Assignment</h2>
-                <div className="flight-selector">
-                    <label>Select Flight:</label>
-                    <TypeAhead
-                        options={flightOptions}
-                        value={selectedFlight}
-                        onChange={(option) => {
-                            const flightId = option?.value as number || '';
-                            setSelectedFlight(flightId);
-                        }}
-                        placeholder="Search flights..."
-                        className="flight-typeahead"
-                    />
-                </div>
-            </div>
+        <Container fluid className="py-4">
+            <Card className="mb-4">
+                <Card.Header>
+                    <Row className="align-items-center">
+                        <Col>
+                            <Card.Title as="h2" className="mb-0">Flight Class Assignment</Card.Title>
+                        </Col>
+                        <Col md="auto">
+                            <Form.Group className="d-flex align-items-center gap-3 mb-0">
+                                <Form.Label className="mb-0 fw-medium">Select Flight:</Form.Label>
+                                <div style={{ minWidth: '300px' }}>
+                                    <TypeAhead
+                                        options={flightOptions}
+                                        value={selectedFlight}
+                                        onChange={(option) => {
+                                            const flightId = option?.value as number || '';
+                                            setSelectedFlight(flightId);
+                                        }}
+                                        placeholder="Search flights..."
+                                    />
+                                </div>
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                </Card.Header>
+            </Card>
 
-            {error && <div className="error-message">{error}</div>}
+            {error && (
+                <Alert variant="danger" className="mb-4">
+                    {error}
+                </Alert>
+            )}
 
             {selectedFlight && (
-                <div className="ticket-class-section">
-                    <div className="section-header">
-                        <h3>Ticket Classes for {getFlightInfo(Number(selectedFlight))?.flightCode}</h3>
-                        {availableTicketClasses.length > 0 && (
-                            <button
-                                className="btn btn-primary"
-                                onClick={() => setShowCreateForm(true)}
-                            >
-                                Add Ticket Class
-                            </button>
-                        )}
-                    </div>
+                <Card>
+                    <Card.Header>
+                        <Row className="align-items-center">
+                            <Col>
+                                <Card.Title as="h3" className="mb-0">
+                                    Ticket Classes for {getFlightInfo(Number(selectedFlight))?.flightCode}
+                                </Card.Title>
+                            </Col>
+                            <Col md="auto">
+                                {availableTicketClasses.length > 0 && (
+                                    <Button
+                                        variant="primary"
+                                        onClick={() => setShowCreateForm(true)}
+                                    >
+                                        Add Ticket Class
+                                    </Button>
+                                )}
+                            </Col>
+                        </Row>
+                    </Card.Header>
 
-                    {showCreateForm && (
-                        <CreateAssociationFormWithTypeAhead
-                            availableClasses={availableTicketClasses}
-                            onSubmit={handleCreateAssociation}
-                            onCancel={() => setShowCreateForm(false)}
-                        />
-                    )}
-
-                    <div className="associations-grid">
-                        {flightTicketClasses.map(association => (
-                            <TicketClassCard
-                                key={`${association.flightId}-${association.ticketClassId}`}
-                                association={association}
-                                className={getTicketClassName(association.ticketClassId!)}
-                                classColor={getTicketClassColor(association.ticketClassId!)}
-                                isEditing={editingAssociation?.ticketClassId === association.ticketClassId}
-                                onEdit={() => setEditingAssociation(association)}
-                                onSave={(data) => handleUpdateAssociation(
-                                    association.flightId!,
-                                    association.ticketClassId!,
-                                    data
-                                )}
-                                onCancel={() => setEditingAssociation(null)}
-                                onDelete={() => handleDeleteAssociation(
-                                    association.flightId!,
-                                    association.ticketClassId!
-                                )}
-                                onUpdateRemaining={(quantity) => handleUpdateRemainingSeats(
-                                    association.flightId!,
-                                    association.ticketClassId!,
-                                    quantity
-                                )}
+                    <Card.Body>
+                        {showCreateForm && (
+                            <CreateAssociationFormWithTypeAhead
+                                availableClasses={availableTicketClasses}
+                                onSubmit={handleCreateAssociation}
+                                onCancel={() => setShowCreateForm(false)}
                             />
-                        ))}
-                    </div>
+                        )}
 
-                    {flightTicketClasses.length === 0 && (
-                        <div className="no-data">
-                            <p>No ticket classes assigned to this flight.</p>
-                            <p>Add ticket classes to enable booking for this flight.</p>
-                        </div>
-                    )}
-                </div>
+                        <Row className="g-3">
+                            {flightTicketClasses.map(association => (
+                                <Col lg={6} xl={4} key={`${association.flightId}-${association.ticketClassId}`}>
+                                    <TicketClassCard
+                                        association={association}
+                                        className={getTicketClassName(association.ticketClassId!)}
+                                        classColor={getTicketClassColor(association.ticketClassId!)}
+                                        isEditing={editingAssociation?.ticketClassId === association.ticketClassId}
+                                        onEdit={() => setEditingAssociation(association)}
+                                        onSave={(data) => handleUpdateAssociation(
+                                            association.flightId!,
+                                            association.ticketClassId!,
+                                            data
+                                        )}
+                                        onCancel={() => setEditingAssociation(null)}
+                                        onDelete={() => handleDeleteAssociation(
+                                            association.flightId!,
+                                            association.ticketClassId!
+                                        )}
+                                        onUpdateRemaining={(quantity) => handleUpdateRemainingSeats(
+                                            association.flightId!,
+                                            association.ticketClassId!,
+                                            quantity
+                                        )}
+                                    />
+                                </Col>
+                            ))}
+                        </Row>
+
+                        {flightTicketClasses.length === 0 && (
+                            <Alert variant="info" className="text-center">
+                                <Alert.Heading>No Ticket Classes Assigned</Alert.Heading>
+                                <p className="mb-0">Add ticket classes to enable booking for this flight.</p>
+                            </Alert>
+                        )}
+                    </Card.Body>
+                </Card>
             )}
-        </div>
+        </Container>
     );
 };
 
@@ -303,61 +336,74 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
     };
 
     return (
-        <div className="form-section">
-            <h4>Add Ticket Class</h4>
-            {formErrors && <div className="error-message">{formErrors}</div>}
-            <form onSubmit={handleSubmit}>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Ticket Class</label>
-                        <TypeAhead
-                            options={ticketClassOptions}
-                            value={selectedTicketClass}
-                            onChange={(option) => {
-                                setSelectedTicketClass(option?.value as number || '');
-                            }}
-                            placeholder="Search ticket class..."
-                        />
-                    </div>
+        <Card className="mb-4">
+            <Card.Header>
+                <Card.Title as="h4" className="mb-0">Add Ticket Class</Card.Title>
+            </Card.Header>
+            <Card.Body>
+                {formErrors && (
+                    <Alert variant="danger" className="mb-3">
+                        {formErrors}
+                    </Alert>
+                )}
+                
+                <Form onSubmit={handleSubmit}>
+                    <Row className="g-3">
+                        <Col md={4}>
+                            <Form.Group>
+                                <Form.Label>Ticket Class</Form.Label>
+                                <TypeAhead
+                                    options={ticketClassOptions}
+                                    value={selectedTicketClass}
+                                    onChange={(option) => {
+                                        setSelectedTicketClass(option?.value as number || '');
+                                    }}
+                                    placeholder="Search ticket class..."
+                                />
+                            </Form.Group>
+                        </Col>
 
-                    <div className="form-group">
-                        <label>Number of Seats</label>
-                        <input
-                            type="number"
-                            min="1"
-                            value={formData.ticketQuantity}
-                            onChange={(e) => setFormData(prev => ({ ...prev, ticketQuantity: e.target.value }))
-                            }
-                            required
-                            placeholder="e.g., 100"
-                        />
-                    </div>
+                        <Col md={4}>
+                            <Form.Group>
+                                <Form.Label>Number of Seats</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    min="1"
+                                    value={formData.ticketQuantity}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, ticketQuantity: e.target.value }))}
+                                    required
+                                    placeholder="e.g., 100"
+                                />
+                            </Form.Group>
+                        </Col>
 
-                    <div className="form-group">
-                        <label>Price per Ticket (VND)</label>
-                        <input
-                            type="number"
-                            min="1"
-                            step="1000"
-                            value={formData.specifiedFare}
-                            onChange={(e) => setFormData(prev => ({ ...prev, specifiedFare: e.target.value }))
-                            }
-                            required
-                            placeholder="e.g., 1500000"
-                        />
-                    </div>
-                </div>
+                        <Col md={4}>
+                            <Form.Group>
+                                <Form.Label>Price per Ticket (VND)</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    min="1"
+                                    step="1000"
+                                    value={formData.specifiedFare}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, specifiedFare: e.target.value }))}
+                                    required
+                                    placeholder="e.g., 1500000"
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
 
-                <div className="form-actions">
-                    <button type="button" className="btn btn-secondary" onClick={onCancel}>
-                        Cancel
-                    </button>
-                    <button type="submit" className="btn btn-primary">
-                        Add Class
-                    </button>
-                </div>
-            </form>
-        </div>
+                    <div className="d-flex gap-2 mt-3">
+                        <Button type="button" variant="secondary" onClick={onCancel}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" variant="primary">
+                            Add Class
+                        </Button>
+                    </div>
+                </Form>
+            </Card.Body>
+        </Card>
 
     );
 };
@@ -405,97 +451,134 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
         ((soldSeats / association.ticketQuantity) * 100).toFixed(1) : '0';
 
     return (
-        <div className="ticket-class-card" style={{ borderLeft: `4px solid ${classColor}` }}>
-            <div className="card-header">
-                <h4 style={{ color: classColor }}>{className}</h4>
-                <div className="card-actions">
+        <Card className="h-100" style={{ borderLeft: `4px solid ${classColor}` }}>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+                <Card.Title as="h5" className="mb-0" style={{ color: classColor }}>
+                    {className}
+                </Card.Title>
+                <div className="d-flex gap-1">
                     {isEditing ? (
                         <>
-                            <button className="btn btn-sm btn-success" onClick={handleSave}>Save</button>
-                            <button className="btn btn-sm btn-secondary" onClick={onCancel}>Cancel</button>
+                            <Button size="sm" variant="success" onClick={handleSave}>
+                                Save
+                            </Button>
+                            <Button size="sm" variant="secondary" onClick={onCancel}>
+                                Cancel
+                            </Button>
                         </>
                     ) : (
                         <>
-                            <button className="btn btn-sm btn-primary" onClick={onEdit}>Edit</button>
-                            <button className="btn btn-sm btn-danger" onClick={onDelete}>Delete</button>
+                            <Button size="sm" variant="outline-primary" onClick={onEdit}>
+                                Edit
+                            </Button>
+                            <Button size="sm" variant="outline-danger" onClick={onDelete}>
+                                Delete
+                            </Button>
                         </>
                     )}
                 </div>
-            </div>
+            </Card.Header>
 
-            <div className="card-content">
+            <Card.Body>
                 {isEditing ? (
-                    <div className="edit-form">
-                        <div className="form-group">
-                            <label>Total Seats</label>
-                            <input
-                                type="number"
-                                value={editData.ticketQuantity}
-                                onChange={(e) => setEditData(prev => ({ ...prev, ticketQuantity: parseInt(e.target.value) || 0 }))
-                                }
-                                min="0"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Price per Ticket (VND)</label>
-                            <input
-                                type="number"
-                                value={editData.specifiedFare}
-                                onChange={(e) => setEditData(prev => ({ ...prev, specifiedFare: parseInt(e.target.value) || 0 }))
-                                }
-                                min="0"
-                            />
-                        </div>
-                        <div className="remaining-seats-control">
-                            <input
-                                type="number"
-                                value={editData.remainingTicketQuantity}
-                                onChange={(e) => setEditData(prev => ({ ...prev, remainingTicketQuantity: parseInt(e.target.value) || 0 }))
-                                }
-                                min="0"
-                                max={editData.ticketQuantity}
-                            />
-                            <button 
-                                className="btn btn-sm btn-warning" 
-                                onClick={handleUpdateRemaining}
-                                title="Update remaining seats only"
-                            >
-                                Update Remaining
-                            </button>
-                        </div>
-                    </div>
+                    <Row className="g-3">
+                        <Col sm={6}>
+                            <Form.Group>
+                                <Form.Label>Total Seats</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    value={editData.ticketQuantity}
+                                    onChange={(e) => setEditData(prev => ({ ...prev, ticketQuantity: parseInt(e.target.value) || 0 }))}
+                                    min="0"
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col sm={6}>
+                            <Form.Group>
+                                <Form.Label>Price per Ticket (VND)</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    value={editData.specifiedFare}
+                                    onChange={(e) => setEditData(prev => ({ ...prev, specifiedFare: parseInt(e.target.value) || 0 }))}
+                                    min="0"
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col xs={12}>
+                            <Form.Group>
+                                <Form.Label>Remaining Seats</Form.Label>
+                                <div className="d-flex gap-2">
+                                    <Form.Control
+                                        type="number"
+                                        value={editData.remainingTicketQuantity}
+                                        onChange={(e) => setEditData(prev => ({ ...prev, remainingTicketQuantity: parseInt(e.target.value) || 0 }))}
+                                        min="0"
+                                        max={editData.ticketQuantity}
+                                    />
+                                    <Button 
+                                        size="sm"
+                                        variant="warning" 
+                                        onClick={handleUpdateRemaining}
+                                        title="Update remaining seats only"
+                                    >
+                                        Update Remaining
+                                    </Button>
+                                </div>
+                            </Form.Group>
+                        </Col>
+                    </Row>
                 ) : (
-                    <div className="card-details">
-                        <div className="detail-row">
-                            <span className="label">Total Seats:</span>
-                            <span className="value">{association.ticketQuantity}</span>
-                        </div>
-                        <div className="detail-row">
-                            <span className="label">Remaining:</span>
-                            <span className="value">{association.remainingTicketQuantity}</span>
-                        </div>
-                        <div className="detail-row">
-                            <span className="label">Price:</span>
-                            <span className="value">{association.specifiedFare?.toLocaleString()} VND</span>
-                        </div>
-                        <div className="detail-row">
-                            <span className="label">Sold:</span>
-                            <span className="value">{soldSeats}</span>
-                        </div>
+                    <>
+                        <Row className="g-2 mb-3">
+                            <Col xs={6}>
+                                <div className="d-flex justify-content-between">
+                                    <span className="text-muted">Total Seats:</span>
+                                    <strong>{association.ticketQuantity}</strong>
+                                </div>
+                            </Col>
+                            <Col xs={6}>
+                                <div className="d-flex justify-content-between">
+                                    <span className="text-muted">Remaining:</span>
+                                    <strong>{association.remainingTicketQuantity}</strong>
+                                </div>
+                            </Col>
+                            <Col xs={6}>
+                                <div className="d-flex justify-content-between">
+                                    <span className="text-muted">Price:</span>
+                                    <strong>{association.specifiedFare?.toLocaleString()} VND</strong>
+                                </div>
+                            </Col>
+                            <Col xs={6}>
+                                <div className="d-flex justify-content-between">
+                                    <span className="text-muted">Sold:</span>
+                                    <strong>{soldSeats}</strong>
+                                </div>
+                            </Col>
+                        </Row>
 
-                        <div className="occupancy-section">
-                            <div className="occupancy-label">Occupancy: {occupancyRate}%</div>
-                            <div className="progress-bar">
+                        <div>
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                <span className="text-muted">Occupancy:</span>
+                                <Badge bg="secondary">{occupancyRate}%</Badge>
+                            </div>
+                            <div className="progress" style={{ height: '8px' }}>
                                 <div 
-                                    className="progress-fill" 
-                                    style={{ width: `${occupancyRate}%` }}
-                                ></div>
+                                    className="progress-bar" 
+                                    role="progressbar"
+                                    style={{ 
+                                        width: `${occupancyRate}%`,
+                                        backgroundColor: classColor
+                                    }}
+                                    aria-valuenow={parseFloat(occupancyRate)}
+                                    aria-valuemin={0}
+                                    aria-valuemax={100}
+                                />
                             </div>
                         </div>
-                    </div>
+                    </>
                 )}
-            </div>
-        </div>
+            </Card.Body>
+        </Card>
     );
 };
 

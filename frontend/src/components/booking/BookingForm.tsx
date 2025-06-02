@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
 import { flightService, ticketService, passengerService, bookingConfirmationService } from '../../services';
 import { Flight } from '../../models';
-import './BookingForm.css';
 import TypeAhead from '../common/TypeAhead';
 
 interface BookingFormData {
@@ -22,25 +22,54 @@ interface BookingFormData {
 }
 
 const BookingForm: React.FC = () => {
-  const { flightId } = useParams<{ flightId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [flight, setFlight] = useState<Flight | null>(null);  const [ticketClasses, setTicketClasses] = useState<any[]>([]);
+  // Get booking data from sessionStorage (preferred) or fallback to query parameters
+  const getBookingData = () => {
+    const sessionData = sessionStorage.getItem('bookingData');
+    if (sessionData) {
+      try {
+        const parsed = JSON.parse(sessionData);
+        return {
+          flightId: parsed.flightId?.toString(),
+          queryPassengers: parsed.passengers?.toString(),
+          queryClass: parsed.class?.toString()
+        };
+      } catch (error) {
+        console.warn('Failed to parse booking data from sessionStorage:', error);
+      }
+    }
+    
+    // Fallback to query parameters for backward compatibility
+    const searchParams = new URLSearchParams(location.search);
+    return {
+      flightId: searchParams.get('flightId'),
+      queryPassengers: searchParams.get('passengers'),
+      queryClass: searchParams.get('class')
+    };
+  };
+
+  const { flightId, queryPassengers, queryClass } = getBookingData();
+
+  const [flight, setFlight] = useState<Flight | null>(null);
+  const [ticketClasses, setTicketClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
 
-  const passengerCount = location.state?.passengerCount || 1;
-
+  // Get passenger count from query param or location state
+  const passengerCount = parseInt(queryPassengers || '0') || location.state?.passengerCount || 1;
   const {
     register,
     handleSubmit,
     formState: { errors },
     watch,
     setValue,
-    control  } = useForm<BookingFormData>({
+    control
+  } = useForm<BookingFormData>({
     defaultValues: {
       passengers: Array(passengerCount).fill(null).map(() => ({
         firstName: '',
@@ -51,7 +80,7 @@ const BookingForm: React.FC = () => {
         phoneNumber: '',
         email: ''
       })),
-      ticketClassId: 0,
+      ticketClassId: parseInt(queryClass || '0') || 0,
       useFrequentFlyer: false
     }
   });
@@ -59,13 +88,42 @@ const BookingForm: React.FC = () => {
   const { fields } = useFieldArray({
     control,
     name: 'passengers'
-  });
-
-  useEffect(() => {
+  });  useEffect(() => {
     if (flightId) {
       loadBookingData();
     }
   }, [flightId]);
+
+  // Set the ticket class when query parameter is provided and ticket classes are loaded
+  useEffect(() => {
+    if (queryClass && ticketClasses.length > 0) {
+      const classId = parseInt(queryClass);
+      const classExists = ticketClasses.some(tc => tc.ticketClassId === classId);
+      if (classExists) {
+        setValue('ticketClassId', classId);
+      }
+    }
+  }, [queryClass, ticketClasses, setValue]);
+  
+  // Clear query parameters from URL and sessionStorage after data is loaded
+  useEffect(() => {
+    if (flight && ticketClasses.length > 0) {
+      // Clear sessionStorage booking data after successful load
+      sessionStorage.removeItem('bookingData');
+      
+      // Replace current URL without query parameters using React Router
+      const searchParams = new URLSearchParams(location.search);
+      if (searchParams.has('flightId') || searchParams.has('passengers') || searchParams.has('class')) {
+        navigate('/booking', { replace: true });
+      }
+    }  }, [flight, ticketClasses, navigate, location.search]);
+
+  // Redirect to flight search if no booking data is available
+  useEffect(() => {
+    if (!flightId) {
+      navigate('/flights', { replace: true });
+    }
+  }, [flightId, navigate]);
 
   const loadBookingData = async () => {
     try {
@@ -184,25 +242,63 @@ const BookingForm: React.FC = () => {
 
   const selectedTicketClass = watch('ticketClassId');
   const selectedClass = ticketClasses.find(tc => tc.ticketClassId === selectedTicketClass);
-
   const calculateTotalPrice = () => {
     if (!selectedClass) return 0;
     return selectedClass.specifiedFare * passengerCount;
   };
 
-  if (loading) {
+  // Guard: Check if flightId is provided
+  if (!flightId) {
     return (
-      <div className="booking-form">
-        <div className="loading">Loading booking form...</div>
-      </div>
+      <Container className="py-5">
+        <Row className="justify-content-center">
+          <Col md={8}>
+            <Card>
+              <Card.Body className="text-center py-5">
+                <Alert variant="danger" className="mb-0">
+                  <Alert.Heading>Missing Flight Information</Alert.Heading>
+                  <p>No flight ID provided. Please select a flight from the search results.</p>
+                  <Button variant="primary" onClick={() => navigate('/search')}>
+                    Back to Flight Search
+                  </Button>
+                </Alert>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
     );
   }
 
+  if (loading) {
+    return (
+      <Container className="py-5">
+        <Row className="justify-content-center">
+          <Col md={8}>
+            <Card>
+              <Card.Body className="text-center py-5">
+                <Spinner animation="border" variant="primary" className="mb-3" />
+                <p className="mb-0">Loading booking form...</p>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
   if (!flight) {
     return (
-      <div className="booking-form">
-        <div className="error-message">Flight not found</div>
-      </div>
+      <Container className="py-5">
+        <Row className="justify-content-center">
+          <Col md={8}>
+            <Card>
+              <Card.Body className="text-center py-5">
+                <Alert variant="danger" className="mb-0">Flight not found</Alert>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
     );
   }
 
@@ -226,274 +322,355 @@ const BookingForm: React.FC = () => {
     { value: '+60', label: '+60 (Malaysia)' },
     { value: '+62', label: '+62 (Indonesia)' }
   ];
-
   const renderPassengerForm = (index: number) => {
     const [selectedGender, setSelectedGender] = useState('');
     const [selectedCountryCode, setSelectedCountryCode] = useState('+84');
 
     return (
-      <div key={index} className="passenger-form">
-        <h4>Passenger {index + 1}</h4>
-        
-        <div className="form-row">
-          <div className="form-group">
-            <label>First Name *</label>
-            <input
-              type="text"
-              {...register(`passengers.${index}.firstName`, {
-                required: 'First name is required'
-              })}
-              placeholder="Enter first name"
-            />
-            {errors.passengers?.[index]?.firstName && (
-              <span className="field-error">{errors.passengers[index]?.firstName?.message}</span>
-            )}
-          </div>
+      <Card key={index} className="mb-4">
+        <Card.Header>
+          <h5 className="mb-0">Passenger {index + 1}</h5>
+        </Card.Header>
+        <Card.Body>
+          <Row className="mb-3">
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>First Name *</Form.Label>
+                <Form.Control
+                  type="text"
+                  {...register(`passengers.${index}.firstName`, {
+                    required: 'First name is required'
+                  })}
+                  placeholder="Enter first name"
+                  isInvalid={!!errors.passengers?.[index]?.firstName}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.passengers?.[index]?.firstName?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
 
-          <div className="form-group">
-            <label>Last Name *</label>
-            <input
-              type="text"
-              {...register(`passengers.${index}.lastName`, {
-                required: 'Last name is required'
-              })}
-              placeholder="Enter last name"
-            />
-            {errors.passengers?.[index]?.lastName && (
-              <span className="field-error">{errors.passengers[index]?.lastName?.message}</span>
-            )}
-          </div>
-        </div>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>Last Name *</Form.Label>
+                <Form.Control
+                  type="text"
+                  {...register(`passengers.${index}.lastName`, {
+                    required: 'Last name is required'
+                  })}
+                  placeholder="Enter last name"
+                  isInvalid={!!errors.passengers?.[index]?.lastName}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.passengers?.[index]?.lastName?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+          </Row>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>Date of Birth</label>
-            <input
-              type="date"
-              {...register(`passengers.${index}.dateOfBirth`)}
-              max={new Date().toISOString().split('T')[0]}
-            />
-          </div>
+          <Row className="mb-3">
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>Date of Birth</Form.Label>
+                <Form.Control
+                  type="date"
+                  {...register(`passengers.${index}.dateOfBirth`)}
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              </Form.Group>
+            </Col>
 
-          <div className="form-group">
-            <label>Gender</label>
-            <TypeAhead
-              options={genderOptions}
-              value={selectedGender}
-              onChange={(option) => {
-                const gender = option?.value as string || '';
-                setSelectedGender(gender);
-                setValue(`passengers.${index}.gender`, gender);
-              }}
-              placeholder="Select gender..."
-              allowClear={true}
-            />
-            <input
-              type="hidden"
-              {...register(`passengers.${index}.gender`)}
-            />
-          </div>
-        </div>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>Gender</Form.Label>
+                <TypeAhead
+                  options={genderOptions}
+                  value={selectedGender}
+                  onChange={(option) => {
+                    const gender = option?.value as string || '';
+                    setSelectedGender(gender);
+                    setValue(`passengers.${index}.gender`, gender);
+                  }}
+                  placeholder="Select gender..."
+                  allowClear={true}
+                />
+                <input
+                  type="hidden"
+                  {...register(`passengers.${index}.gender`)}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>Email *</label>
-            <input
-              type="email"
-              {...register(`passengers.${index}.email`, {
-                required: 'Email is required',
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Invalid email address'
-                }
-              })}
-              placeholder="Enter email address"
-            />
-            {errors.passengers?.[index]?.email && (
-              <span className="field-error">{errors.passengers[index]?.email?.message}</span>
-            )}
-          </div>
+          <Row className="mb-3">
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>Email *</Form.Label>
+                <Form.Control
+                  type="email"
+                  {...register(`passengers.${index}.email`, {
+                    required: 'Email is required',
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: 'Invalid email address'
+                    }
+                  })}
+                  placeholder="Enter email address"
+                  isInvalid={!!errors.passengers?.[index]?.email}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.passengers?.[index]?.email?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
 
-          <div className="form-group">
-            <label>Citizen ID *</label>
-            <input
-              type="text"
-              {...register(`passengers.${index}.citizenId`, {
-                required: 'Citizen ID is required'
-              })}
-              placeholder="Enter citizen ID number"
-            />
-            {errors.passengers?.[index]?.citizenId && (
-              <span className="field-error">{errors.passengers[index]?.citizenId?.message}</span>
-            )}
-          </div>
-        </div>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>Citizen ID *</Form.Label>
+                <Form.Control
+                  type="text"
+                  {...register(`passengers.${index}.citizenId`, {
+                    required: 'Citizen ID is required'
+                  })}
+                  placeholder="Enter citizen ID number"
+                  isInvalid={!!errors.passengers?.[index]?.citizenId}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.passengers?.[index]?.citizenId?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+          </Row>
 
-        <div className="form-row">
-          <div className="form-group phone-group">
-            <label>Phone Number</label>
-            <div className="phone-input-group">
-              <TypeAhead
-                options={countryCodeOptions}
-                value={selectedCountryCode}
-                onChange={(option) => {
-                  const newCountryCode = option?.value as string || '+84';
-                  setSelectedCountryCode(newCountryCode);
-                  // Update the phone number with new country code
-                  const currentPhone = watch(`passengers.${index}.phoneNumber`) || '';
-                  const phoneWithoutCode = currentPhone.replace(/^\+\d+\s*/, '');
-                  setValue(`passengers.${index}.phoneNumber`, `${newCountryCode} ${phoneWithoutCode}`);
-                }}
-                placeholder="Code"
-                className="country-code-select"
-              />
-              <input
-                type="tel"
-                placeholder="Phone number"
-                className="phone-number-input"
-                onChange={(e) => {
-                  const phoneNumber = `${selectedCountryCode} ${e.target.value}`;
-                  setValue(`passengers.${index}.phoneNumber`, phoneNumber);
-                }}
-              />
-              <input
-                type="hidden"
-                {...register(`passengers.${index}.phoneNumber`)}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+          <Row>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>Phone Number</Form.Label>
+                <div className="d-flex gap-2">
+                  <div style={{ width: '130px' }}>
+                    <TypeAhead
+                      options={countryCodeOptions}
+                      value={selectedCountryCode}
+                      onChange={(option) => {
+                        const newCountryCode = option?.value as string || '+84';
+                        setSelectedCountryCode(newCountryCode);
+                        // Update the phone number with new country code
+                        const currentPhone = watch(`passengers.${index}.phoneNumber`) || '';
+                        const phoneWithoutCode = currentPhone.replace(/^\+\d+\s*/, '');
+                        setValue(`passengers.${index}.phoneNumber`, `${newCountryCode} ${phoneWithoutCode}`);
+                      }}
+                      placeholder="Code"
+                    />
+                  </div>
+                  <Form.Control
+                    type="tel"
+                    placeholder="Phone number"
+                    onChange={(e) => {
+                      const phoneNumber = `${selectedCountryCode} ${e.target.value}`;
+                      setValue(`passengers.${index}.phoneNumber`, phoneNumber);
+                    }}
+                  />
+                  <input
+                    type="hidden"
+                    {...register(`passengers.${index}.phoneNumber`)}
+                  />
+                </div>
+              </Form.Group>
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
     );
   };
-
   return (
-    <div className="booking-form">
-      <div className="booking-header">
-        <h1>Complete Your Booking</h1>
-        <div className="flight-summary">
-          <div className="flight-info">
-            <span className="flight-code">{flight.flightCode}</span>
-            <span className="route">
-              {flight.departureCityName} → {flight.arrivalCityName}
-            </span>
-            <span className="date">
-              {new Date(flight.departureTime).toLocaleDateString()}
-            </span>
-          </div>
-        </div>
-      </div>      <form onSubmit={handleSubmit(onSubmit)} className="booking-form-content">
-        {error && <div className="error-message">{error}</div>}
-        {validationWarnings.length > 0 && (
-          <div className="warning-message">
-            <h4>⚠️ Warnings:</h4>
-            <ul>
-              {validationWarnings.map((warning, index) => (
-                <li key={index}>{warning}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Ticket Class Selection */}
-        <div className="form-section">
-          <h3>Select Ticket Class</h3>
-          <div className="ticket-classes">
-            {ticketClasses.map(ticketClass => (
-              <label key={ticketClass.ticketClassId} className="ticket-class-option">
-                <input
-                  type="radio"
-                  value={ticketClass.ticketClassId}
-                  {...register('ticketClassId', {
-                    required: 'Please select a ticket class',
-                    valueAsNumber: true
-                  })}
-                />
-                <div className="class-info">
-                  <span className="class-name">{ticketClass.ticketClassName}</span>
-                  <span className="class-price">${ticketClass.specifiedFare}</span>
+    <Container className="py-5">
+      <Row className="justify-content-center">
+        <Col md={10} lg={8}>
+          {/* Header Section */}
+          <div className="text-center mb-4">
+            <h1 className="mb-4">Complete Your Booking</h1>
+            <Card className="bg-primary text-white">
+              <Card.Body>
+                <div className="d-flex justify-content-center align-items-center flex-wrap gap-3">
+                  <Badge bg="light" text="dark" className="fs-6 px-3 py-2">
+                    {flight.flightCode}
+                  </Badge>
+                  <span className="fs-5">
+                    {flight.departureCityName} → {flight.arrivalCityName}
+                  </span>
+                  <small className="opacity-75">
+                    {new Date(flight.departureTime).toLocaleDateString()}
+                  </small>
                 </div>
-              </label>
-            ))}
+              </Card.Body>
+            </Card>
           </div>
-          {errors.ticketClassId && (
-            <span className="field-error">{errors.ticketClassId.message}</span>
-          )}
-        </div>        {/* Passenger Information */}
-        <div className="form-section">
-          <h3>Passenger Information</h3>
-          {fields.map((_, index) => renderPassengerForm(index))}
-        </div>
 
-        {/* Frequent Flyer Program */}
-        {user && (
-          <div className="form-section">
-            <h3>Frequent Flyer Program</h3>
-            <div className="form-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  {...register('useFrequentFlyer')}
-                />
-                <span className="checkmark"></span>
-                Join frequent flyer program and link this booking to your account
-              </label>
-              <p className="form-note">
-                Checking this option will link your booking to your customer profile for frequent flyer benefits.
-              </p>
-            </div>
-          </div>
-        )}
+          <Card className="shadow">
+            <Card.Body className="p-4">
+              <Form onSubmit={handleSubmit(onSubmit)}>
+                {/* Error and Warning Messages */}
+                {error && (
+                  <Alert variant="danger" className="mb-4">
+                    {error}
+                  </Alert>
+                )}
+                
+                {validationWarnings.length > 0 && (
+                  <Alert variant="warning" className="mb-4">
+                    <Alert.Heading as="h6">⚠️ Warnings:</Alert.Heading>
+                    <ul className="mb-0">
+                      {validationWarnings.map((warning, index) => (
+                        <li key={index}>{warning}</li>
+                      ))}
+                    </ul>
+                  </Alert>
+                )}
 
-        {/* Booking Summary */}
-        <div className="booking-summary">
-          <h3>Booking Summary</h3>
-          <div className="summary-details">
-            <div className="summary-row">
-              <span>Flight:</span>
-              <span>{flight.flightCode}</span>
-            </div>
-            <div className="summary-row">
-              <span>Passengers:</span>
-              <span>{passengerCount}</span>
-            </div>
-            {selectedClass && (
-              <>
-                <div className="summary-row">
-                  <span>Class:</span>
-                  <span>{selectedClass.ticketClassName}</span>
+                {/* Ticket Class Selection */}
+                <div className="mb-5 pb-4 border-bottom">
+                  <h4 className="mb-3">Select Ticket Class</h4>
+                  <Row>
+                    {ticketClasses.map(ticketClass => (
+                      <Col md={4} key={ticketClass.ticketClassId} className="mb-3">
+                        <Card 
+                          className={`h-100 border-2 ${selectedTicketClass === ticketClass.ticketClassId ? 'border-primary bg-primary text-white' : 'border-light'}`}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <Card.Body>
+                            <Form.Check
+                              type="radio"
+                              id={`class-${ticketClass.ticketClassId}`}
+                              value={ticketClass.ticketClassId}
+                              {...register('ticketClassId', {
+                                required: 'Please select a ticket class',
+                                valueAsNumber: true
+                              })}
+                              className="d-none"
+                            />
+                            <label htmlFor={`class-${ticketClass.ticketClassId}`} className="d-block w-100 h-100 cursor-pointer">
+                              <div className="d-flex justify-content-between align-items-center">
+                                <span className="fw-semibold">{ticketClass.ticketClassName}</span>
+                                <span className="fs-5 fw-bold">${ticketClass.specifiedFare}</span>
+                              </div>
+                            </label>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                  {errors.ticketClassId && (
+                    <div className="text-danger mt-2">{errors.ticketClassId.message}</div>
+                  )}
                 </div>
-                <div className="summary-row">
-                  <span>Price per ticket:</span>
-                  <span>${selectedClass.specifiedFare}</span>
-                </div>
-                <div className="summary-row total">
-                  <span>Total:</span>
-                  <span>${calculateTotalPrice()}</span>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
 
-        <div className="form-actions">
-          <button 
-            type="button" 
-            className="btn btn-secondary"
-            onClick={() => navigate(-1)}
-          >
-            Back
-          </button>
-          <button 
-            type="submit" 
-            className="btn btn-primary"
-            disabled={submitting || !selectedClass}
-          >
-            {submitting ? 'Processing...' : `Book Flight - $${calculateTotalPrice()}`}
-          </button>
-        </div>
-      </form>
-    </div>
+                {/* Passenger Information */}
+                <div className="mb-5 pb-4 border-bottom">
+                  <h4 className="mb-3">Passenger Information</h4>
+                  {fields.map((_, index) => renderPassengerForm(index))}
+                </div>
+
+                {/* Frequent Flyer Program */}
+                {user && (
+                  <div className="mb-5 pb-4 border-bottom">
+                    <h4 className="mb-3">Frequent Flyer Program</h4>
+                    <Form.Check
+                      type="checkbox"
+                      id="useFrequentFlyer"
+                      label="Join frequent flyer program and link this booking to your account"
+                      {...register('useFrequentFlyer')}
+                      className="mb-2"
+                    />
+                    <Form.Text className="text-muted">
+                      Checking this option will link your booking to your customer profile for frequent flyer benefits.
+                    </Form.Text>
+                  </div>
+                )}
+
+                {/* Booking Summary */}
+                <Card className="bg-light mb-4">
+                  <Card.Body>
+                    <h4 className="mb-3">Booking Summary</h4>
+                    <Row className="g-2">
+                      <Col xs={6}>
+                        <strong>Flight:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        {flight.flightCode}
+                      </Col>
+                      
+                      <Col xs={6}>
+                        <strong>Passengers:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        {passengerCount}
+                      </Col>
+                      
+                      {selectedClass && (
+                        <>
+                          <Col xs={6}>
+                            <strong>Class:</strong>
+                          </Col>
+                          <Col xs={6} className="text-end">
+                            {selectedClass.ticketClassName}
+                          </Col>
+                          
+                          <Col xs={6}>
+                            <strong>Price per ticket:</strong>
+                          </Col>
+                          <Col xs={6} className="text-end">
+                            ${selectedClass.specifiedFare}
+                          </Col>
+                          
+                          <Col xs={12}>
+                            <hr className="my-2" />
+                          </Col>
+                          
+                          <Col xs={6}>
+                            <strong className="text-primary fs-5">Total:</strong>
+                          </Col>
+                          <Col xs={6} className="text-end">
+                            <strong className="text-primary fs-5">${calculateTotalPrice()}</strong>
+                          </Col>
+                        </>
+                      )}
+                    </Row>
+                  </Card.Body>
+                </Card>
+
+                {/* Form Actions */}
+                <div className="d-flex justify-content-between gap-3">
+                  <Button 
+                    variant="outline-secondary"
+                    onClick={() => navigate(-1)}
+                    size="lg"
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    variant="primary"
+                    disabled={submitting || !selectedClass}
+                    size="lg"
+                    className="flex-fill"
+                    style={{ maxWidth: '300px' }}
+                  >
+                    {submitting ? (
+                      <>
+                        <Spinner animation="border" size="sm" className="me-2" />
+                        Processing...
+                      </>
+                    ) : (
+                      `Book Flight - $${calculateTotalPrice()}`
+                    )}
+                  </Button>
+                </div>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Modal, Table } from 'react-bootstrap';
 import { flightService, airportService, planeService, ticketClassService, flightTicketClassService } from '../../services';
-import { Flight, Airport, Plane, TicketClass, FlightTicketClass } from '../../models';
-import './FlightManagement.css';
+import { Flight, Airport, Plane, TicketClass } from '../../models';
 import TypeAhead from '../common/TypeAhead';
 import { usePermissions } from '../../hooks/useAuth';
 
@@ -21,14 +21,19 @@ interface TicketClassAssignment {
     specifiedFare: number;
 }
 
-const FlightManagement: React.FC = () => {
-    const { canViewAdmin } = usePermissions();
+const FlightManagement: React.FC = () => {    const { canViewAdmin } = usePermissions();
     if (!canViewAdmin) {
         return (
-            <div className="unauthorized">
-                <h2>Access Denied</h2>
-                <p>You do not have permission to access flight management.</p>
-            </div>
+            <Container className="py-5">
+                <Row className="justify-content-center">
+                    <Col md={8}>
+                        <Alert variant="danger" className="text-center">
+                            <Alert.Heading>Access Denied</Alert.Heading>
+                            <p>You do not have permission to access flight management.</p>
+                        </Alert>
+                    </Col>
+                </Row>
+            </Container>
         );
     }
 
@@ -42,7 +47,7 @@ const FlightManagement: React.FC = () => {
     const [editingFlight, setEditingFlight] = useState<Flight | null>(null);
     const [showTicketClassModal, setShowTicketClassModal] = useState(false);
     const [selectedFlightForClasses, setSelectedFlightForClasses] = useState<Flight | null>(null);
-    const [flightTicketClasses, setFlightTicketClasses] = useState<FlightTicketClass[]>([]);
+
     const [ticketClassAssignments, setTicketClassAssignments] = useState<TicketClassAssignment[]>([]);
     const [selectedDepartureAirport, setSelectedDepartureAirport] = useState<number | ''>('');
     const [selectedArrivalAirport, setSelectedArrivalAirport] = useState<number | ''>('');
@@ -151,9 +156,7 @@ const FlightManagement: React.FC = () => {
 
     const handleManageTicketClasses = async (flight: Flight) => {
         try {
-            setSelectedFlightForClasses(flight);
-            const flightClasses = await flightTicketClassService.getFlightTicketClassesByFlightId(flight.flightId!);
-            setFlightTicketClasses(flightClasses);
+            setSelectedFlightForClasses(flight);            const flightClasses = await flightTicketClassService.getFlightTicketClassesByFlightId(flight.flightId!);
             
             // Initialize assignments for existing classes
             const assignments = ticketClasses.map(tc => {
@@ -210,52 +213,70 @@ const FlightManagement: React.FC = () => {
         setSelectedFlightForClasses(null);
         setTicketClassAssignments([]);
         setError('');
-    };
+    };    if (loading) {
+        return (
+            <Container className="py-5 text-center">
+                <Spinner animation="border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </Spinner>
+                <p className="mt-3">Loading flight data...</p>
+            </Container>
+        );
+    }    return (
+        <Container fluid className="py-4">
+            <Row className="mb-4">
+                <Col>
+                    <Card>
+                        <Card.Header className="d-flex justify-content-between align-items-center">
+                            <Card.Title className="mb-0">✈️ Flight Management</Card.Title>
+                            <Button
+                                variant="primary"
+                                onClick={() => setShowForm(true)}
+                            >
+                                Add New Flight
+                            </Button>
+                        </Card.Header>
+                    </Card>
+                </Col>
+            </Row>
 
-    if (loading) {
-        return <div className="loading">Loading flight data...</div>;
-    }
-
-    return (
-        <div className="flight-management">
-            <div className="management-header">
-                <h2>Flight Management</h2>
-                <button
-                    className="btn btn-primary"
-                    onClick={() => setShowForm(true)}
-                >
-                    Add New Flight
-                </button>
-            </div>
-
-            {error && <div className="error-message">{error}</div>}
-
-            {showForm && (
-                <div className="form-modal">
-                    <div className="form-container">
-                        <h3>{editingFlight ? 'Edit Flight' : 'Add New Flight'}</h3>
-
-                        <form onSubmit={handleSubmit(onSubmit)}>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Flight Code</label>
-                                    <input
+            {error && (
+                <Row className="mb-4">
+                    <Col>
+                        <Alert variant="danger" className="text-center">
+                            {error}
+                        </Alert>
+                    </Col>
+                </Row>
+            )}            <Modal show={showForm} onHide={handleCancel} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>{editingFlight ? 'Edit Flight' : 'Add New Flight'}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form onSubmit={handleSubmit(onSubmit)}>
+                        <Row className="mb-3">
+                            <Col>
+                                <Form.Group>
+                                    <Form.Label>Flight Code</Form.Label>
+                                    <Form.Control
                                         type="text"
                                         {...register('flightCode', {
                                             required: 'Flight code is required'
                                         })}
-                                        className={errors.flightCode ? 'error' : ''}
+                                        isInvalid={!!errors.flightCode}
                                         placeholder="e.g., FL001"
                                     />
-                                    {errors.flightCode && (
-                                        <span className="field-error">{errors.flightCode.message}</span>
-                                    )}
-                                </div>
-                            </div>
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.flightCode?.message}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                        </Row>
 
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Departure Airport</label>
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label>Departure Airport</Form.Label>
                                     <TypeAhead
                                         options={airportOptions}
                                         value={selectedDepartureAirport}
@@ -275,12 +296,14 @@ const FlightManagement: React.FC = () => {
                                         })}
                                     />
                                     {errors.departureAirportId && (
-                                        <span className="field-error">{errors.departureAirportId.message}</span>
+                                        <div className="text-danger small mt-1">{errors.departureAirportId.message}</div>
                                     )}
-                                </div>
+                                </Form.Group>
+                            </Col>
 
-                                <div className="form-group">
-                                    <label>Arrival Airport</label>
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label>Arrival Airport</Form.Label>
                                     <TypeAhead
                                         options={airportOptions}
                                         value={selectedArrivalAirport}
@@ -300,44 +323,50 @@ const FlightManagement: React.FC = () => {
                                         })}
                                     />
                                     {errors.arrivalAirportId && (
-                                        <span className="field-error">{errors.arrivalAirportId.message}</span>
+                                        <div className="text-danger small mt-1">{errors.arrivalAirportId.message}</div>
                                     )}
-                                </div>
-                            </div>
+                                </Form.Group>
+                            </Col>
+                        </Row>
 
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Departure Time</label>
-                                    <input
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label>Departure Time</Form.Label>
+                                    <Form.Control
                                         type="datetime-local"
                                         {...register('departureTime', {
                                             required: 'Departure time is required'
                                         })}
-                                        className={errors.departureTime ? 'error' : ''}
+                                        isInvalid={!!errors.departureTime}
                                     />
-                                    {errors.departureTime && (
-                                        <span className="field-error">{errors.departureTime.message}</span>
-                                    )}
-                                </div>
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.departureTime?.message}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
 
-                                <div className="form-group">
-                                    <label>Arrival Time</label>
-                                    <input
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label>Arrival Time</Form.Label>
+                                    <Form.Control
                                         type="datetime-local"
                                         {...register('arrivalTime', {
                                             required: 'Arrival time is required'
                                         })}
-                                        className={errors.arrivalTime ? 'error' : ''}
+                                        isInvalid={!!errors.arrivalTime}
                                     />
-                                    {errors.arrivalTime && (
-                                        <span className="field-error">{errors.arrivalTime.message}</span>
-                                    )}
-                                </div>
-                            </div>
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.arrivalTime?.message}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                        </Row>
 
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Aircraft</label>
+                        <Row className="mb-3">
+                            <Col>
+                                <Form.Group>
+                                    <Form.Label>Aircraft</Form.Label>
                                     <TypeAhead
                                         options={planeOptions}
                                         value={selectedPlane}
@@ -357,155 +386,164 @@ const FlightManagement: React.FC = () => {
                                         })}
                                     />
                                     {errors.planeId && (
-                                        <span className="field-error">{errors.planeId.message}</span>
+                                        <div className="text-danger small mt-1">{errors.planeId.message}</div>
                                     )}
-                                </div>
-                            </div>
-
-                            <div className="form-actions">
-                                <button type="button" className="btn btn-secondary" onClick={handleCancel}>
-                                    Cancel
-                                </button>
-                                <button type="submit" className="btn btn-primary">
-                                    {editingFlight ? 'Update Flight' : 'Create Flight'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {showTicketClassModal && selectedFlightForClasses && (
-                <div className="form-modal">
-                    <div className="form-container ticket-class-modal">
-                        <h3>Manage Ticket Classes for Flight {selectedFlightForClasses.flightCode}</h3>
-                        
-                        <div className="ticket-class-assignments">
-                            {ticketClasses.map(ticketClass => {
-                                const assignment = ticketClassAssignments.find(
-                                    a => a.ticketClassId === ticketClass.ticketClassId
-                                );
-                                
-                                return (
-                                    <div key={ticketClass.ticketClassId} className="ticket-class-row">
-                                        <div className="class-info">
-                                            <span 
-                                                className="class-badge" 
-                                                style={{ backgroundColor: (ticketClass as any).color || '#ccc' }}
+                                </Form.Group>
+                            </Col>
+                        </Row>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCancel}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={handleSubmit(onSubmit)}>
+                        {editingFlight ? 'Update Flight' : 'Create Flight'}
+                    </Button>
+                </Modal.Footer>
+            </Modal>            <Modal show={showTicketClassModal && !!selectedFlightForClasses} onHide={handleCancelTicketClasses} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>Manage Ticket Classes for Flight {selectedFlightForClasses?.flightCode}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Row className="g-3">
+                        {ticketClasses.map(ticketClass => {
+                            const assignment = ticketClassAssignments.find(
+                                a => a.ticketClassId === ticketClass.ticketClassId
+                            );
+                            
+                            return (
+                                <Col md={6} key={ticketClass.ticketClassId}>
+                                    <Card className="h-100">
+                                        <Card.Header className="py-2">
+                                            <Badge 
+                                                bg="primary" 
+                                                style={{ backgroundColor: (ticketClass as any).color || '#0d6efd' }}
                                             >
                                                 {ticketClass.ticketClassName}
-                                            </span>
-                                        </div>
-                                        
-                                        <div className="class-inputs">
-                                            <div className="input-group">
-                                                <label>Seats</label>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    value={assignment?.ticketQuantity || 0}
-                                                    onChange={(e) => handleTicketClassChange(
-                                                        ticketClass.ticketClassId!,
-                                                        'ticketQuantity',
-                                                        parseInt(e.target.value) || 0
-                                                    )}
-                                                    placeholder="Number of seats"
-                                                />
-                                            </div>
-                                            
-                                            <div className="input-group">
-                                                <label>Price (VND)</label>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    step="1000"
-                                                    value={assignment?.specifiedFare || 0}
-                                                    onChange={(e) => handleTicketClassChange(
-                                                        ticketClass.ticketClassId!,
-                                                        'specifiedFare',
-                                                        parseFloat(e.target.value) || 0
-                                                    )}
-                                                    placeholder="Price per ticket"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        <div className="form-actions">
-                            <button 
-                                type="button" 
-                                className="btn btn-secondary" 
-                                onClick={handleCancelTicketClasses}
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                type="button" 
-                                className="btn btn-primary" 
-                                onClick={handleSaveTicketClasses}
-                            >
-                                Save Ticket Classes
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <div className="flights-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Flight Code</th>
-                            <th>Route</th>
-                            <th>Departure</th>
-                            <th>Arrival</th>
-                            <th>Aircraft</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {flights.map(flight => (
-                            <tr key={flight.flightId}>
-                                <td>{flight.flightCode}</td>
-                                <td>{flight.departureCityName} → {flight.arrivalCityName}</td>
-                                <td>{new Date(flight.departureTime).toLocaleString()}</td>
-                                <td>{new Date(flight.arrivalTime).toLocaleString()}</td>
-                                <td>{flight.planeCode}</td>
-                                <td>
-                                    <button 
-                                        className="btn btn-sm btn-secondary"
-                                        onClick={() => handleEdit(flight)}
-                                    >
-                                        Edit
-                                    </button>
-                                    <button 
-                                        className="btn btn-sm btn-primary"
-                                        onClick={() => handleManageTicketClasses(flight)}
-                                    >
-                                        Manage Classes
-                                    </button>
-                                    <button 
-                                        className="btn btn-sm btn-danger"
-                                        onClick={() => handleDelete(flight.flightId!)}
-                                    >
-                                        Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-
-                {flights.length === 0 && (
-                    <div className="no-data">
-                        <p>No flights found. Add your first flight to get started.</p>
-                    </div>
-                )}
-            </div>
-        </div>
+                                            </Badge>
+                                        </Card.Header>
+                                        <Card.Body>
+                                            <Row className="g-2">
+                                                <Col>
+                                                    <Form.Group>
+                                                        <Form.Label className="small">Seats</Form.Label>
+                                                        <Form.Control
+                                                            type="number"
+                                                            min="0"
+                                                            value={assignment?.ticketQuantity || 0}
+                                                            onChange={(e) => handleTicketClassChange(
+                                                                ticketClass.ticketClassId!,
+                                                                'ticketQuantity',
+                                                                parseInt(e.target.value) || 0
+                                                            )}
+                                                            placeholder="Number of seats"
+                                                            size="sm"
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col>
+                                                    <Form.Group>
+                                                        <Form.Label className="small">Price (VND)</Form.Label>
+                                                        <Form.Control
+                                                            type="number"
+                                                            min="0"
+                                                            step="1000"
+                                                            value={assignment?.specifiedFare || 0}
+                                                            onChange={(e) => handleTicketClassChange(
+                                                                ticketClass.ticketClassId!,
+                                                                'specifiedFare',
+                                                                parseFloat(e.target.value) || 0
+                                                            )}
+                                                            placeholder="Price per ticket"
+                                                            size="sm"
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                            </Row>
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            );
+                        })}
+                    </Row>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCancelTicketClasses}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={handleSaveTicketClasses}>
+                        Save Ticket Classes
+                    </Button>
+                </Modal.Footer>
+            </Modal>            <Row>
+                <Col>
+                    <Card>
+                        <Card.Header>
+                            <Card.Title className="mb-0">All Flights</Card.Title>
+                        </Card.Header>
+                        <Card.Body className="p-0">
+                            {flights.length === 0 ? (
+                                <div className="text-center py-5">
+                                    <p className="text-muted mb-0">No flights found. Add your first flight to get started.</p>
+                                </div>
+                            ) : (
+                                <Table responsive striped hover>
+                                    <thead>
+                                        <tr>
+                                            <th>Flight Code</th>
+                                            <th>Route</th>
+                                            <th>Departure</th>
+                                            <th>Arrival</th>
+                                            <th>Aircraft</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {flights.map(flight => (
+                                            <tr key={flight.flightId}>
+                                                <td>
+                                                    <Badge bg="primary">{flight.flightCode}</Badge>
+                                                </td>
+                                                <td>{flight.departureCityName} → {flight.arrivalCityName}</td>
+                                                <td>{new Date(flight.departureTime).toLocaleString()}</td>
+                                                <td>{new Date(flight.arrivalTime).toLocaleString()}</td>
+                                                <td>{flight.planeCode}</td>
+                                                <td>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline-secondary"
+                                                        className="me-2"
+                                                        onClick={() => handleEdit(flight)}
+                                                    >
+                                                        Edit
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline-primary"
+                                                        className="me-2"
+                                                        onClick={() => handleManageTicketClasses(flight)}
+                                                    >
+                                                        Manage Classes
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline-danger"
+                                                        onClick={() => handleDelete(flight.flightId!)}
+                                                    >
+                                                        Delete
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
+                            )}
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
+        </Container>
     );
 };
 

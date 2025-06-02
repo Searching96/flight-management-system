@@ -5,10 +5,15 @@ import com.flightmanagement.dto.LoginDto;
 import com.flightmanagement.dto.LoginResponseDto;
 import com.flightmanagement.dto.RegisterDto;
 import com.flightmanagement.entity.Account;
+import com.flightmanagement.entity.Employee;
 import com.flightmanagement.mapper.AccountMapper;
 import com.flightmanagement.repository.AccountRepository;
+import com.flightmanagement.repository.EmployeeRepository;
+import com.flightmanagement.security.CustomUserDetailsService;
+import com.flightmanagement.security.JwtUtil;
 import com.flightmanagement.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +30,15 @@ public class AccountServiceImpl implements AccountService {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
+    
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
+    
+    @Autowired
+    private EmployeeRepository employeeRepository;
     
     @Override
     public List<AccountDto> getAllAccounts() {
@@ -117,9 +131,7 @@ public class AccountServiceImpl implements AccountService {
     public List<AccountDto> getAccountsByType(Integer accountType) {
         List<Account> accounts = accountRepository.findByAccountType(accountType);
         return accountMapper.toDtoList(accounts);
-    }
-
-    @Override
+    }    @Override
     public LoginResponseDto login(String email, String password) {
         Account account = accountRepository.findByEmail(email)
             .orElseThrow(() -> new RuntimeException("Invalid email or password"));
@@ -128,15 +140,35 @@ public class AccountServiceImpl implements AccountService {
             throw new RuntimeException("Invalid email or password");
         }
         
-        // Generate JWT token here if needed
-        // String token = jwtTokenProvider.generateToken(account);
+        // Load user details for JWT generation
+        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
         
-        return new LoginResponseDto(
+        // Get employee type if this is an employee account
+        Integer employeeType = null;
+        if (account.getAccountType() == 2) { // Employee account
+            Employee employee = employeeRepository.findByEmail(email).orElse(null);
+            if (employee != null) {
+                employeeType = employee.getEmployeeType();
+            }
+        }
+        
+        // Generate JWT token
+        String token = jwtUtil.generateToken(
+            userDetails,
             account.getAccountId(),
-            account.getAccountName(), // Username for display
+            account.getAccountType(),
+            employeeType
+        );
+        
+        // Create response with token
+        LoginResponseDto response = new LoginResponseDto(
+            account.getAccountId(),
+            account.getAccountName(),
             account.getEmail(),
             account.getAccountType()
-            // token
         );
+        response.setToken(token);
+        
+        return response;
     }
 }

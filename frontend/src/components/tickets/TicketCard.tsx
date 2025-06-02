@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
+import { Card, Row, Col, Badge, Button, Spinner } from 'react-bootstrap';
 import { Ticket } from '../../models';
 import { ticketService } from '../../services';
-import './TicketCard.css';
 
 interface TicketCardProps {
   ticket: Ticket;
@@ -11,32 +11,27 @@ interface TicketCardProps {
 const TicketCard: React.FC<TicketCardProps> = ({ ticket, onCancel }) => {
   const [cancelling, setCancelling] = useState(false);
 
-  const formatTime = (dateTime: string) => {
-    return new Date(dateTime).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
+  const getStatusVariant = (status?: number) => {
+    switch (status) {
+      case 1: return 'success'; // paid
+      case 2: return 'warning'; // unpaid  
+      case 3: return 'danger';  // cancelled
+      default: return 'secondary';
+    }
   };
 
-  const formatDate = (dateTime: string) => {
-    return new Date(dateTime).toLocaleDateString();
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'confirmed': return '#28a745';
-      case 'cancelled': return '#dc3545';
-      case 'pending': return '#ffc107';
-      default: return '#6c757d';
+  const getStatusText = (status?: number) => {
+    switch (status) {
+      case 1: return 'Confirmed';
+      case 2: return 'Pending Payment';
+      case 3: return 'Cancelled';
+      default: return 'Unknown';
     }
   };
 
   const canCancelTicket = () => {
-    const departureTime = new Date(ticket.departureTime);
-    const now = new Date();
-    const hoursDifference = (departureTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-    
-    return ticket.ticketStatus === 'Confirmed' && hoursDifference > 24;
+    // Allow cancellation if status is confirmed (paid)
+    return ticket.ticketStatus === 1;
   };
 
   const handleCancelTicket = async () => {
@@ -57,78 +52,91 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onCancel }) => {
   };
 
   return (
-    <div className="ticket-card">
-      <div className="ticket-header">
-        <div className="ticket-info">
-          <span className="ticket-id">Ticket #{ticket.ticketId}</span>
-          <span className="flight-code">{ticket.flightCode}</span>
-        </div>
-        <div 
-          className="ticket-status"
-          style={{ backgroundColor: getStatusColor(ticket.ticketStatus) }}
-        >
-          {ticket.ticketStatus}
-        </div>
-      </div>
+    <Card className="mb-3 shadow-sm">
+      <Card.Header className="bg-primary text-white">
+        <Row className="align-items-center">
+          <Col>
+            <div className="d-flex align-items-center gap-3">
+              <span className="fw-bold">Ticket #{ticket.ticketId}</span>
+              {ticket.flightCode && (
+                <Badge bg="light" text="dark" className="fs-6">
+                  {ticket.flightCode}
+                </Badge>
+              )}
+            </div>
+          </Col>
+          <Col xs="auto">
+            <Badge bg={getStatusVariant(ticket.ticketStatus)}>
+              {getStatusText(ticket.ticketStatus)}
+            </Badge>
+          </Col>
+        </Row>
+      </Card.Header>
 
-      <div className="ticket-route">
-        <div className="departure">
-          <div className="time">{formatTime(ticket.departureTime)}</div>
-          <div className="airport">{ticket.departureCityName}</div>
-          <div className="date">{formatDate(ticket.departureTime)}</div>
-        </div>
+      <Card.Body>
+        <Row className="g-3">
+          <Col md={4}>
+            <div className="text-center">
+              <small className="text-muted d-block">Passenger</small>
+              <strong>{ticket.passengerName || 'N/A'}</strong>
+            </div>
+          </Col>
+          
+          <Col md={4}>
+            <div className="text-center">
+              <small className="text-muted d-block">Seat</small>
+              <strong>{ticket.seatNumber || 'TBA'}</strong>
+            </div>
+          </Col>
+          
+          <Col md={4}>
+            <div className="text-center">
+              <small className="text-muted d-block">Class</small>
+              <strong>{ticket.ticketClassName || 'N/A'}</strong>
+            </div>
+          </Col>
 
-        <div className="flight-path">
-          <div className="duration">
-            {(() => {
-              const departure = new Date(ticket.departureTime);
-              const arrival = new Date(ticket.arrivalTime);
-              const durationMs = arrival.getTime() - departure.getTime();
-              const hours = Math.floor(durationMs / (1000 * 60 * 60));
-              const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
-              return `${hours}h ${minutes}m`;
-            })()}
+          {ticket.fare && (
+            <Col xs={12}>
+              <div className="text-center border-top pt-3">
+                <small className="text-muted d-block">Fare</small>
+                <h5 className="text-primary mb-0">${ticket.fare}</h5>
+              </div>
+            </Col>
+          )}
+
+          {ticket.paymentTime && (
+            <Col xs={12}>
+              <div className="text-center">
+                <small className="text-muted">
+                  Payment confirmed on {new Date(ticket.paymentTime).toLocaleDateString()}
+                </small>
+              </div>
+            </Col>
+          )}
+        </Row>
+
+        {canCancelTicket() && (
+          <div className="mt-3 d-flex justify-content-center">
+            <Button 
+              variant="outline-danger"
+              onClick={handleCancelTicket}
+              disabled={cancelling}
+              size="sm"
+            >
+              {cancelling ? (
+                <>
+                  <Spinner animation="border" size="sm" className="me-2" />
+                  Cancelling...
+                </>
+              ) : (
+                'Cancel Ticket'
+              )}
+            </Button>
           </div>
-          <div className="path-line">
-            <div className="line"></div>
-            <div className="plane-icon">✈️</div>
-          </div>
-        </div>
-
-        <div className="arrival">
-          <div className="time">{formatTime(ticket.arrivalTime)}</div>
-          <div className="airport">{ticket.arrivalCityName}</div>
-          <div className="date">{formatDate(ticket.arrivalTime)}</div>
-        </div>
-      </div>
-
-      <div className="ticket-details">
-        <div className="passenger-info">
-          <span className="label">Passenger:</span>
-          <span className="value">{ticket.passengerName}</span>
-        </div>
-        <div className="seat-info">
-          <span className="label">Seat:</span>
-          <span className="value">{ticket.seatNumber || 'TBA'}</span>
-        </div>
-        <div className="class-info">
-          <span className="label">Class:</span>
-          <span className="value">{ticket.ticketClassName}</span>
-        </div>
-      </div>
-
-      {canCancelTicket() && (
-        <div className="ticket-actions">
-          <button 
-            className="cancel-btn"
-            onClick={handleCancelTicket}
-            disabled={cancelling}
-          >
-            {cancelling ? 'Cancelling...' : 'Cancel Ticket'}
-          </button>
-        </div>
-      )}
-    </div>
+        )}
+      </Card.Body>
+    </Card>
   );
 };
 

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner, ButtonGroup } from 'react-bootstrap';
 import { flightService, airportService, ticketClassService } from '../../services';
 import { Flight, Airport, TicketClass } from '../../models';
 import TypeAhead from '../common/TypeAhead';
 import FlightCard from '../flights/FlightCard';
-import './FlightSearch.css';
 
 interface SearchFormData {
   departureAirportId: number;
@@ -16,6 +17,7 @@ interface SearchFormData {
 }
 
 const FlightSearch: React.FC = () => {
+  const navigate = useNavigate();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [airports, setAirports] = useState<Airport[]>([]);
   const [ticketClasses, setTicketClasses] = useState<TicketClass[]>([]);
@@ -100,17 +102,16 @@ const FlightSearch: React.FC = () => {
 
       console.log('Sending search criteria:', searchCriteria);
       const results = await flightService.searchFlights(searchCriteria);
-      
-      // Get availability for all ticket classes of each flight
+        // Get availability for all ticket classes of each flight
       const flightsWithAvailability = await Promise.all(
         results.map(async (flight) => {
           try {
-            const availability = await flightService.checkFlightAvailability(flight.flightId!);
-            return { ...flight, availability };
+            const flightTicketClasses = await flightService.checkFlightAvailability(flight.flightId!);
+            return { ...flight, flightTicketClasses };
           } catch (err) {
             console.error(`Could not check availability for flight ${flight.flightCode}:`, err);
             // Return flight without availability data rather than failing completely
-            return { ...flight, availability: [] };
+            return { ...flight, flightTicketClasses: [] };
           }
         })
       );
@@ -137,9 +138,7 @@ const FlightSearch: React.FC = () => {
     const tempDeparture = selectedDepartureAirport;
     setSelectedDepartureAirport(selectedArrivalAirport);
     setSelectedArrivalAirport(tempDeparture);
-  };
-
-  const handleBookFlight = (flightId: number, ticketClassId: number) => {
+  };  const handleBookFlight = (flightId: number, ticketClassId: number) => {
     // Store search context for better UX
     const searchContext = {
       departureAirportId: selectedDepartureAirport,
@@ -152,214 +151,328 @@ const FlightSearch: React.FC = () => {
     // Store in sessionStorage for booking form to access
     sessionStorage.setItem('flightSearchContext', JSON.stringify(searchContext));
     
-    // Navigate to booking page with flight ID
-    window.location.href = `/booking?flightId=${flightId}&passengers=${watch('passengerCount')}&class=${ticketClassId}`;
+    // Store booking data in sessionStorage instead of URL parameters
+    sessionStorage.setItem('bookingData', JSON.stringify({
+      flightId,
+      passengers: watch('passengerCount'),
+      class: ticketClassId
+    }));
+    
+    // Navigate to booking page without query parameters
+    navigate('/booking');
   };
-
   return (
-    <div className="flight-search">
-      <div className="search-container">
-        <h2>Search Flights</h2>
-        
-        <form onSubmit={handleSubmit(onSubmit)} className="search-form">
-          {/* Trip Type Selection */}
-          <div className="trip-type-selector">
-            <label>
-              <input
-                type="radio"
-                checked={!isRoundTrip}
-                onChange={() => setIsRoundTrip(false)}
-              />
-              One Way
-            </label>
-            <label>
-              <input
-                type="radio"
-                checked={isRoundTrip}
-                onChange={() => setIsRoundTrip(true)}
-              />
-              Round Trip
-            </label>
-          </div>
+    <Container className="py-4">
+      <Row>
+        <Col>
+          <Card className="shadow-sm">
+            <Card.Header className="bg-primary text-white">
+              <h2 className="mb-0">
+                <i className="bi bi-search me-2"></i>
+                Search Flights
+              </h2>
+            </Card.Header>
+            <Card.Body className="p-4">
+              <Form onSubmit={handleSubmit(onSubmit)}>
+                {/* Trip Type Selection */}
+                <Row className="mb-4">
+                  <Col>
+                    <Form.Label className="fw-bold">Trip Type</Form.Label>
+                    <ButtonGroup className="d-block">
+                      <Button
+                        variant={!isRoundTrip ? "primary" : "outline-primary"}
+                        onClick={() => setIsRoundTrip(false)}
+                        className="me-2"
+                      >
+                        <i className="bi bi-arrow-right me-1"></i>
+                        One Way
+                      </Button>
+                      <Button
+                        variant={isRoundTrip ? "primary" : "outline-primary"}
+                        onClick={() => setIsRoundTrip(true)}
+                      >
+                        <i className="bi bi-arrow-left-right me-1"></i>
+                        Round Trip
+                      </Button>
+                    </ButtonGroup>
+                  </Col>
+                </Row>
 
-          {/* Airport Selection */}
-          <div className="airport-selection">
-            <div className="form-group airport-group">
-              <label>From</label>
-              <TypeAhead
-                options={airportOptions}
-                value={selectedDepartureAirport}
-                onChange={(option) => {
-                  const airportId = option?.value as number || '';
-                  setSelectedDepartureAirport(airportId);
-                  setValue('departureAirportId', Number(airportId) || 0);
-                }}
-                placeholder="Departure city or airport..."
-                error={!!errors.departureAirportId}
-              />
-              <input
-                type="hidden"
-                {...register('departureAirportId', {
-                  required: 'Departure airport is required',
-                  validate: (value) => value > 0 || 'Please select a departure airport'
-                })}
-                value={selectedDepartureAirport || ''}
-              />
-              {errors.departureAirportId && (
-                <span className="field-error">{errors.departureAirportId.message}</span>
-              )}
-            </div>
+                {/* Airport Selection */}
+                <Row className="mb-4">
+                  <Col md={5}>
+                    <Form.Group>
+                      <Form.Label className="fw-bold">
+                        <i className="bi bi-geo-alt me-1"></i>
+                        From
+                      </Form.Label>
+                      <TypeAhead
+                        options={airportOptions}
+                        value={selectedDepartureAirport}
+                        onChange={(option) => {
+                          const airportId = option?.value as number || '';
+                          setSelectedDepartureAirport(airportId);
+                          setValue('departureAirportId', Number(airportId) || 0);
+                        }}
+                        placeholder="Departure city or airport..."
+                        error={!!errors.departureAirportId}
+                      />
+                      <Form.Control
+                        type="hidden"
+                        {...register('departureAirportId', {
+                          required: 'Departure airport is required',
+                          validate: (value) => value > 0 || 'Please select a departure airport'
+                        })}
+                        value={selectedDepartureAirport || ''}
+                      />
+                      {errors.departureAirportId && (
+                        <Form.Text className="text-danger">
+                          {errors.departureAirportId.message}
+                        </Form.Text>
+                      )}
+                    </Form.Group>
+                  </Col>
+                  
+                  <Col md={2} className="d-flex align-items-end justify-content-center">
+                    <Button
+                      variant="outline-secondary"
+                      onClick={swapAirports}
+                      className="mb-3"
+                      title="Swap airports"
+                    >
+                      <i className="bi bi-arrow-left-right"></i>
+                    </Button>
+                  </Col>
 
-            <button
-              type="button"
-              className="swap-button"
-              onClick={swapAirports}
-              title="Swap airports"
-            >
-              ⇄
-            </button>
+                  <Col md={5}>
+                    <Form.Group>
+                      <Form.Label className="fw-bold">
+                        <i className="bi bi-geo me-1"></i>
+                        To
+                      </Form.Label>
+                      <TypeAhead
+                        options={airportOptions}
+                        value={selectedArrivalAirport}
+                        onChange={(option) => {
+                          const airportId = option?.value as number || '';
+                          setSelectedArrivalAirport(airportId);
+                          setValue('arrivalAirportId', Number(airportId) || 0);
+                        }}
+                        placeholder="Arrival city or airport..."
+                        error={!!errors.arrivalAirportId}
+                      />
+                      <Form.Control
+                        type="hidden"
+                        {...register('arrivalAirportId', {
+                          required: 'Arrival airport is required',
+                          validate: (value) => value > 0 || 'Please select an arrival airport'
+                        })}
+                        value={selectedArrivalAirport || ''}
+                      />
+                      {errors.arrivalAirportId && (
+                        <Form.Text className="text-danger">
+                          {errors.arrivalAirportId.message}
+                        </Form.Text>
+                      )}
+                    </Form.Group>
+                  </Col>
+                </Row>
 
-            <div className="form-group airport-group">
-              <label>To</label>
-              <TypeAhead
-                options={airportOptions}
-                value={selectedArrivalAirport}
-                onChange={(option) => {
-                  const airportId = option?.value as number || '';
-                  setSelectedArrivalAirport(airportId);
-                  setValue('arrivalAirportId', Number(airportId) || 0);
-                }}
-                placeholder="Arrival city or airport..."
-                error={!!errors.arrivalAirportId}
-              />
-              <input
-                type="hidden"
-                {...register('arrivalAirportId', {
-                  required: 'Arrival airport is required',
-                  validate: (value) => value > 0 || 'Please select an arrival airport'
-                })}
-                value={selectedArrivalAirport || ''}
-              />
-              {errors.arrivalAirportId && (
-                <span className="field-error">{errors.arrivalAirportId.message}</span>
-              )}
-            </div>
-          </div>
+                {/* Date Selection */}
+                <Row className="mb-4">
+                  <Col md={isRoundTrip ? 6 : 12}>
+                    <Form.Group>
+                      <Form.Label htmlFor="departureDate" className="fw-bold">
+                        <i className="bi bi-calendar-event me-1"></i>
+                        Departure Date
+                      </Form.Label>
+                      <Form.Control
+                        id="departureDate"
+                        type="date"
+                        min={new Date().toISOString().split('T')[0]}
+                        {...register('departureDate', { required: 'Departure date is required' })}
+                        isInvalid={!!errors.departureDate}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.departureDate?.message}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
 
-          {/* Date Selection */}
-          <div className="date-selection">
-            <div className="form-group">
-              <label htmlFor="departureDate">Departure Date</label>
-              <input
-                id="departureDate"
-                className=""
-                min={new Date().toISOString().split('T')[0]}
-                type="date"
-                {...register('departureDate', { required: 'Departure date is required' })}
-              />
-            </div>
+                  {isRoundTrip && (
+                    <Col md={6}>
+                      <Form.Group>
+                        <Form.Label htmlFor="returnDate" className="fw-bold">
+                          <i className="bi bi-calendar-check me-1"></i>
+                          Return Date
+                        </Form.Label>
+                        <Form.Control
+                          id="returnDate"
+                          type="date"
+                          min={watch('departureDate') || new Date().toISOString().split('T')[0]}
+                          {...register('returnDate', { required: isRoundTrip ? 'Return date is required' : false })}
+                          isInvalid={!!errors.returnDate}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.returnDate?.message}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  )}
+                </Row>
 
-            {isRoundTrip && (
-              <div className="form-group">
-                <label htmlFor="returnDate">Return Date</label>
-                <input
-                  id="returnDate"
-                  className=""
-                  min={watch('departureDate') || new Date().toISOString().split('T')[0]}
-                  type="date"
-                  {...register('returnDate', { required: 'Return date is required' })}
-                />
-              </div>
-            )}
-          </div>
+                {/* Passengers and Class Selection */}
+                <Row className="mb-4">
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label htmlFor="passengerCount" className="fw-bold">
+                        <i className="bi bi-people me-1"></i>
+                        Passengers
+                      </Form.Label>
+                      <Form.Select
+                        id="passengerCount"
+                        {...register('passengerCount', { required: 'Passenger count is required', valueAsNumber: true })}
+                        isInvalid={!!errors.passengerCount}
+                      >
+                        {[...Array(9)].map((_, i) => (
+                          <option key={i + 1} value={i + 1}>
+                            {i + 1} {i === 0 ? 'Passenger' : 'Passengers'}
+                          </option>
+                        ))}
+                      </Form.Select>
+                      <Form.Control.Feedback type="invalid">
+                        {errors.passengerCount?.message}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
 
-          {/* Passengers and Class Selection */}
-          <div className="passenger-class-selection">
-            <div className="form-group">
-              <label htmlFor="passengerCount">Passengers</label>
-              <select
-                id="passengerCount"
-                className=""
-                {...register('passengerCount', { required: 'Passenger count is required', valueAsNumber: true })}
-              >
-                {[...Array(9)].map((_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {i + 1} {i === 0 ? 'Passenger' : 'Passengers'}
-                  </option>
-                ))}
-              </select>
-            </div>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label htmlFor="ticketClassId" className="fw-bold">
+                        <i className="bi bi-star me-1"></i>
+                        Ticket Class
+                      </Form.Label>
+                      <Form.Select
+                        id="ticketClassId"
+                        value={selectedTicketClass}
+                        onChange={e => setSelectedTicketClass(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                      >
+                        <option value="all">All Classes</option>
+                        {ticketClassOptions.map(tc => (
+                          <option key={tc.value} value={tc.value}>{tc.label}</option>
+                        ))}
+                      </Form.Select>
+                      <Form.Control
+                        type="hidden"
+                        {...register('ticketClassId')}
+                        value={selectedTicketClass === 'all' ? 0 : selectedTicketClass}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
 
-            <div className="form-group">
-              <label htmlFor="ticketClassId">Ticket Class</label>
-              <select
-                id="ticketClassId"
-                className="ticket-class-select"
-                value={selectedTicketClass}
-                onChange={e => setSelectedTicketClass(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-              >
-                <option value="all">All Classes</option>
-                {ticketClassOptions.map(tc => (
-                  <option key={tc.value} value={tc.value}>{tc.label}</option>
-                ))}
-              </select>
-            </div>
-            <input
-              type="hidden"
-              {...register('ticketClassId')}
-              value={selectedTicketClass === 'all' ? 0 : selectedTicketClass}
-            />
-          </div>
+                {/* Error Message */}
+                {error && (
+                  <Alert variant="danger" className="mb-3">
+                    <i className="bi bi-exclamation-triangle me-2"></i>
+                    {error}
+                  </Alert>
+                )}
 
-          {/* Search Button */}
-          <button
-            type="submit"
-            className="search-button"
-            disabled={loading}
-            aria-busy={loading}
-          >
-            {loading ? 'Searching...' : 'Search Flights'}
-          </button>
+                {/* Search Button */}
+                <div className="d-grid">
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Spinner
+                          as="span"
+                          animation="border"
+                          size="sm"
+                          role="status"
+                          aria-hidden="true"
+                          className="me-2"
+                        />
+                        Searching...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-search me-2"></i>
+                        Search Flights
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
-          {error && <div className="error-message">{error}</div>}
-        </form>
-      </div>
+      {/* Loading State */}
+      {loading && (
+        <Row className="mt-4">
+          <Col>
+            <Card className="text-center">
+              <Card.Body className="py-5">
+                <Spinner animation="border" variant="primary" className="mb-3" />
+                <h5>Searching for flights...</h5>
+                <p className="text-muted">Please wait while we find the best options for you.</p>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {/* Search Results */}
-      {loading && (
-        <div className="search-loading">
-          <p>Searching for flights...</p>
-        </div>
-      )}
-
       {flights.length > 0 && !loading && (
-        <div className="search-results">
-          <h3>Search Results ({flights.length} flights found)</h3>
-          <div className="flights-list">
-            {flights.map(flight => (
-              <FlightCard
-                key={flight.flightId}
-                flight={flight}
-                onBookFlight={handleBookFlight}
-                searchContext={{
-                  passengerCount: watch('passengerCount'),
-                  allTicketClasses: ticketClasses,
-                  availability: (flight as any).availability || [],
-                  selectedTicketClass: selectedTicketClass === 'all' ? null : (selectedTicketClass as number),
-                  searchedForAllClasses: selectedTicketClass === 'all'
-                }}
-              />
-            ))}
-          </div>
-        </div>
+        <Row className="mt-4">
+          <Col>
+            <Card>
+              <Card.Header className="bg-success text-white">
+                <h3 className="mb-0">
+                  <i className="bi bi-check-circle me-2"></i>
+                  Search Results ({flights.length} flights found)
+                </h3>
+              </Card.Header>
+              <Card.Body className="p-0">
+                {flights.map(flight => (
+                  <FlightCard
+                    key={flight.flightId}
+                    flight={flight}
+                    onBookFlight={handleBookFlight}                    searchContext={{
+                      passengerCount: watch('passengerCount'),
+                      allTicketClasses: ticketClasses,
+                      selectedTicketClass: selectedTicketClass === 'all' ? null : (selectedTicketClass as number),
+                      searchedForAllClasses: selectedTicketClass === 'all'
+                    }}
+                  />
+                ))}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       )}
 
+      {/* No Results */}
       {flights.length === 0 && !loading && error === '' && (
-        <div className="no-results">
-          <p>No flights found. Try adjusting your search criteria.</p>
-        </div>
+        <Row className="mt-4">
+          <Col>
+            <Card className="text-center">
+              <Card.Body className="py-5">
+                <i className="bi bi-search text-muted mb-3" style={{ fontSize: '3rem' }}></i>
+                <h5>No flights found</h5>
+                <p className="text-muted">Try adjusting your search criteria and search again.</p>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       )}
-    </div>
+    </Container>
   );
 };
 

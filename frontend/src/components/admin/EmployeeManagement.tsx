@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Modal } from 'react-bootstrap';
 import { employeeService } from '../../services';
-import { Employee } from '../../models';
-import './EmployeeManagement.css';
+import { Employee, CreateEmployeeRequest, UpdateEmployeeRequest } from '../../models';
 import TypeAhead from '../common/TypeAhead';
 
 interface EmployeeFormData {
@@ -11,6 +11,7 @@ interface EmployeeFormData {
     phoneNumber: string;
     citizenId: string;
     employeeType: number;
+    password?: string;
 }
 
 const EmployeeManagement: React.FC = () => {
@@ -54,31 +55,38 @@ const EmployeeManagement: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
-
-    const onSubmit = async (data: EmployeeFormData) => {
+    };    const onSubmit = async (data: EmployeeFormData) => {
         try {
             if (editingEmployee) {
-                await employeeService.updateEmployee(editingEmployee.employeeId!, data);
+                // For updates, we don't need citizenId or password
+                const updateData: UpdateEmployeeRequest = {
+                    accountName: data.accountName,
+                    email: data.email,
+                    phoneNumber: data.phoneNumber,
+                    employeeType: data.employeeType
+                };
+                await employeeService.updateEmployee(editingEmployee.employeeId!, updateData);
             } else {
-                await employeeService.createEmployee(data);
+                // For creation, we need password and citizenId
+                const createData: CreateEmployeeRequest = {
+                    ...data,
+                    password: data.password || 'defaultPassword123' // Temporary default password
+                };
+                await employeeService.createEmployee(createData);
             }
-
             loadEmployees();
             handleCancel();
         } catch (err: any) {
             setError(err.message || 'Failed to save employee');
         }
-    };
-
-    const handleEdit = (employee: Employee) => {
+    };    const handleEdit = (employee: Employee) => {
         setEditingEmployee(employee);
         setSelectedEmployeeType(employee.employeeType || '');
         reset({
             accountName: employee.accountName || '',
             email: employee.email || '',
             phoneNumber: employee.phoneNumber || '',
-            citizenId: employee.citizenId || '',
+            citizenId: '', // For the form structure only, not used in updates
             employeeType: employee.employeeType || 1
         });
         setShowForm(true);
@@ -112,89 +120,116 @@ const EmployeeManagement: React.FC = () => {
     });
 
     // Get unique employee types for filter
-    const employeeTypes = [...new Set(employees.map(employee => employee.employeeType))];
-
-    if (loading) {
-        return <div className="loading">Loading employee data...</div>;
+    const employeeTypes = [...new Set(employees.map(employee => employee.employeeType))];    if (loading) {
+        return (
+            <Container className="py-5">
+                <Row className="justify-content-center">
+                    <Col md={8} className="text-center">
+                        <Spinner animation="border" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                        </Spinner>
+                        <p className="mt-3">Loading employee data...</p>
+                    </Col>
+                </Row>
+            </Container>
+        );
     }
 
     return (
-        <div className="employee-management">
-            <div className="management-header">
-                <h2>Employee Management</h2>
-                <button
-                    className="btn btn-primary"
-                    onClick={() => setShowForm(true)}
-                >
-                    Add New Employee
-                </button>
-            </div>
+        <Container fluid className="py-4">
+            <Card className="mb-4">
+                <Card.Header>
+                    <Row className="align-items-center">
+                        <Col>
+                            <Card.Title as="h2" className="mb-0">👥 Employee Management</Card.Title>
+                        </Col>
+                        <Col md="auto">
+                            <Button
+                                variant="primary"
+                                onClick={() => setShowForm(true)}
+                            >
+                                Add New Employee
+                            </Button>
+                        </Col>
+                    </Row>
+                </Card.Header>
+            </Card>
 
-            {error && <div className="error-message">{error}</div>}
+            {error && (
+                <Alert variant="danger" className="mb-4">
+                    {error}
+                </Alert>
+            )}
 
             {/* Search and Filter Controls */}
-            <div className="controls-section">
-                <div className="search-controls">
-                    <div className="search-group">
-                        <label>Search Employee</label>
-                        <input
-                            type="text"
-                            placeholder="Search by name or email..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="search-input"
-                        />
-                    </div>
-                    
-                    <div className="filter-group">
-                        <label>Filter by Type</label>
-                        <select
-                            value={filterType}
-                            onChange={(e) => setFilterType(e.target.value)}
-                            className="filter-select"
-                        >
-                            <option value="">All Types</option>
-                            {employeeTypes.map(type => (
-                                <option key={type} value={type}>{type}</option>
-                            ))}
-                        </select>
-                    </div>
+            <Card className="mb-4">
+                <Card.Body>
+                    <Row className="g-3 align-items-end">
+                        <Col md={4}>
+                            <Form.Group>
+                                <Form.Label>Search Employee</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    placeholder="Search by name or email..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </Form.Group>
+                        </Col>
+                        
+                        <Col md={3}>
+                            <Form.Group>
+                                <Form.Label>Filter by Type</Form.Label>
+                                <Form.Select
+                                    value={filterType}
+                                    onChange={(e) => setFilterType(e.target.value)}
+                                >
+                                    <option value="">All Types</option>
+                                    {employeeTypes.map(type => (
+                                        <option key={type} value={type}>{type}</option>
+                                    ))}
+                                </Form.Select>
+                            </Form.Group>
+                        </Col>
 
-                    <div className="stats-group">
-                        <div className="stat-item">
-                            <span className="stat-label">Total Employees:</span>
-                            <span className="stat-value">{employees.length}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Add/Edit Form Modal */}
-            {showForm && (
-                <div className="form-modal">
-                    <div className="form-container">
-                        <h3>{editingEmployee ? 'Edit Employee' : 'Add New Employee'}</h3>
-
-                        <form onSubmit={handleSubmit(onSubmit)}>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Account Name</label>
-                                    <input
+                        <Col md={3}>
+                            <div className="d-flex align-items-center">
+                                <Badge bg="info" className="fs-6 px-3 py-2">
+                                    Total Employees: {employees.length}
+                                </Badge>
+                            </div>
+                        </Col>
+                    </Row>
+                </Card.Body>
+            </Card>            {/* Add/Edit Form Modal */}
+            <Modal show={showForm} onHide={handleCancel} size="lg" centered backdrop="static">
+                <Modal.Header closeButton>
+                    <Modal.Title>{editingEmployee ? 'Edit Employee' : 'Add New Employee'}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form onSubmit={handleSubmit(onSubmit)}>
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <Form.Group controlId="formAccountName">
+                                    <Form.Label>Account Name</Form.Label>
+                                    <Form.Control
                                         type="text"
                                         {...register('accountName', {
                                             required: 'Account name is required'
                                         })}
-                                        className={errors.accountName ? 'error' : ''}
+                                        isInvalid={!!errors.accountName}
                                         placeholder="e.g., John Doe"
                                     />
-                                    {errors.accountName && (
-                                        <span className="field-error">{errors.accountName.message}</span>
-                                    )}
-                                </div>
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.accountName?.message}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
 
-                                <div className="form-group">
-                                    <label>Email</label>
-                                    <input
+                            <Col md={6}>
+                                <Form.Group controlId="formEmail">
+                                    <Form.Label>Email</Form.Label>
+                                    <Form.Control
                                         type="email"
                                         {...register('email', {
                                             required: 'Email is required',
@@ -203,17 +238,21 @@ const EmployeeManagement: React.FC = () => {
                                                 message: 'Invalid email format'
                                             }
                                         })}
-                                        className={errors.email ? 'error' : ''}
+                                        isInvalid={!!errors.email}
                                         placeholder="e.g., john.doe@email.com"
                                     />
-                                    {errors.email && (
-                                        <span className="field-error">{errors.email.message}</span>
-                                    )}
-                                </div>
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.email?.message}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                        </Row>
 
-                                <div className="form-group">
-                                    <label>Phone Number</label>
-                                    <input
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <Form.Group controlId="formPhoneNumber">
+                                    <Form.Label>Phone Number</Form.Label>
+                                    <Form.Control
                                         type="text"
                                         {...register('phoneNumber', {
                                             required: 'Phone number is required',
@@ -222,134 +261,151 @@ const EmployeeManagement: React.FC = () => {
                                                 message: 'Invalid phone number format'
                                             }
                                         })}
-                                        className={errors.phoneNumber ? 'error' : ''}
+                                        isInvalid={!!errors.phoneNumber}
                                         placeholder="e.g., +1234567890"
                                     />
-                                    {errors.phoneNumber && (
-                                        <span className="field-error">{errors.phoneNumber.message}</span>
-                                    )}
-                                </div>
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.phoneNumber?.message}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
 
-                                <div className="form-group">
-                                    <label>Citizen ID</label>
-                                    <input
+                            <Col md={6}>
+                                <Form.Group controlId="formCitizenId">
+                                    <Form.Label>Citizen ID</Form.Label>
+                                    <Form.Control
                                         type="text"
                                         {...register('citizenId', {
-                                            required: 'Citizen ID is required',
+                                            required: !editingEmployee ? 'Citizen ID is required' : false,
                                             pattern: {
                                                 value: /^[0-9]+$/,
                                                 message: 'Invalid Citizen ID format'
                                             }
                                         })}
-                                        className={errors.citizenId ? 'error' : ''}
+                                        isInvalid={!!errors.citizenId}
                                         placeholder="e.g., 123456789"
+                                        disabled={!!editingEmployee}
                                     />
-                                    {errors.citizenId && (
-                                        <span className="field-error">{errors.citizenId.message}</span>
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.citizenId?.message}
+                                    </Form.Control.Feedback>
+                                    {editingEmployee && (
+                                        <Form.Text muted>
+                                            Citizen ID cannot be updated after creation
+                                        </Form.Text>
                                     )}
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Form.Group className="mb-3" controlId="formEmployeeType">
+                            <Form.Label>Employee Type</Form.Label>
+                            <TypeAhead
+                                options={employeeTypeOptions}
+                                value={selectedEmployeeType}
+                                onChange={(option) => {
+                                    const employeeType = option?.value as number || '';
+                                    setSelectedEmployeeType(employeeType);
+                                    setValue('employeeType', Number(employeeType));
+                                }}
+                                placeholder="Select employee type..."
+                                error={!!errors.employeeType}
+                            />
+                            <input
+                                type="hidden"
+                                {...register('employeeType', {
+                                    required: 'Employee type is required',
+                                    valueAsNumber: true
+                                })}
+                            />
+                            {errors.employeeType && (
+                                <div className="invalid-feedback d-block">
+                                    {errors.employeeType.message}
                                 </div>
+                            )}
+                        </Form.Group>
 
-                                <div className="form-group">
-                                    <label>Employee Type</label>
-                                    <TypeAhead
-                                        options={employeeTypeOptions}
-                                        value={selectedEmployeeType}
-                                        onChange={(option) => {
-                                            const employeeType = option?.value as number || '';
-                                            setSelectedEmployeeType(employeeType);
-                                            setValue('employeeType', Number(employeeType));
-                                        }}
-                                        placeholder="Select employee type..."
-                                        error={!!errors.employeeType}
-                                    />
-                                    <input
-                                        type="hidden"
-                                        {...register('employeeType', {
-                                            required: 'Employee type is required',
-                                            valueAsNumber: true
-                                        })}
-                                    />
-                                    {errors.employeeType && (
-                                        <span className="field-error">{errors.employeeType.message}</span>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="form-actions">
-                                <button type="button" className="btn btn-secondary" onClick={handleCancel}>
-                                    Cancel
-                                </button>
-                                <button type="submit" className="btn btn-primary">
-                                    {editingEmployee ? 'Update Employee' : 'Add Employee'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Employee Grid */}
-            <div className="employees-grid">
+                        {!editingEmployee && (
+                            <Form.Group className="mb-3">
+                                <Form.Text className="text-muted">
+                                    A default password will be generated for the new employee. They will need to change it after first login.
+                                </Form.Text>
+                            </Form.Group>
+                        )}
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCancel}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={handleSubmit(onSubmit)}>
+                        {editingEmployee ? 'Update Employee' : 'Add Employee'}
+                    </Button>
+                </Modal.Footer>
+            </Modal>            {/* Employee Grid */}
+            <Row className="g-4">
                 {filteredEmployees.map(employee => (
-                    <div key={employee.employeeId} className="employee-card">
-                        <div className="employee-header">
-                            <div className="employee-name">{employee.accountName}</div>
-                            <div className="employee-actions">
-                                <button 
-                                    className="btn btn-sm btn-secondary"
-                                    onClick={() => handleEdit(employee)}
-                                >
-                                    Edit
-                                </button>
-                                <button 
-                                    className="btn btn-sm btn-danger"
-                                    onClick={() => handleDelete(employee.employeeId!)}
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="employee-content">
-                            <div className="employee-email">{employee.email}</div>
-                            
-                            <div className="employee-details">
-                                <div className="detail-row">
-                                    <span className="label">Phone:</span>
-                                    <span className="value">{employee.phoneNumber}</span>
+                    <Col key={employee.employeeId} lg={4} md={6} sm={12}>
+                        <Card className="h-100 shadow-sm">
+                            <Card.Header className="d-flex justify-content-between align-items-center bg-light">
+                                <div className="fw-bold">{employee.accountName}</div>
+                                <div>
+                                    <Button 
+                                        variant="outline-secondary" 
+                                        size="sm" 
+                                        className="me-2"
+                                        onClick={() => handleEdit(employee)}
+                                    >
+                                        Edit
+                                    </Button>
+                                    <Button 
+                                        variant="outline-danger" 
+                                        size="sm"
+                                        onClick={() => handleDelete(employee.employeeId!)}
+                                    >
+                                        Delete
+                                    </Button>
                                 </div>
+                            </Card.Header>
+
+                            <Card.Body>
+                                <Card.Subtitle className="mb-3 text-muted">
+                                    {employee.email}
+                                </Card.Subtitle>
                                 
-                                <div className="detail-row">
-                                    <span className="label">Citizen ID:</span>
-                                    <span className="value">{employee.citizenId}</span>
-                                </div>
+                                <Card.Text as="div">
+                                    <Row className="mb-2">
+                                        <Col xs={4} className="text-muted">Phone:</Col>
+                                        <Col>{employee.phoneNumber}</Col>
+                                    </Row>
 
-                                <div className="detail-row">
-                                    <span className="label">Employee Type:</span>
-                                    <span className="value">
-                                        {employee.employeeType === 1 && 'Flight Schedule Reception'}
-                                        {employee.employeeType === 2 && 'Ticket Sales/Booking'}
-                                        {employee.employeeType === 3 && 'Customer Service'}
-                                        {employee.employeeType === 4 && 'Accounting'}
-                                        {employee.employeeType === 5 && 'System Administrator'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                    <Row className="mb-2">
+                                        <Col xs={4} className="text-muted">Type:</Col>
+                                        <Col>
+                                            {employee.employeeType === 1 && 'Flight Schedule Reception'}
+                                            {employee.employeeType === 2 && 'Ticket Sales/Booking'}
+                                            {employee.employeeType === 3 && 'Customer Service'}
+                                            {employee.employeeType === 4 && 'Accounting'}
+                                            {employee.employeeType === 5 && 'System Administrator'}
+                                        </Col>
+                                    </Row>
+                                </Card.Text>
+                            </Card.Body>
+                        </Card>
+                    </Col>
                 ))}
-            </div>
+            </Row>
 
             {filteredEmployees.length === 0 && (
-                <div className="no-data">
+                <Alert variant="info" className="text-center my-4">
                     {searchTerm || filterType ? (
-                        <p>No employees found matching your search criteria.</p>
+                        <p className="mb-0">No employees found matching your search criteria.</p>
                     ) : (
-                        <p>No employees in the system. Add your first employee to get started.</p>
+                        <p className="mb-0">No employees in the system. Add your first employee to get started.</p>
                     )}
-                </div>
+                </Alert>
             )}
-        </div>
+        </Container>
     );
 };
 

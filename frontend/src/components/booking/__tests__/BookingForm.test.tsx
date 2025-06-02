@@ -477,8 +477,88 @@ describe('BookingForm', () => {  const mockFlight = {
       fireEvent.click(businessRadio);
 
       expect(screen.getByText('Business')).toBeInTheDocument();
-      expect(screen.getByText('$599.99')).toBeInTheDocument(); // Price per ticket
-      expect(screen.getByText('$1199.98')).toBeInTheDocument(); // Total price
+      expect(screen.getByText('$599.99')).toBeInTheDocument(); // Price per ticket      expect(screen.getByText('$1199.98')).toBeInTheDocument(); // Total price
+    });
+  });
+
+  describe('SessionStorage and URL Cleanup', () => {
+    it('should read booking data from sessionStorage when available', async () => {
+      // Mock sessionStorage with booking data
+      const bookingData = {
+        flightId: 1,
+        passengers: 2,
+        class: 1
+      };
+      
+      const sessionStorageMock = {
+        getItem: vi.fn((key) => {
+          if (key === 'bookingData') {
+            return JSON.stringify(bookingData);
+          }
+          return null;
+        }),
+        removeItem: vi.fn(),
+        setItem: vi.fn(),
+        clear: vi.fn()
+      };
+      
+      Object.defineProperty(window, 'sessionStorage', {
+        value: sessionStorageMock,
+        writable: true
+      });
+
+      render(
+        <TestWrapper>
+          <BookingForm />
+        </TestWrapper>
+      );
+
+      await waitFor(() => {
+        expect(mockFlightService.getFlightById).toHaveBeenCalledWith(1);
+      });
+
+      // Verify sessionStorage was cleared after loading
+      await waitFor(() => {
+        expect(sessionStorageMock.removeItem).toHaveBeenCalledWith('bookingData');
+      });
+    });
+
+    it('should fallback to query parameters when sessionStorage is empty', async () => {
+      // Mock empty sessionStorage
+      const sessionStorageMock = {
+        getItem: vi.fn(() => null),
+        removeItem: vi.fn(),
+        setItem: vi.fn(),
+        clear: vi.fn()
+      };
+      
+      Object.defineProperty(window, 'sessionStorage', {
+        value: sessionStorageMock,
+        writable: true
+      });
+
+      // Mock useLocation to return query parameters
+      const mockNavigate = vi.fn();
+      vi.mocked(require('react-router-dom').useLocation).mockReturnValue({
+        search: '?flightId=1&passengers=2&class=1',
+        state: {}
+      });
+      vi.mocked(require('react-router-dom').useNavigate).mockReturnValue(mockNavigate);
+
+      render(
+        <TestWrapper>
+          <BookingForm />
+        </TestWrapper>
+      );
+
+      await waitFor(() => {
+        expect(mockFlightService.getFlightById).toHaveBeenCalledWith(1);
+      });
+
+      // Verify URL was cleaned up after loading
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/booking', { replace: true });
+      });
     });
   });
 });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Card, Form, Button, Spinner, Badge } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
-import './ChatWidget.css';
 
 interface Message {
   messageId?: number;
@@ -111,52 +111,90 @@ const ChatWidget: React.FC = () => {
   if (!user) {
     return null;
   }
-
   return (
-    <div className={`chat-widget ${isOpen ? 'open' : ''}`}>
-      <div className="chat-header" onClick={() => setIsOpen(!isOpen)}>
-        <span className="chat-icon">💬</span>
-        <span className="chat-title">Support Chat</span>
-        <span className="toggle-icon">{isOpen ? '−' : '+'}</span>
-      </div>
-
-      {isOpen && (
-        <div className="chat-body">
-          <div className="messages-container">
-            {loading ? (
-              <div className="loading">Loading chat...</div>
-            ) : (
-              <>
-                {messages.map(message => (
-                  <div
-                    key={message.messageId}
-                    className={`message ${message.isFromCustomer ? 'customer' : 'employee'}`}
-                  >
-                    <div className="message-content">{message.content}</div>
-                    <div className="message-time">
-                      {new Date(message.sendTime).toLocaleTimeString()}
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </>
-            )}
+    <div 
+      className={`position-fixed bottom-0 end-0 m-3 ${isOpen ? '' : ''}`}
+      style={{ zIndex: 1050, width: isOpen ? '350px' : 'auto' }}
+    >
+      <Card className="shadow-lg border-0">
+        <Card.Header 
+          className="bg-primary text-white d-flex justify-content-between align-items-center"
+          style={{ cursor: 'pointer' }}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <div className="d-flex align-items-center">
+            <i className="bi bi-chat-dots me-2"></i>
+            <span className="fw-bold">Support Chat</span>
           </div>
+          <div className="d-flex align-items-center">
+            <Badge bg="success" className="me-2">Online</Badge>
+            <i className={`bi ${isOpen ? 'bi-dash' : 'bi-plus'}`}></i>
+          </div>
+        </Card.Header>
 
-          <form onSubmit={sendMessage} className="message-input">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type your message..."
-              disabled={loading}
-            />
-            <button type="submit" disabled={!newMessage.trim() || loading}>
-              Send
-            </button>
-          </form>
-        </div>
-      )}
+        {isOpen && (
+          <div>
+            <div 
+              className="p-3 bg-light"
+              style={{ height: '300px', overflowY: 'auto' }}
+            >
+              {loading ? (
+                <div className="text-center py-5">
+                  <Spinner animation="border" size="sm" className="me-2" />
+                  Loading chat...
+                </div>
+              ) : (
+                <>
+                  {messages.map(message => (
+                    <div
+                      key={message.messageId}
+                      className={`mb-3 d-flex ${message.isFromCustomer ? 'justify-content-end' : 'justify-content-start'}`}
+                    >
+                      <div 
+                        className={`p-2 rounded max-width-75 ${
+                          message.isFromCustomer 
+                            ? 'bg-primary text-white' 
+                            : 'bg-white border'
+                        }`}
+                        style={{ maxWidth: '75%' }}
+                      >
+                        <div className="small">{message.content}</div>
+                        <div className={`text-xs mt-1 ${message.isFromCustomer ? 'text-light' : 'text-muted'}`} style={{ fontSize: '0.7rem' }}>
+                          {new Date(message.sendTime).toLocaleTimeString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </>
+              )}
+            </div>
+
+            <Card.Footer className="p-2">
+              <Form onSubmit={sendMessage}>
+                <div className="d-flex gap-2">
+                  <Form.Control
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    disabled={loading}
+                    size="sm"
+                  />
+                  <Button 
+                    type="submit" 
+                    variant="primary"
+                    size="sm"
+                    disabled={!newMessage.trim() || loading}
+                  >
+                    <i className="bi bi-send"></i>
+                  </Button>
+                </div>
+              </Form>
+            </Card.Footer>
+          </div>
+        )}
+      </Card>
     </div>
   );
 };

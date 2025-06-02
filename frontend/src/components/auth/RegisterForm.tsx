@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
-import './AuthForms.css';
 
 interface RegisterFormData {
   accountName: string;
@@ -50,145 +50,182 @@ const RegisterForm: React.FC = () => {
       setLoading(false);
     }
   };
-
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <h2>Create Account</h2>
-          <p>Join us to start booking flights</p>
-        </div>
+    <Container className="py-5">
+      <Row className="justify-content-center">
+        <Col xs={12} md={8} lg={6}>
+          <Card>
+            <Card.Header className="text-center bg-primary text-white">
+              <h2 className="mb-1">Create Account</h2>
+              <p className="mb-0">Join us to start booking flights</p>
+            </Card.Header>
+            <Card.Body className="p-4">
+              <Form onSubmit={handleSubmit(onSubmit)}>
+                {error && (
+                  <Alert variant="danger" className="mb-3">
+                    {error}
+                  </Alert>
+                )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
-          {error && <div className="error-message">{error}</div>}
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label htmlFor="accountName">Username</Form.Label>
+                      <Form.Control
+                        id="accountName"
+                        type="text"
+                        {...register('accountName', {
+                          required: 'Username is required',
+                          minLength: { value: 3, message: 'Username must be at least 3 characters' },
+                          pattern: { value: /^[a-zA-Z0-9_]+$/, message: 'Username can only contain letters, numbers, and underscores' }
+                        })}
+                        isInvalid={!!errors.accountName}
+                        placeholder="Choose a username"
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.accountName?.message}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="accountName">Username</label>
-              <input
-                id="accountName"
-                type="text"
-                {...register('accountName', {
-                  required: 'Username is required',
-                  minLength: { value: 3, message: 'Username must be at least 3 characters' },
-                  pattern: { value: /^[a-zA-Z0-9_]+$/, message: 'Username can only contain letters, numbers, and underscores' }
-                })}
-                className={errors.accountName ? 'error' : ''}
-                placeholder="Choose a username"
-              />
-              {errors.accountName && (
-                <span className="field-error">{errors.accountName.message}</span>
-              )}
-            </div>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label htmlFor="email">Email</Form.Label>
+                      <Form.Control
+                        id="email"
+                        type="email"
+                        {...register('email', {
+                          required: 'Email is required',
+                          pattern: { value: /^\S+@\S+\.\S+$/, message: 'Please enter a valid email address' }
+                        })}
+                        isInvalid={!!errors.email}
+                        placeholder="Enter your email"
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.email?.message}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                </Row>
 
-            <div className="form-group">
-              <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                {...register('email', {
-                  required: 'Email is required',
-                  pattern: { value: /^\S+@\S+\.\S+$/, message: 'Please enter a valid email address' }
-                })}
-                className={errors.email ? 'error' : ''}
-                placeholder="Enter your email"
-              />
-              {errors.email && (
-                <span className="field-error">{errors.email.message}</span>
-              )}
-            </div>
-          </div>
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label htmlFor="phoneNumber">Phone Number</Form.Label>
+                      <Form.Control
+                        id="phoneNumber"
+                        type="tel"
+                        {...register('phoneNumber', {
+                          required: 'Phone number is required',
+                          pattern: { value: /^\+?[\d\s-()]+$/, message: 'Please enter a valid phone number' }
+                        })}
+                        isInvalid={!!errors.phoneNumber}
+                        placeholder="Enter your phone number"
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.phoneNumber?.message}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="phoneNumber">Phone Number</label>
-              <input
-                id="phoneNumber"
-                type="tel"
-                {...register('phoneNumber', {
-                  required: 'Phone number is required',
-                  pattern: { value: /^\+?[\d\s-()]+$/, message: 'Please enter a valid phone number' }
-                })}
-                className={errors.phoneNumber ? 'error' : ''}
-                placeholder="Enter your phone number"
-              />
-              {errors.phoneNumber && (
-                <span className="field-error">{errors.phoneNumber.message}</span>
-              )}
-            </div>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label htmlFor="citizenId">Citizen ID</Form.Label>
+                      <Form.Control
+                        id="citizenId"
+                        type="text"
+                        {...register('citizenId', {
+                          required: 'Citizen ID is required',
+                          minLength: { value: 9, message: 'Citizen ID must be at least 9 characters' }
+                        })}
+                        isInvalid={!!errors.citizenId}
+                        placeholder="Enter your citizen ID"
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.citizenId?.message}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                </Row>
 
-            <div className="form-group">
-              <label htmlFor="citizenId">Citizen ID</label>
-              <input
-                id="citizenId"
-                type="text"
-                {...register('citizenId', {
-                  required: 'Citizen ID is required',
-                  minLength: { value: 9, message: 'Citizen ID must be at least 9 characters' }
-                })}
-                className={errors.citizenId ? 'error' : ''}
-                placeholder="Enter your citizen ID"
-              />
-              {errors.citizenId && (
-                <span className="field-error">{errors.citizenId.message}</span>
-              )}
-            </div>
-          </div>
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label htmlFor="password">Password</Form.Label>
+                      <Form.Control
+                        id="password"
+                        type="password"
+                        {...register('password', {
+                          required: 'Password is required',
+                          minLength: { value: 6, message: 'Password must be at least 6 characters' },
+                          pattern: { 
+                            value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+                            message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+                          }
+                        })}
+                        isInvalid={!!errors.password}
+                        placeholder="Create a password"
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.password?.message}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                {...register('password', {
-                  required: 'Password is required',
-                  minLength: { value: 6, message: 'Password must be at least 6 characters' },
-                  pattern: { 
-                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                    message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
-                  }
-                })}
-                className={errors.password ? 'error' : ''}
-                placeholder="Create a password"
-              />
-              {errors.password && (
-                <span className="field-error">{errors.password.message}</span>
-              )}
-            </div>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label htmlFor="confirmPassword">Confirm Password</Form.Label>
+                      <Form.Control
+                        id="confirmPassword"
+                        type="password"
+                        {...register('confirmPassword', {
+                          required: 'Please confirm your password',
+                          validate: value => value === password || 'Passwords do not match'
+                        })}
+                        isInvalid={!!errors.confirmPassword}
+                        placeholder="Confirm your password"
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.confirmPassword?.message}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                </Row>
 
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
-              <input
-                id="confirmPassword"
-                type="password"
-                {...register('confirmPassword', {
-                  required: 'Please confirm your password',
-                  validate: value => value === password || 'Passwords do not match'
-                })}
-                className={errors.confirmPassword ? 'error' : ''}
-                placeholder="Confirm your password"
-              />
-              {errors.confirmPassword && (
-                <span className="field-error">{errors.confirmPassword.message}</span>
-              )}
-            </div>
-          </div>
-
-          <button 
-            type="submit" 
-            className="btn btn-primary btn-full"
-            disabled={loading}
-          >
-            {loading ? 'Creating Account...' : 'Create Account'}
-          </button>
-        </form>
-
-        <div className="auth-footer">
-          <p>Already have an account? <Link to="/login">Sign in here</Link></p>
-        </div>
-      </div>
-    </div>
+                <Button 
+                  type="submit" 
+                  variant="primary"
+                  size="lg"
+                  className="w-100"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Spinner
+                        as="span"
+                        animation="border"
+                        size="sm"
+                        role="status"
+                        aria-hidden="true"
+                        className="me-2"
+                      />
+                      Creating Account...
+                    </>
+                  ) : (
+                    'Create Account'
+                  )}
+                </Button>
+              </Form>
+            </Card.Body>
+            <Card.Footer className="text-center">
+              <p className="mb-0">
+                Already have an account? <Link to="/login" className="text-decoration-none">Sign in here</Link>
+              </p>
+            </Card.Footer>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 

@@ -13,10 +13,9 @@ import { API_URL } from './config';
 
 class EmployeeService {
   private readonly baseUrl = API_URL.EMPLOYEES;
-
   // Authentication
   async login(loginData: LoginRequest): Promise<LoginResponse> {
-    const response = await apiClient.post('/auth/employee/login', loginData);
+    const response = await apiClient.post('/accounts/login', loginData);
     if (response.token) {
       localStorage.setItem('authToken', response.token);
     }

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Modal, Table } from 'react-bootstrap';
 import { airportService } from '../../services';
 import { Airport } from '../../models';
-import './AirportManagement.css';
 import TypeAhead from '../common/TypeAhead';
 import { usePermissions } from '../../hooks/useAuth';
 
@@ -15,12 +15,18 @@ interface AirportFormData {
 const AirportManagement: React.FC = () => {
   const { canViewAdmin } = usePermissions();
   if (!canViewAdmin) {
-    return (
-      <div className="unauthorized">
-        <h2>Access Denied</h2>
-        <p>You do not have permission to access airport management.</p>
-      </div>
-    );
+        return (
+            <Container className="py-5">
+                <Row className="justify-content-center">
+                    <Col md={8}>
+                        <Alert variant="danger" className="text-center">
+                            <Alert.Heading>Access Denied</Alert.Heading>
+                            <p>You do not have permission to access airport management.</p>
+                        </Alert>
+                    </Col>
+                </Row>
+            </Container>
+        );
   }
 
   const [airports, setAirports] = useState<Airport[]>([]);
@@ -117,144 +123,182 @@ const AirportManagement: React.FC = () => {
     setError('');
   };
 
-  if (loading) {
-    return <div className="loading">Loading airports...</div>;
-  }
+    if (loading) {
+        return (
+            <Container className="py-5 text-center">
+                <Spinner animation="border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </Spinner>
+                <p className="mt-3">Loading airport data...</p>
+            </Container>
+        );
+    }
 
-  return (
-    <div className="airport-management">
-      <div className="management-header">
-        <h2>Airport Management</h2>
-        <button 
-          className="btn btn-primary"
-          onClick={() => setShowForm(true)}
-        >
-          Add New Airport
-        </button>
-      </div>
+    return (
+        <Container fluid className="py-4">
+            <Row className="mb-4">
+                <Col>
+                    <Card>
+                        <Card.Header className="d-flex justify-content-between align-items-center">
+                            <Card.Title className="mb-0">🏢 Airport Management</Card.Title>
+                            <Button
+                                variant="primary"
+                                onClick={() => setShowForm(true)}
+                            >
+                                Add New Airport
+                            </Button>
+                        </Card.Header>
+                    </Card>
+                </Col>
+            </Row>
 
-      {error && <div className="error-message">{error}</div>}
+            {error && (
+                <Row className="mb-4">
+                    <Col>
+                        <Alert variant="danger" className="text-center">
+                            {error}
+                        </Alert>
+                    </Col>
+                </Row>
+            )}
 
-      {showForm && (
-        <div className="form-modal">
-          <div className="form-container">
-            <h3>{editingAirport ? 'Edit Airport' : 'Add New Airport'}</h3>
+            <Modal show={showForm} onHide={handleCancel} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>{editingAirport ? 'Edit Airport' : 'Add New Airport'}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form id="airport-form" onSubmit={handleSubmit(onSubmit)}>
+                        <Row className="mb-3">
+                            <Col>
+                                <Form.Group>
+                                    <Form.Label>Airport Name</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        {...register('airportName', {
+                                            required: 'Airport name is required'
+                                        })}
+                                        isInvalid={!!errors.airportName}
+                                        placeholder="e.g., John F. Kennedy International Airport"
+                                    />
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.airportName?.message}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                        </Row>
 
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Airport Name</label>
-                  <input
-                    type="text"
-                    {...register('airportName', {
-                      required: 'Airport name is required'
-                    })}
-                    className={errors.airportName ? 'error' : ''}
-                    placeholder="e.g., John F. Kennedy International Airport"
-                  />
-                  {errors.airportName && (
-                    <span className="field-error">{errors.airportName.message}</span>
-                  )}
-                </div>
+                        <Row className="mb-3">
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label>City Name</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        {...register('cityName', {
+                                            required: 'City name is required'
+                                        })}
+                                        isInvalid={!!errors.cityName}
+                                        placeholder="e.g., New York"
+                                    />
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.cityName?.message}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group>
+                                    <Form.Label>Country</Form.Label>
+                                    <TypeAhead
+                                        options={countryOptions}
+                                        value={selectedCountry}
+                                        onChange={(option) => {
+                                            const country = option?.value || '';
+                                            setSelectedCountry(String(country));
+                                        }}
+                                        placeholder="Search country..."
+                                        error={!!errors.countryName}
+                                    />
+                                    <input
+                                        type="hidden"
+                                        {...register('countryName', {
+                                            required: 'Country is required'
+                                        })}
+                                        value={selectedCountry}
+                                    />
+                                    {errors.countryName && (
+                                        <div className="text-danger small mt-1">{errors.countryName.message}</div>
+                                    )}
+                                </Form.Group>
+                            </Col>
+                        </Row>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCancel}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={handleSubmit(onSubmit)}>
+                        {editingAirport ? 'Update Airport' : 'Create Airport'}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
-                <div className="form-group">
-                  <label>City Name</label>
-                  <input
-                    type="text"
-                    {...register('cityName', {
-                      required: 'City name is required'
-                    })}
-                    className={errors.cityName ? 'error' : ''}
-                    placeholder="e.g., New York"
-                  />
-                  {errors.cityName && (
-                    <span className="field-error">{errors.cityName.message}</span>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label>Country</label>
-                  <TypeAhead
-                    options={countryOptions}
-                    value={selectedCountry}
-                    onChange={(option) => {
-                      const country = option?.value || '';
-                      setSelectedCountry(String(country));
-                    }}
-                    placeholder="Search country..."
-                    error={!!errors.countryName}
-                  />
-                  <input
-                    type="hidden"
-                    {...register('countryName', {
-                      required: 'Country is required'
-                    })}
-                    value={selectedCountry}
-                  />
-                  {errors.countryName && (
-                    <span className="field-error">{errors.countryName.message}</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="form-actions">
-                <button type="button" className="btn btn-secondary" onClick={handleCancel}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  {editingAirport ? 'Update Airport' : 'Create Airport'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <div className="airports-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Airport Name</th>
-              <th>City</th>
-              <th>Country</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {airports.map(airport => (
-              <tr key={airport.airportId}>
-                <td>{airport.airportName}</td>
-                <td>{airport.cityName}</td>
-                <td>{airport.countryName}</td>
-                <td>
-                  <div className="actions">
-                    <button 
-                      className="btn btn-sm btn-secondary"
-                      onClick={() => handleEdit(airport)}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      className="btn btn-sm btn-danger"
-                      onClick={() => handleDelete(airport.airportId!)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {airports.length === 0 && (
-          <div className="no-data">
-            <p>No airports found. Add your first airport to get started.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+            <Row>
+                <Col>
+                    <Card>
+                        <Card.Header>
+                            <Card.Title className="mb-0">All Airports</Card.Title>
+                        </Card.Header>
+                        <Card.Body className="p-0">
+                            {airports.length === 0 ? (
+                                <div className="text-center py-5">
+                                    <p className="text-muted mb-0">No airports found. Add your first airport to get started.</p>
+                                </div>
+                            ) : (
+                                <Table responsive striped hover>
+                                    <thead>
+                                        <tr>
+                                            <th>Airport Name</th>
+                                            <th>City</th>
+                                            <th>Country</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {airports.map(airport => (
+                                            <tr key={airport.airportId}>
+                                                <td>{airport.airportName}</td>
+                                                <td>
+                                                    <Badge bg="info">{airport.cityName}</Badge>
+                                                </td>
+                                                <td>{airport.countryName}</td>
+                                                <td>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline-secondary"
+                                                        className="me-2"
+                                                        onClick={() => handleEdit(airport)}
+                                                    >
+                                                        Edit
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline-danger"
+                                                        onClick={() => handleDelete(airport.airportId!)}
+                                                    >
+                                                        Delete
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
+                            )}
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
+        </Container>
+    );
 };
 
 export default AirportManagement;

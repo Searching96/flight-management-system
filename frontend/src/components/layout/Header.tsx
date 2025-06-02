@@ -1,76 +1,66 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Navbar, Nav, Container, Dropdown } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import './Header.css';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
   return (
-    <header className="header">
-      <div className="container">
-        <div className="header-content">
-          <Link to="/" className="logo">
-            <span className="logo-icon">✈️</span>
-            <span>FlightMS</span>
-          </Link>
+    <Navbar bg="white" expand="lg" sticky="top" className="shadow-sm border-bottom">
+      <Container>
+        <Navbar.Brand as={Link} to="/" className="fw-bold text-primary fs-4 text-decoration-none">
+          <i className="bi bi-airplane me-2"></i>
+          FlightMS
+        </Navbar.Brand>
 
-          <nav className={`nav ${mobileMenuOpen ? 'nav-open' : ''}`}>            <ul className="nav-list">
-              <li><Link to="/" className="nav-link">Home</Link></li>
-              <li><Link to="/search" className="nav-link">Search Flights</Link></li>
-              <li><Link to="/booking-lookup" className="nav-link">Manage Booking</Link></li>
-              
-              {user ? (
-                <>
-                  <li><Link to="/dashboard" className="nav-link">Dashboard</Link></li>
-                  {user.accountType === 1 && (
-                    <li><Link to="/admin" className="nav-link">Admin</Link></li>
-                  )}
-                </>
-              ) : (
-                <>
-                  <li><Link to="/login" className="nav-link">Login</Link></li>
-                  <li><Link to="/register" className="nav-link">Register</Link></li>
-                </>
-              )}
-            </ul>
-          </nav>
-
-          <div className="user-menu">
-            {user ? (
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="me-auto">
+            <Nav.Link as={Link} to="/" className="text-decoration-none">Home</Nav.Link>
+            <Nav.Link as={Link} to="/search" className="text-decoration-none">Search Flights</Nav.Link>
+            <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Manage Booking</Nav.Link>
+            
+            {user && (
               <>
-                <span className="user-name">Welcome, {user.accountName}</span>
-                <button onClick={handleLogout} className="logout-btn">
-                  Logout
-                </button>
+                <Nav.Link as={Link} to="/dashboard" className="text-decoration-none">Dashboard</Nav.Link>
+                {user.accountType === 2 && (
+                  <Nav.Link as={Link} to="/admin" className="text-decoration-none">Admin</Nav.Link>
+                )}
               </>
-            ) : (
-              <Link to="/login" className="btn btn-primary">
-                Sign In
-              </Link>
             )}
-          </div>
-
-          <button 
-            className="mobile-menu-btn"
-            onClick={toggleMobileMenu}
-          >
-            ☰
-          </button>
-        </div>
-      </div>
-    </header>
+          </Nav>          <Nav className="ms-auto">
+            {user ? (
+              <Dropdown align="end">
+                <Dropdown.Toggle variant="outline-primary" id="dropdown-basic">
+                  <i className="bi bi-person-circle me-1"></i>
+                  {user.accountName}
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  <Dropdown.Item onClick={handleLogout}>
+                    <i className="bi bi-box-arrow-right me-2"></i>
+                    Logout
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            ) : (
+              <>
+                <Nav.Link as={Link} to="/login" className="me-2 text-decoration-none">Login</Nav.Link>
+                <Link to="/register" className="btn btn-primary btn-sm text-decoration-none">
+                  Sign Up
+                </Link>
+              </>
+            )}
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
   );
 };
 

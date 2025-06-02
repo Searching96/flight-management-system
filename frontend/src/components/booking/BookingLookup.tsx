@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, ListGroup } from 'react-bootstrap';
 import { bookingConfirmationService, BookingConfirmation } from '../../services/bookingConfirmationService';
-import './BookingLookup.css';
 
 const BookingLookup: React.FC = () => {
   const navigate = useNavigate();
@@ -67,189 +67,232 @@ const BookingLookup: React.FC = () => {
   };
 
   return (
-    <div className="booking-lookup">
-      <div className="lookup-header">
-        <h1>Manage Your Booking</h1>
-        <p>Enter your booking confirmation code to view and manage your reservation</p>
-      </div>
-
-      <div className="lookup-form-container">
-        <form onSubmit={handleSearch} className="lookup-form">
-          <div className="form-group">
-            <label htmlFor="confirmationCode">Confirmation Code *</label>
-            <input
-              type="text"
-              id="confirmationCode"
-              value={searchData.confirmationCode}
-              onChange={(e) => setSearchData(prev => ({ 
-                ...prev, 
-                confirmationCode: e.target.value.toUpperCase() 
-              }))}
-              placeholder="FMS-YYYYMMDD-XXXX"
-              className="form-control"
-              required
-            />
-            <small className="form-help">
-              Format: FMS-YYYYMMDD-XXXX (e.g., FMS-20240527-A1B2)
-            </small>
+    <Container className="py-5">
+      <Row className="justify-content-center">
+        <Col lg={8}>
+          {/* Header */}
+          <div className="text-center mb-5">
+            <h1 className="mb-3">Manage Your Booking</h1>
+            <p className="text-muted">Enter your booking confirmation code to view and manage your reservation</p>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="email">Email (Optional)</label>
-            <input
-              type="email"
-              id="email"
-              value={searchData.email}
-              onChange={(e) => setSearchData(prev => ({ 
-                ...prev, 
-                email: e.target.value 
-              }))}
-              placeholder="Enter email for verification"
-              className="form-control"
-            />
-            <small className="form-help">
-              Enter email for additional verification (recommended)
-            </small>
-          </div>
+          {/* Search Form */}
+          <Card className="mb-4">
+            <Card.Header>
+              <h4 className="mb-0">Find Your Booking</h4>
+            </Card.Header>
+            <Card.Body>
+              <Form onSubmit={handleSearch}>
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Confirmation Code *</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={searchData.confirmationCode}
+                        onChange={(e) => setSearchData(prev => ({ 
+                          ...prev, 
+                          confirmationCode: e.target.value.toUpperCase() 
+                        }))}
+                        placeholder="FMS-YYYYMMDD-XXXX"
+                        required
+                      />
+                      <Form.Text className="text-muted">
+                        Format: FMS-YYYYMMDD-XXXX (e.g., FMS-20240527-A1B2)
+                      </Form.Text>
+                    </Form.Group>
+                  </Col>
 
-          {error && <div className="error-message">{error}</div>}
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Email (Optional)</Form.Label>
+                      <Form.Control
+                        type="email"
+                        value={searchData.email}
+                        onChange={(e) => setSearchData(prev => ({ 
+                          ...prev, 
+                          email: e.target.value 
+                        }))}
+                        placeholder="Enter email for verification"
+                      />
+                      <Form.Text className="text-muted">
+                        Enter email for additional verification (recommended)
+                      </Form.Text>
+                    </Form.Group>
+                  </Col>
+                </Row>
 
-          <div className="form-actions">
-            <button 
-              type="submit" 
-              className="btn btn-primary"
-              disabled={loading}
-            >
-              {loading ? 'Searching...' : 'Find Booking'}
-            </button>
-            <button 
-              type="button" 
-              className="btn btn-secondary"
-              onClick={() => navigate('/')}
-            >
-              Back to Home
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {booking && (
-        <div className="booking-details">
-          <div className="booking-header">
-            <h2>Booking Found</h2>
-            <div className="confirmation-code">
-              Code: {booking.confirmationCode}
-            </div>
-          </div>
-
-          <div className="booking-info">
-            <div className="flight-section">
-              <h3>Flight Information</h3>
-              <div className="info-grid">
-                <div className="info-item">
-                  <span className="label">Flight:</span>
-                  <span className="value">{booking.flightInfo.flightCode}</span>
-                </div>
-                <div className="info-item">
-                  <span className="label">Route:</span>
-                  <span className="value">
-                    {booking.flightInfo.departureCity} → {booking.flightInfo.arrivalCity}
-                  </span>
-                </div>
-                <div className="info-item">
-                  <span className="label">Departure:</span>
-                  <span className="value">
-                    {new Date(booking.flightInfo.departureTime).toLocaleString()}
-                  </span>
-                </div>
-                {booking.flightInfo.arrivalTime && (
-                  <div className="info-item">
-                    <span className="label">Arrival:</span>
-                    <span className="value">
-                      {new Date(booking.flightInfo.arrivalTime).toLocaleString()}
-                    </span>
-                  </div>
+                {error && (
+                  <Alert variant="danger" className="mb-3">
+                    {error}
+                  </Alert>
                 )}
-              </div>
-            </div>
 
-            <div className="passengers-section">
-              <h3>Passenger Information</h3>
-              <div className="passengers-list">
-                {booking.tickets.map((ticket, index) => (
-                  <div key={index} className="passenger-card">
-                    <div className="passenger-info">
-                      <span className="passenger-number">Passenger {index + 1}</span>
-                      <span className="seat-info">Seat: {ticket.seatNumber}</span>
-                    </div>
-                    <div className="ticket-info">
-                      <span className="fare">${ticket.fare}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="booking-summary">
-              <h3>Booking Summary</h3>
-              <div className="summary-grid">
-                <div className="summary-item">
-                  <span className="label">Booking Date:</span>
-                  <span className="value">
-                    {new Date(booking.bookingDate).toLocaleDateString()}
-                  </span>
+                <div className="d-flex gap-3">
+                  <Button 
+                    type="submit" 
+                    variant="primary"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Spinner animation="border" size="sm" className="me-2" />
+                        Searching...
+                      </>
+                    ) : (
+                      'Find Booking'
+                    )}
+                  </Button>
+                  <Button 
+                    variant="outline-secondary"
+                    onClick={() => navigate('/')}
+                  >
+                    Back to Home
+                  </Button>
                 </div>
-                <div className="summary-item">
-                  <span className="label">Total Passengers:</span>
-                  <span className="value">{booking.tickets.length}</span>
-                </div>
-                <div className="summary-item total">
-                  <span className="label">Total Amount:</span>
-                  <span className="value">${booking.totalAmount}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+              </Form>
+            </Card.Body>
+          </Card>
 
-          <div className="booking-actions">
-            <button 
-              onClick={handlePrintBooking}
-              className="btn btn-secondary"
-            >
-              Print Booking
-            </button>
-            <button 
-              onClick={() => navigate('/booking-confirmation', {
-                state: {
-                  confirmationCode: booking.confirmationCode,
-                  confirmationData: booking,
-                  message: 'Booking retrieved successfully!'
-                }
-              })}
-              className="btn btn-primary"
-            >
-              View Full Details
-            </button>
-            <button 
-              onClick={handleCancelBooking}
-              className="btn btn-danger"
-            >
-              Cancel Booking
-            </button>
-          </div>
-        </div>
-      )}
+          {/* Booking Details */}
+          {booking && (
+            <Card className="mb-4">
+              <Card.Header className="bg-success text-white">
+                <div className="d-flex justify-content-between align-items-center">
+                  <h4 className="mb-0">Booking Found</h4>
+                  <Badge bg="light" text="dark" className="fs-6">
+                    Code: {booking.confirmationCode}
+                  </Badge>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                {/* Flight Information */}
+                <div className="mb-4">
+                  <h5 className="text-primary mb-3">Flight Information</h5>
+                  <Row className="g-3">
+                    <Col sm={6}>
+                      <strong>Flight:</strong>
+                      <div>{booking.flightInfo.flightCode}</div>
+                    </Col>
+                    <Col sm={6}>
+                      <strong>Route:</strong>
+                      <div>{booking.flightInfo.departureCity} → {booking.flightInfo.arrivalCity}</div>
+                    </Col>
+                    <Col sm={6}>
+                      <strong>Departure:</strong>
+                      <div>{new Date(booking.flightInfo.departureTime).toLocaleString()}</div>
+                    </Col>
+                    {booking.flightInfo.arrivalTime && (
+                      <Col sm={6}>
+                        <strong>Arrival:</strong>
+                        <div>{new Date(booking.flightInfo.arrivalTime).toLocaleString()}</div>
+                      </Col>
+                    )}
+                  </Row>
+                </div>
 
-      <div className="lookup-help">
-        <h3>Need Help?</h3>
-        <ul>
-          <li>Make sure you enter the confirmation code exactly as shown</li>
-          <li>The confirmation code format is: FMS-YYYYMMDD-XXXX</li>
-          <li>If you can't find your booking, contact customer service</li>
-          <li>Guest bookings are stored locally for up to 10 recent bookings</li>
-        </ul>
-      </div>
-    </div>
+                {/* Passenger Information */}
+                <div className="mb-4">
+                  <h5 className="text-primary mb-3">Passenger Information</h5>
+                  <ListGroup>
+                    {booking.tickets.map((ticket, index) => (
+                      <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>Passenger {index + 1}</strong>
+                          <div className="text-muted">Seat: {ticket.seatNumber}</div>
+                        </div>
+                        <Badge bg="primary" className="fs-6">${ticket.fare}</Badge>
+                      </ListGroup.Item>
+                    ))}
+                  </ListGroup>
+                </div>
+
+                {/* Booking Summary */}
+                <div className="mb-0">
+                  <h5 className="text-primary mb-3">Booking Summary</h5>
+                  <Row className="g-3">
+                    <Col sm={6}>
+                      <strong>Booking Date:</strong>
+                      <div>{new Date(booking.bookingDate).toLocaleDateString()}</div>
+                    </Col>
+                    <Col sm={6}>
+                      <strong>Total Passengers:</strong>
+                      <div>{booking.tickets.length}</div>
+                    </Col>
+                    <Col xs={12}>
+                      <div className="border-top pt-3">
+                        <Row>
+                          <Col>
+                            <strong className="fs-5">Total Amount:</strong>
+                          </Col>
+                          <Col className="text-end">
+                            <strong className="fs-4 text-primary">${booking.totalAmount}</strong>
+                          </Col>
+                        </Row>
+                      </div>
+                    </Col>
+                  </Row>
+                </div>
+              </Card.Body>
+              
+              {/* Booking Actions */}
+              <Card.Footer className="bg-light">
+                <Row className="g-2">
+                  <Col md={4}>
+                    <Button 
+                      onClick={handlePrintBooking}
+                      variant="outline-secondary"
+                      className="w-100"
+                    >
+                      Print Booking
+                    </Button>
+                  </Col>
+                  <Col md={4}>
+                    <Button 
+                      onClick={() => navigate('/booking-confirmation', {
+                        state: {
+                          confirmationCode: booking.confirmationCode,
+                          confirmationData: booking,
+                          message: 'Booking retrieved successfully!'
+                        }
+                      })}
+                      variant="primary"
+                      className="w-100"
+                    >
+                      View Full Details
+                    </Button>
+                  </Col>
+                  <Col md={4}>
+                    <Button 
+                      onClick={handleCancelBooking}
+                      variant="danger"
+                      className="w-100"
+                    >
+                      Cancel Booking
+                    </Button>
+                  </Col>
+                </Row>
+              </Card.Footer>
+            </Card>
+          )}
+
+          {/* Help Section */}
+          <Card className="bg-light">
+            <Card.Header>
+              <h5 className="mb-0">Need Help?</h5>
+            </Card.Header>
+            <Card.Body>
+              <ul className="mb-0">
+                <li>Make sure you enter the confirmation code exactly as shown</li>
+                <li>The confirmation code format is: FMS-YYYYMMDD-XXXX</li>
+                <li>If you can't find your booking, contact customer service</li>
+                <li>Guest bookings are stored locally for up to 10 recent bookings</li>
+              </ul>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 

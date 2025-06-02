@@ -15,44 +15,36 @@ export class ParameterService {
     return apiClient.get(this.baseUrl);
   }
 
-  async getParameterById(id: number): Promise<Parameter> {
-    return apiClient.get(`${this.baseUrl}/${id}`);
+  async updateParameters(parameterData: ParameterRequest): Promise<Parameter> {
+    return apiClient.put(this.baseUrl, parameterData);
   }
 
-  async getParameterByName(name: string): Promise<Parameter> {
-    return apiClient.get(`${this.baseUrl}/name/${name}`);
+  async updateMaxMediumAirports(value: number): Promise<Parameter> {
+    return apiClient.put(`${this.baseUrl}/max-medium-airports/${value}`);
   }
 
-  async getParametersByCategory(category: string): Promise<Parameter[]> {
-    return apiClient.get(`${this.baseUrl}/category/${category}`);
+  async updateMinFlightDuration(value: number): Promise<Parameter> {
+    return apiClient.put(`${this.baseUrl}/min-flight-duration/${value}`);
   }
 
-  async createParameter(parameterData: ParameterRequest): Promise<Parameter> {
-    return apiClient.post(this.baseUrl, parameterData);
+  async updateMaxLayoverDuration(value: number): Promise<Parameter> {
+    return apiClient.put(`${this.baseUrl}/max-layover-duration/${value}`);
   }
 
-  async updateParameter(id: number, parameterData: Partial<ParameterRequest>): Promise<Parameter> {
-    return apiClient.put(`${this.baseUrl}/${id}`, parameterData);
+  async updateMinLayoverDuration(value: number): Promise<Parameter> {
+    return apiClient.put(`${this.baseUrl}/min-layover-duration/${value}`);
   }
 
-  async updateParameterValue(id: number, value: string): Promise<Parameter> {
-    return apiClient.patch(`${this.baseUrl}/${id}/value`, { parameterValue: value });
+  async updateMinBookingAdvance(value: number): Promise<Parameter> {
+    return apiClient.put(`${this.baseUrl}/min-booking-advance/${value}`);
   }
 
-  async deleteParameter(id: number): Promise<void> {
-    return apiClient.delete(`${this.baseUrl}/${id}`);
+  async updateMaxBookingHold(value: number): Promise<Parameter> {
+    return apiClient.put(`${this.baseUrl}/max-booking-hold/${value}`);
   }
 
-  async searchParameters(query: string): Promise<Parameter[]> {
-    return apiClient.get(`${this.baseUrl}/search`, { params: { q: query } });
-  }
-
-  async getSystemSettings(): Promise<Record<string, string>> {
-    return apiClient.get(`${this.baseUrl}/system-settings`);
-  }
-
-  async updateSystemSettings(settings: Record<string, string>): Promise<void> {
-    return apiClient.patch(`${this.baseUrl}/system-settings`, settings);
+  async initializeDefaultParameters(): Promise<Parameter> {
+    return apiClient.post(`${this.baseUrl}/initialize`);
   }
 }
 
