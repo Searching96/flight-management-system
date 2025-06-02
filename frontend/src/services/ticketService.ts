@@ -31,6 +31,7 @@ export class TicketService {
       }))
     };
 
+    console.log(transformedBooking);
     return apiClient.post('/tickets/book', transformedBooking);
   }
 

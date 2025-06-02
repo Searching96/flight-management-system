@@ -271,10 +271,8 @@ const FlightManagement: React.FC = () => {    const { canViewAdmin } = usePermis
                                     </Form.Control.Feedback>
                                 </Form.Group>
                             </Col>
-                        </Row>
 
-                        <Row className="mb-3">
-                            <Col md={6}>
+                            <Col>
                                 <Form.Group>
                                     <Form.Label>Departure Airport</Form.Label>
                                     <TypeAhead
@@ -301,7 +299,7 @@ const FlightManagement: React.FC = () => {    const { canViewAdmin } = usePermis
                                 </Form.Group>
                             </Col>
 
-                            <Col md={6}>
+                            <Col>
                                 <Form.Group>
                                     <Form.Label>Arrival Airport</Form.Label>
                                     <TypeAhead
@@ -330,7 +328,7 @@ const FlightManagement: React.FC = () => {    const { canViewAdmin } = usePermis
                         </Row>
 
                         <Row className="mb-3">
-                            <Col md={6}>
+                            <Col>
                                 <Form.Group>
                                     <Form.Label>Departure Time</Form.Label>
                                     <Form.Control
@@ -346,7 +344,7 @@ const FlightManagement: React.FC = () => {    const { canViewAdmin } = usePermis
                                 </Form.Group>
                             </Col>
 
-                            <Col md={6}>
+                            <Col>
                                 <Form.Group>
                                     <Form.Label>Arrival Time</Form.Label>
                                     <Form.Control

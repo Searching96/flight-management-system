@@ -8,6 +8,7 @@ import com.flightmanagement.entity.Flight;
 import com.flightmanagement.mapper.FlightMapper;
 import com.flightmanagement.repository.FlightRepository;
 import com.flightmanagement.service.FlightService;
+import com.flightmanagement.service.FlightTicketClassService;
 import com.flightmanagement.service.ParameterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,9 @@ public class FlightServiceImpl implements FlightService {
     
     @Autowired
     private FlightRepository flightRepository;
+
+    @Autowired
+    private FlightTicketClassService flightTicketClassService;
     
     @Autowired
     private FlightMapper flightMapper;
@@ -173,11 +177,6 @@ public class FlightServiceImpl implements FlightService {
         }
     }
     
-    private boolean hasAvailableSeats(Integer flightId, Integer ticketClassId, Integer passengerCount) {
-        // Check if flight has enough available seats for the specified class
-        return flightRepository.checkSeatAvailability(flightId, ticketClassId, passengerCount);
-    }
-    
     @Override
     public List<FlightTicketClassDto> checkFlightAvailability(Integer flightId) {
         // Get flight ticket class information for the given flight
@@ -185,10 +184,7 @@ public class FlightServiceImpl implements FlightService {
             Flight flight = flightRepository.findActiveById(flightId)
                 .orElseThrow(() -> new RuntimeException("Flight not found with id: " + flightId));
             
-            // Return the flight ticket class information - this would be implemented 
-            // once we have the FlightTicketClassService properly set up
-            // For now, return empty list to allow compilation
-            return List.of();
+            return flightTicketClassService.getFlightTicketClassesByFlightId(flight.getFlightId());
         } catch (Exception e) {
             throw new RuntimeException("Error checking flight availability: " + e.getMessage());
         }

@@ -45,6 +45,7 @@ public class DataInitializer implements CommandLineRunner {
         initializePlanes();
         initializeDemoAccounts();
         initializeDemoFlights();
+        initializeDemoPassengers();
         System.out.println("✅ Demo data initialization completed!");
     }
     
@@ -161,8 +162,9 @@ public class DataInitializer implements CommandLineRunner {
         try {
             if (flightService.getAllFlights().isEmpty()) {
                 LocalDateTime tomorrow = LocalDateTime.now().plusDays(1);
+                LocalDateTime dayAfter = LocalDateTime.now().plusDays(2);
                 
-                // Create sample flights
+                // Create all sample flights
                 FlightDto flight1 = new FlightDto();
                 flight1.setFlightCode("VN001");
                 flight1.setPlaneId(1);
@@ -181,38 +183,135 @@ public class DataInitializer implements CommandLineRunner {
                 flight2.setArrivalTime(tomorrow.withHour(15).withMinute(45));
                 flightService.createFlight(flight2);
                 
-                // Add flight ticket classes
-                initializeFlightTicketClasses();
+                // Flight 3: Da Nang to Nha Trang
+                FlightDto flight3 = new FlightDto();
+                flight3.setFlightCode("VN003");
+                flight3.setPlaneId(3);
+                flight3.setDepartureAirportId(3); // DAD
+                flight3.setArrivalAirportId(4);   // CXR
+                flight3.setDepartureTime(tomorrow.withHour(16).withMinute(30));
+                flight3.setArrivalTime(tomorrow.withHour(17).withMinute(45));
+                flightService.createFlight(flight3);
                 
-                System.out.println("✓ Demo flights created");
+                // Flight 4: Ho Chi Minh to Phu Quoc
+                FlightDto flight4 = new FlightDto();
+                flight4.setFlightCode("VN004");
+                flight4.setPlaneId(4);
+                flight4.setDepartureAirportId(1); // SGN
+                flight4.setArrivalAirportId(5);   // PQC
+                flight4.setDepartureTime(dayAfter.withHour(9).withMinute(0));
+                flight4.setArrivalTime(dayAfter.withHour(10).withMinute(15));
+                flightService.createFlight(flight4);
+                
+                // Flight 5: Return flight - Phu Quoc to Ho Chi Minh
+                FlightDto flight5 = new FlightDto();
+                flight5.setFlightCode("VN005");
+                flight5.setPlaneId(5);
+                flight5.setDepartureAirportId(5); // PQC
+                flight5.setArrivalAirportId(1);   // SGN
+                flight5.setDepartureTime(dayAfter.withHour(18).withMinute(0));
+                flight5.setArrivalTime(dayAfter.withHour(19).withMinute(15));
+                flightService.createFlight(flight5);
+                
+                // Add flight ticket classes for all flights
+                initializeAllFlightTicketClasses();
+                
+                System.out.println("✓ Demo flights and ticket classes created");
             }
         } catch (Exception e) {
             System.err.println("⚠️ Error creating demo flights: " + e.getMessage());
         }
     }
     
-    private void initializeFlightTicketClasses() {
+    private void initializeAllFlightTicketClasses() {
         try {
-            // Add ticket classes for flight 1
-            FlightTicketClassDto ftc1 = new FlightTicketClassDto();
-            ftc1.setFlightId(1);
-            ftc1.setTicketClassId(1); // Economy
-            ftc1.setTicketQuantity(100);
-            ftc1.setRemainingTicketQuantity(100);
-            ftc1.setSpecifiedFare(new BigDecimal("1500000")); // 1.5M VND
-            flightTicketClassService.createFlightTicketClass(ftc1);
+            // Flight 1 ticket classes (SGN -> HAN)
+            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(1, 1, 100, new BigDecimal("1500000"))); // Economy
+            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(1, 2, 20, new BigDecimal("3000000")));  // Business
+            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(1, 3, 10, new BigDecimal("5000000")));  // First Class
             
-            FlightTicketClassDto ftc2 = new FlightTicketClassDto();
-            ftc2.setFlightId(1);
-            ftc2.setTicketClassId(2); // Business
-            ftc2.setTicketQuantity(20);
-            ftc2.setRemainingTicketQuantity(20);
-            ftc2.setSpecifiedFare(new BigDecimal("3000000")); // 3M VND
-            flightTicketClassService.createFlightTicketClass(ftc2);
+            // Flight 2 ticket classes (HAN -> DAD)
+            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(2, 1, 150, new BigDecimal("1200000"))); // Economy
+            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(2, 2, 30, new BigDecimal("2500000")));  // Business
             
-            System.out.println("✓ Flight ticket classes created");
+            // Flight 3 ticket classes (DAD -> CXR)
+            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(3, 1, 80, new BigDecimal("800000")));   // Economy
+            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(3, 2, 15, new BigDecimal("1800000")));  // Business
+            
+            // Flight 4 ticket classes (SGN -> PQC)
+            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(4, 1, 120, new BigDecimal("1000000"))); // Economy
+            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(4, 2, 25, new BigDecimal("2200000")));  // Business
+            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(4, 3, 8, new BigDecimal("3500000")));   // First Class
+            
+            // Flight 5 ticket classes (PQC -> SGN)
+            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(5, 1, 60, new BigDecimal("950000")));   // Economy
+            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(5, 2, 10, new BigDecimal("2100000")));  // Business
+            
+            System.out.println("✓ Flight ticket classes created for all flights");
         } catch (Exception e) {
             System.err.println("⚠️ Error creating flight ticket classes: " + e.getMessage());
         }
     }
+    
+    private void initializeDemoPassengers() {
+        try {
+            if (passengerService.getAllPassengers().isEmpty()) {
+                // Create demo passengers for testing bookings
+                PassengerDto passenger1 = new PassengerDto();
+                passenger1.setPassengerName("Nguyen Van A");
+                passenger1.setCitizenId("123456789");
+                passenger1.setPhoneNumber("0987654321");
+                passenger1.setEmail("nguyenvana@email.com");
+                passengerService.createPassenger(passenger1);
+                
+                PassengerDto passenger2 = new PassengerDto();
+                passenger2.setPassengerName("Tran Thi B");
+                passenger2.setCitizenId("987654321");
+                passenger2.setPhoneNumber("0123456789");
+                passenger2.setEmail("tranthib@email.com");
+                passengerService.createPassenger(passenger2);
+                
+                PassengerDto passenger3 = new PassengerDto();
+                passenger3.setPassengerName("Le Van C");
+                passenger3.setCitizenId("456789123");
+                passenger3.setPhoneNumber("0369852147");
+                passenger3.setEmail("levanc@email.com");
+                passengerService.createPassenger(passenger3);
+                
+                PassengerDto passenger4 = new PassengerDto();
+                passenger4.setPassengerName("Pham Thi D");
+                passenger4.setCitizenId("789123456");
+                passenger4.setPhoneNumber("0147258369");
+                passenger4.setEmail("phamthid@email.com");
+                passengerService.createPassenger(passenger4);
+                
+                PassengerDto passenger5 = new PassengerDto();
+                passenger5.setPassengerName("Hoang Van E");
+                passenger5.setCitizenId("321654987");
+                passenger5.setPhoneNumber("0258147963");
+                passenger5.setEmail("hoangvane@email.com");
+                passengerService.createPassenger(passenger5);
+                
+                System.out.println("✓ Demo passengers created");
+                System.out.println("  - Nguyen Van A (123456789)");
+                System.out.println("  - Tran Thi B (987654321)");
+                System.out.println("  - Le Van C (456789123)");
+                System.out.println("  - Pham Thi D (789123456)");
+                System.out.println("  - Hoang Van E (321654987)");
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ Error creating demo passengers: " + e.getMessage());
+        }
+    }
+
+    private FlightTicketClassDto createFlightTicketClass(int flightId, int ticketClassId, int quantity, BigDecimal fare) {
+        FlightTicketClassDto ftc = new FlightTicketClassDto();
+        ftc.setFlightId(flightId);
+        ftc.setTicketClassId(ticketClassId);
+        ftc.setTicketQuantity(quantity);
+        ftc.setRemainingTicketQuantity(quantity);
+        ftc.setSpecifiedFare(fare);
+        return ftc;
+    }
+    
 }

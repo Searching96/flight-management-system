@@ -28,8 +28,7 @@ const BookingForm: React.FC = () => {
 
   // Get booking data from sessionStorage (preferred) or fallback to query parameters
   const getBookingData = () => {
-    const sessionData = sessionStorage.getItem('bookingData');
-    if (sessionData) {
+    const sessionData = sessionStorage.getItem('bookingData');    if (sessionData) {
       try {
         const parsed = JSON.parse(sessionData);
         return {
@@ -109,14 +108,8 @@ const BookingForm: React.FC = () => {
   useEffect(() => {
     if (flight && ticketClasses.length > 0) {
       // Clear sessionStorage booking data after successful load
-      sessionStorage.removeItem('bookingData');
-      
-      // Replace current URL without query parameters using React Router
-      const searchParams = new URLSearchParams(location.search);
-      if (searchParams.has('flightId') || searchParams.has('passengers') || searchParams.has('class')) {
-        navigate('/booking', { replace: true });
-      }
-    }  }, [flight, ticketClasses, navigate, location.search]);
+    }
+  }, [flight, ticketClasses, navigate, location.search]);
 
   // Redirect to flight search if no booking data is available
   useEffect(() => {
@@ -192,6 +185,7 @@ const BookingForm: React.FC = () => {
       };
 
       // Book the tickets
+      console.log("Booking data:", booking);
       await ticketService.bookTickets(booking);
 
       // Handle guest booking confirmation
@@ -257,8 +251,7 @@ const BookingForm: React.FC = () => {
               <Card.Body className="text-center py-5">
                 <Alert variant="danger" className="mb-0">
                   <Alert.Heading>Missing Flight Information</Alert.Heading>
-                  <p>No flight ID provided. Please select a flight from the search results.</p>
-                  <Button variant="primary" onClick={() => navigate('/search')}>
+                  <p>No flight ID provided. Please select a flight from the search results.</p>                  <Button variant="primary" onClick={() => navigate('/flights')}>
                     Back to Flight Search
                   </Button>
                 </Alert>
@@ -323,8 +316,12 @@ const BookingForm: React.FC = () => {
     { value: '+62', label: '+62 (Indonesia)' }
   ];
   const renderPassengerForm = (index: number) => {
-    const [selectedGender, setSelectedGender] = useState('');
-    const [selectedCountryCode, setSelectedCountryCode] = useState('+84');
+    // Get current values from form state
+    const currentGender = watch(`passengers.${index}.gender`) || '';
+    const currentPhone = watch(`passengers.${index}.phoneNumber`) || '';
+    
+    // Extract country code from current phone number or default to +84
+    const extractedCountryCode = currentPhone.match(/^\+\d+/)?.[0] || '+84';
 
     return (
       <Card key={index} className="mb-4">
@@ -385,10 +382,9 @@ const BookingForm: React.FC = () => {
                 <Form.Label>Gender</Form.Label>
                 <TypeAhead
                   options={genderOptions}
-                  value={selectedGender}
+                  value={currentGender}
                   onChange={(option) => {
                     const gender = option?.value as string || '';
-                    setSelectedGender(gender);
                     setValue(`passengers.${index}.gender`, gender);
                   }}
                   placeholder="Select gender..."
@@ -450,12 +446,10 @@ const BookingForm: React.FC = () => {
                   <div style={{ width: '130px' }}>
                     <TypeAhead
                       options={countryCodeOptions}
-                      value={selectedCountryCode}
+                      value={extractedCountryCode}
                       onChange={(option) => {
                         const newCountryCode = option?.value as string || '+84';
-                        setSelectedCountryCode(newCountryCode);
                         // Update the phone number with new country code
-                        const currentPhone = watch(`passengers.${index}.phoneNumber`) || '';
                         const phoneWithoutCode = currentPhone.replace(/^\+\d+\s*/, '');
                         setValue(`passengers.${index}.phoneNumber`, `${newCountryCode} ${phoneWithoutCode}`);
                       }}
@@ -465,8 +459,9 @@ const BookingForm: React.FC = () => {
                   <Form.Control
                     type="tel"
                     placeholder="Phone number"
+                    value={currentPhone.replace(/^\+\d+\s*/, '')}
                     onChange={(e) => {
-                      const phoneNumber = `${selectedCountryCode} ${e.target.value}`;
+                      const phoneNumber = `${extractedCountryCode} ${e.target.value}`;
                       setValue(`passengers.${index}.phoneNumber`, phoneNumber);
                     }}
                   />
@@ -526,43 +521,6 @@ const BookingForm: React.FC = () => {
                     </ul>
                   </Alert>
                 )}
-
-                {/* Ticket Class Selection */}
-                <div className="mb-5 pb-4 border-bottom">
-                  <h4 className="mb-3">Select Ticket Class</h4>
-                  <Row>
-                    {ticketClasses.map(ticketClass => (
-                      <Col md={4} key={ticketClass.ticketClassId} className="mb-3">
-                        <Card 
-                          className={`h-100 border-2 ${selectedTicketClass === ticketClass.ticketClassId ? 'border-primary bg-primary text-white' : 'border-light'}`}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <Card.Body>
-                            <Form.Check
-                              type="radio"
-                              id={`class-${ticketClass.ticketClassId}`}
-                              value={ticketClass.ticketClassId}
-                              {...register('ticketClassId', {
-                                required: 'Please select a ticket class',
-                                valueAsNumber: true
-                              })}
-                              className="d-none"
-                            />
-                            <label htmlFor={`class-${ticketClass.ticketClassId}`} className="d-block w-100 h-100 cursor-pointer">
-                              <div className="d-flex justify-content-between align-items-center">
-                                <span className="fw-semibold">{ticketClass.ticketClassName}</span>
-                                <span className="fs-5 fw-bold">${ticketClass.specifiedFare}</span>
-                              </div>
-                            </label>
-                          </Card.Body>
-                        </Card>
-                      </Col>
-                    ))}
-                  </Row>
-                  {errors.ticketClassId && (
-                    <div className="text-danger mt-2">{errors.ticketClassId.message}</div>
-                  )}
-                </div>
 
                 {/* Passenger Information */}
                 <div className="mb-5 pb-4 border-bottom">

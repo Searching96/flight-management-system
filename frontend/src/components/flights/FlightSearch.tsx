@@ -76,7 +76,7 @@ const FlightSearch: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      
+
       // Validate airport selection
       if (!selectedDepartureAirport || !selectedArrivalAirport) {
         setError('Please select both departure and arrival airports');
@@ -89,7 +89,7 @@ const FlightSearch: React.FC = () => {
         setLoading(false);
         return;
       }
-      
+
       const searchCriteria = {
         departureAirportId: selectedDepartureAirport as number,
         arrivalAirportId: selectedArrivalAirport as number,
@@ -102,7 +102,7 @@ const FlightSearch: React.FC = () => {
 
       console.log('Sending search criteria:', searchCriteria);
       const results = await flightService.searchFlights(searchCriteria);
-        // Get availability for all ticket classes of each flight
+      // Get availability for all ticket classes of each flight
       const flightsWithAvailability = await Promise.all(
         results.map(async (flight) => {
           try {
@@ -115,7 +115,7 @@ const FlightSearch: React.FC = () => {
           }
         })
       );
-      
+
       setFlights(flightsWithAvailability);
     } catch (err: any) {
       console.error('Flight search error:', err);
@@ -138,7 +138,8 @@ const FlightSearch: React.FC = () => {
     const tempDeparture = selectedDepartureAirport;
     setSelectedDepartureAirport(selectedArrivalAirport);
     setSelectedArrivalAirport(tempDeparture);
-  };  const handleBookFlight = (flightId: number, ticketClassId: number) => {
+  };
+  const handleBookFlight = (flightId: number, ticketClassId: number) => {
     // Store search context for better UX
     const searchContext = {
       departureAirportId: selectedDepartureAirport,
@@ -147,17 +148,17 @@ const FlightSearch: React.FC = () => {
       passengerCount: watch('passengerCount'),
       ticketClassId: ticketClassId
     };
-    
+
     // Store in sessionStorage for booking form to access
     sessionStorage.setItem('flightSearchContext', JSON.stringify(searchContext));
-    
+
     // Store booking data in sessionStorage instead of URL parameters
     sessionStorage.setItem('bookingData', JSON.stringify({
       flightId,
       passengers: watch('passengerCount'),
       class: ticketClassId
     }));
-    
+
     // Navigate to booking page without query parameters
     navigate('/booking');
   };
@@ -232,7 +233,7 @@ const FlightSearch: React.FC = () => {
                       )}
                     </Form.Group>
                   </Col>
-                  
+
                   <Col md={2} className="d-flex align-items-end justify-content-center">
                     <Button
                       variant="outline-secondary"
@@ -444,7 +445,7 @@ const FlightSearch: React.FC = () => {
                   <FlightCard
                     key={flight.flightId}
                     flight={flight}
-                    onBookFlight={handleBookFlight}                    searchContext={{
+                    onBookFlight={handleBookFlight} searchContext={{
                       passengerCount: watch('passengerCount'),
                       allTicketClasses: ticketClasses,
                       selectedTicketClass: selectedTicketClass === 'all' ? null : (selectedTicketClass as number),

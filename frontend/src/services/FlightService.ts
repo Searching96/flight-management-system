@@ -4,8 +4,9 @@ import { Flight, FlightSearch } from '../models';
 
 export interface FlightRequest {
   flightCode: string;
+  departureDate: string;
   departureTime: string;
-  arrivalTime: string;
+  duration: string;
   planeId: number;
   departureAirportId: number;
   arrivalAirportId: number;

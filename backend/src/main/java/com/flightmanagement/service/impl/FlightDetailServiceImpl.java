@@ -2,7 +2,6 @@ package com.flightmanagement.service.impl;
 
 import com.flightmanagement.dto.FlightDetailDto;
 import com.flightmanagement.entity.FlightDetail;
-import com.flightmanagement.entity.composite.FlightDetailId;
 import com.flightmanagement.mapper.FlightDetailMapper;
 import com.flightmanagement.repository.FlightDetailRepository;
 import com.flightmanagement.service.FlightDetailService;
@@ -49,9 +48,8 @@ public class FlightDetailServiceImpl implements FlightDetailService {
     
     @Override
     public FlightDetailDto updateFlightDetail(Integer flightId, Integer mediumAirportId, FlightDetailDto flightDetailDto) {
-        FlightDetailId id = new FlightDetailId(flightId, mediumAirportId);
-        FlightDetail existingFlightDetail = flightDetailRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("FlightDetail not found"));
+        FlightDetail existingFlightDetail = flightDetailRepository.findByFlightIdAndMediumAirportId(flightId, mediumAirportId)
+            .orElseThrow(() -> new RuntimeException("FlightDetail not found for flight: " + flightId + " and airport: " + mediumAirportId));
         
         existingFlightDetail.setArrivalTime(flightDetailDto.getArrivalTime());
         existingFlightDetail.setLayoverDuration(flightDetailDto.getLayoverDuration());
@@ -62,9 +60,8 @@ public class FlightDetailServiceImpl implements FlightDetailService {
     
     @Override
     public void deleteFlightDetail(Integer flightId, Integer mediumAirportId) {
-        FlightDetailId id = new FlightDetailId(flightId, mediumAirportId);
-        FlightDetail flightDetail = flightDetailRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("FlightDetail not found"));
+        FlightDetail flightDetail = flightDetailRepository.findByFlightIdAndMediumAirportId(flightId, mediumAirportId)
+            .orElseThrow(() -> new RuntimeException("FlightDetail not found for flight: " + flightId + " and airport: " + mediumAirportId));
         
         flightDetail.setDeletedAt(LocalDateTime.now());
         flightDetailRepository.save(flightDetail);
