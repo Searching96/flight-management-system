@@ -28,13 +28,13 @@ export type {
 } from './Employee';
 
 // Chat related
-export type { Chatbox, Message, SendMessageRequest } from './Chat';
+export type { CreateTestChatboxRequest, Chatbox, Message, SendMessageRequest } from './Chat';
 
 // Plane related
 export type { Plane } from './Plane';
 
 // Passenger related
-export type { Passenger, CreatePassengerRequest, UpdatePassengerRequest, Gender } from './Passenger';
+export type { Passenger, CreatePassengerRequest, UpdatePassengerRequest } from './Passenger';
 
 // System related
 export type { Parameter } from './Parameter';

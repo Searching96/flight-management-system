@@ -2,13 +2,22 @@ package com.flightmanagement.mapper;
 
 import com.flightmanagement.dto.ChatboxDto;
 import com.flightmanagement.entity.Chatbox;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.flightmanagement.repository.CustomerRepository;
+import com.flightmanagement.repository.EmployeeRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
 public class ChatboxMapper implements BaseMapper<Chatbox, ChatboxDto> {
+    @Autowired
+    CustomerRepository customerRepository;
+    @Autowired
+    EmployeeRepository employeeRepository;
     
     @Override
     public ChatboxDto toDto(Chatbox entity) {
@@ -43,6 +52,10 @@ public class ChatboxMapper implements BaseMapper<Chatbox, ChatboxDto> {
         
         Chatbox entity = new Chatbox();
         entity.setChatboxId(dto.getChatboxId());
+        entity.setCustomer(customerRepository.findById(dto.getCustomerId())
+            .orElseThrow(() -> new RuntimeException("Customer not found with id: " + dto.getCustomerId())));
+        entity.setEmployee(employeeRepository.findById(dto.getEmployeeId())
+            .orElseThrow(() -> new RuntimeException("Employee not found with id: " + dto.getEmployeeId())));
         return entity;
     }
     

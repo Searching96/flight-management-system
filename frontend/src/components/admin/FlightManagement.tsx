@@ -43,7 +43,7 @@ const FlightManagement: React.FC = () => {    const { canViewAdmin } = usePermis
     const [ticketClasses, setTicketClasses] = useState<TicketClass[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [showForm, setShowForm] = useState(false);
+    const [showFlightModal, setShowFlightModal] = useState(false);
     const [editingFlight, setEditingFlight] = useState<Flight | null>(null);
     const [showTicketClassModal, setShowTicketClassModal] = useState(false);
     const [selectedFlightForClasses, setSelectedFlightForClasses] = useState<Flight | null>(null);
@@ -130,7 +130,7 @@ const FlightManagement: React.FC = () => {    const { canViewAdmin } = usePermis
             departureAirportId: flight.departureAirportId,
             arrivalAirportId: flight.arrivalAirportId
         });
-        setShowForm(true);
+        setShowFlightModal(true);
     };
 
     const handleDelete = async (flightId: number) => {
@@ -145,7 +145,7 @@ const FlightManagement: React.FC = () => {    const { canViewAdmin } = usePermis
     };
 
     const handleCancel = () => {
-        setShowForm(false);
+        setShowFlightModal(false);
         setEditingFlight(null);
         setSelectedDepartureAirport('');
         setSelectedArrivalAirport('');
@@ -231,7 +231,7 @@ const FlightManagement: React.FC = () => {    const { canViewAdmin } = usePermis
                             <Card.Title className="mb-0">✈️ Flight Management</Card.Title>
                             <Button
                                 variant="primary"
-                                onClick={() => setShowForm(true)}
+                                onClick={() => setShowFlightModal(true)}
                             >
                                 Add New Flight
                             </Button>
@@ -248,9 +248,10 @@ const FlightManagement: React.FC = () => {    const { canViewAdmin } = usePermis
                         </Alert>
                     </Col>
                 </Row>
-            )}            <Modal show={showForm} onHide={handleCancel} size="lg">
+            )}            
+            <Modal show={showFlightModal} onHide={handleCancel} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>{editingFlight ? 'Edit Flight' : 'Add New Flight'}</Modal.Title>
+                    <Modal.Title>editingFlight ? 'Edit Flight' : 'Add New Flight'</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={handleSubmit(onSubmit)}>

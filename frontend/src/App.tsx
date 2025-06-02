@@ -13,6 +13,7 @@ import BookingConfirmation from './components/booking/BookingConfirmation';
 import BookingLookup from './components/booking/BookingLookup';
 import AdminPanel from './components/admin/AdminPanel';
 import ChatWidget from './components/chat/ChatWidget';
+import TestForm from './components/test/TestForm';
 
 const App: React.FC = () => {
   return (
@@ -23,11 +24,13 @@ const App: React.FC = () => {
             {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginForm />} />
-            <Route path="/register" element={<RegisterForm />} />            <Route path="/search" element={<FlightSearch />} />
+            <Route path="/register" element={<RegisterForm />} />            
+            <Route path="/search" element={<FlightSearch />} />
             <Route path="/flights" element={<FlightSearch />} />            {/* Guest booking routes - public access */}
             <Route path="/booking-confirmation" element={<BookingConfirmation />} />
             <Route path="/booking-lookup" element={<BookingLookup />} />
             <Route path="/booking" element={<BookingForm />} />
+            <Route path="/test" element={<TestForm />} />
 
             {/* Protected Routes */}
             <Route 

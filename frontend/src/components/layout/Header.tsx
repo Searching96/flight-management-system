@@ -24,18 +24,29 @@ const Header: React.FC = () => {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link as={Link} to="/" className="text-decoration-none">Home</Nav.Link>
-            <Nav.Link as={Link} to="/search" className="text-decoration-none">Search Flights</Nav.Link>
-            <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Manage Booking</Nav.Link>
-            
+            <Nav.Link as={Link} to="/test" className="text-decoration-none">Test</Nav.Link>
+            {!user && (
+              <>
+                <Nav.Link as={Link} to="/search" className="text-decoration-none">Search Flights</Nav.Link>
+                <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Manage Booking</Nav.Link>
+              </>
+            )}
             {user && (
               <>
+                {user.accountType === 1 && (
+                  <>
+                    <Nav.Link as={Link} to="/search" className="text-decoration-none">Search Flights</Nav.Link>
+                    <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Manage Booking</Nav.Link>
+                  </>
+                )}
                 <Nav.Link as={Link} to="/dashboard" className="text-decoration-none">Dashboard</Nav.Link>
                 {user.accountType === 2 && (
                   <Nav.Link as={Link} to="/admin" className="text-decoration-none">Admin</Nav.Link>
                 )}
               </>
             )}
-          </Nav>          <Nav className="ms-auto">
+          </Nav>          
+          <Nav className="ms-auto">
             {user ? (
               <Dropdown align="end">
                 <Dropdown.Toggle variant="outline-primary" id="dropdown-basic">

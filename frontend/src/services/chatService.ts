@@ -1,11 +1,15 @@
 import { apiClient } from './api';
-import { Chatbox, Message, SendMessageRequest } from '../models';
+import { Chatbox, CreateTestChatboxRequest, Message, SendMessageRequest } from '../models';
 
 export class ChatService {
   private readonly chatboxUrl = '/chatboxes';
   private readonly messageUrl = '/messages';
 
   // Chatbox operations
+  async createChatboxTest(chatboxData: CreateTestChatboxRequest): Promise<CreateTestChatboxRequest> {
+    return apiClient.post(`${this.chatboxUrl}/test`, chatboxData);
+  }
+
   async getAllChatboxes(): Promise<Chatbox[]> {
     return apiClient.get(this.chatboxUrl);
   }
@@ -35,9 +39,9 @@ export class ChatService {
     return apiClient.get(`${this.messageUrl}/chatbox/${chatboxId}`);
   }
 
-  async getRecentMessages(chatboxId: number, limit: number = 20): Promise<Message[]> {
-    return apiClient.get(`${this.messageUrl}/chatbox/${chatboxId}/recent`, { limit });
-  }
+  // async getRecentMessages(chatboxId: number, limit: number = 20): Promise<Message[]> {
+  //   return apiClient.get(`${this.messageUrl}/chatbox/${chatboxId}/recent`, { limit });
+  // }
 
   async sendMessage(messageData: SendMessageRequest): Promise<Message> {
     return apiClient.post(this.messageUrl, messageData);

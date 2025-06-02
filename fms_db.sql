@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS `account`
 
 CREATE TABLE IF NOT EXISTS employee
 (
-    employee_id INT NOT NULL,
+    employee_id INT PRIMARY KEY,
     employee_type INT NOT NULL, -- 1: tiep nhan lich bay, 2: ban/dat ve, 3: cskh, 4: ke toan, 5: sa
     deleted_at DATETIME DEFAULT NULL,
     FOREIGN KEY (employee_id) REFERENCES `account`(account_id)
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS employee
 
 CREATE TABLE IF NOT EXISTS customer
 (
-    customer_id INT NOT NULL,
+    customer_id INT PRIMARY KEY,
     score INT DEFAULT 0,
     deleted_at DATETIME DEFAULT NULL,
     FOREIGN KEY (customer_id) REFERENCES `account`(account_id)
@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS ticket
 
 CREATE TABLE IF NOT EXISTS chatbox
 (
-    chatbox_id INT PRIMARY KEY,
+    chatbox_id INT AUTO_INCREMENT PRIMARY KEY,
     customer_id INT NOT NULL,
     employee_id INT NOT NULL,
     deleted_at DATETIME DEFAULT NULL,
@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS chatbox
 
 CREATE TABLE IF NOT EXISTS message
 (
-    message_id INT PRIMARY KEY,
+    message_id INT AUTO_INCREMENT PRIMARY KEY,
     chatbox_id INT NOT NULL,
     message_type INT NOT NULL, -- 1: customer send to employee, 2: employee send to customer
     content TEXT NOT NULL,

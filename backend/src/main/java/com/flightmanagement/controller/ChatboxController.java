@@ -1,6 +1,7 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.ChatboxDto;
+import com.flightmanagement.dto.ChatboxTestDto;
 import com.flightmanagement.service.ChatboxService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,6 +32,12 @@ public class ChatboxController {
     @PostMapping
     public ResponseEntity<ChatboxDto> createChatbox(@RequestBody ChatboxDto chatboxDto) {
         ChatboxDto createdChatbox = chatboxService.createChatbox(chatboxDto);
+        return new ResponseEntity<>(createdChatbox, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/test")
+    public ResponseEntity<ChatboxDto> createChatboxTest(@RequestBody ChatboxTestDto chatboxDto) {
+        ChatboxDto createdChatbox = chatboxService.createChatboxTest(chatboxDto);
         return new ResponseEntity<>(createdChatbox, HttpStatus.CREATED);
     }
     

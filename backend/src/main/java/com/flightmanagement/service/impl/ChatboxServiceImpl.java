@@ -1,6 +1,7 @@
 package com.flightmanagement.service.impl;
 
 import com.flightmanagement.dto.ChatboxDto;
+import com.flightmanagement.dto.ChatboxTestDto;
 import com.flightmanagement.entity.Chatbox;
 import com.flightmanagement.mapper.ChatboxMapper;
 import com.flightmanagement.repository.ChatboxRepository;
@@ -19,7 +20,7 @@ public class ChatboxServiceImpl implements ChatboxService {
     
     @Autowired
     private ChatboxMapper chatboxMapper;
-    
+
     @Override
     public List<ChatboxDto> getAllChatboxes() {
         List<Chatbox> chatboxes = chatboxRepository.findAllActive();
@@ -41,6 +42,16 @@ public class ChatboxServiceImpl implements ChatboxService {
         return chatboxMapper.toDto(savedChatbox);
     }
     
+    @Override
+    public ChatboxDto createChatboxTest(ChatboxTestDto chatboxTestDto) {
+        ChatboxDto chatboxDto = new ChatboxDto();
+        chatboxDto.setCustomerId(chatboxTestDto.getCustomerId());
+        chatboxDto.setEmployeeId(chatboxTestDto.getEmployeeId());
+        Chatbox chatbox = chatboxMapper.toEntity(chatboxDto);
+        chatbox.setDeletedAt(null);
+        Chatbox savedChatbox = chatboxRepository.save(chatbox);
+        return chatboxMapper.toDto(savedChatbox);
+    }
     @Override
     public void deleteChatbox(Integer id) {
         Chatbox chatbox = chatboxRepository.findById(id)

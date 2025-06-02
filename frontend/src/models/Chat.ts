@@ -9,6 +9,11 @@ export interface Chatbox {
   unreadCount?: number;
 }
 
+export interface CreateTestChatboxRequest {
+  customerId: string;
+  employeeId: string;
+}
+
 export interface Message {
   messageId?: number;
   chatboxId?: number;

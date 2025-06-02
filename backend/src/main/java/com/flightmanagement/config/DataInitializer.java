@@ -35,6 +35,12 @@ public class DataInitializer implements CommandLineRunner {
     
     @Autowired
     private FlightTicketClassService flightTicketClassService;
+
+    @Autowired
+    private CustomerService customerService;
+
+    @Autowired
+    private EmployeeService employeeService;
     
     @Override
     public void run(String... args) {
@@ -107,7 +113,8 @@ public class DataInitializer implements CommandLineRunner {
     
     private void initializeDemoAccounts() {
         try {
-            if (accountService.getAllAccounts().isEmpty()) {                // Create admin account
+            if (accountService.getAllAccounts().isEmpty()) {
+                // Create admin account
                 RegisterDto admin = new RegisterDto();
                 admin.setAccountName("System Administrator");
                 admin.setEmail("admin@flightms.com");
@@ -115,7 +122,15 @@ public class DataInitializer implements CommandLineRunner {
                 admin.setCitizenId("999999999");
                 admin.setPhoneNumber("0123456789");
                 admin.setAccountType(2); // Admin
-                accountService.createAccount(admin);
+                AccountDto adminAccount = accountService.createAccount(admin);
+                
+                // Create employee record based on account type
+                if (adminAccount.getAccountType() == 2) {
+                    EmployeeDto adminEmployee = new EmployeeDto();
+                    adminEmployee.setEmployeeId(adminAccount.getAccountId());
+                    adminEmployee.setEmployeeType(5); // System Admin
+                    employeeService.createEmployee(adminEmployee);
+                }
                 
                 // Create employee account
                 RegisterDto employee = new RegisterDto();
@@ -125,7 +140,15 @@ public class DataInitializer implements CommandLineRunner {
                 employee.setCitizenId("888888888");
                 employee.setPhoneNumber("0123456788");
                 employee.setAccountType(2); // Employee/Admin
-                accountService.createAccount(employee);
+                AccountDto employeeAccount = accountService.createAccount(employee);
+                
+                // Create employee record based on account type
+                if (employeeAccount.getAccountType() == 2) {
+                    EmployeeDto empRecord = new EmployeeDto();
+                    empRecord.setEmployeeId(employeeAccount.getAccountId());
+                    empRecord.setEmployeeType(3); // Customer Service
+                    employeeService.createEmployee(empRecord);
+                }
                 
                 // Create demo customer
                 RegisterDto customer = new RegisterDto();
@@ -135,7 +158,15 @@ public class DataInitializer implements CommandLineRunner {
                 customer.setCitizenId("123456789");
                 customer.setPhoneNumber("0987654321");
                 customer.setAccountType(1); // Customer
-                accountService.createAccount(customer);
+                AccountDto customerAccount = accountService.createAccount(customer);
+                
+                // Create customer record based on account type
+                if (customerAccount.getAccountType() == 1) {
+                    CustomerDto custRecord = new CustomerDto();
+                    custRecord.setCustomerId(customerAccount.getAccountId());
+                    custRecord.setScore(0);
+                    customerService.createCustomer(custRecord);
+                }
                 
                 // Create additional test customer
                 RegisterDto testCustomer = new RegisterDto();
@@ -145,7 +176,15 @@ public class DataInitializer implements CommandLineRunner {
                 testCustomer.setCitizenId("987654321");
                 testCustomer.setPhoneNumber("0987654322");
                 testCustomer.setAccountType(1); // Customer
-                accountService.createAccount(testCustomer);
+                AccountDto testCustomerAccount = accountService.createAccount(testCustomer);
+                
+                // Create customer record based on account type
+                if (testCustomerAccount.getAccountType() == 1) {
+                    CustomerDto testCustRecord = new CustomerDto();
+                    testCustRecord.setCustomerId(testCustomerAccount.getAccountId());
+                    testCustRecord.setScore(0);
+                    customerService.createCustomer(testCustRecord);
+                }
                 
                 System.out.println("✓ Demo accounts created with correct email addresses");
                 System.out.println("  - Admin: admin@flightms.com / admin123");
