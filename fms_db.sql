@@ -158,3 +158,4 @@ CREATE TABLE IF NOT EXISTS message
     deleted_at DATETIME DEFAULT NULL,
     FOREIGN KEY (chatbox_id) REFERENCES chatbox(chatbox_id)
 );
+

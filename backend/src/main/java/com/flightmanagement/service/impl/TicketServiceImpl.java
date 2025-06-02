@@ -10,12 +10,10 @@ import com.flightmanagement.repository.*;
 import com.flightmanagement.service.FlightTicketClassService;
 import com.flightmanagement.service.PassengerService;
 import com.flightmanagement.service.TicketService;
-import com.flightmanagement.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,8 +45,8 @@ public class TicketServiceImpl implements TicketService {
       @Autowired
     private PassengerRepository passengerRepository;
     
-    @Autowired
-    private AccountService accountService;
+    // @Autowired
+    // private AccountService accountService;
     
     @Autowired
     private AccountRepository accountRepository;
@@ -256,10 +254,10 @@ public class TicketServiceImpl implements TicketService {
         }
     }
     
-    private BigDecimal calculateFare(Integer flightId, Integer ticketClassId) {
-        FlightTicketClassDto flightTicketClass = flightTicketClassService.getFlightTicketClassById(flightId, ticketClassId);
-        return flightTicketClass.getSpecifiedFare();
-    }
+    // private BigDecimal calculateFare(Integer flightId, Integer ticketClassId) {
+    //     FlightTicketClassDto flightTicketClass = flightTicketClassService.getFlightTicketClassById(flightId, ticketClassId);
+    //     return flightTicketClass.getSpecifiedFare();
+    // }
     
     @Override
     public TicketDto payTicket(Integer ticketId) {
