@@ -1,5 +1,4 @@
 export const DOMAIN_URL_DEFAULT = 'http://localhost:8080';
-// process.env.REACT_APP_API_URL || ;
 
 export const API_URL = {
   // Authentication
@@ -20,8 +19,8 @@ export const API_URL = {
   PASSENGERS: '/passengers',
   CUSTOMERS: '/customers',
   EMPLOYEES: '/employees',
-  CHATBOXES: '/chatboxes',
-  MESSAGES: '/messages',
+  //CHATBOXES: '/chatboxes',
+  //MESSAGES: '/messages',
   PARAMETERS: '/parameters',
 
   // Additional endpoints for demo

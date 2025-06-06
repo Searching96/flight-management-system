@@ -1,6 +1,6 @@
 import { apiClient } from './api';
 import {  } from '../models/LoginResponse';
-import { Account, LoginRequest, RegisterRequest, LoginResponse } from '../models/Account';
+import { Account, RegisterRequest, LoginResponse } from '../models/Account';
 
 export class AccountService {
   private readonly baseUrl = '/accounts';  async login(credentials: { email: string; password: string }): Promise<LoginResponse> {

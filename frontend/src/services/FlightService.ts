@@ -1,6 +1,6 @@
 import { apiClient } from './api';
 import { API_URL } from './config';
-import { Flight, FlightSearch } from '../models';
+import { Flight } from '../models';
 
 export interface FlightRequest {
   flightCode: string;

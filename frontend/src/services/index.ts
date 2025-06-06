@@ -3,17 +3,17 @@ export { apiClient } from './api';
 
 // Services
 export { accountService } from './accountService';
-export { airportService } from './airportService';
+export { airportService } from './AirportService'
 export { bookingConfirmationService } from './bookingConfirmationService';
-export { chatService } from './chatService';
+//export { chatService } from './chatService';
 export { customerService } from './customerService';
 export { demoService } from './demoService';
 export { employeeService } from './employeeService';
 export { flightDetailService } from './flightDetailService';
-export { flightService } from './flightService';
+export { flightService } from './FlightService';
 export { flightTicketClassService } from './flightTicketClassService';
-export { messageService } from './messageService';
-export { parameterService } from './parameterService';
+//export { messageService } from './messageService';
+export { parameterService } from './ParameterService';
 export { passengerService } from './passengerService';
 export { planeService } from './planeService';
 export { ticketClassService } from './ticketClassService';
