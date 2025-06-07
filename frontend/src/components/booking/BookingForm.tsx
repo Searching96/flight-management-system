@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { flightService, ticketService, passengerService, bookingConfirmationService } from '../../services';
 import { Flight } from '../../models';
 import TypeAhead from '../common/TypeAhead';
+import { aw } from 'vitest/dist/chunks/reporters.nr4dxCkA.js';
 
 interface BookingFormData {
   passengers: {
@@ -28,7 +29,9 @@ const BookingForm: React.FC = () => {
 
   // Get booking data from sessionStorage (preferred) or fallback to query parameters
   const getBookingData = () => {
-    const sessionData = sessionStorage.getItem('bookingData');    if (sessionData) {
+    const sessionData = sessionStorage.getItem('bookingData'); 
+
+    if (sessionData) {
       try {
         const parsed = JSON.parse(sessionData);
         return {
@@ -40,7 +43,7 @@ const BookingForm: React.FC = () => {
         console.warn('Failed to parse booking data from sessionStorage:', error);
       }
     }
-    
+
     // Fallback to query parameters for backward compatibility
     const searchParams = new URLSearchParams(location.search);
     return {
@@ -87,7 +90,7 @@ const BookingForm: React.FC = () => {
   const { fields } = useFieldArray({
     control,
     name: 'passengers'
-  });  useEffect(() => {
+  }); useEffect(() => {
     if (flightId) {
       loadBookingData();
     }
@@ -103,7 +106,7 @@ const BookingForm: React.FC = () => {
       }
     }
   }, [queryClass, ticketClasses, setValue]);
-  
+
   // Clear query parameters from URL and sessionStorage after data is loaded
   useEffect(() => {
     if (flight && ticketClasses.length > 0) {
@@ -125,7 +128,7 @@ const BookingForm: React.FC = () => {
         flightService.getFlightById(Number(flightId)),
         flightService.getFlightTicketClassesByFlightId(Number(flightId))
       ]);
-      
+
       setFlight(flightData);
       setTicketClasses(ticketClassData);
     } catch (err: any) {
@@ -133,7 +136,9 @@ const BookingForm: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };  const onSubmit = async (data: BookingFormData) => {
+  }; 
+  
+  const onSubmit = async (data: BookingFormData) => {
     try {
       setSubmitting(true);
       setError('');
@@ -146,7 +151,7 @@ const BookingForm: React.FC = () => {
         const errors = passengerService.validatePassengerData(passengerData);
         validationErrors.push(...errors);
       }
-      
+
       if (validationErrors.length > 0) {
         setError('Please correct the following errors: ' + validationErrors.join(', '));
         return;
@@ -156,16 +161,30 @@ const BookingForm: React.FC = () => {
       const warnings: string[] = [];
       for (const passenger of data.passengers) {
         if (passenger.citizenId) {
-          const existing = await passengerService.findExistingPassenger(passenger.citizenId);
-          if (existing) {
-            warnings.push(`Passenger with Citizen ID ${passenger.citizenId} already exists in the system.`);
+          try {
+            const existing = await passengerService.findExistingPassenger(passenger.citizenId);
+            if (existing) {
+              warnings.push(`Passenger with Citizen ID ${passenger.citizenId} already exists in the system.`);
+            } else {
+              // If existing is null or undefined, create new passenger
+              const newPassenger = passengerService.transformPassengerData(passenger);
+              await passengerService.createPassenger(newPassenger);
+            }
+          } catch (err: any) {
+            if (err?.response?.status === 404) {
+              const newPassenger = passengerService.transformPassengerData(passenger);
+              await passengerService.createPassenger(newPassenger);
+            } else {
+              throw err;
+            }
           }
         }
       }
 
       if (warnings.length > 0) {
         setValidationWarnings(warnings);
-      }      // Transform passenger data for validation only
+      }
+      // Transform passenger data for validation only
       // const transformedPassengers = data.passengers.map(p => 
       //   passengerService.transformPassengerData(p)
       // );
@@ -173,10 +192,10 @@ const BookingForm: React.FC = () => {
       // Generate seat numbers for demonstration
       const seatNumbers = data.passengers.map((_, index) => {
         const selectedClass = ticketClasses.find(tc => tc.ticketClassId === data.ticketClassId);
-        const seatPrefix = selectedClass?.ticketClassName === 'Economy' ? 'A' : 
-                          selectedClass?.ticketClassName === 'Business' ? 'B' : 'C';
+        const seatPrefix = selectedClass?.ticketClassName === 'Economy' ? 'A' :
+          selectedClass?.ticketClassName === 'Business' ? 'B' : 'C';
         return `${seatPrefix}${index + 1}`;
-      });      const booking = {
+      }); const booking = {
         flightId: Number(flightId),
         passengers: data.passengers, // Keep original format for BookingRequest
         customerId: data.useFrequentFlyer ? user!.accountId! : null,
@@ -191,7 +210,7 @@ const BookingForm: React.FC = () => {
       // Handle guest booking confirmation
       if (!data.useFrequentFlyer) {
         const confirmationCode = bookingConfirmationService.generateConfirmationCode();
-          // Create confirmation data compatible with BookingConfirmation interface
+        // Create confirmation data compatible with BookingConfirmation interface
         const tickets = data.passengers.map((_, index) => ({
           ticketId: undefined, // Will be assigned by backend
           flightId: Number(flightId),
@@ -207,13 +226,13 @@ const BookingForm: React.FC = () => {
           data.passengers.map(p => p.email),
           flight!
         );
-        
+
         bookingConfirmationService.storeGuestBookingConfirmation(confirmationData);
         await bookingConfirmationService.sendConfirmationEmail(confirmationData);
 
         // Navigate to confirmation page for guest bookings
         navigate('/booking-confirmation', {
-          state: { 
+          state: {
             confirmationCode,
             confirmationData,
             message: 'Guest booking successful! Please save your confirmation code for future reference.'
@@ -222,8 +241,8 @@ const BookingForm: React.FC = () => {
       } else {
         // Navigate to dashboard for logged-in users
         navigate('/dashboard', {
-          state: { 
-            message: 'Booking successful! Your tickets have been confirmed and linked to your account.' 
+          state: {
+            message: 'Booking successful! Your tickets have been confirmed and linked to your account.'
           }
         });
       }
@@ -279,6 +298,7 @@ const BookingForm: React.FC = () => {
       </Container>
     );
   }
+
   if (!flight) {
     return (
       <Container className="py-5">
@@ -315,11 +335,12 @@ const BookingForm: React.FC = () => {
     { value: '+60', label: '+60 (Malaysia)' },
     { value: '+62', label: '+62 (Indonesia)' }
   ];
+
   const renderPassengerForm = (index: number) => {
     // Get current values from form state
     const currentGender = watch(`passengers.${index}.gender`) || '';
     const currentPhone = watch(`passengers.${index}.phoneNumber`) || '';
-    
+
     // Extract country code from current phone number or default to +84
     const extractedCountryCode = currentPhone.match(/^\+\d+/)?.[0] || '+84';
 
@@ -443,17 +464,17 @@ const BookingForm: React.FC = () => {
               <Form.Group>
                 <Form.Label>Phone Number</Form.Label>
                 <div className="d-flex gap-2">
-                  <div style={{ width: '130px' }}>
+                  <div style={{ width: '280px' }}>
                     <TypeAhead
                       options={countryCodeOptions}
-                      value={extractedCountryCode}
+                      //value={extractedCountryCode}
                       onChange={(option) => {
                         const newCountryCode = option?.value as string || '+84';
                         // Update the phone number with new country code
                         const phoneWithoutCode = currentPhone.replace(/^\+\d+\s*/, '');
                         setValue(`passengers.${index}.phoneNumber`, `${newCountryCode} ${phoneWithoutCode}`);
                       }}
-                      placeholder="Code"
+                      placeholder="Country code"
                     />
                   </div>
                   <Form.Control
@@ -510,7 +531,7 @@ const BookingForm: React.FC = () => {
                     {error}
                   </Alert>
                 )}
-                
+
                 {validationWarnings.length > 0 && (
                   <Alert variant="warning" className="mb-4">
                     <Alert.Heading as="h6">⚠️ Warnings:</Alert.Heading>
@@ -556,14 +577,14 @@ const BookingForm: React.FC = () => {
                       <Col xs={6} className="text-end">
                         {flight.flightCode}
                       </Col>
-                      
+
                       <Col xs={6}>
                         <strong>Passengers:</strong>
                       </Col>
                       <Col xs={6} className="text-end">
                         {passengerCount}
                       </Col>
-                      
+
                       {selectedClass && (
                         <>
                           <Col xs={6}>
@@ -572,18 +593,18 @@ const BookingForm: React.FC = () => {
                           <Col xs={6} className="text-end">
                             {selectedClass.ticketClassName}
                           </Col>
-                          
+
                           <Col xs={6}>
                             <strong>Price per ticket:</strong>
                           </Col>
                           <Col xs={6} className="text-end">
                             ${selectedClass.specifiedFare}
                           </Col>
-                          
+
                           <Col xs={12}>
                             <hr className="my-2" />
                           </Col>
-                          
+
                           <Col xs={6}>
                             <strong className="text-primary fs-5">Total:</strong>
                           </Col>
@@ -598,15 +619,15 @@ const BookingForm: React.FC = () => {
 
                 {/* Form Actions */}
                 <div className="d-flex justify-content-between gap-3">
-                  <Button 
+                  <Button
                     variant="outline-secondary"
                     onClick={() => navigate(-1)}
                     size="lg"
                   >
                     Back
                   </Button>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     variant="primary"
                     disabled={submitting || !selectedClass}
                     size="lg"

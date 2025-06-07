@@ -72,6 +72,7 @@ const FlightSearch: React.FC = () => {
     label: tc.ticketClassName,
     color: tc.color
   }));
+
   const onSubmit = async (data: SearchFormData) => {
     try {
       setLoading(true);
@@ -139,6 +140,7 @@ const FlightSearch: React.FC = () => {
     setSelectedDepartureAirport(selectedArrivalAirport);
     setSelectedArrivalAirport(tempDeparture);
   };
+
   const handleBookFlight = (flightId: number, ticketClassId: number) => {
     // Store search context for better UX
     const searchContext = {
@@ -162,6 +164,7 @@ const FlightSearch: React.FC = () => {
     // Navigate to booking page without query parameters
     navigate('/booking');
   };
+
   return (
     <Container className="py-4">
       <Row>

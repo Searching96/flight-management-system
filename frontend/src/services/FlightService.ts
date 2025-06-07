@@ -41,6 +41,7 @@ export class FlightService {
   async getFlightByCode(flightCode: string): Promise<Flight> {
     return apiClient.get(`${this.baseUrl}/code/${flightCode}`);
   }
+  
   async searchFlights(criteria: FlightSearchCriteria): Promise<Flight[]> {
     const params: any = {
       departureAirportId: criteria.departureAirportId,

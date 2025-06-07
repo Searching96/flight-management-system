@@ -194,6 +194,8 @@ const FlightManagement: React.FC = () => {    const { canViewAdmin } = usePermis
                 assignment => assignment.ticketQuantity > 0 && assignment.specifiedFare > 0
             );
 
+            console.log(selectedFlightForClasses);
+            console.log(validAssignments);
             // Use the flightService to replace all ticket class assignments
             await flightService.assignTicketClassesToFlight(
                 selectedFlightForClasses.flightId!,

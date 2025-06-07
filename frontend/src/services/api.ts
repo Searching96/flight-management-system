@@ -30,7 +30,7 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response: AxiosResponse) => response.data,
       (error) => {
-        console.error('API Error:', error.response?.data || error.message);
+        //console.error('API Error:', error.response?.data || error.message);
         if (error.response?.status === 401) {
           localStorage.removeItem('authToken');
           window.location.href = '/login';

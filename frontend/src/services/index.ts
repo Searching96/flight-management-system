@@ -3,14 +3,14 @@ export { apiClient } from './api';
 
 // Services
 export { accountService } from './accountService';
-export { airportService } from './AirportService'
+export { airportService } from './airportService'
 export { bookingConfirmationService } from './bookingConfirmationService';
 //export { chatService } from './chatService';
 export { customerService } from './customerService';
 export { demoService } from './demoService';
 export { employeeService } from './employeeService';
 export { flightDetailService } from './flightDetailService';
-export { flightService } from './FlightService';
+export { flightService } from './flightService';
 export { flightTicketClassService } from './flightTicketClassService';
 //export { messageService } from './messageService';
 export { parameterService } from './ParameterService';

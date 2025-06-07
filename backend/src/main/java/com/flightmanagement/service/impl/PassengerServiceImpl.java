@@ -37,9 +37,9 @@ public class PassengerServiceImpl implements PassengerService {
     
     @Override
     public PassengerDto getPassengerByCitizenId(String citizenId) {
-        Passenger passenger = passengerRepository.findByCitizenId(citizenId)
-            .orElseThrow(() -> new RuntimeException("Passenger not found with citizen ID: " + citizenId));
-        return passengerMapper.toDto(passenger);
+        return passengerRepository.findByCitizenId(citizenId)
+            .map(passengerMapper::toDto)
+            .orElse(null);
     }
     
     @Override
