@@ -12,6 +12,7 @@ import com.flightmanagement.repository.EmployeeRepository;
 import com.flightmanagement.security.CustomUserDetailsService;
 import com.flightmanagement.security.JwtUtil;
 import com.flightmanagement.service.AccountService;
+import com.flightmanagement.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,6 +40,9 @@ public class AccountServiceImpl implements AccountService {
     
     @Autowired
     private EmployeeRepository employeeRepository;
+    
+    @Autowired
+    private CustomerService customerService;
     
     @Override
     public List<AccountDto> getAllAccounts() {
@@ -75,6 +79,18 @@ public class AccountServiceImpl implements AccountService {
         account.setAccountType(registerDto.getAccountType());
         
         Account savedAccount = accountRepository.save(account);
+        
+        // If account type is customer (1), create customer record
+        if (registerDto.getAccountType() == 1) {
+            try {
+                customerService.createCustomerWithAccountId(savedAccount.getAccountId());
+            } catch (Exception e) {
+                // If customer creation fails, we should still return the account
+                // but log the error for debugging
+                System.err.println("Warning: Failed to create customer record for account " + savedAccount.getAccountId() + ": " + e.getMessage());
+            }
+        }
+        
         return accountMapper.toDto(savedAccount);
     }
     

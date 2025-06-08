@@ -54,8 +54,15 @@ public class ChatboxMapper implements BaseMapper<Chatbox, ChatboxDto> {
         entity.setChatboxId(dto.getChatboxId());
         entity.setCustomer(customerRepository.findById(dto.getCustomerId())
             .orElseThrow(() -> new RuntimeException("Customer not found with id: " + dto.getCustomerId())));
-        entity.setEmployee(employeeRepository.findById(dto.getEmployeeId())
-            .orElseThrow(() -> new RuntimeException("Employee not found with id: " + dto.getEmployeeId())));
+        
+        // Handle null employeeId case
+        if (dto.getEmployeeId() != null) {
+            entity.setEmployee(employeeRepository.findById(dto.getEmployeeId())
+                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + dto.getEmployeeId())));
+        } else {
+            entity.setEmployee(null);
+        }
+        
         return entity;
     }
     

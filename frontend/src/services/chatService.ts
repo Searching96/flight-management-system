@@ -50,6 +50,10 @@ export class ChatService {
   async sendQuickMessage(chatboxId: number, content: string, messageType: number): Promise<Message> {
     return apiClient.post(`${this.messageUrl}/send`, { chatboxId, content, messageType });
   }
+
+  async getChatboxByCustomerId(customerId: number): Promise<Chatbox> {
+    return apiClient.get(`${this.chatboxUrl}/customer/${customerId}/chatbox`);
+  }
 }
 
 export const chatService = new ChatService();

@@ -141,7 +141,7 @@ CREATE TABLE IF NOT EXISTS chatbox
 (
     chatbox_id INT AUTO_INCREMENT PRIMARY KEY,
     customer_id INT NOT NULL,
-    employee_id INT NOT NULL,
+    employee_id INT,
     deleted_at DATETIME DEFAULT NULL,
     CONSTRAINT unique_chat_box UNIQUE (customer_id, employee_id),
     FOREIGN KEY (customer_id) REFERENCES customer(customer_id),

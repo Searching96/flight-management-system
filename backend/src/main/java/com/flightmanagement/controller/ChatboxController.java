@@ -47,27 +47,22 @@ public class ChatboxController {
         return ResponseEntity.noContent().build();
     }
     
-    @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<ChatboxDto>> getChatboxesByCustomerId(@PathVariable Integer customerId) {
-        List<ChatboxDto> chatboxes = chatboxService.getChatboxesByCustomerId(customerId);
-        return ResponseEntity.ok(chatboxes);
-    }
-    
-    @GetMapping("/employee/{employeeId}")
-    public ResponseEntity<List<ChatboxDto>> getChatboxesByEmployeeId(@PathVariable Integer employeeId) {
-        List<ChatboxDto> chatboxes = chatboxService.getChatboxesByEmployeeId(employeeId);
-        return ResponseEntity.ok(chatboxes);
-    }
-    
-    @GetMapping("/customer/{customerId}/employee/{employeeId}")
-    public ResponseEntity<ChatboxDto> getChatboxByCustomerAndEmployee(@PathVariable Integer customerId, @PathVariable Integer employeeId) {
-        ChatboxDto chatbox = chatboxService.getChatboxByCustomerAndEmployee(customerId, employeeId);
-        return ResponseEntity.ok(chatbox);
-    }
-    
-    @PostMapping("/get-or-create")
-    public ResponseEntity<ChatboxDto> getOrCreateChatbox(@RequestParam Integer customerId, @RequestParam Integer employeeId) {
-        ChatboxDto chatbox = chatboxService.getOrCreateChatbox(customerId, employeeId);
-        return ResponseEntity.ok(chatbox);
+    @GetMapping("/customer/{customerId}/chatbox")
+    public ResponseEntity<ChatboxDto> getChatboxByCustomerId(@PathVariable Integer customerId) {
+        System.out.println("Getting chatbox for customer ID: " + customerId);
+        
+        if (customerId == null) {
+            System.err.println("Customer ID is null");
+            return ResponseEntity.badRequest().build();
+        }
+        
+        try {
+            ChatboxDto chatbox = chatboxService.getChatboxByCustomerId(customerId);
+            return ResponseEntity.ok(chatbox);
+        } catch (Exception e) {
+            System.err.println("Error getting chatbox for customer " + customerId + ": " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

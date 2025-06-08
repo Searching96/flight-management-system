@@ -29,7 +29,7 @@ public class Chatbox {
     private Customer customer;
     
     @ManyToOne
-    @JoinColumn(name = "employee_id", nullable = false)
+    @JoinColumn(name = "employee_id", nullable = true)
     private Employee employee;
     
     @Column(name = "deletedAt")

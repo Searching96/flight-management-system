@@ -52,6 +52,7 @@ public class ChatboxServiceImpl implements ChatboxService {
         Chatbox savedChatbox = chatboxRepository.save(chatbox);
         return chatboxMapper.toDto(savedChatbox);
     }
+    
     @Override
     public void deleteChatbox(Integer id) {
         Chatbox chatbox = chatboxRepository.findById(id)
@@ -59,6 +60,33 @@ public class ChatboxServiceImpl implements ChatboxService {
         
         chatbox.setDeletedAt(LocalDateTime.now());
         chatboxRepository.save(chatbox);
+    }
+    
+    @Override
+    public ChatboxDto getChatboxByCustomerId(Integer customerId) {
+        System.out.println("Service: Getting chatbox for customer ID: " + customerId);
+        
+        try {
+            List<Chatbox> chatboxes = chatboxRepository.findByCustomerId(customerId);
+            System.out.println("Found " + chatboxes.size() + " chatboxes for customer " + customerId);
+            
+            if (chatboxes.isEmpty()) {
+                System.out.println("No chatbox found, creating new one");
+                return createChatboxWithCustomerId(customerId);
+            }
+            return chatboxMapper.toDto(chatboxes.get(0));
+        } catch (Exception e) {
+            System.err.println("Error in getChatboxByCustomerId: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
+    
+    private ChatboxDto createChatboxWithCustomerId(Integer customerId) {
+        ChatboxDto chatboxDto = new ChatboxDto();
+        chatboxDto.setCustomerId(customerId);
+        chatboxDto.setEmployeeId(null); // Employee will be assigned later
+        return createChatbox(chatboxDto);
     }
     
     @Override

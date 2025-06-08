@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, Form, Button, Spinner, Badge } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
+import { chatService } from '../../services/chatService';
+import { Chatbox, Message as ChatMessage, SendMessageRequest } from '../../models/Chat';
 
 interface Message {
   messageId?: number;
@@ -11,24 +13,18 @@ interface Message {
   isFromCustomer: boolean;
 }
 
-interface Chatbox {
-  chatboxId?: number;
-  customerId: number;
-  employeeId: number;
-  status: string;
-}
-
 const ChatWidget: React.FC = () => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [chatboxId, setChatboxId] = useState<number | null>(null);
+  const [chatbox, setChatbox] = useState<Chatbox | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isOpen && user && !chatboxId) {
+    if (isOpen && user && !chatbox) {
       initializeChat();
     }
   }, [isOpen, user]);
@@ -42,31 +38,43 @@ const ChatWidget: React.FC = () => {
   };
 
   const initializeChat = async () => {
+    if (!user?.accountId) return;
+    
     try {
       setLoading(true);
-      // Create a mock chatbox for demo purposes
-      const mockChatbox: Chatbox = {
-        chatboxId: Date.now(),
-        customerId: user!.accountId!,
-        employeeId: 1,
-        status: 'ACTIVE'
-      };
+      setError(null);
       
-      setChatboxId(mockChatbox.chatboxId!);
+      // Get or create chatbox for customer
+      const chatboxData = await chatService.getChatboxByCustomerId(user.accountId);
+      setChatbox(chatboxData);
       
-      // Add welcome message
-      const welcomeMessage: Message = {
-        messageId: Date.now(),
-        chatboxId: mockChatbox.chatboxId!,
-        content: "Hello! How can we help you today?",
-        sendTime: new Date().toISOString(),
-        senderName: "Support Agent",
-        isFromCustomer: false
-      };
-      
-      setMessages([welcomeMessage]);
+      // Load existing messages if chatbox exists
+      if (chatboxData.chatboxId) {
+        const existingMessages = await chatService.getMessagesByChatboxId(chatboxData.chatboxId);
+        const formattedMessages: Message[] = existingMessages.map(msg => ({
+          messageId: msg.messageId,
+          chatboxId: msg.chatboxId || chatboxData.chatboxId!,
+          content: msg.content,
+          sendTime: msg.sendTime || new Date().toISOString(),
+          senderName: msg.senderName,
+          isFromCustomer: msg.messageType === 1
+        }));
+        setMessages(formattedMessages);
+      } else {
+        // Add welcome message for new chatbox
+        const welcomeMessage: Message = {
+          messageId: Date.now(),
+          chatboxId: chatboxData.chatboxId!,
+          content: "Hello! How can we help you today?",
+          sendTime: new Date().toISOString(),
+          senderName: "Support Agent",
+          isFromCustomer: false
+        };
+        setMessages([welcomeMessage]);
+      }
     } catch (error) {
       console.error('Failed to initialize chat:', error);
+      setError('Failed to load chat. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -74,27 +82,36 @@ const ChatWidget: React.FC = () => {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !chatboxId) return;
+    if (!newMessage.trim() || !chatbox?.chatboxId || !user) return;
 
     try {
-      // Add user message
+      // Add user message to UI immediately
       const userMessage: Message = {
         messageId: Date.now(),
-        chatboxId,
+        chatboxId: chatbox.chatboxId,
         content: newMessage.trim(),
         sendTime: new Date().toISOString(),
-        senderName: user?.accountName,
+        senderName: user.accountName,
         isFromCustomer: true
       };
       
       setMessages(prev => [...prev, userMessage]);
       setNewMessage('');
       
+      // Send message to API
+      const messageData: SendMessageRequest = {
+        chatboxId: chatbox.chatboxId,
+        messageType: 1, // Customer to employee
+        content: newMessage.trim()
+      };
+      
+      await chatService.sendMessage(messageData);
+      
       // Simulate employee response for demo
       setTimeout(() => {
         const autoResponse: Message = {
           messageId: Date.now() + 1,
-          chatboxId,
+          chatboxId: chatbox.chatboxId!,
           content: "Thank you for your message. Our team will assist you shortly.",
           sendTime: new Date().toISOString(),
           senderName: "Support Agent",
@@ -105,12 +122,19 @@ const ChatWidget: React.FC = () => {
       
     } catch (error) {
       console.error('Failed to send message:', error);
+      setError('Failed to send message. Please try again.');
     }
   };
 
   if (!user) {
     return null;
   }
+
+  // Only show chat widget for customers
+  if (user.accountType !== 1) {
+    return null;
+  }
+
   return (
     <div 
       className={`position-fixed bottom-0 end-0 m-3 ${isOpen ? '' : ''}`}
@@ -142,6 +166,20 @@ const ChatWidget: React.FC = () => {
                 <div className="text-center py-5">
                   <Spinner animation="border" size="sm" className="me-2" />
                   Loading chat...
+                </div>
+              ) : error ? (
+                <div className="text-center py-5 text-danger">
+                  <i className="bi bi-exclamation-triangle me-2"></i>
+                  {error}
+                  <br />
+                  <Button 
+                    variant="outline-primary" 
+                    size="sm" 
+                    className="mt-2"
+                    onClick={initializeChat}
+                  >
+                    Retry
+                  </Button>
                 </div>
               ) : (
                 <>
@@ -178,19 +216,24 @@ const ChatWidget: React.FC = () => {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type your message..."
-                    disabled={loading}
+                    disabled={loading || !chatbox}
                     size="sm"
                   />
                   <Button 
                     type="submit" 
                     variant="primary"
                     size="sm"
-                    disabled={!newMessage.trim() || loading}
+                    disabled={!newMessage.trim() || loading || !chatbox}
                   >
                     <i className="bi bi-send"></i>
                   </Button>
                 </div>
               </Form>
+              {error && (
+                <div className="text-danger small mt-1">
+                  {error}
+                </div>
+              )}
             </Card.Footer>
           </div>
         )}
