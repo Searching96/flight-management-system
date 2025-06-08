@@ -61,6 +61,11 @@ export class TicketService {
   async searchTickets(query: string): Promise<Ticket[]> {
     return apiClient.get(`${this.baseUrl}/search`, { params: { q: query } });
   }
+
+  async countAllTickets(): Promise<number> {
+    const tickets = await this.getAllTickets();
+    return tickets.length;
+  }
 }
 
 export const ticketService = new TicketService();

@@ -1,6 +1,5 @@
 import { apiClient } from './api';
 import {Passenger, CreatePassengerRequest, UpdatePassengerRequest} from '../models/index';
-import { get } from 'lodash';
 
 class PassengerService {
   async getAllPassengers(): Promise<Passenger[]> {

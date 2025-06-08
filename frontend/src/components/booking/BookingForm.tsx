@@ -6,10 +6,10 @@ import { useAuth } from '../../hooks/useAuth';
 import { flightService, ticketService, passengerService, bookingConfirmationService } from '../../services';
 import { Flight } from '../../models';
 import TypeAhead from '../common/TypeAhead';
-import { aw } from 'vitest/dist/chunks/reporters.nr4dxCkA.js';
 
 interface BookingFormData {
   passengers: {
+    passengerId: number;
     firstName: string;
     lastName: string;
     dateOfBirth: string;
@@ -29,11 +29,13 @@ const BookingForm: React.FC = () => {
 
   // Get booking data from sessionStorage (preferred) or fallback to query parameters
   const getBookingData = () => {
-    const sessionData = sessionStorage.getItem('bookingData'); 
+    const sessionData = sessionStorage.getItem('bookingData');
 
     if (sessionData) {
       try {
         const parsed = JSON.parse(sessionData);
+
+        console.log('Parsed booking data from sessionStorage:', parsed);
         return {
           flightId: parsed.flightId?.toString(),
           queryPassengers: parsed.passengers?.toString(),
@@ -60,7 +62,6 @@ const BookingForm: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
 
   // Get passenger count from query param or location state
   const passengerCount = parseInt(queryPassengers || '0') || location.state?.passengerCount || 1;
@@ -74,6 +75,7 @@ const BookingForm: React.FC = () => {
   } = useForm<BookingFormData>({
     defaultValues: {
       passengers: Array(passengerCount).fill(null).map(() => ({
+        passengerId: undefined,
         firstName: '',
         lastName: '',
         dateOfBirth: '',
@@ -90,7 +92,9 @@ const BookingForm: React.FC = () => {
   const { fields } = useFieldArray({
     control,
     name: 'passengers'
-  }); useEffect(() => {
+  });
+
+  useEffect(() => {
     if (flightId) {
       loadBookingData();
     }
@@ -107,20 +111,6 @@ const BookingForm: React.FC = () => {
     }
   }, [queryClass, ticketClasses, setValue]);
 
-  // Clear query parameters from URL and sessionStorage after data is loaded
-  useEffect(() => {
-    if (flight && ticketClasses.length > 0) {
-      // Clear sessionStorage booking data after successful load
-    }
-  }, [flight, ticketClasses, navigate, location.search]);
-
-  // Redirect to flight search if no booking data is available
-  useEffect(() => {
-    if (!flightId) {
-      navigate('/flights', { replace: true });
-    }
-  }, [flightId, navigate]);
-
   const loadBookingData = async () => {
     try {
       setLoading(true);
@@ -136,14 +126,15 @@ const BookingForm: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }; 
-  
+  };
+
   const onSubmit = async (data: BookingFormData) => {
     try {
       setSubmitting(true);
       setError('');
-      setValidationWarnings([]);
-
+      /*
+        VALIDATION LOGIC
+      */
       // Validate passenger data using the service
       const validationErrors: string[] = [];
       for (const passenger of data.passengers) {
@@ -157,37 +148,51 @@ const BookingForm: React.FC = () => {
         return;
       }
 
-      // Check for existing passengers and show warnings
-      const warnings: string[] = [];
-      for (const passenger of data.passengers) {
+      // Check if any passenger already exists in DB by citizenId
+      for (let i = 0; i < data.passengers.length; i++) {
+        const passenger = data.passengers[i];
         if (passenger.citizenId) {
           try {
             const existing = await passengerService.findExistingPassenger(passenger.citizenId);
             if (existing) {
-              warnings.push(`Passenger with Citizen ID ${passenger.citizenId} already exists in the system.`);
+              // Set passengerId if found
+              data.passengers[i] = {
+                ...data.passengers[i],
+                ...existing,
+                passengerId: existing.passengerId ?? 0
+              };
             } else {
-              // If existing is null or undefined, create new passenger
-              const newPassenger = passengerService.transformPassengerData(passenger);
-              await passengerService.createPassenger(newPassenger);
+              // If not found, create new passenger
+              const created = await passengerService.transformPassengerData(passenger);
+              const createdPassenger = await passengerService.createPassenger(created);
+              data.passengers[i] = {
+                ...data.passengers[i],
+                ...createdPassenger,
+                passengerId: createdPassenger.passengerId ?? 0
+              };
             }
           } catch (err: any) {
+            // If not found (404), create new passenger
             if (err?.response?.status === 404) {
-              const newPassenger = passengerService.transformPassengerData(passenger);
-              await passengerService.createPassenger(newPassenger);
+              try {
+                const created = await passengerService.transformPassengerData(passenger);
+                const createdPassenger = await passengerService.createPassenger(created);
+                data.passengers[i] = {
+                  ...data.passengers[i],
+                  ...createdPassenger,
+                  passengerId: createdPassenger.passengerId ?? 0
+                };
+              } catch (createErr: any) {
+                setError('Error creating passenger: ' + (createErr.message || 'Unknown error'));
+                return;
+              }
             } else {
-              throw err;
+              setError('Error checking existing passenger: ' + (err.message || 'Unknown error'));
+              return;
             }
           }
         }
       }
-
-      if (warnings.length > 0) {
-        setValidationWarnings(warnings);
-      }
-      // Transform passenger data for validation only
-      // const transformedPassengers = data.passengers.map(p => 
-      //   passengerService.transformPassengerData(p)
-      // );
 
       // Generate seat numbers for demonstration
       const seatNumbers = data.passengers.map((_, index) => {
@@ -195,57 +200,53 @@ const BookingForm: React.FC = () => {
         const seatPrefix = selectedClass?.ticketClassName === 'Economy' ? 'A' :
           selectedClass?.ticketClassName === 'Business' ? 'B' : 'C';
         return `${seatPrefix}${index + 1}`;
-      }); const booking = {
-        flightId: Number(flightId),
-        passengers: data.passengers, // Keep original format for BookingRequest
+      });
+
+      const booking = {
         customerId: data.useFrequentFlyer ? user!.accountId! : null,
-        ticketClassId: data.ticketClassId,
-        seatNumbers: seatNumbers
+        flightId: Number(flightId),
+        passengers: data.passengers, // Keep original format for BookingReques
+        seatNumbers: seatNumbers,
+        ticketClassId: data.ticketClassId
       };
 
       // Book the tickets
       console.log("Booking data:", booking);
-      await ticketService.bookTickets(booking);
+      //await ticketService.bookTickets(booking);
 
-      // Handle guest booking confirmation
-      if (!data.useFrequentFlyer) {
-        const confirmationCode = bookingConfirmationService.generateConfirmationCode();
-        // Create confirmation data compatible with BookingConfirmation interface
-        const tickets = data.passengers.map((_, index) => ({
-          ticketId: undefined, // Will be assigned by backend
-          flightId: Number(flightId),
-          bookCustomerId: null,
-          passengerId: undefined,
-          ticketClassId: data.ticketClassId,
-          seatNumber: seatNumbers[index],
-          fare: selectedClass?.specifiedFare || 0
-        }));
+      const confirmationCode = bookingConfirmationService.generateConfirmationCode();
+      // Create confirmation data compatible with BookingConfirmation interface
+      const ticketCount = await ticketService.countAllTickets();
+      const tickets = data.passengers.map((_, index) => ({
+        ticketId: ticketCount + 1 + index,
+        flightId: Number(flightId),
+        bookCustomerId: data.useFrequentFlyer ? user!.accountId! : null,
+        passengerId: data.passengers[index].passengerId, // Use citizenId as passengerId for guest bookings
+        ticketClassId: data.ticketClassId,
+        seatNumber: seatNumbers[index],
+        fare: selectedClass?.specifiedFare || 0
+      }));
 
-        const confirmationData = bookingConfirmationService.createConfirmation(
-          tickets,
-          data.passengers.map(p => p.email),
-          flight!
-        );
+      console.log("Tickets to be confirmed:", tickets);
 
-        bookingConfirmationService.storeGuestBookingConfirmation(confirmationData);
-        await bookingConfirmationService.sendConfirmationEmail(confirmationData);
+      const confirmationData = bookingConfirmationService.createConfirmation(
+        tickets,
+        data.passengers.map(p => p.email),
+        flight!
+      );
 
-        // Navigate to confirmation page for guest bookings
-        navigate('/booking-confirmation', {
-          state: {
-            confirmationCode,
-            confirmationData,
-            message: 'Guest booking successful! Please save your confirmation code for future reference.'
-          }
-        });
-      } else {
-        // Navigate to dashboard for logged-in users
-        navigate('/dashboard', {
-          state: {
-            message: 'Booking successful! Your tickets have been confirmed and linked to your account.'
-          }
-        });
-      }
+      bookingConfirmationService.storeGuestBookingConfirmation(confirmationData);
+      await bookingConfirmationService.sendConfirmationEmail(confirmationData);
+
+      // Navigate to confirmation page for guest bookings
+      navigate('/booking-confirmation', {
+        state: {
+          confirmationCode,
+          confirmationData,
+          message: 'Guest booking successful! Please save your confirmation code for future reference.'
+        }
+      });
+
     } catch (err: any) {
       setError(err.message || 'Booking failed. Please try again.');
     } finally {
@@ -270,7 +271,8 @@ const BookingForm: React.FC = () => {
               <Card.Body className="text-center py-5">
                 <Alert variant="danger" className="mb-0">
                   <Alert.Heading>Missing Flight Information</Alert.Heading>
-                  <p>No flight ID provided. Please select a flight from the search results.</p>                  <Button variant="primary" onClick={() => navigate('/flights')}>
+                  <p>No flight ID provided. Please select a flight from the search results.</p>
+                  <Button variant="primary" onClick={() => navigate('/flights')}>
                     Back to Flight Search
                   </Button>
                 </Alert>
@@ -322,27 +324,10 @@ const BookingForm: React.FC = () => {
     { value: 'OTHER', label: 'Other' }
   ];
 
-  // Country code options for TypeAhead (for phone numbers)
-  const countryCodeOptions = [
-    { value: '+84', label: '+84 (Vietnam)' },
-    { value: '+1', label: '+1 (US/Canada)' },
-    { value: '+44', label: '+44 (UK)' },
-    { value: '+86', label: '+86 (China)' },
-    { value: '+81', label: '+81 (Japan)' },
-    { value: '+82', label: '+82 (South Korea)' },
-    { value: '+65', label: '+65 (Singapore)' },
-    { value: '+66', label: '+66 (Thailand)' },
-    { value: '+60', label: '+60 (Malaysia)' },
-    { value: '+62', label: '+62 (Indonesia)' }
-  ];
-
   const renderPassengerForm = (index: number) => {
     // Get current values from form state
     const currentGender = watch(`passengers.${index}.gender`) || '';
     const currentPhone = watch(`passengers.${index}.phoneNumber`) || '';
-
-    // Extract country code from current phone number or default to +84
-    const extractedCountryCode = currentPhone.match(/^\+\d+/)?.[0] || '+84';
 
     return (
       <Card key={index} className="mb-4">
@@ -409,7 +394,7 @@ const BookingForm: React.FC = () => {
                     setValue(`passengers.${index}.gender`, gender);
                   }}
                   placeholder="Select gender..."
-                  allowClear={true}
+                  allowClear={false}
                 />
                 <input
                   type="hidden"
@@ -464,25 +449,12 @@ const BookingForm: React.FC = () => {
               <Form.Group>
                 <Form.Label>Phone Number</Form.Label>
                 <div className="d-flex gap-2">
-                  <div style={{ width: '280px' }}>
-                    <TypeAhead
-                      options={countryCodeOptions}
-                      //value={extractedCountryCode}
-                      onChange={(option) => {
-                        const newCountryCode = option?.value as string || '+84';
-                        // Update the phone number with new country code
-                        const phoneWithoutCode = currentPhone.replace(/^\+\d+\s*/, '');
-                        setValue(`passengers.${index}.phoneNumber`, `${newCountryCode} ${phoneWithoutCode}`);
-                      }}
-                      placeholder="Country code"
-                    />
-                  </div>
                   <Form.Control
                     type="tel"
                     placeholder="Phone number"
                     value={currentPhone.replace(/^\+\d+\s*/, '')}
                     onChange={(e) => {
-                      const phoneNumber = `${extractedCountryCode} ${e.target.value}`;
+                      const phoneNumber = `${e.target.value}`;
                       setValue(`passengers.${index}.phoneNumber`, phoneNumber);
                     }}
                   />
@@ -498,6 +470,7 @@ const BookingForm: React.FC = () => {
       </Card>
     );
   };
+
   return (
     <Container className="py-5">
       <Row className="justify-content-center">
@@ -529,17 +502,6 @@ const BookingForm: React.FC = () => {
                 {error && (
                   <Alert variant="danger" className="mb-4">
                     {error}
-                  </Alert>
-                )}
-
-                {validationWarnings.length > 0 && (
-                  <Alert variant="warning" className="mb-4">
-                    <Alert.Heading as="h6">⚠️ Warnings:</Alert.Heading>
-                    <ul className="mb-0">
-                      {validationWarnings.map((warning, index) => (
-                        <li key={index}>{warning}</li>
-                      ))}
-                    </ul>
                   </Alert>
                 )}
 
