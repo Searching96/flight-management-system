@@ -6,9 +6,11 @@ import ParameterSettings from './ParameterSettings';
 import PlaneManagement from './PlaneManagement';
 import TicketClassManagement from './TicketClassManagement';
 import FlightTicketClassManagement from './FlightTicketClassManagement';
+import ChatManagement from './ChatManagement';
+import EmployeeManagement from './EmployeeManagement';
 import { usePermissions } from '../../hooks/useAuth';
 
-type AdminTab = 'overview' | 'flights' | 'airports' | 'planes' | 'ticket-classes' | 'flight-ticket-classes' | 'parameters';
+type AdminTab = 'overview' | 'flights' | 'airports' | 'planes' | 'ticket-classes' | 'flight-ticket-classes' | 'parameters' | 'chat' | 'employees';
 
 export const AdminPanel: React.FC = () => {
   const { canViewAdmin } = usePermissions();
@@ -45,6 +47,10 @@ export const AdminPanel: React.FC = () => {
         return <FlightTicketClassManagement />;
       case 'parameters':
         return <ParameterSettings />;
+      case 'chat':
+        return <ChatManagement />;
+      case 'employees':
+        return <EmployeeManagement />;
       default:
         return <AdminOverview />;
     }
@@ -113,6 +119,22 @@ export const AdminPanel: React.FC = () => {
                 onClick={() => setActiveTab('parameters')}
               >
                 ⚙️ Settings
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link
+                active={activeTab === 'chat'}
+                onClick={() => setActiveTab('chat')}
+              >
+                💬 Customer Support
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link
+                active={activeTab === 'employees'}
+                onClick={() => setActiveTab('employees')}
+              >
+                👥 Employee Management
               </Nav.Link>
             </Nav.Item>
           </Nav>

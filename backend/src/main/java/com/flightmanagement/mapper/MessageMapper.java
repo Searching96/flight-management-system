@@ -2,6 +2,8 @@ package com.flightmanagement.mapper;
 
 import com.flightmanagement.dto.MessageDto;
 import com.flightmanagement.entity.Message;
+import com.flightmanagement.repository.ChatboxRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -9,6 +11,9 @@ import java.util.stream.Collectors;
 
 @Component
 public class MessageMapper implements BaseMapper<Message, MessageDto> {
+    
+    @Autowired
+    private ChatboxRepository chatboxRepository;
     
     @Override
     public MessageDto toDto(Message entity) {
@@ -45,6 +50,13 @@ public class MessageMapper implements BaseMapper<Message, MessageDto> {
         entity.setMessageType(dto.getMessageType());
         entity.setContent(dto.getContent());
         entity.setSendTime(dto.getSendTime());
+        
+        // Set chatbox relationship
+        if (dto.getChatboxId() != null) {
+            entity.setChatbox(chatboxRepository.findById(dto.getChatboxId())
+                .orElseThrow(() -> new RuntimeException("Chatbox not found with id: " + dto.getChatboxId())));
+        }
+        
         return entity;
     }
     

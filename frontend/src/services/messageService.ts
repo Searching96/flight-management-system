@@ -1,10 +1,5 @@
 import { apiClient } from './api';
-import { 
-  Message, 
-  CreateMessageRequest, 
-  MessageFilter, 
-  NotificationSettings 
-} from '../models';
+import { Message } from '../models/Chat';
 
 export class MessageService {
   private readonly baseUrl = '/messages';
@@ -18,10 +13,6 @@ export class MessageService {
     return apiClient.get(`${this.baseUrl}/${id}`);
   }
 
-  async getMyMessages(filters?: MessageFilter): Promise<Message[]> {
-    return apiClient.get(`${this.baseUrl}/my-messages`, { params: filters });
-  }
-
   async getSentMessages(): Promise<Message[]> {
     return apiClient.get(`${this.baseUrl}/sent`);
   }
@@ -33,10 +24,6 @@ export class MessageService {
   async getUnreadCount(): Promise<number> {
     const response = await apiClient.get(`${this.baseUrl}/unread/count`);
     return response.count;
-  }
-
-  async sendMessage(messageData: CreateMessageRequest): Promise<Message> {
-    return apiClient.post(this.baseUrl, messageData);
   }
 
   async markAsRead(messageId: number): Promise<void> {
@@ -87,65 +74,20 @@ export class MessageService {
     });
   }
 
-  // Notification settings
-  async getNotificationSettings(): Promise<NotificationSettings> {
-    return apiClient.get(`${this.baseUrl}/settings`);
+  async getMessagesByChatboxId(chatboxId: number): Promise<Message[]> {
+    return apiClient.get(`${this.baseUrl}/chatbox/${chatboxId}`);
   }
 
-  async updateNotificationSettings(settings: Partial<NotificationSettings>): Promise<NotificationSettings> {
-    return apiClient.patch(`${this.baseUrl}/settings`, settings);
+  async createMessage(messageData: any): Promise<Message> {
+    return apiClient.post(this.baseUrl, messageData);
   }
 
-  // Real-time messaging (WebSocket support)
-  async subscribeToNotifications(callback: (message: Message) => void): Promise<() => void> {
-    // This would implement WebSocket connection for real-time notifications
-    // Return unsubscribe function
-    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
-    const eventSource = new EventSource(`${baseURL}${this.baseUrl}/subscribe`);
-    
-    eventSource.onmessage = (event) => {
-      const message: Message = JSON.parse(event.data);
-      callback(message);
-    };
-
-    return () => {
-      eventSource.close();
-    };
+  async createCustomerMessage(chatboxId: number, content: string): Promise<Message> {
+    return apiClient.post(`${this.baseUrl}/customer`, { chatboxId, content });
   }
 
-  // Bulk operations
-  async sendBulkMessage(messageData: Omit<CreateMessageRequest, 'receiverId'>, receiverIds: number[]): Promise<Message[]> {
-    return apiClient.post(`${this.baseUrl}/bulk`, {
-      ...messageData,
-      receiverIds
-    });
-  }
-
-  async deleteMultipleMessages(messageIds: number[]): Promise<void> {
-    return apiClient.delete(`${this.baseUrl}/bulk`, {
-      data: { messageIds }
-    });
-  }
-
-  async markMultipleAsRead(messageIds: number[]): Promise<void> {
-    return apiClient.patch(`${this.baseUrl}/bulk/read`, {
-      messageIds
-    });
-  }
-
-  // Search and filter
-  async searchMessages(query: string, filters?: MessageFilter): Promise<Message[]> {
-    return apiClient.get(`${this.baseUrl}/search`, {
-      params: { q: query, ...filters }
-    });
-  }
-
-  async getMessagesByType(messageType: string): Promise<Message[]> {
-    return apiClient.get(`${this.baseUrl}/type/${messageType}`);
-  }
-
-  async getMessagesByPriority(priority: string): Promise<Message[]> {
-    return apiClient.get(`${this.baseUrl}/priority/${priority}`);
+  async createEmployeeMessage(chatboxId: number, content: string): Promise<Message> {
+    return apiClient.post(`${this.baseUrl}/employee`, { chatboxId, content });
   }
 }
 

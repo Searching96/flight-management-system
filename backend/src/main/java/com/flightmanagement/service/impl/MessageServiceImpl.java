@@ -78,4 +78,22 @@ public class MessageServiceImpl implements MessageService {
         messageDto.setMessageType(messageType);
         return createMessage(messageDto);
     }
+    
+    @Override
+    public MessageDto createCustomerMessage(Integer chatboxId, String content) {
+        MessageDto messageDto = new MessageDto();
+        messageDto.setChatboxId(chatboxId);
+        messageDto.setContent(content);
+        messageDto.setMessageType(1); // Customer send to employee
+        return createMessage(messageDto);
+    }
+    
+    @Override
+    public MessageDto createEmployeeMessage(Integer chatboxId, String content) {
+        MessageDto messageDto = new MessageDto();
+        messageDto.setChatboxId(chatboxId);
+        messageDto.setContent(content);
+        messageDto.setMessageType(2); // Employee send to customer
+        return createMessage(messageDto);
+    }
 }

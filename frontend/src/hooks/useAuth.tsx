@@ -100,12 +100,21 @@ export const usePermissions = () => {
   const { user } = useAuth();
   
   return {
-    canViewAdmin: user?.accountType === 2,        // Employee per database schema
-    canManageFlights: user?.accountType === 2,    // Employee per database schema
-    canBookTickets: user?.accountType === 1,      // Customer per database schema
-    canViewOwnBookings: !!user,
+    // Customer permissions (accountType = 1)
+    canBookTickets: user?.accountType === 1,
+    canViewOwnTickets: user?.accountType === 1,
+    canUseChat: user?.accountType === 1,
+    
+    // Employee permissions (accountType = 2)
+    canViewAdmin: user?.accountType === 2,
+    canManageFlights: user?.accountType === 2,
+    canManageAirports: user?.accountType === 2,
     canManageEmployees: user?.accountType === 2,
-    canManageCustomers: user?.accountType === 2,
-    canViewReports: user?.accountType === 2
+    canManageCustomerSupport: user?.accountType === 2,
+    canAccessChatManagement: user?.accountType === 2,
+    
+    // General permissions
+    isEmployee: user?.accountType === 2,
+    isCustomer: user?.accountType === 1
   };
 };

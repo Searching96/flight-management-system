@@ -22,6 +22,7 @@ const ChatWidget: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (isOpen && user && !chatbox) {
@@ -32,6 +33,17 @@ const ChatWidget: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Real-time polling for messages
+  useEffect(() => {
+    if (isOpen && chatbox?.chatboxId) {
+      startPolling();
+    } else {
+      stopPolling();
+    }
+
+    return () => stopPolling();
+  }, [isOpen, chatbox]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -59,7 +71,7 @@ const ChatWidget: React.FC = () => {
           senderName: msg.senderName,
           isFromCustomer: msg.messageType === 1
         }));
-        setMessages(formattedMessages);
+        setMessages(formattedMessages); // Cache trong state
       } else {
         // Add welcome message for new chatbox
         const welcomeMessage: Message = {
@@ -96,16 +108,11 @@ const ChatWidget: React.FC = () => {
       };
       
       setMessages(prev => [...prev, userMessage]);
+      const messageContent = newMessage.trim();
       setNewMessage('');
       
-      // Send message to API
-      const messageData: SendMessageRequest = {
-        chatboxId: chatbox.chatboxId,
-        messageType: 1, // Customer to employee
-        content: newMessage.trim()
-      };
-      
-      await chatService.sendMessage(messageData);
+      // Send message to API using createCustomerMessage
+      await chatService.createCustomerMessage(chatbox.chatboxId, messageContent);
       
       // Simulate employee response for demo
       setTimeout(() => {
@@ -120,6 +127,60 @@ const ChatWidget: React.FC = () => {
         setMessages(prev => [...prev, autoResponse]);
       }, 1000);
       
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      setError('Failed to send message. Please try again.');
+    }
+  };
+
+  const startPolling = () => {
+    if (pollingIntervalRef.current) return;
+    
+    pollingIntervalRef.current = setInterval(async () => {
+      if (chatbox?.chatboxId) {
+        try {
+          const messages = await chatService.getMessagesByChatboxId(chatbox.chatboxId);
+          const formattedMessages: Message[] = messages.map(msg => ({
+            messageId: msg.messageId,
+            chatboxId: msg.chatboxId || chatbox.chatboxId!,
+            content: msg.content,
+            sendTime: msg.sendTime || new Date().toISOString(),
+            senderName: msg.senderName,
+            isFromCustomer: msg.messageType === 1
+          }));
+          setMessages(formattedMessages);
+        } catch (error) {
+          console.error('Failed to poll messages:', error);
+        }
+      }
+    }, 10); // Poll every 0.2 seconds
+  };
+
+  const stopPolling = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  };
+
+  const handleSendMessage = async (messageContent: string) => {
+    if (!messageContent.trim() || !chatbox?.chatboxId) return;
+
+    try {
+      await chatService.createCustomerMessage(chatbox.chatboxId, messageContent.trim());
+      setNewMessage('');
+      
+      // Immediately reload messages after sending
+      const messages = await chatService.getMessagesByChatboxId(chatbox.chatboxId);
+      const formattedMessages: Message[] = messages.map(msg => ({
+        messageId: msg.messageId,
+        chatboxId: msg.chatboxId || chatbox.chatboxId!,
+        content: msg.content,
+        sendTime: msg.sendTime || new Date().toISOString(),
+        senderName: msg.senderName,
+        isFromCustomer: msg.messageType === 1
+      }));
+      setMessages(formattedMessages);
     } catch (error) {
       console.error('Failed to send message:', error);
       setError('Failed to send message. Please try again.');
@@ -218,6 +279,12 @@ const ChatWidget: React.FC = () => {
                     placeholder="Type your message..."
                     disabled={loading || !chatbox}
                     size="sm"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage(newMessage);
+                      }
+                    }}
                   />
                   <Button 
                     type="submit" 

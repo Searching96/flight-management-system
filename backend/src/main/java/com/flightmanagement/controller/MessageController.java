@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/messages")
@@ -34,14 +35,6 @@ public class MessageController {
         return new ResponseEntity<>(createdMessage, HttpStatus.CREATED);
     }
     
-    @PostMapping("/send")
-    public ResponseEntity<MessageDto> sendMessage(@RequestParam Integer chatboxId, 
-                                                 @RequestParam String content, 
-                                                 @RequestParam Integer messageType) {
-        MessageDto sentMessage = messageService.sendMessage(chatboxId, content, messageType);
-        return new ResponseEntity<>(sentMessage, HttpStatus.CREATED);
-    }
-    
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMessage(@PathVariable Integer id) {
         messageService.deleteMessage(id);
@@ -54,16 +47,31 @@ public class MessageController {
         return ResponseEntity.ok(messages);
     }
     
-    @GetMapping("/chatbox/{chatboxId}/recent")
-    public ResponseEntity<List<MessageDto>> getRecentMessagesByChatboxId(@PathVariable Integer chatboxId, 
-                                                                        @RequestParam(defaultValue = "20") int limit) {
-        List<MessageDto> messages = messageService.getRecentMessagesByChatboxId(chatboxId, limit);
-        return ResponseEntity.ok(messages);
+    @PostMapping("/customer")
+    public ResponseEntity<MessageDto> createCustomerMessage(@RequestBody Map<String, Object> request) {
+        try {
+            Integer chatboxId = (Integer) request.get("chatboxId");
+            String content = (String) request.get("content");
+            
+            MessageDto message = messageService.createCustomerMessage(chatboxId, content);
+            return new ResponseEntity<>(message, HttpStatus.CREATED);
+        } catch (Exception e) {
+            System.err.println("Error creating customer message: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
     
-    @GetMapping("/type/{messageType}")
-    public ResponseEntity<List<MessageDto>> getMessagesByType(@PathVariable Integer messageType) {
-        List<MessageDto> messages = messageService.getMessagesByType(messageType);
-        return ResponseEntity.ok(messages);
+    @PostMapping("/employee")
+    public ResponseEntity<MessageDto> createEmployeeMessage(@RequestBody Map<String, Object> request) {
+        try {
+            Integer chatboxId = (Integer) request.get("chatboxId");
+            String content = (String) request.get("content");
+            
+            MessageDto message = messageService.createEmployeeMessage(chatboxId, content);
+            return new ResponseEntity<>(message, HttpStatus.CREATED);
+        } catch (Exception e) {
+            System.err.println("Error creating employee message: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

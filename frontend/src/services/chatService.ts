@@ -18,18 +18,6 @@ export class ChatService {
     return apiClient.get(`${this.chatboxUrl}/${id}`);
   }
 
-  async getChatboxesByCustomerId(customerId: number): Promise<Chatbox[]> {
-    return apiClient.get(`${this.chatboxUrl}/customer/${customerId}`);
-  }
-
-  async getChatboxesByEmployeeId(employeeId: number): Promise<Chatbox[]> {
-    return apiClient.get(`${this.chatboxUrl}/employee/${employeeId}`);
-  }
-
-  async getOrCreateChatbox(customerId: number, employeeId: number): Promise<Chatbox> {
-    return apiClient.post(`${this.chatboxUrl}/get-or-create`, { customerId, employeeId });
-  }
-
   async deleteChatbox(id: number): Promise<void> {
     return apiClient.delete(`${this.chatboxUrl}/${id}`);
   }
@@ -51,8 +39,38 @@ export class ChatService {
     return apiClient.post(`${this.messageUrl}/send`, { chatboxId, content, messageType });
   }
 
+  async createCustomerMessage(chatboxId: number, content: string): Promise<Message> {
+    return apiClient.post(`${this.messageUrl}/customer`, { chatboxId, content });
+  }
+
   async getChatboxByCustomerId(customerId: number): Promise<Chatbox> {
     return apiClient.get(`${this.chatboxUrl}/customer/${customerId}/chatbox`);
+  }
+
+  // Employee chat management methods
+  async getChatboxesByEmployeeId(employeeId: number): Promise<Chatbox[]> {
+    return apiClient.get(`/api/chatboxes/employee/${employeeId}`);
+  }
+
+  async assignChatboxToEmployee(chatboxId: number, employeeId: number): Promise<Chatbox> {
+    return apiClient.put(`/api/chatboxes/${chatboxId}/assign`, { employeeId });
+  }
+
+  async createEmployeeMessage(chatboxId: number, content: string): Promise<Message> {
+    const messageData = {
+      chatboxId,
+      content,
+      messageType: 2 // Employee to customer
+    };
+    return apiClient.post('/api/messages/employee', messageData);
+  }
+
+  async markChatboxAsRead(chatboxId: number): Promise<void> {
+    return apiClient.patch(`/api/chatboxes/${chatboxId}/read`);
+  }
+
+  async getUnassignedChatboxes(): Promise<Chatbox[]> {
+    return apiClient.get('/api/chatboxes/unassigned');
   }
 }
 

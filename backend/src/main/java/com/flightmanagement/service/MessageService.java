@@ -21,4 +21,8 @@ public interface MessageService {
     List<MessageDto> getMessagesByType(Integer messageType);
     
     MessageDto sendMessage(Integer chatboxId, String content, Integer messageType);
+    
+    MessageDto createCustomerMessage(Integer chatboxId, String content);
+    
+    MessageDto createEmployeeMessage(Integer chatboxId, String content);
 }

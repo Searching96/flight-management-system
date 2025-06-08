@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ChatboxServiceImpl implements ChatboxService {
@@ -64,25 +65,23 @@ public class ChatboxServiceImpl implements ChatboxService {
     
     @Override
     public ChatboxDto getChatboxByCustomerId(Integer customerId) {
-        System.out.println("Service: Getting chatbox for customer ID: " + customerId);
+        System.out.println("Getting chatbox for customer ID: " + customerId);
         
-        try {
-            List<Chatbox> chatboxes = chatboxRepository.findByCustomerId(customerId);
-            System.out.println("Found " + chatboxes.size() + " chatboxes for customer " + customerId);
-            
-            if (chatboxes.isEmpty()) {
-                System.out.println("No chatbox found, creating new one");
-                return createChatboxWithCustomerId(customerId);
-            }
+        // Get existing chatbox (should be only one per customer)
+        List<Chatbox> chatboxes = chatboxRepository.findByCustomerId(customerId);
+        if (!chatboxes.isEmpty()) {
+            System.out.println("Found existing chatbox: " + chatboxes.get(0).getChatboxId());
             return chatboxMapper.toDto(chatboxes.get(0));
-        } catch (Exception e) {
-            System.err.println("Error in getChatboxByCustomerId: " + e.getMessage());
-            e.printStackTrace();
-            throw e;
         }
+        
+        // If no chatbox found, create a new one
+        System.out.println("No chatbox found, creating new one for customer: " + customerId);
+        return createChatboxWithCustomerId(customerId);
     }
     
     private ChatboxDto createChatboxWithCustomerId(Integer customerId) {
+        System.out.println("Creating new chatbox for customer ID: " + customerId);
+        
         ChatboxDto chatboxDto = new ChatboxDto();
         chatboxDto.setCustomerId(customerId);
         chatboxDto.setEmployeeId(null); // Employee will be assigned later
