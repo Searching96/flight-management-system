@@ -1,31 +1,6 @@
 import { apiClient } from './api';
 import { API_URL } from './config';
-import { Flight, FlightSearch } from '../models';
-
-export interface FlightRequest {
-  flightCode: string;
-  departureDate: string;
-  departureTime: string;
-  duration: string;
-  planeId: number;
-  departureAirportId: number;
-  arrivalAirportId: number;
-}
-
-export interface TicketClassAssignment {
-  ticketClassId: number;
-  ticketQuantity: number;
-  specifiedFare: number;
-}
-
-export interface FlightSearchCriteria {
-  departureAirportId: number;
-  arrivalAirportId: number;
-  departureDate: string;
-  returnDate?: string;
-  passengerCount: number;
-  ticketClassId: number; // Keep this required to match backend
-}
+import { Flight, FlightSearch, FlightRequest } from '../models';
 
 export class FlightService {
   private readonly baseUrl = API_URL.FLIGHTS;
@@ -41,12 +16,14 @@ export class FlightService {
   async getFlightByCode(flightCode: string): Promise<Flight> {
     return apiClient.get(`${this.baseUrl}/code/${flightCode}`);
   }
-  async searchFlights(criteria: FlightSearchCriteria): Promise<Flight[]> {
+  async searchFlights(criteria: FlightSearch): Promise<Flight[]> {
     const params: any = {
       departureAirportId: criteria.departureAirportId,
       arrivalAirportId: criteria.arrivalAirportId,
       departureDate: criteria.departureDate,
-      passengerCount: criteria.passengerCount
+      passengerCount: criteria.passengers,
+      isRoundTrip: criteria.isRoundTrip || false,
+      ticketClassId: criteria.ticketClassId || 0, // Default to 0 if not specified
     };
 
     // Only include ticketClassId if specified and > 0 to avoid 500 errors
@@ -66,8 +43,8 @@ export class FlightService {
     departureAirportId: number,
     arrivalAirportId: number
   ): Promise<Flight[]> {
-    return apiClient.get(`${this.baseUrl}/route`, { 
-      params: { departureAirportId, arrivalAirportId } 
+    return apiClient.get(`${this.baseUrl}/route`, {
+      params: { departureAirportId, arrivalAirportId }
     });
   }
 
@@ -102,13 +79,6 @@ export class FlightService {
 
   async checkFlightAvailability(flightId: number): Promise<any> {
     return apiClient.get(API_URL.FLIGHT_TICKET_CLASS + `/flight/${flightId}`);
-  }
-
-  async assignTicketClassesToFlight(
-    flightId: number,
-    assignments: TicketClassAssignment[]
-  ): Promise<any[]> {
-    return apiClient.put(API_URL.FLIGHT_TICKET_CLASS + `/flight/${flightId}/bulk`, assignments);
   }
 
   async cancelFlight(id: number): Promise<Flight> {

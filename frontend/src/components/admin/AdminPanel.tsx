@@ -5,7 +5,6 @@ import AirportManagement from './AirportManagement';
 import ParameterSettings from './ParameterSettings';
 import PlaneManagement from './PlaneManagement';
 import TicketClassManagement from './TicketClassManagement';
-import FlightTicketClassManagement from './FlightTicketClassManagement';
 import { usePermissions } from '../../hooks/useAuth';
 
 type AdminTab = 'overview' | 'flights' | 'airports' | 'planes' | 'ticket-classes' | 'flight-ticket-classes' | 'parameters';
@@ -41,8 +40,6 @@ export const AdminPanel: React.FC = () => {
         return <PlaneManagement />;
       case 'ticket-classes':
         return <TicketClassManagement />;
-      case 'flight-ticket-classes':
-        return <FlightTicketClassManagement />;
       case 'parameters':
         return <ParameterSettings />;
       default:
@@ -97,14 +94,6 @@ export const AdminPanel: React.FC = () => {
                 onClick={() => setActiveTab('ticket-classes')}
               >
                 🎟️ Ticket Classes
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === 'flight-ticket-classes'}
-                onClick={() => setActiveTab('flight-ticket-classes')}
-              >
-                ✈️🎟️ Flight Class Assignment
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>

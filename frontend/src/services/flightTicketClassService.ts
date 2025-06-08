@@ -1,51 +1,38 @@
 import { apiClient } from './api';
-import { FlightTicketClass } from '../models/index';
-export interface CreateFlightTicketClassRequest {
-  flightId: number;
-  ticketClassId: number;
-  ticketQuantity: number;
-  remainingTicketQuantity: number;
-  specifiedFare: number;
-}
-
-export interface UpdateFlightTicketClassRequest {
-  ticketQuantity?: number;
-  remainingTicketQuantity?: number;
-  specifiedFare?: number;
-}
+import { API_URL } from './config';
+import {
+  FlightTicketClass,
+  FlightTicketClassRequest,
+  UpdateFlightTicketClassRequest,
+} from '../models';
 
 class FlightTicketClassService {
-  async getAllFlightTicketClasses(): Promise<FlightTicketClass[]> {
-    return apiClient.get('/flight-ticket-classes');
+  private readonly baseUrl = API_URL.FLIGHT_TICKET_CLASS;
+
+  async getFlightTicketClassesByFlightId(flightId: number): Promise<FlightTicketClass[]> {
+    return apiClient.get(`${this.baseUrl}/flight/${flightId}`);
   }
 
   async getFlightTicketClassById(flightId: number, ticketClassId: number): Promise<FlightTicketClass> {
-    return apiClient.get(`/flight-ticket-classes/${flightId}/${ticketClassId}`);
+    return apiClient.get(`${this.baseUrl}/${flightId}/${ticketClassId}`);
   }
 
-  async getFlightTicketClassesByFlightId(flightId: number): Promise<FlightTicketClass[]> {
-    return apiClient.get(`/flight-ticket-classes/flight/${flightId}`);
+  async createFlightTicketClass(request: FlightTicketClassRequest): Promise<FlightTicketClass> {
+    return apiClient.post(this.baseUrl, request);
   }
 
-  async createFlightTicketClass(data: CreateFlightTicketClassRequest): Promise<FlightTicketClass> {
-    return apiClient.post('/flight-ticket-classes', data);
-  }
-
-  async updateFlightTicketClass(flightId: number, ticketClassId: number, data: UpdateFlightTicketClassRequest): Promise<FlightTicketClass> {
-    return apiClient.put(`/flight-ticket-classes/${flightId}/${ticketClassId}`, data);
+  async updateFlightTicketClass(
+    flightId: number,
+    ticketClassId: number,
+    request: UpdateFlightTicketClassRequest
+  ): Promise<FlightTicketClass> {
+    return apiClient.put(`${this.baseUrl}/${flightId}/${ticketClassId}`, request);
   }
 
   async deleteFlightTicketClass(flightId: number, ticketClassId: number): Promise<void> {
-    return apiClient.delete(`/flight-ticket-classes/${flightId}/${ticketClassId}`);
-  }
-
-  async updateRemainingTickets(flightId: number, ticketClassId: number, quantity: number): Promise<void> {
-    return apiClient.put(`/flight-ticket-classes/${flightId}/${ticketClassId}/update-remaining?quantity=${quantity}`);
-  }
-
-  async getAvailableFlightTicketClasses(): Promise<FlightTicketClass[]> {
-    return apiClient.get('/flight-ticket-classes/available');
+    return apiClient.delete(`${this.baseUrl}/${flightId}/${ticketClassId}`);
   }
 }
 
 export const flightTicketClassService = new FlightTicketClassService();
+export default flightTicketClassService;

@@ -34,11 +34,3 @@ export interface FlightSearch {
   ticketClassId: number;
   isRoundTrip?: boolean;
 }
-
-// Additional interfaces
-export interface FlightDetail {
-  flightId: number;
-  mediumAirportId: number;
-  arrivalTime: string;
-  departureTime: string;
-}

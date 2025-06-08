@@ -4,9 +4,9 @@ import { Ticket } from './Ticket';
 export type { Account, LoginRequest, LoginResponse, RegisterRequest } from './Account';
 
 // Flight related
-export type { Flight, FlightSearch } from './Flight';
+export type { Flight, FlightSearch, FlightRequest } from './Flight';
 export type { FlightDetail, SeatAvailability, BookSeatRequest, SeatMap } from './FlightDetail';
-export type { FlightTicketClass, CreateFlightTicketClassRequest, UpdateFlightTicketClassRequest } from './FlightTicketClass';
+export type { FlightTicketClass, FlightTicketClassRequest, UpdateFlightTicketClassRequest } from './FlightTicketClass';
 
 // Airport related
 export type { Airport } from './Airport';
@@ -34,7 +34,7 @@ export type { Chatbox, Message, SendMessageRequest } from './Chat';
 export type { Plane } from './Plane';
 
 // Passenger related
-export type { Passenger, CreatePassengerRequest, UpdatePassengerRequest, Gender } from './Passenger';
+export type { Passenger, CreatePassengerRequest, UpdatePassengerRequest} from './Passenger';
 
 // System related
 export type { Parameter } from './Parameter';

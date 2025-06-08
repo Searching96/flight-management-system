@@ -21,7 +21,7 @@ export interface FlightTicketClassId {
   ticketClassId: number;
 }
 
-export interface CreateFlightTicketClassRequest {
+export interface FlightTicketClassRequest {
   flightId: number;
   ticketClassId: number;
   ticketQuantity: number;
@@ -33,12 +33,4 @@ export interface UpdateFlightTicketClassRequest {
   ticketQuantity?: number;
   remainingTicketQuantity?: number;
   specifiedFare?: number;
-}
-
-// Interface for bulk assignment operations
-export interface FlightTicketClassAssignment {
-  ticketClassId: number;
-  ticketQuantity: number;
-  remainingTicketQuantity?: number;
-  specifiedFare: number;
 }
