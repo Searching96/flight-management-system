@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navbar, Nav, Container, Dropdown } from 'react-bootstrap';
+import { Navbar, Nav, Container, Dropdown, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -26,7 +26,7 @@ const Header: React.FC = () => {
             <Nav.Link as={Link} to="/" className="text-decoration-none">Home</Nav.Link>
             <Nav.Link as={Link} to="/search" className="text-decoration-none">Search Flights</Nav.Link>
             <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Manage Booking</Nav.Link>
-            
+
             {user && (
               <>
                 <Nav.Link as={Link} to="/dashboard" className="text-decoration-none">Dashboard</Nav.Link>
@@ -35,7 +35,8 @@ const Header: React.FC = () => {
                 )}
               </>
             )}
-          </Nav>          <Nav className="ms-auto">
+          </Nav>
+          <Nav className="ms-auto">
             {user ? (
               <Dropdown align="end">
                 <Dropdown.Toggle variant="outline-primary" id="dropdown-basic">
@@ -50,12 +51,14 @@ const Header: React.FC = () => {
                 </Dropdown.Menu>
               </Dropdown>
             ) : (
-              <>
-                <Nav.Link as={Link} to="/login" className="me-2 text-decoration-none">Login</Nav.Link>
-                <Link to="/register" className="btn btn-primary btn-sm text-decoration-none">
+              <div className="d-flex gap-2">
+                <Button as={Link as any} to="/login" className="me-2" variant='outline-primary'>
+                  Login
+                </Button>
+                <Button as={Link as any} to="/register">
                   Sign Up
-                </Link>
-              </>
+                </Button>
+              </div>
             )}
           </Nav>
         </Navbar.Collapse>

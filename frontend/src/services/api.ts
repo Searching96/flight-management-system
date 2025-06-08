@@ -1,23 +1,31 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+import { DOMAIN_URL_DEFAULT } from './config';
 
 class ApiClient {
+  private baseUrl = `${DOMAIN_URL_DEFAULT}/api`;
   private client: AxiosInstance;
+  private authContext: any = null;
 
   constructor() {
     this.client = axios.create({
-      baseURL,
-      timeout: 10000,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      baseURL: this.baseUrl,
+      withCredentials: true, // Enable cookies for all requests
     });
 
-    // Request interceptor
+    this.setupInterceptors();
+  }
+
+  // Set the auth context after the app is initialized
+  setAuthContext(context: any) {
+    this.authContext = context;
+  }
+
+  setupInterceptors() {
+    // Request interceptor - Add auth token to requests
     this.client.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('authToken');
+        // Get token from authContext instead of localStorage
+        const token = this.authContext?.getAccessToken?.() || null;
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
