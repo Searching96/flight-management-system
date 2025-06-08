@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Modal, Table, InputGroup } from 'react-bootstrap';
-import { flightService, airportService, planeService, ticketClassService, flightTicketClassService } from '../../services';
+import {
+    airportService,
+    planeService,
+    ticketClassService,
+    flightTicketClassService,
+    parameterService
+} from '../../services';
 import {
     Flight,
     Airport,
@@ -11,9 +17,16 @@ import {
     FlightTicketClass,
     FlightTicketClassRequest,
     UpdateFlightTicketClassRequest,
+    Parameter
 } from '../../models';
-import TypeAhead from '../common/TypeAhead';
 import { usePermissions } from '../../hooks/useAuth';
+import { useFlights } from '../../hooks/useFlights';
+import { useFlightDetails } from '../../hooks/useFlightDetails';
+import FlightForm from './flights/FlightForm';
+import TypeAhead from '../common/TypeAhead';
+import DataTable from 'datatables.net-react';
+import DT from 'datatables.net-dt';
+DataTable.use(DT);
 
 const FlightManagement: React.FC = () => {
     const { canViewAdmin } = usePermissions();
@@ -23,8 +36,8 @@ const FlightManagement: React.FC = () => {
                 <Row className="justify-content-center">
                     <Col md={8}>
                         <Alert variant="danger" className="text-center">
-                            <Alert.Heading>Access Denied</Alert.Heading>
-                            <p>You do not have permission to access flight management.</p>
+                            <Alert.Heading>Từ chối truy cập</Alert.Heading>
+                            <p>Bạn không có quyền truy cập vào quản lý chuyến bay.</p>
                         </Alert>
                     </Col>
                 </Row>
@@ -32,15 +45,42 @@ const FlightManagement: React.FC = () => {
         );
     }
 
-    // Main state for flight management
-    const [flights, setFlights] = useState<Flight[]>([]);
+    // Use our custom hooks
+    const {
+        flights,
+        loading,
+        error: flightsError,
+        loadFlights,
+        createFlight,
+        updateFlight,
+        deleteFlight
+    } = useFlights();
+
+    const {
+        flightDetails,
+        error: detailsError,
+        loadFlightDetails,
+        saveFlightDetails,
+        addFlightDetail,
+        removeFlightDetail,
+        updateFlightDetail,
+        clearDetails
+    } = useFlightDetails();
+
+    // Add this to access the reset function
+    const {
+        reset
+    } = useForm<FlightRequest>();
+
+    // State for resources and UI
     const [airports, setAirports] = useState<Airport[]>([]);
     const [planes, setPlanes] = useState<Plane[]>([]);
     const [ticketClasses, setTicketClasses] = useState<TicketClass[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+    const [detailErrors, setDetailErrors] = useState<{ [key: string]: string }>({});
     const [showForm, setShowForm] = useState(false);
     const [editingFlight, setEditingFlight] = useState<Flight | null>(null);
+    const [error, setError] = useState('');
 
     // State for ticket class management
     const [selectedFlightForClasses, setSelectedFlightForClasses] = useState<Flight | null>(null);
@@ -51,110 +91,110 @@ const FlightManagement: React.FC = () => {
     const [editingAssociation, setEditingAssociation] = useState<FlightTicketClass | null>(null);
     const [ticketClassValidationError, setTicketClassValidationError] = useState<string>('');
 
-    const [selectedDepartureAirport, setSelectedDepartureAirport] = useState<number | ''>('');
-    const [selectedArrivalAirport, setSelectedArrivalAirport] = useState<number | ''>('');
-    const [selectedPlane, setSelectedPlane] = useState<number | ''>('');
+    // Add state for system parameters
+    const [parameters, setParameters] = useState<Parameter | null>(null);
 
-    const {
-        register,
-        handleSubmit,
-        reset,
-        setValue,
-        formState: { errors }
-    } = useForm<FlightRequest>();
-
+    // Initial data loading
     useEffect(() => {
         loadData();
     }, []);
 
+    // Combine hook errors into one state
+    useEffect(() => {
+        setError(flightsError || detailsError || '');
+    }, [flightsError, detailsError]);
+
     const loadData = async () => {
         try {
-            setLoading(true);
-            const [flightData, airportData, planeData, ticketClassData] = await Promise.all([
-                flightService.getAllFlights(),
+            const [airportData, planeData, ticketClassData, parameterData] = await Promise.all([
                 airportService.getAllAirports(),
                 planeService.getAllPlanes(),
-                ticketClassService.getAllTicketClasses()
+                ticketClassService.getAllTicketClasses(),
+                parameterService.getAllParameters()
             ]);
 
-            setFlights(flightData);
             setAirports(airportData);
             setPlanes(planeData);
             setTicketClasses(ticketClassData);
+            setParameters(parameterData[0]); // Assuming first item contains all parameters
+
+            await loadFlights();
         } catch (err: any) {
             setError('Failed to load data');
-        } finally {
-            setLoading(false);
         }
     };
 
-    // Flight CRUD operations
-    const onSubmit = async (data: FlightRequest) => {
+    // Flight form handlers
+    const handleSubmit = async (data: FlightRequest) => {
         try {
+            // Save the flight first
+            let flightId: number;
             if (editingFlight) {
-                await flightService.updateFlight(editingFlight.flightId!, data);
+                await updateFlight(editingFlight.flightId!, data);
+                flightId = editingFlight.flightId!;
             } else {
-                await flightService.createFlight(data);
+                const newFlight = await createFlight(data);
+                if (!newFlight) return;
+                flightId = newFlight.flightId!;
             }
 
-            loadData();
+            // Then save flight details
+            const detailsSaved = await saveFlightDetails(flightId);
+            if (!detailsSaved) return;
+
+            // Success - close form and reload data
             handleCancel();
         } catch (err: any) {
-            setError(err.message || 'Failed to save flight');
+            // Enhanced error handling
+            let errorMsg = err.message || 'Không thể lưu chuyến bay';
+            
+            // Check for specific API error about duplicate airports
+            if (err.status === 400 && err.message?.includes('Departure and arrival airports cannot be the same')) {
+                errorMsg = 'Sân bay đi và sân bay đến không thể là cùng một sân bay.';
+                setFormErrors(prev => ({...prev, airports: errorMsg}));
+            } else if (err.message) {
+                errorMsg = err.message;
+            }
+            
+            setError(errorMsg);
         }
     };
 
-    const handleEdit = (flight: Flight) => {
+    const handleEdit = async (flight: Flight) => {
         setEditingFlight(flight);
-        setSelectedDepartureAirport(flight.departureAirportId);
-        setSelectedArrivalAirport(flight.arrivalAirportId);
-        setSelectedPlane(flight.planeId);
-        reset({
-            flightCode: flight.flightCode,
-            departureTime: flight.departureTime.slice(0, 16),
-            arrivalTime: flight.arrivalTime.slice(0, 16),
-            planeId: flight.planeId,
-            departureAirportId: flight.departureAirportId,
-            arrivalAirportId: flight.arrivalAirportId
-        });
+        await loadFlightDetails(flight.flightId!);
         setShowForm(true);
     };
 
     const handleDelete = async (flightId: number) => {
         if (!window.confirm('Are you sure you want to delete this flight?')) return;
-
-        try {
-            await flightService.deleteFlight(flightId);
-            loadData();
-        } catch (err: any) {
-            setError(err.message || 'Failed to delete flight');
-        }
+        await deleteFlight(flightId);
     };
 
     const handleCancel = () => {
         setShowForm(false);
         setEditingFlight(null);
-        setSelectedDepartureAirport('');
-        setSelectedArrivalAirport('');
-        setSelectedPlane('');
+        clearDetails();
+        setFormErrors({});
+        setDetailErrors({});
         reset();
         setError('');
     };
 
-    // Transform data for TypeAhead
-    const airportOptions = airports.map(airport => ({
-        value: airport.airportId!,
-        label: `${airport.cityName} - ${airport.airportName}`,
-        city: airport.cityName,
-        name: airport.airportName
-    }));
+    // Add handler for FlightForm to add flight details
+    const handleAddFlightDetail = () => {
+        addFlightDetail(editingFlight?.flightId || 0);
 
-    const planeOptions = planes.map(plane => ({
-        value: plane.planeId!,
-        label: `${plane.planeCode} - ${plane.planeType}`,
-        code: plane.planeCode,
-        type: plane.planeType
-    }));
+        // Clear any previous errors
+        if (error.includes('Lỗi: Sân bay')) {
+            setError('');
+        }
+        // Also clear form errors but only for flightDetails
+        setDetailErrors(prev => {
+            const { flightDetails, ...rest } = prev;
+            return rest;
+        });
+    };
 
     // TICKET CLASS MANAGEMENT FUNCTIONS
     const loadFlightTicketClasses = async (flightId: number) => {
@@ -362,6 +402,13 @@ const FlightManagement: React.FC = () => {
         setError('');
     };
 
+
+    // Update the handleFlightDetailChange function to move validation to the form
+    const handleFlightDetailChange = (index: number, field: string, value: any) => {
+        // When changing airport, check if it's a duplicate is now handled inside FlightForm
+        updateFlightDetail(index, field, value);
+    };
+
     const availableTicketClasses = selectedFlightForClasses
         ? ticketClasses.filter(
             tc => !flightTicketClasses.some(ftc => ftc.ticketClassId === tc.ticketClassId)
@@ -374,29 +421,31 @@ const FlightManagement: React.FC = () => {
                 <Spinner animation="border" role="status">
                     <span className="visually-hidden">Loading...</span>
                 </Spinner>
-                <p className="mt-3">Loading flight data...</p>
+                <p className="mt-3">Đang tải dữ liệu chuyến bay...</p>
             </Container>
         );
     }
 
     return (
         <Container fluid className="py-4">
+            {/* Header */}
             <Row className="mb-4">
                 <Col>
                     <Card>
                         <Card.Header className="d-flex justify-content-between align-items-center">
-                            <Card.Title className="mb-0">✈️ Flight Management</Card.Title>
+                            <Card.Title className="mb-0">✈️ Quản lý chuyến bay</Card.Title>
                             <Button
                                 variant="primary"
                                 onClick={() => setShowForm(true)}
                             >
-                                Add New Flight
+                                Thêm chuyến bay mới
                             </Button>
                         </Card.Header>
                     </Card>
                 </Col>
             </Row>
 
+            {/* Error display */}
             {error && (
                 <Row className="mb-4">
                     <Col>
@@ -407,162 +456,35 @@ const FlightManagement: React.FC = () => {
                 </Row>
             )}
 
-            {/* Flight Creation/Edit Modal */}
+            {/* Flight Form Modal */}
             <Modal show={showForm} onHide={handleCancel} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>{editingFlight ? 'Edit Flight' : 'Add New Flight'}</Modal.Title>
+                    <Modal.Title>{editingFlight ? 'Sửa chuyến bay' : 'Thêm chuyến bay mới'}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form onSubmit={handleSubmit(onSubmit)}>
-                        <Row className="mb-3">
-                            <Col>
-                                <Form.Group>
-                                    <Form.Label>Flight Code</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        {...register('flightCode', {
-                                            required: 'Flight code is required'
-                                        })}
-                                        isInvalid={!!errors.flightCode}
-                                        placeholder="e.g., FL001"
-                                    />
-                                    <Form.Control.Feedback type="invalid">
-                                        {errors.flightCode?.message}
-                                    </Form.Control.Feedback>
-                                </Form.Group>
-                            </Col>
-
-                            <Col>
-                                <Form.Group>
-                                    <Form.Label>Departure Airport</Form.Label>
-                                    <TypeAhead
-                                        options={airportOptions}
-                                        value={selectedDepartureAirport}
-                                        onChange={(option) => {
-                                            const airportId = option?.value as number || '';
-                                            setSelectedDepartureAirport(airportId);
-                                            setValue('departureAirportId', Number(airportId));
-                                        }}
-                                        placeholder="Search departure airport..."
-                                        error={!!errors.departureAirportId}
-                                    />
-                                    <input
-                                        type="hidden"
-                                        {...register('departureAirportId', {
-                                            required: 'Departure airport is required',
-                                            valueAsNumber: true
-                                        })}
-                                    />
-                                    {errors.departureAirportId && (
-                                        <div className="text-danger small mt-1">{errors.departureAirportId.message}</div>
-                                    )}
-                                </Form.Group>
-                            </Col>
-
-                            <Col>
-                                <Form.Group>
-                                    <Form.Label>Arrival Airport</Form.Label>
-                                    <TypeAhead
-                                        options={airportOptions}
-                                        value={selectedArrivalAirport}
-                                        onChange={(option) => {
-                                            const airportId = option?.value as number || '';
-                                            setSelectedArrivalAirport(airportId);
-                                            setValue('arrivalAirportId', Number(airportId));
-                                        }}
-                                        placeholder="Search arrival airport..."
-                                        error={!!errors.arrivalAirportId}
-                                    />
-                                    <input
-                                        type="hidden"
-                                        {...register('arrivalAirportId', {
-                                            required: 'Arrival airport is required',
-                                            valueAsNumber: true
-                                        })}
-                                    />
-                                    {errors.arrivalAirportId && (
-                                        <div className="text-danger small mt-1">{errors.arrivalAirportId.message}</div>
-                                    )}
-                                </Form.Group>
-                            </Col>
-                        </Row>
-
-                        <Row className="mb-3">
-                            <Col>
-                                <Form.Group>
-                                    <Form.Label>Departure Time</Form.Label>
-                                    <Form.Control
-                                        type="datetime-local"
-                                        {...register('departureTime', {
-                                            required: 'Departure time is required'
-                                        })}
-                                        isInvalid={!!errors.departureTime}
-                                    />
-                                    <Form.Control.Feedback type="invalid">
-                                        {errors.departureTime?.message}
-                                    </Form.Control.Feedback>
-                                </Form.Group>
-                            </Col>
-
-                            <Col>
-                                <Form.Group>
-                                    <Form.Label>Arrival Time</Form.Label>
-                                    <Form.Control
-                                        type="datetime-local"
-                                        {...register('arrivalTime', {
-                                            required: 'Arrival time is required'
-                                        })}
-                                        isInvalid={!!errors.arrivalTime}
-                                    />
-                                    <Form.Control.Feedback type="invalid">
-                                        {errors.arrivalTime?.message}
-                                    </Form.Control.Feedback>
-                                </Form.Group>
-                            </Col>
-                        </Row>
-
-                        <Row className="mb-3">
-                            <Col>
-                                <Form.Group>
-                                    <Form.Label>Aircraft</Form.Label>
-                                    <TypeAhead
-                                        options={planeOptions}
-                                        value={selectedPlane}
-                                        onChange={(option) => {
-                                            const planeId = option?.value as number || '';
-                                            setSelectedPlane(planeId);
-                                            setValue('planeId', Number(planeId));
-                                        }}
-                                        placeholder="Search aircraft..."
-                                        error={!!errors.planeId}
-                                    />
-                                    <input
-                                        type="hidden"
-                                        {...register('planeId', {
-                                            required: 'Aircraft is required',
-                                            valueAsNumber: true
-                                        })}
-                                    />
-                                    {errors.planeId && (
-                                        <div className="text-danger small mt-1">{errors.planeId.message}</div>
-                                    )}
-                                </Form.Group>
-                            </Col>
-                        </Row>
-
-                        <Row className="mb-3">
-                            <Col>
-                                <Button variant="secondary" onClick={handleCancel} className="w-100">
-                                    Cancel
-                                </Button>
-                            </Col>
-                            <Col>
-                                <Button variant="primary" onClick={handleSubmit(onSubmit)} className="w-100">
-                                    {editingFlight ? 'Update Flight' : 'Create Flight'}
-                                </Button>
-                            </Col>
-                        </Row>
-                    </Form>
+                    {/* Add a specific alert for API errors */}
+                    {error && error.includes('sân bay') && (
+                        <Alert variant="danger" className="mb-3">
+                            <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                            {error}
+                        </Alert>
+                    )}
+                    <FlightForm
+                        editingFlight={editingFlight}
+                        airports={airports}
+                        planes={planes}
+                        flightDetails={flightDetails}
+                        formErrors={formErrors}
+                        detailErrors={detailErrors}
+                        setFormErrors={setFormErrors}
+                        setDetailErrors={setDetailErrors}
+                        onSubmit={handleSubmit}
+                        onCancel={handleCancel}
+                        onFlightDetailChange={handleFlightDetailChange}
+                        onAddFlightDetail={handleAddFlightDetail}
+                        onRemoveFlightDetail={removeFlightDetail}
+                        parameters={parameters}
+                    />
                 </Modal.Body>
             </Modal>
 
@@ -575,19 +497,19 @@ const FlightManagement: React.FC = () => {
             >
                 <Modal.Header closeButton>
                     <Modal.Title>
-                        Ticket Classes for Flight {selectedFlightForClasses?.flightCode}
+                        Hạng vé cho chuyến bay {selectedFlightForClasses?.flightCode}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Row className="align-items-center mb-3">
                         <Col>
                             <h5 className="mb-0">
-                                Route: {selectedFlightForClasses?.departureCityName} → {selectedFlightForClasses?.arrivalCityName}
+                                Tuyến bay: {selectedFlightForClasses?.departureCityName} → {selectedFlightForClasses?.arrivalCityName}
                             </h5>
                             <p className="text-muted">
-                                Aircraft: {selectedFlightForClasses?.planeCode}
+                                Máy bay: {selectedFlightForClasses?.planeCode}
                                 {planes.find(p => p.planeId === selectedFlightForClasses?.planeId)?.seatQuantity &&
-                                    ` (${planes.find(p => p.planeId === selectedFlightForClasses?.planeId)?.seatQuantity} seats)`
+                                    ` (${planes.find(p => p.planeId === selectedFlightForClasses?.planeId)?.seatQuantity} ghế)`
                                 }
                             </p>
                         </Col>
@@ -598,7 +520,7 @@ const FlightManagement: React.FC = () => {
                                     onClick={() => setShowCreateForm(true)}
                                 >
                                     <i className="bi bi-plus-circle me-2"></i>
-                                    Add Ticket Class
+                                    Thêm hạng vé
                                 </Button>
                             )}
                         </Col>
@@ -615,7 +537,7 @@ const FlightManagement: React.FC = () => {
                     {modifiedTicketClasses.size > 0 && (
                         <Alert variant="warning" className="mb-3">
                             <i className="bi bi-info-circle-fill me-2"></i>
-                            You have {modifiedTicketClasses.size} unsaved changes. Click "Save Changes" to apply them.
+                            Bạn có {modifiedTicketClasses.size} thay đổi chưa lưu. Nhấn "Lưu thay đổi" để áp dụng.
                         </Alert>
                     )}
 
@@ -658,14 +580,14 @@ const FlightManagement: React.FC = () => {
 
                     {flightTicketClasses.length === 0 && (
                         <Alert variant="info" className="text-center">
-                            <Alert.Heading>No Ticket Classes Assigned</Alert.Heading>
-                            <p className="mb-0">Add ticket classes to enable booking for this flight.</p>
+                            <Alert.Heading>Chưa có hạng vé nào</Alert.Heading>
+                            <p className="mb-0">Thêm hạng vé để cho phép đặt chỗ cho chuyến bay này.</p>
                         </Alert>
                     )}
                 </Modal.Body>
                 <Modal.Footer className="d-flex justify-content-between">
                     <Button variant="secondary" onClick={handleCancelTicketClasses}>
-                        Close
+                        Đóng
                     </Button>
                     <Button
                         variant="success"
@@ -673,7 +595,7 @@ const FlightManagement: React.FC = () => {
                         disabled={modifiedTicketClasses.size === 0}
                     >
                         <i className="bi bi-save me-2"></i>
-                        Save Changes
+                        Lưu thay đổi
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -683,23 +605,23 @@ const FlightManagement: React.FC = () => {
                 <Col>
                     <Card>
                         <Card.Header>
-                            <Card.Title className="mb-0">All Flights</Card.Title>
+                            <Card.Title className="mb-0">Tất cả chuyến bay</Card.Title>
                         </Card.Header>
                         <Card.Body className="p-0">
                             {flights.length === 0 ? (
                                 <div className="text-center py-5">
-                                    <p className="text-muted mb-0">No flights found. Add your first flight to get started.</p>
+                                    <p className="text-muted mb-0">Không tìm thấy chuyến bay nào. Thêm chuyến bay đầu tiên để bắt đầu.</p>
                                 </div>
                             ) : (
                                 <Table responsive striped hover>
                                     <thead>
                                         <tr>
-                                            <th>Flight Code</th>
-                                            <th>Route</th>
-                                            <th>Departure</th>
-                                            <th>Arrival</th>
-                                            <th>Aircraft</th>
-                                            <th>Actions</th>
+                                            <th>Mã chuyến bay</th>
+                                            <th>Tuyến bay</th>
+                                            <th>Khởi hành</th>
+                                            <th>Đến</th>
+                                            <th>Máy bay</th>
+                                            <th>Thao tác</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -727,14 +649,14 @@ const FlightManagement: React.FC = () => {
                                                         className="me-2"
                                                         onClick={() => handleManageTicketClasses(flight)}
                                                     >
-                                                        Manage Classes
+                                                        Quản lý hạng vé
                                                     </Button>
                                                     <Button
                                                         size="sm"
                                                         variant="outline-danger"
                                                         onClick={() => handleDelete(flight.flightId!)}
                                                     >
-                                                        Delete
+                                                        Xóa
                                                     </Button>
                                                 </td>
                                             </tr>
@@ -807,7 +729,7 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
     return (
         <Card className="mb-4">
             <Card.Header>
-                <Card.Title as="h4" className="mb-0">Add Ticket Class</Card.Title>
+                <Card.Title as="h4" className="mb-0">Thêm hạng vé</Card.Title>
             </Card.Header>
             <Card.Body>
                 {formErrors && (
@@ -820,21 +742,21 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
                     <Row className="g-3">
                         <Col md={4}>
                             <Form.Group>
-                                <Form.Label>Ticket Class</Form.Label>
+                                <Form.Label>Hạng vé</Form.Label>
                                 <TypeAhead
                                     options={ticketClassOptions}
                                     value={selectedTicketClass}
                                     onChange={(option) => {
                                         setSelectedTicketClass(option?.value as number || '');
                                     }}
-                                    placeholder="Search ticket class..."
+                                    placeholder="Tìm hạng vé..."
                                 />
                             </Form.Group>
                         </Col>
 
                         <Col md={4}>
                             <Form.Group>
-                                <Form.Label>Number of Seats</Form.Label>
+                                <Form.Label>Số lượng ghế</Form.Label>
                                 <Form.Control
                                     type="number"
                                     min="1"
@@ -842,14 +764,14 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
                                     onChange={(e) => setFormData(prev => ({ ...prev, ticketQuantity: e.target.value }))
                                     }
                                     required
-                                    placeholder="e.g., 100"
+                                    placeholder="vd: 100"
                                 />
                             </Form.Group>
                         </Col>
 
                         <Col md={4}>
                             <Form.Group>
-                                <Form.Label>Price per Ticket</Form.Label>
+                                <Form.Label>Giá vé</Form.Label>
                                 <InputGroup>
                                     <Form.Control
                                         className='me-0'
@@ -860,7 +782,7 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
                                         onChange={(e) => setFormData(prev => ({ ...prev, specifiedFare: e.target.value }))
                                         }
                                         required
-                                        placeholder="e.g., 1500000"
+                                        placeholder="vd: 1500000"
                                     />
                                     <InputGroup.Text>VND</InputGroup.Text>
                                 </InputGroup>
@@ -870,10 +792,10 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
 
                     <div className="d-flex gap-2 mt-3">
                         <Button type="button" variant="secondary" onClick={onCancel}>
-                            Cancel
+                            Hủy
                         </Button>
                         <Button type="submit" variant="primary">
-                            Add Class
+                            Thêm hạng vé
                         </Button>
                     </div>
                 </Form>
@@ -1004,7 +926,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                     <Row className="g-3">
                         <Col sm={6}>
                             <Form.Group>
-                                <Form.Label>Total Seats</Form.Label>
+                                <Form.Label>Tổng số ghế</Form.Label>
                                 <Form.Control
                                     type="number"
                                     value={editData.ticketQuantity}
@@ -1016,14 +938,14 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                                 />
                                 {soldSeats > 0 && (
                                     <div className="text-muted small">
-                                        Minimum: {soldSeats} (sold tickets)
+                                        Tối thiểu: {soldSeats} (vé đã bán)
                                     </div>
                                 )}
                             </Form.Group>
                         </Col>
                         <Col sm={6}>
                             <Form.Group>
-                                <Form.Label>Price per Ticket</Form.Label>
+                                <Form.Label>Giá vé</Form.Label>
                                 <InputGroup>
                                     <Form.Control
                                         type="number"
@@ -1041,7 +963,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                         </Col>
                         <Col xs={12}>
                             <Form.Group>
-                                <Form.Label>Remaining Seats</Form.Label>
+                                <Form.Label>Số ghế còn lại</Form.Label>
                                 <Form.Control
                                     type="number"
                                     value={editData.remainingTicketQuantity}
@@ -1057,7 +979,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                                     {validationError}
                                 </Form.Control.Feedback>
                                 <div className="text-muted small">
-                                    Sold tickets: {soldSeats}
+                                    Vé đã bán: {soldSeats}
                                 </div>
                             </Form.Group>
                         </Col>
@@ -1067,7 +989,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                         <Row className="g-2 mb-3">
                             <Col xs={6}>
                                 <div className="d-flex justify-content-between">
-                                    <span className="text-muted">Total Seats:</span>
+                                    <span className="text-muted">Tổng số ghế:</span>
                                     <span>
                                         <strong>{association.ticketQuantity}</strong>
                                         {isModified && modifiedTicketClasses.get(association.ticketClassId!)?.ticketQuantity !== undefined && (
@@ -1080,7 +1002,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                             </Col>
                             <Col xs={6}>
                                 <div className="d-flex justify-content-between">
-                                    <span className="text-muted">Remaining:</span>
+                                    <span className="text-muted">Còn lại:</span>
                                     <span>
                                         <strong>{association.remainingTicketQuantity}</strong>
                                         {isModified && modifiedTicketClasses.get(association.ticketClassId!)?.remainingTicketQuantity !== undefined && (
@@ -1093,7 +1015,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                             </Col>
                             <Col xs={6}>
                                 <div className="d-flex justify-content-between">
-                                    <span className="text-muted">Price:</span>
+                                    <span className="text-muted">Giá vé:</span>
                                     <span>
                                         <strong>{association.specifiedFare?.toLocaleString()} VND</strong>
                                         {isModified && modifiedTicketClasses.get(association.ticketClassId!)?.specifiedFare !== undefined && (
@@ -1106,7 +1028,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                             </Col>
                             <Col xs={6}>
                                 <div className="d-flex justify-content-between">
-                                    <span className="text-muted">Sold:</span>
+                                    <span className="text-muted">Đã bán:</span>
                                     <strong>{soldSeats}</strong>
                                 </div>
                             </Col>
@@ -1115,7 +1037,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                         <Row className="mb-2">
                             <Col xs={12}>
                                 <div className="d-flex justify-content-between align-items-center mb-2">
-                                    <span className="text-muted">Occupancy:</span>
+                                    <span className="text-muted">Tỷ lệ lấp đầy:</span>
                                     <Badge bg="secondary">{occupancyRate}%</Badge>
                                 </div>
                                 <div className="progress" style={{ height: '8px' }}>
@@ -1144,7 +1066,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                         <Col xs={12} className="text-center py-2">
                             <small className="text-muted">
                                 <i className="bi bi-info-circle me-1"></i>
-                                Changes not yet saved. Click <i className="bi bi-arrow-counterclockwise"></i> to undo.
+                                Thay đổi chưa được lưu. Nhấn <i className="bi bi-arrow-counterclockwise"></i> để hoàn tác.
                             </small>
                         </Col>
                     </Row>

@@ -11,6 +11,7 @@ interface TypeAheadProps {
   options: Option[];
   value?: string | number;
   onChange: (option: Option | null) => void;
+  onInputChange?: (text: string) => void; // Add this prop to support free text input
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -19,12 +20,14 @@ interface TypeAheadProps {
   noOptionsMessage?: string;
   allowClear?: boolean;
   error?: boolean;
+  allowNew?: boolean; // Add support for adding new values
 }
 
 const TypeAhead: React.FC<TypeAheadProps> = ({
   options,
   value,
   onChange,
+  onInputChange,
   placeholder = "Search...",
   disabled = false,
   className = "",
@@ -32,7 +35,8 @@ const TypeAhead: React.FC<TypeAheadProps> = ({
   displayProperty = "label",
   noOptionsMessage = "No options found",
   allowClear = true,
-  error = false
+  error = false,
+  allowNew = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -90,6 +94,18 @@ const TypeAhead: React.FC<TypeAheadProps> = ({
     if (term === '' && allowClear) {
       onChange(null);
     }
+
+    // Call the onInputChange prop if provided
+    if (onInputChange) {
+      onInputChange(term);
+    }
+    
+    // Open dropdown when typing
+    if (term.trim().length > 0) {
+      setIsOpen(true);
+    } else {
+      setIsOpen(false);
+    }
   };
 
   const handleOptionClick = (option: Option) => {
@@ -124,6 +140,12 @@ const TypeAhead: React.FC<TypeAheadProps> = ({
         e.preventDefault();
         if (highlightedIndex >= 0 && filteredOptions[highlightedIndex]) {
           handleOptionClick(filteredOptions[highlightedIndex]);
+        } else if (allowNew && searchTerm) {
+          // If no matching option but allowNew is true, keep the text value
+          const customOption = { value: searchTerm, label: searchTerm };
+          onChange(customOption);
+          setSearchTerm('');
+          setIsOpen(false);
         }
         break;
       case 'Escape':

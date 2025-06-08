@@ -37,6 +37,8 @@ const PlaneManagement: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('');
     const [selectedPlaneType, setSelectedPlaneType] = useState<string>('');
+    // Add this state to track user text input
+    const [typeInputText, setTypeInputText] = useState('');
 
     const {
         register,
@@ -125,19 +127,10 @@ const PlaneManagement: React.FC = () => {
         setError('');
     };
 
-    const handlePlaneTypeChange = (option: any) => {
-        const planeType = option?.value || '';
-        setSelectedPlaneType(planeType);
-        // Update form value
-        if (planeType) {
-            register('planeType').onChange({ target: { value: planeType } });
-        }
-    };
-
     // Filter planes based on search term and type
     const filteredPlanes = planes.filter(plane => {
         const matchesSearch = plane.planeCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             plane.planeType.toLowerCase().includes(searchTerm.toLowerCase());
+            plane.planeType.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesType = !filterType || plane.planeType.toLowerCase().includes(filterType.toLowerCase());
         return matchesSearch && matchesType;
     });
@@ -273,23 +266,20 @@ const PlaneManagement: React.FC = () => {
                             <Col md={8}>
                                 <Form.Group>
                                     <Form.Label>Aircraft Type</Form.Label>
-                                    <TypeAhead
-                                        options={aircraftTypeOptions}
-                                        value={selectedPlaneType}
-                                        onChange={handlePlaneTypeChange}
-                                        placeholder="Search aircraft type..."
-                                        error={!!errors.planeType}
-                                    />
-                                    <input
-                                        type="hidden"
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Enter aircraft type..."
+                                        isInvalid={!!errors.planeType}
                                         {...register('planeType', {
                                             required: 'Aircraft type is required'
                                         })}
-                                        value={selectedPlaneType}
                                     />
-                                    {errors.planeType && (
-                                        <div className="text-danger small mt-1">{errors.planeType.message}</div>
-                                    )}
+                                    <Form.Text className="text-muted">
+                                        Common types: {aircraftTypeOptions.slice(0, 3).map(type => type.value).join(', ')}, etc.
+                                    </Form.Text>
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.planeType?.message}
+                                    </Form.Control.Feedback>
                                 </Form.Group>
                             </Col>
                             <Col md={4}>
@@ -339,8 +329,8 @@ const PlaneManagement: React.FC = () => {
                         <Card>
                             <Card.Body className="text-center py-5">
                                 <p className="text-muted mb-0">
-                                    {searchTerm || filterType ? 
-                                        'No aircraft found matching your search criteria.' : 
+                                    {searchTerm || filterType ?
+                                        'No aircraft found matching your search criteria.' :
                                         'No aircraft in the fleet. Add your first aircraft to get started.'
                                     }
                                 </p>
@@ -373,7 +363,7 @@ const PlaneManagement: React.FC = () => {
                                 </Card.Header>
                                 <Card.Body>
                                     <Card.Title className="text-center mb-3">{plane.planeType}</Card.Title>
-                                    
+
                                     <Row className="mb-3">
                                         <Col xs={6}>
                                             <strong>Total Seats:</strong>
@@ -382,16 +372,16 @@ const PlaneManagement: React.FC = () => {
                                             <Badge bg="info">{plane.seatQuantity}</Badge>
                                         </Col>
                                     </Row>
-                                    
+
                                     <Row className="mb-3">
                                         <Col xs={6}>
                                             <strong>Category:</strong>
                                         </Col>
                                         <Col xs={6} className="text-end">
                                             <Badge bg="secondary">
-                                                {plane.seatQuantity < 100 ? 'Regional' : 
-                                                 plane.seatQuantity < 200 ? 'Narrow-body' : 
-                                                 plane.seatQuantity < 350 ? 'Wide-body' : 'Large Wide-body'}
+                                                {plane.seatQuantity < 100 ? 'Regional' :
+                                                    plane.seatQuantity < 200 ? 'Narrow-body' :
+                                                        plane.seatQuantity < 350 ? 'Wide-body' : 'Large Wide-body'}
                                             </Badge>
                                         </Col>
                                     </Row>

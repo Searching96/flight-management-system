@@ -22,7 +22,7 @@ public class FlightDetailController {
         return ResponseEntity.ok(flightDetails);
     }
     
-    @PostMapping
+    @PostMapping("/")
     public ResponseEntity<FlightDetailDto> createFlightDetail(@RequestBody FlightDetailDto flightDetailDto) {
         FlightDetailDto createdFlightDetail = flightDetailService.createFlightDetail(flightDetailDto);
         return new ResponseEntity<>(createdFlightDetail, HttpStatus.CREATED);

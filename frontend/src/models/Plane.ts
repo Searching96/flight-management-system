@@ -15,15 +15,6 @@ export interface Plane {
   seatQuantity: number;
 }
 
-// Keep legacy interface for backward compatibility
-export interface PlaneModel {
-  planeId?: number;
-  planeCode: string;
-  planeModel: string;
-  manufacturer?: string;
-  capacity?: number;
-}
-
 export interface PlaneUtilization extends Plane {
   totalFlights?: number;
   upcomingFlights?: number;

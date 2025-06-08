@@ -1,9 +1,9 @@
 import { apiClient } from './api';
-import { 
-  FlightDetail, 
-  SeatAvailability, 
-  BookSeatRequest, 
-  SeatMap 
+import {
+  FlightDetail,
+  SeatAvailability,
+  BookSeatRequest,
+  SeatMap
 } from '../models';
 
 import { API_URL } from './config';
@@ -54,12 +54,12 @@ export class FlightDetailService {
     return apiClient.get(`${this.baseUrl}/passenger/${passengerId}`);
   }
 
-  async createFlightDetails(flightId: number): Promise<FlightDetail[]> {
-    return apiClient.post(`${this.baseUrl}/generate`, { flightId });
+  async createFlightDetails(flightDetail: FlightDetail): Promise<FlightDetail[]> {
+    return apiClient.post(`${this.baseUrl}/`, flightDetail);
   }
 
-  async updateFlightDetail(id: number, updateData: Partial<FlightDetail>): Promise<FlightDetail> {
-    return apiClient.put(`${this.baseUrl}/${id}`, updateData);
+  async updateFlightDetail(flightId: number, currentMediumAirportId: number, updateData: Partial<FlightDetail>): Promise<FlightDetail> {
+    return apiClient.put(`${this.baseUrl}/${flightId}/${currentMediumAirportId}`, updateData);
   }
 
   async deleteFlightDetail(id: number): Promise<void> {

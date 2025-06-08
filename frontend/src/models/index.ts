@@ -5,8 +5,15 @@ export type { Account, LoginRequest, LoginResponse, RegisterRequest } from './Ac
 
 // Flight related
 export type { Flight, FlightSearch, FlightRequest } from './Flight';
-export type { FlightDetail, SeatAvailability, BookSeatRequest, SeatMap } from './FlightDetail';
-export type { FlightTicketClass, FlightTicketClassRequest, UpdateFlightTicketClassRequest } from './FlightTicketClass';
+export type { FlightDetail } from './FlightDetail';
+export type {
+  FlightTicketClass,
+  FlightTicketClassRequest,
+  UpdateFlightTicketClassRequest,
+  SeatAvailability,
+  BookSeatRequest,
+  SeatMap
+} from './FlightTicketClass';
 
 // Airport related
 export type { Airport } from './Airport';
@@ -17,14 +24,14 @@ export type { Ticket, TicketRequest, BookingRequest } from './Ticket';
 
 // User related
 export type { Customer } from './Customer';
-export type { 
-  Employee, 
-  CreateEmployeeRequest, 
-  UpdateEmployeeRequest, 
-  EmployeeLoginRequest, 
-  EmployeeLoginResponse, 
-  ChangePasswordRequest, 
-  EmployeeSearchFilters 
+export type {
+  Employee,
+  CreateEmployeeRequest,
+  UpdateEmployeeRequest,
+  EmployeeLoginRequest,
+  EmployeeLoginResponse,
+  ChangePasswordRequest,
+  EmployeeSearchFilters
 } from './Employee';
 
 // Chat related
@@ -34,7 +41,7 @@ export type { Chatbox, Message, SendMessageRequest } from './Chat';
 export type { Plane } from './Plane';
 
 // Passenger related
-export type { Passenger, CreatePassengerRequest, UpdatePassengerRequest} from './Passenger';
+export type { Passenger, CreatePassengerRequest, UpdatePassengerRequest } from './Passenger';
 
 // System related
 export type { Parameter } from './Parameter';
