@@ -19,6 +19,7 @@ export class TicketService {
   async getTicketsByFlightId(flightId: number): Promise<Ticket[]> {
     return apiClient.get(`${this.baseUrl}/flight/${flightId}`);
   }
+
   async bookTickets(booking: BookingRequest): Promise<Ticket[]> {
     // Transform passenger data format to match backend expectations
     const transformedBooking = {
@@ -65,6 +66,28 @@ export class TicketService {
   async countAllTickets(): Promise<number> {
     const tickets = await this.getAllTickets();
     return tickets.length;
+  }
+
+  transformTicketData(ticket: {
+    // Optional for new tickets
+    flightId: number;
+    ticketClassId: number;
+    bookCustomerId: number | null; // Optional for frequent flyers
+    passengerId: number;
+    seatNumber: string;
+    fare: number;
+    paymentTime?: string; // Optional for paid tickets
+  }): TicketRequest {
+    return {
+      //ticketId: ticket.ticketId, // Optional for new tickets
+      flightId: ticket.flightId,
+      ticketClassId: ticket.ticketClassId,
+      bookCustomerId: ticket.bookCustomerId || null,
+      passengerId: ticket.passengerId,
+      seatNumber: ticket.seatNumber,
+      fare: ticket.fare,
+      paymentTime: ticket.paymentTime
+    };
   }
 }
 

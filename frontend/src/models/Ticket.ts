@@ -1,13 +1,10 @@
 export interface Ticket {
   ticketId?: number;
   flightId?: number;
-  flightCode?: string;
   ticketClassId?: number;
-  ticketClassName?: string;
   bookCustomerId?: number | null; // Optional - only for frequent flyers program
   passengerId?: number;
-  passengerName?: string;
-  seatNumber: string;
+  seatNumber?: string;
   ticketStatus?: number; // 1: paid, 2: unpaid, 3: canceled
   paymentTime?: string;
   fare?: number;
@@ -16,14 +13,16 @@ export interface Ticket {
 export interface TicketRequest {
   flightId: number;
   ticketClassId: number;
+  bookCustomerId: number | null;
   passengerId: number;
   seatNumber: string;
-  bookCustomerId?: number | null; // Optional - only for frequent flyers program
+  fare: number;
+  paymentTime?: string; // Optional - only for paid tickets
 }
 
 export interface BookingRequest {
   flightId: number;
-  customerId?: number | null; // Optional - only for frequent flyers program
+  customerId: number; // Required - only for frequent flyers program
   ticketClassId: number;
   passengers: {
     firstName: string;

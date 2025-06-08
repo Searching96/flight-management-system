@@ -4,7 +4,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
 import { flightService, ticketService, passengerService, bookingConfirmationService, flightTicketClassService } from '../../services';
-import { Flight } from '../../models';
+import { Flight, TicketRequest } from '../../models';
 import TypeAhead from '../common/TypeAhead';
 
 interface BookingFormData {
@@ -218,18 +218,30 @@ const BookingForm: React.FC = () => {
 
       const confirmationCode = bookingConfirmationService.generateConfirmationCode();
       // Create confirmation data compatible with BookingConfirmation interface
-      const ticketCount = await ticketService.countAllTickets();
-      const tickets = data.passengers.map((_, index) => ({
-        ticketId: ticketCount + 1 + index,
+      //const ticketCount = await ticketService.countAllTickets();
+      // Convert to TicketRequest format
+      const tickets = data.passengers.map((passenger, index) => ({
+        //ticketId: ticketCount + index + 1, // Generate new ticket ID
         flightId: Number(flightId),
-        bookCustomerId: user!.accountId! ?? null,
-        passengerId: data.passengers[index].passengerId, // Use citizenId as passengerId for guest bookings
         ticketClassId: data.ticketClassId,
+        bookCustomerId: user?.accountType === 1 && user.accountId !== undefined ? user.accountId : null, // Ensure never undefined
+        passengerId: passenger.passengerId,
         seatNumber: seatNumbers[index],
-        fare: selectedClass?.specifiedFare || 0
+        fare: selectedClass?.specifiedFare || 0,
       }));
 
       console.log("Tickets to be confirmed:", tickets);
+      
+      for (const ticket of tickets) {
+        try {
+          const newTicket = ticketService.transformTicketData(ticket);
+          await ticketService.createTicket(newTicket);
+          console.log("Ticket created:", newTicket);
+        } catch (err: any) {
+          console.error("Error creating ticket:", err);
+          return;
+        }
+      }
 
       const confirmationData = bookingConfirmationService.createConfirmation(
         tickets,
