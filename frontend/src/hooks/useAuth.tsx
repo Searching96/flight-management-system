@@ -27,43 +27,26 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<Account | null>(null);
   const [loading, setLoading] = useState(true);
-  // Store the access token in memory instead of localStorage
-  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuthStatus();
   }, []);
 
-  // Function to get the access token for API calls
-  // const getAccessToken = () => accessToken;
-
   const checkAuthStatus = async () => {
     try {
       // Check for stored user account first
-      const storedUser = sessionStorage.getItem('userAccount');
+      const storedUser = localStorage.getItem('userAccount');
       if (storedUser) {
         const userData = JSON.parse(storedUser);
         setUser(userData);
-        
-        // // Try to refresh the token if we have stored user data
-        // try {
-        //   const refreshResult = await accountService.refreshToken();
-        //   if (refreshResult?.token) {
-        //     setAccessToken(refreshResult.token);
-        //   }
-        // } catch (refreshError) {
-        //   // If refresh fails, clear user data and require re-login
-        //   sessionStorage.removeItem('userAccount');
-        //   setUser(null);
-        // }
       }
     } catch (error) {
-      sessionStorage.removeItem('userAccount');
-      setUser(null);
+      localStorage.removeItem('userAccount');
     } finally {
       setLoading(false);
     }
   };
+  
   const login = async (loginRequest: LoginRequest) => {
     try {
       setLoading(true);
@@ -79,14 +62,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       setUser(userAccount);
       
-      // Store token in memory instead of localStorage
-      if (response.token) {
-        setAccessToken(response.token);
-      }
-      
-      // Store minimal user information in sessionStorage instead of localStorage
-      // (sessionStorage is cleared when the tab is closed)
-      sessionStorage.setItem('userAccount', JSON.stringify(userAccount));
+      // Store user info (simplified - no tokens)
+      localStorage.setItem('userAccount', JSON.stringify(userAccount));
     } catch (error) {
       throw error;
     } finally {
@@ -101,15 +78,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async () => {
     try {
       // Call logout endpoint if we have a token
-      if (accessToken) {
+      // if (accessToken) {
         await logout();
-      }
+      // }
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
       // Clear memory and storage regardless of API result
-      sessionStorage.removeItem('userAccount');
-      setAccessToken(null);
+      localStorage.removeItem('userAccount');
+      // setAccessToken(null);
       setUser(null);
     }
   };
@@ -120,7 +97,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
-    // getAccessToken  // Add this function to the context
   };
 
   return (
@@ -130,7 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   );
 };
 
-// Fix permission checking to match database schema
+// Simplified permission checking to only use accountType
 export const usePermissions = () => {
   const { user } = useAuth();
   

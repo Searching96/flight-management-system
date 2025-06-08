@@ -20,7 +20,7 @@ const ApiContextBridge: React.FC<{ children: React.ReactNode }> = ({ children })
   const auth = useAuth();
   
   useEffect(() => {
-    // Provide the auth context to the API client once it's available
+    // Provide the auth context to the API client
     apiClient.setAuthContext(auth);
   }, [auth]);
   

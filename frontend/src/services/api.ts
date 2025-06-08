@@ -4,45 +4,43 @@ import { DOMAIN_URL_DEFAULT } from './config';
 class ApiClient {
   private baseUrl = `${DOMAIN_URL_DEFAULT}/api`;
   private client: AxiosInstance;
-  private authContext: any = null;
+  private authContext: any;
 
   constructor() {
     this.client = axios.create({
       baseURL: this.baseUrl,
-      withCredentials: true, // Enable cookies for all requests
+      withCredentials: true, // For session cookies
     });
 
     this.setupInterceptors();
   }
 
-  // Set the auth context after the app is initialized
-  setAuthContext(context: any) {
-    this.authContext = context;
-  }
-
   setupInterceptors() {
-    // Request interceptor - Add auth token to requests
+    // Request interceptor - simplified to just include credentials
     this.client.interceptors.request.use(
       (config) => {
-        // Get token from authContext instead of localStorage
-        const token = this.authContext?.getAccessToken?.() || null;
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        // Get user info from localStorage (simplified approach)
+        const userAccount = localStorage.getItem('userAccount');
+
+        if (userAccount) {
+          // Just for development - add user type as a header
+          const user = JSON.parse(userAccount);
+          config.headers['X-User-Type'] = user.accountType === 1 ? 'CUSTOMER' : 'EMPLOYEE';
         }
+
+        // Ensure CORS headers are properly handled
+        config.withCredentials = true;
+
         return config;
       },
       (error) => Promise.reject(error)
     );
 
-    // Response interceptor
+    // Response interceptor - simplified error handling
     this.client.interceptors.response.use(
       (response: AxiosResponse) => response.data,
       (error) => {
         console.error('API Error:', error.response?.data || error.message);
-        if (error.response?.status === 401) {
-          localStorage.removeItem('authToken');
-          window.location.href = '/login';
-        }
         return Promise.reject(error);
       }
     );
@@ -66,6 +64,10 @@ class ApiClient {
 
   async delete<T = any>(url: string, config?: any): Promise<T> {
     return this.client.delete(url, config);
+  }
+
+  setAuthContext(authContext: any) {
+    this.authContext = authContext;
   }
 }
 

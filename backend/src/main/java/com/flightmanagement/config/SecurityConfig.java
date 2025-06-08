@@ -14,6 +14,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableWebSecurity
@@ -24,7 +25,8 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-      @Bean
+    
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
@@ -32,9 +34,10 @@ public class SecurityConfig {
             "http://localhost:5173", 
             "http://localhost:4173"
         ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization", "X-Requested-With"));
-        configuration.setAllowCredentials(false);
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization", "X-Requested-With", "X-User-Type"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -44,6 +47,7 @@ public class SecurityConfig {
     
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // Disable JWT auth filter and use simplified security for development
         http.csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .headers(headers -> headers
@@ -52,18 +56,35 @@ public class SecurityConfig {
                 .httpStrictTransportSecurity(hstsConfig -> hstsConfig
                     .maxAgeInSeconds(31536000)
                     .includeSubDomains(true)))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // Use stateful sessions instead of JWT tokens
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+            // Define endpoints by user type rather than JWT validation
             .authorizeHttpRequests(auth -> auth
+                // Explicitly allow OPTIONS requests for preflight
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                
+                // Public endpoints
                 .requestMatchers("/api/accounts/login", "/api/accounts/register").permitAll()
-                .requestMatchers("/api/flights/**", "/api/airports/**", "/api/ticket-classes/**").permitAll()
-                .requestMatchers("/api/planes/**", "/api/passengers/**", "/api/tickets/**").permitAll()
-                .requestMatchers("/api/chatboxes/**", "/api/messages/**").permitAll()
-                .requestMatchers("/api/customers/**", "/api/employees/**").permitAll()
-                .requestMatchers("/api/flight-details/**", "/api/flight-ticket-classes/**").permitAll()
-                .requestMatchers("/actuator/health").permitAll()
-                .requestMatchers("/api/parameters/**").permitAll() // Allow for demo
-                .anyRequest().permitAll() // Permit all for demonstration
-            );
+                .requestMatchers("/api/flights/public/**", "/api/airports/**", "/api/ticket-classes/**").permitAll()
+                
+                // Customer-only endpoints
+                .requestMatchers("/api/customers/**").hasRole("CUSTOMER")
+                .requestMatchers("/api/tickets/customer/**").hasRole("CUSTOMER")
+                .requestMatchers("/api/bookings/customer/**").hasRole("CUSTOMER")
+                
+                // Admin/employee endpoints
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/employees/**").hasRole("EMPLOYEE")
+                .requestMatchers("/api/flights/manage/**").hasAnyRole("ADMIN", "EMPLOYEE")
+                
+                // For development only - permit all other requests
+                .anyRequest().permitAll()
+            )
+            // Use HTTP Basic or Form Login instead of JWT
+            .httpBasic(basic -> {});
+        
+        // Remove the JWT filter from the chain
+        // .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
     }
