@@ -13,4 +13,5 @@ public interface FlightTicketClassService {
     void deleteFlightTicketClass(Integer flightId, Integer ticketClassId);
     void updateRemainingTickets(Integer flightId, Integer ticketClassId, Integer quantity);
     List<FlightTicketClassDto> getAvailableFlightTicketClasses();
+    Integer calculateOccupiedSeatsByFlightIdAndTicketClassId(Integer flightId, Integer ticketClassId);
 }

@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
-import { flightService, ticketService, passengerService, bookingConfirmationService } from '../../services';
+import { flightService, ticketService, passengerService, bookingConfirmationService, flightTicketClassService } from '../../services';
 import { Flight } from '../../models';
 import TypeAhead from '../common/TypeAhead';
 
@@ -195,15 +195,17 @@ const BookingForm: React.FC = () => {
       }
 
       // Generate seat numbers for demonstration
+      const occupiedSeats = await flightTicketClassService.getOccupiedSeats(Number(flightId), Number(data.ticketClassId));
       const seatNumbers = data.passengers.map((_, index) => {
         const selectedClass = ticketClasses.find(tc => tc.ticketClassId === data.ticketClassId);
         const seatPrefix = selectedClass?.ticketClassName === 'Economy' ? 'A' :
           selectedClass?.ticketClassName === 'Business' ? 'B' : 'C';
-        return `${seatPrefix}${index + 1}`;
+        return `${seatPrefix}${occupiedSeats + index + 1}`;
       });
 
+    
       const booking = {
-        customerId: data.useFrequentFlyer ? user!.accountId! : null,
+        customerId: user!.accountId! ?? null,
         flightId: Number(flightId),
         passengers: data.passengers, // Keep original format for BookingReques
         seatNumbers: seatNumbers,
@@ -220,7 +222,7 @@ const BookingForm: React.FC = () => {
       const tickets = data.passengers.map((_, index) => ({
         ticketId: ticketCount + 1 + index,
         flightId: Number(flightId),
-        bookCustomerId: data.useFrequentFlyer ? user!.accountId! : null,
+        bookCustomerId: user!.accountId! ?? null,
         passengerId: data.passengers[index].passengerId, // Use citizenId as passengerId for guest bookings
         ticketClassId: data.ticketClassId,
         seatNumber: seatNumbers[index],
