@@ -22,5 +22,6 @@ public class ChatboxDto {
     private Integer lastMessageEmployeeId;
     private String lastMessageSenderName;
     private Integer unreadCount;
+    private LocalDateTime lastCustomerMessageTime; // New field for sorting
     private LocalDateTime deletedAt;
 }

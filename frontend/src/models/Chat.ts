@@ -8,6 +8,7 @@ export interface Chatbox {
   lastMessageEmployeeId?: number;
   lastMessageSenderName?: string;
   unreadCount?: number;
+  lastCustomerMessageTime?: string; // New field for sorting
   deletedAt?: string;
 }
 

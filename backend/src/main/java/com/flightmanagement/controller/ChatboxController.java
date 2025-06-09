@@ -22,6 +22,12 @@ public class ChatboxController {
         return ResponseEntity.ok(chatboxes);
     }
     
+    @GetMapping("/sorted-by-customer-time")
+    public ResponseEntity<List<ChatboxDto>> getAllChatboxesSortedByCustomerMessageTime() {
+        List<ChatboxDto> chatboxes = chatboxService.getAllChatboxesSortedByCustomerMessageTime();
+        return ResponseEntity.ok(chatboxes);
+    }
+    
     @GetMapping("/{id}")
     public ResponseEntity<ChatboxDto> getChatboxById(@PathVariable Integer id) {
         ChatboxDto chatbox = chatboxService.getChatboxById(id);

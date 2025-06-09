@@ -791,6 +791,11 @@ Get all chatboxes.
 
 **Response**: `List<ChatboxDto>`
 
+#### GET /api/chatboxes/sorted-by-customer-time
+Get all chatboxes sorted by latest customer message time (most recent first).
+
+**Response**: `List<ChatboxDto>`
+
 #### GET /api/chatboxes/customer/{customerId}
 Get chatboxes for a specific customer.
 

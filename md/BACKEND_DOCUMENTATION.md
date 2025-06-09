@@ -430,6 +430,7 @@ GET    /tickets/seat-available?flightId={id}&seatNumber={seat} # Check seat avai
 ### Chat System
 ```
 GET    /chatboxes                # List all chatboxes
+GET    /chatboxes/sorted-by-customer-time # List chatboxes sorted by latest customer message
 GET    /chatboxes/{id}           # Get chatbox by ID
 POST   /chatboxes                # Create chatbox
 DELETE /chatboxes/{id}           # Delete chatbox

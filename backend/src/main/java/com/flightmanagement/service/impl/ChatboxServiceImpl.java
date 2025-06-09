@@ -41,6 +41,47 @@ public class ChatboxServiceImpl implements ChatboxService {
             .collect(Collectors.toList());
     }
 
+    @Override
+    public List<ChatboxDto> getAllChatboxesSortedByCustomerMessageTime() {
+        List<Chatbox> chatboxes = chatboxRepository.findAllActive();
+        
+        // Get all chatboxes with enriched message info
+        List<ChatboxDto> enrichedChatboxes = chatboxes.stream()
+            .map(this::enrichChatboxWithCustomerMessageTime)
+            .collect(Collectors.toList());
+        
+        // Sort by latest customer message time (most recent first)
+        return enrichedChatboxes.stream()
+            .sorted((c1, c2) -> {
+                LocalDateTime time1 = c1.getLastCustomerMessageTime();
+                LocalDateTime time2 = c2.getLastCustomerMessageTime();
+                
+                // If both have customer messages, sort by time (newest first)
+                if (time1 != null && time2 != null) {
+                    return time2.compareTo(time1);
+                }
+                // If only one has customer messages, prioritize it
+                if (time1 != null) return -1;
+                if (time2 != null) return 1;
+                
+                // If neither has customer messages, sort by chatbox creation (newest first)
+                return c2.getChatboxId().compareTo(c1.getChatboxId());
+            })
+            .collect(Collectors.toList());
+    }
+
+    private ChatboxDto enrichChatboxWithCustomerMessageTime(Chatbox chatbox) {
+        ChatboxDto dto = enrichChatboxWithMessageInfo(chatbox);
+        
+        // Get the latest customer message time specifically
+        messageRepository.findLatestCustomerMessageByChatboxId(chatbox.getChatboxId())
+            .ifPresent(customerMessage -> {
+                dto.setLastCustomerMessageTime(customerMessage.getSendTime());
+            });
+        
+        return dto;
+    }
+
     private ChatboxDto enrichChatboxWithMessageInfo(Chatbox chatbox) {
         ChatboxDto dto = chatboxMapper.toDto(chatbox);
 

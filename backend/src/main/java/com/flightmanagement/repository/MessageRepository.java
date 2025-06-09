@@ -16,4 +16,10 @@ public interface MessageRepository extends JpaRepository<Message, Integer> {
     
     @Query("SELECT m FROM Message m WHERE m.chatboxId = ?1 AND m.deletedAt IS NULL ORDER BY m.sendTime DESC LIMIT 1")
     Optional<Message> findTopByChatboxIdOrderBySendTimeDesc(Integer chatboxId);
+    
+    @Query("SELECT m FROM Message m WHERE m.chatboxId = ?1 AND m.employeeId IS NULL AND m.deletedAt IS NULL ORDER BY m.sendTime DESC LIMIT 1")
+    Optional<Message> findLatestCustomerMessageByChatboxId(Integer chatboxId);
+    
+    @Query("SELECT m.chatboxId, MAX(m.sendTime) FROM Message m WHERE m.employeeId IS NULL AND m.deletedAt IS NULL GROUP BY m.chatboxId")
+    List<Object[]> findLatestCustomerMessageTimesByChatbox();
 }

@@ -77,7 +77,16 @@ const CustomerSupport: React.FC = () => {
   const loadChatboxes = async () => {
     try {
       setLoading(true);
-      const data = await chatService.getAllChatboxes();
+      let data: Chatbox[];
+      
+      // Load chatboxes based on sort option
+      if (sortOption === 'Thời điểm yêu cầu tư vấn') {
+        data = await chatService.getAllChatboxesSortedByCustomerTime();
+      } else {
+        // For other options, use the default API for now
+        data = await chatService.getAllChatboxes();
+      }
+      
       setChatboxes(data);
     } catch (err: any) {
       setError('Failed to load chatboxes');
@@ -133,7 +142,15 @@ const CustomerSupport: React.FC = () => {
     
     chatboxPollingIntervalRef.current = setInterval(async () => {
       try {
-        const data = await chatService.getAllChatboxes();
+        let data: Chatbox[];
+        
+        // Use the same sorting logic for polling
+        if (sortOption === 'Thời điểm yêu cầu tư vấn') {
+          data = await chatService.getAllChatboxesSortedByCustomerTime();
+        } else {
+          data = await chatService.getAllChatboxes();
+        }
+        
         // Only update if there are actually changes
         if (JSON.stringify(data) !== JSON.stringify(chatboxes)) {
           setChatboxes(data);

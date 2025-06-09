@@ -10,6 +10,10 @@ export class ChatService {
     return apiClient.get(this.chatboxUrl);
   }
 
+  async getAllChatboxesSortedByCustomerTime(): Promise<Chatbox[]> {
+    return apiClient.get(`${this.chatboxUrl}/sorted-by-customer-time`);
+  }
+
   async getChatboxById(id: number): Promise<Chatbox> {
     return apiClient.get(`${this.chatboxUrl}/${id}`);
   }

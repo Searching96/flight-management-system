@@ -17,4 +17,6 @@ public interface ChatboxService {
     List<ChatboxDto> getChatboxesByCustomerId(Integer customerId);
     
     ChatboxDto getChatboxByCustomerId(Integer customerId);
+    
+    List<ChatboxDto> getAllChatboxesSortedByCustomerMessageTime();
 }
