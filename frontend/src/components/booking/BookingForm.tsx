@@ -28,33 +28,16 @@ const BookingForm: React.FC = () => {
   // Get booking data from sessionStorage (preferred) or fallback to query parameters
   const getBookingData = () => {
     const sessionData = sessionStorage.getItem('bookingData');
-    const getAccountFromId = async (accountId: number) => {
-      try {
-        const account = await accountService.getAccountById(accountId);
-        return account;
-      } catch (error) {
-        console.error('Failed to get account by ID:', error);
-        return null;
-      }
-    };
-
-    const logUserInfo = async () => {
-      const userInfo = await getAccountFromId(user?.accountId ?? 0);
-      console.log('User info from session:', userInfo);
-      return userInfo;
-    };
 
     if (sessionData) {
       try {
         const parsed = JSON.parse(sessionData);
 
         console.log('Parsed booking data from sessionStorage:', parsed);
-        console.log('Current user:', user);
         return {
           flightId: parsed.flightId?.toString(),
           queryPassengers: parsed.passengers?.toString(),
           queryClass: parsed.class?.toString()
-          //user: user === null ? undefined : user.email
         };
       } catch (error) {
         console.warn('Failed to parse booking data from sessionStorage:', error);
@@ -71,7 +54,7 @@ const BookingForm: React.FC = () => {
   };
 
   // write a function to get account from accountId
-  
+
 
   const { flightId, queryPassengers, queryClass } = getBookingData();
 
@@ -90,6 +73,7 @@ const BookingForm: React.FC = () => {
     const logUserInfo = async () => {
       if (user?.accountType === 1 && user?.accountId) {
         const userInfo = await accountService.getAccountById(user.accountId);
+        console.log('User account info:', userInfo);
         setAccountInfo(userInfo);
       }
     };
@@ -108,8 +92,8 @@ const BookingForm: React.FC = () => {
     defaultValues: {
       passengers: Array(passengerCount).fill(null).map((_, i) => ({
         passengerId: undefined,
-        firstName: '',
-        lastName: '',
+        firstName: user?.accountType === 1 && i === 0 ? accountInfo?.accountName || '' : '',
+        lastName: user?.accountType === 1 && i === 0 ? accountInfo?.accountName || '' : '',
         dateOfBirth: '',
         citizenId: user?.accountType === 1 && i === 0 ? accountInfo?.citizenId || '' : '',
         phoneNumber: user?.accountType === 1 && i === 0 ? accountInfo?.phoneNumber || '' : '',
@@ -122,9 +106,15 @@ const BookingForm: React.FC = () => {
 
   // Update default values for first passenger when accountInfo is loaded
   useEffect(() => {
-    if (user?.accountType === 1 && accountInfo) {
+    if (user?.accountType === 1 && accountInfo?.accountName) {
+      const nameParts = accountInfo.accountName.trim().split(' ');
+      const firstName = nameParts.slice(0, -1).join(' ') || '';
+      const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0] || '';
+      setValue('passengers.0.firstName', firstName);
+      setValue('passengers.0.lastName', lastName);
       setValue('passengers.0.citizenId', accountInfo.citizenId || '');
       setValue('passengers.0.phoneNumber', accountInfo.phoneNumber || '');
+      setValue('passengers.0.email', accountInfo.email || user.email || '');
     }
     // eslint-disable-next-line
   }, [accountInfo]);
@@ -234,12 +224,6 @@ const BookingForm: React.FC = () => {
         }
       }
 
-      // if (user?.accountType === 1) {
-      //   const accountPassenger = accountService.getAccountByEmail(user.email);
-      //   console.log("Account passenger data:", accountPassenger);
-      // }
-
-      // Generate seat numbers for demonstration
       const occupiedSeats = await flightTicketClassService.getOccupiedSeats(Number(flightId), Number(data.ticketClassId));
       const seatNumbers = data.passengers.map((_, index) => {
         const selectedClass = ticketClasses.find(tc => tc.ticketClassId === data.ticketClassId);
@@ -270,7 +254,7 @@ const BookingForm: React.FC = () => {
       }));
 
       console.log("Tickets to be confirmed:", tickets);
-      
+
       for (const ticket of tickets) {
         try {
           const newTicket = ticketService.transformTicketData(ticket);
@@ -393,6 +377,7 @@ const BookingForm: React.FC = () => {
                   })}
                   placeholder="Enter first name"
                   isInvalid={!!errors.passengers?.[index]?.firstName}
+                  disabled={isAccountPassenger}
                 />
                 <Form.Control.Feedback type="invalid">
                   {errors.passengers?.[index]?.firstName?.message}
@@ -410,45 +395,11 @@ const BookingForm: React.FC = () => {
                   })}
                   placeholder="Enter last name"
                   isInvalid={!!errors.passengers?.[index]?.lastName}
+                  disabled={isAccountPassenger}
                 />
                 <Form.Control.Feedback type="invalid">
                   {errors.passengers?.[index]?.lastName?.message}
                 </Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-          </Row>
-
-          <Row className="mb-3">
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label>Date of Birth</Form.Label>
-                <Form.Control
-                  type="date"
-                  {...register(`passengers.${index}.dateOfBirth`)}
-                  max={new Date().toISOString().split('T')[0]}
-                />
-              </Form.Group>
-            </Col>
-
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label>Phone Number</Form.Label>
-                <div className="d-flex gap-2">
-                  <Form.Control
-                    type="tel"
-                    placeholder="Phone number"
-                    value={currentPhone.replace(/^\+\d+\s*/, '')}
-                    onChange={(e) => {
-                      const phoneNumber = `${e.target.value}`;
-                      setValue(`passengers.${index}.phoneNumber`, phoneNumber);
-                    }}
-                    disabled={isAccountPassenger}
-                  />
-                  <input
-                    type="hidden"
-                    {...register(`passengers.${index}.phoneNumber`)}
-                  />
-                </div>
               </Form.Group>
             </Col>
           </Row>
@@ -476,6 +427,30 @@ const BookingForm: React.FC = () => {
               </Form.Group>
             </Col>
 
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>Phone Number</Form.Label>
+                <div className="d-flex gap-2">
+                  <Form.Control
+                    type="tel"
+                    placeholder="Phone number"
+                    value={currentPhone.replace(/^\+\d+\s*/, '')}
+                    onChange={(e) => {
+                      const phoneNumber = `${e.target.value}`;
+                      setValue(`passengers.${index}.phoneNumber`, phoneNumber);
+                    }}
+                    disabled={isAccountPassenger}
+                  />
+                  <input
+                    type="hidden"
+                    {...register(`passengers.${index}.phoneNumber`)}
+                  />
+                </div>
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row className="mb-3">
             <Col md={6}>
               <Form.Group>
                 <Form.Label>Citizen ID *</Form.Label>
