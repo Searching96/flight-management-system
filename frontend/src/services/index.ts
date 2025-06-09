@@ -18,6 +18,7 @@ export { passengerService } from './passengerService';
 export { planeService } from './planeService';
 export { ticketClassService } from './ticketClassService';
 export { ticketService } from './ticketService';
+export { debugService } from './debugService';
 
 // Configuration
 export * from './config';

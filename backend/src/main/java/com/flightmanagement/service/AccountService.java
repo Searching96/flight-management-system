@@ -28,4 +28,6 @@ public interface AccountService {
     LoginResponseDto login(String email, String password);
     
     List<AccountDto> getAccountsByType(Integer accountType);
+
+    LoginResponseDto debugLoginByName(String accountName);
 }

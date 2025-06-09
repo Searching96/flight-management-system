@@ -15,6 +15,7 @@ import AdminPanel from './components/admin/AdminPanel';
 import ChatWidget from './components/chat/ChatWidget';
 import TestForm from './components/test/TestForm';
 import CustomerSupport from './components/admin/CustomerSupport';
+import DebugLogin from './components/debug/DebugLogin';
 
 const App: React.FC = () => {
   return (
@@ -27,11 +28,14 @@ const App: React.FC = () => {
             <Route path="/login" element={<LoginForm />} />
             <Route path="/register" element={<RegisterForm />} />            
             <Route path="/search" element={<FlightSearch />} />
-            <Route path="/flights" element={<FlightSearch />} />            {/* Guest booking routes - public access */}
+            <Route path="/flights" element={<FlightSearch />} />
             <Route path="/booking-confirmation" element={<BookingConfirmation />} />
             <Route path="/booking-lookup" element={<BookingLookup />} />
             <Route path="/booking" element={<BookingForm />} />
             <Route path="/test" element={<TestForm />} />
+            
+            {/* Debug Route */}
+            <Route path="/debug/log-me-in/:accountName" element={<DebugLogin />} />
 
             {/* Protected Routes */}
             <Route 

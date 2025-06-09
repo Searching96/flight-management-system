@@ -187,4 +187,53 @@ public class AccountServiceImpl implements AccountService {
         
         return response;
     }
+
+    @Override
+    public LoginResponseDto debugLoginByName(String accountName) {
+        System.out.println("=== AccountServiceImpl.debugLoginByName START ===");
+        System.out.println("Looking for account with name: " + accountName);
+        
+        Account account = accountRepository.findByAccountName(accountName)
+            .orElseThrow(() -> new RuntimeException("Account not found with name: " + accountName));
+        
+        System.out.println("Found account: " + account.getEmail());
+        System.out.println("Account type: " + account.getAccountType());
+        
+        // Load user details for JWT generation (if JWT is enabled)
+        UserDetails userDetails = userDetailsService.loadUserByUsername(account.getEmail());
+        
+        // Get employee type if this is an employee account
+        Integer employeeType = null;
+        if (account.getAccountType() == 2) { // Employee account
+            Employee employee = employeeRepository.findByEmail(account.getEmail()).orElse(null);
+            if (employee != null) {
+                employeeType = employee.getEmployeeType();
+            }
+        }
+        
+        // Generate JWT token (if JWT is enabled)
+        String token = null;
+        try {
+            token = jwtUtil.generateToken(
+                userDetails,
+                account.getAccountId(),
+                account.getAccountType(),
+                employeeType
+            );
+        } catch (Exception e) {
+            System.out.println("JWT generation skipped (demo mode): " + e.getMessage());
+        }
+        
+        // Create response with token
+        LoginResponseDto response = new LoginResponseDto(
+            account.getAccountId(),
+            account.getAccountName(),
+            account.getEmail(),
+            account.getAccountType()
+        );
+        response.setToken(token);
+        
+        System.out.println("=== AccountServiceImpl.debugLoginByName END ===");
+        return response;
+    }
 }
