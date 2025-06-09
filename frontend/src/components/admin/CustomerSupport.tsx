@@ -29,9 +29,12 @@ const CustomerSupport: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const chatboxPollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     loadChatboxes();
+    startChatboxPolling();
+    return () => stopChatboxPolling();
   }, []);
 
   useEffect(() => {
@@ -122,6 +125,29 @@ const CustomerSupport: React.FC = () => {
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
+    }
+  };
+
+  const startChatboxPolling = () => {
+    if (chatboxPollingIntervalRef.current) return;
+    
+    chatboxPollingIntervalRef.current = setInterval(async () => {
+      try {
+        const data = await chatService.getAllChatboxes();
+        // Only update if there are actually changes
+        if (JSON.stringify(data) !== JSON.stringify(chatboxes)) {
+          setChatboxes(data);
+        }
+      } catch (error) {
+        console.error('Failed to poll chatboxes:', error);
+      }
+    }, 1000); // Poll every 1 second for chatbox list
+  };
+
+  const stopChatboxPolling = () => {
+    if (chatboxPollingIntervalRef.current) {
+      clearInterval(chatboxPollingIntervalRef.current);
+      chatboxPollingIntervalRef.current = null;
     }
   };
 
