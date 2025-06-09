@@ -7,7 +7,6 @@ const BookingLookup: React.FC = () => {
   const navigate = useNavigate();
   const [searchData, setSearchData] = useState({
     confirmationCode: '',
-    email: ''
   });
   const [booking, setBooking] = useState<BookingConfirmation | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,22 +24,7 @@ const BookingLookup: React.FC = () => {
     setError('');
     setBooking(null);
 
-    try {
-      const result = await bookingConfirmationService.lookupBooking({
-        confirmationCode: searchData.confirmationCode.trim(),
-        email: searchData.email.trim() || undefined
-      });
-
-      if (result) {
-        setBooking(result);
-      } else {
-        setError('Booking not found. Please check your confirmation code and try again.');
-      }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while looking up your booking.');
-    } finally {
-      setLoading(false);
-    }
+    
   };
 
   const handleCancelBooking = async () => {
@@ -55,7 +39,7 @@ const BookingLookup: React.FC = () => {
         await bookingConfirmationService.cancelBooking(booking.confirmationCode);
         alert('Booking cancelled successfully.');
         setBooking(null);
-        setSearchData({ confirmationCode: '', email: '' });
+        setSearchData({ confirmationCode: ''});
       } catch (err: any) {
         alert('Failed to cancel booking: ' + (err.message || 'Unknown error'));
       }
@@ -84,9 +68,9 @@ const BookingLookup: React.FC = () => {
             <Card.Body>
               <Form onSubmit={handleSearch}>
                 <Row>
-                  <Col md={6}>
+                  <Col md={12}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Confirmation Code *</Form.Label>
+                      <Form.Label className="w-100 text-center fw-bold fs-4">Confirmation Code *</Form.Label>
                       <Form.Control
                         type="text"
                         value={searchData.confirmationCode}
@@ -99,24 +83,6 @@ const BookingLookup: React.FC = () => {
                       />
                       <Form.Text className="text-muted">
                         Format: FMS-YYYYMMDD-XXXX (e.g., FMS-20240527-A1B2)
-                      </Form.Text>
-                    </Form.Group>
-                  </Col>
-
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Email (Optional)</Form.Label>
-                      <Form.Control
-                        type="email"
-                        value={searchData.email}
-                        onChange={(e) => setSearchData(prev => ({ 
-                          ...prev, 
-                          email: e.target.value 
-                        }))}
-                        placeholder="Enter email for verification"
-                      />
-                      <Form.Text className="text-muted">
-                        Enter email for additional verification (recommended)
                       </Form.Text>
                     </Form.Group>
                   </Col>

@@ -100,4 +100,10 @@ public class TicketController {
         String code = ticketService.generateConfirmationCode();
         return ResponseEntity.ok(code);
     }
+
+    @GetMapping("/booking-lookup/{code}")
+    public ResponseEntity<List<TicketDto>> getTicketsOnConfirmationCode(@PathVariable String code) {
+        List<TicketDto> tickets = ticketService.getTicketsOnConfirmationCode(code);
+        return ResponseEntity.ok(tickets);
+    }
 }

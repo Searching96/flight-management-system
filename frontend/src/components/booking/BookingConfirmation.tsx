@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Alert, Badge, ListGroup } from 'react-bootstrap';
 import { BookingConfirmation as BookingConfirmationType } from '../../services/bookingConfirmationService';
+import { ticketService } from '../../services';
 
 const BookingConfirmation: React.FC = () => {
   const location = useLocation();

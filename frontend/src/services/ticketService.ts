@@ -72,6 +72,10 @@ export class TicketService {
     return apiClient.get(`${this.baseUrl}/confirmation-code`);
   }
 
+  async getTicketsOnConfirmationCode(code: string) : Promise<Ticket[]> {
+    return apiClient.get(`${this.baseUrl}/booking-lookup/${code}`);
+  } 
+
   transformTicketData(ticket: {
     flightId: number;
     ticketClassId: number;

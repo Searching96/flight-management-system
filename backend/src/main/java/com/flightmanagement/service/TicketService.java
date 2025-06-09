@@ -34,4 +34,6 @@ public interface TicketService {
     boolean isSeatAvailable(Integer flightId, String seatNumber);
 
     String generateConfirmationCode();
+
+    List<TicketDto> getTicketsOnConfirmationCode(String code);
 }

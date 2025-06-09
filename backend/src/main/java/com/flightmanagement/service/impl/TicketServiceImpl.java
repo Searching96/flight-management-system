@@ -279,6 +279,12 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    public List<TicketDto> getTicketsOnConfirmationCode(String code) {
+        List<Ticket> tickets = ticketRepository.findByConfirmationCode(code);
+        return ticketMapper.toDtoList(tickets);
+    }
+
+    @Override
     public TicketDto payTicket(Integer ticketId) {
         Ticket ticket = ticketRepository.findActiveById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + ticketId));
