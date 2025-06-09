@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, ListGroup } from 'react-bootstrap';
 import { bookingConfirmationService, BookingConfirmation } from '../../services/bookingConfirmationService';
-import { ticketService, flightService } from '../../services';
+import { ticketService, flightService, passengerService } from '../../services';
 
 const BookingLookup: React.FC = () => {
   const navigate = useNavigate();
@@ -38,12 +38,25 @@ const BookingLookup: React.FC = () => {
       const firstTicket = tickets[0];
       const flight = await flightService.getFlightById(firstTicket.flightId);
 
+      // Get passenger names for each ticket
+      const passengerNames = await Promise.all(
+        tickets.map(async (ticket) => {
+          try {
+            const passenger = await passengerService.getPassengerById(ticket.passengerId);
+            return passenger.passengerName;
+          } catch (error) {
+            console.error(`Error getting passenger ${ticket.passengerId}:`, error);
+            return `Passenger ${ticket.passengerId}`;
+          }
+        })
+      );
+
       // Create booking confirmation object similar to BookingConfirmation
       const bookingData: BookingConfirmation = {
         confirmationCode: searchData.confirmationCode,
         bookingDate: new Date().toISOString(), // You might want to get actual booking date from ticket
         tickets: tickets,
-        passengers: tickets.map((_, index) => `Passenger ${index + 1}`), // You'll need to get actual passenger names
+        passengers: passengerNames, // Now contains actual passenger names
         totalAmount: tickets.reduce((sum, ticket) => sum + (ticket.fare || 0), 0),
         flightInfo: {
           flightCode: flight.flightCode || '',
@@ -75,7 +88,7 @@ const BookingLookup: React.FC = () => {
         await bookingConfirmationService.cancelBooking(booking.confirmationCode);
         alert('Booking cancelled successfully.');
         setBooking(null);
-        setSearchData({ confirmationCode: ''});
+        setSearchData({ confirmationCode: '' });
       } catch (err: any) {
         alert('Failed to cancel booking: ' + (err.message || 'Unknown error'));
       }
@@ -110,9 +123,9 @@ const BookingLookup: React.FC = () => {
                       <Form.Control
                         type="text"
                         value={searchData.confirmationCode}
-                        onChange={(e) => setSearchData(prev => ({ 
-                          ...prev, 
-                          confirmationCode: e.target.value.toUpperCase() 
+                        onChange={(e) => setSearchData(prev => ({
+                          ...prev,
+                          confirmationCode: e.target.value.toUpperCase()
                         }))}
                         placeholder="FMS-YYYYMMDD-XXXX"
                         required
@@ -131,8 +144,8 @@ const BookingLookup: React.FC = () => {
                 )}
 
                 <div className="d-flex gap-3">
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     variant="primary"
                     disabled={loading}
                   >
@@ -145,7 +158,7 @@ const BookingLookup: React.FC = () => {
                       'Find Booking'
                     )}
                   </Button>
-                  <Button 
+                  <Button
                     variant="outline-secondary"
                     onClick={() => navigate('/')}
                   >
@@ -200,7 +213,7 @@ const BookingLookup: React.FC = () => {
                     {booking.tickets.map((ticket, index) => (
                       <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
                         <div>
-                          <strong>Passenger {index + 1}</strong>
+                          <strong>Passenger {index + 1} : {booking.passengers[index]}</strong>
                           <div className="text-muted">Seat: {ticket.seatNumber}</div>
                         </div>
                         <Badge bg="primary" className="fs-6">${ticket.fare}</Badge>
@@ -236,12 +249,12 @@ const BookingLookup: React.FC = () => {
                   </Row>
                 </div>
               </Card.Body>
-              
+
               {/* Booking Actions */}
               <Card.Footer className="bg-light">
                 <Row className="g-2">
                   <Col md={4}>
-                    <Button 
+                    <Button
                       onClick={handlePrintBooking}
                       variant="outline-secondary"
                       className="w-100"
@@ -250,7 +263,7 @@ const BookingLookup: React.FC = () => {
                     </Button>
                   </Col>
                   <Col md={4}>
-                    <Button 
+                    <Button
                       onClick={() => navigate('/booking-confirmation', {
                         state: {
                           confirmationCode: booking.confirmationCode,
@@ -265,7 +278,7 @@ const BookingLookup: React.FC = () => {
                     </Button>
                   </Col>
                   <Col md={4}>
-                    <Button 
+                    <Button
                       onClick={handleCancelBooking}
                       variant="danger"
                       className="w-100"
