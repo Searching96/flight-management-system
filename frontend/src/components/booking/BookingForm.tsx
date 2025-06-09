@@ -250,7 +250,14 @@ const BookingForm: React.FC = () => {
       // Book the tickets
       console.log("Booking data:", booking);
 
-      const confirmationCode = bookingConfirmationService.generateConfirmationCode();
+      let confirmationCode = '';
+      try {
+        confirmationCode = await ticketService.generateConfirmationCode();
+      } catch (err: any) {
+        console.error('confirmation code: ', err);
+        return;
+      }
+
       const tickets = data.passengers.map((passenger, index) => ({
         flightId: Number(flightId),
         ticketClassId: data.ticketClassId,
@@ -258,6 +265,7 @@ const BookingForm: React.FC = () => {
         passengerId: passenger.passengerId,
         seatNumber: seatNumbers[index],
         fare: selectedClass?.specifiedFare || 0,
+        confirmationCode: confirmationCode
       }));
 
       console.log("Tickets to be confirmed:", tickets);
@@ -281,7 +289,6 @@ const BookingForm: React.FC = () => {
       );
 
       bookingConfirmationService.storeGuestBookingConfirmation(confirmationData);
-      await bookingConfirmationService.sendConfirmationEmail(confirmationData);
 
       // Navigate to confirmation page for guest bookings
       navigate('/booking-confirmation', {

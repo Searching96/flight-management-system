@@ -21,6 +21,7 @@ public class TicketMapper implements BaseMapper<Ticket, TicketDto> {
         dto.setTicketStatus(entity.getTicketStatus());
         dto.setPaymentTime(entity.getPaymentTime());
         dto.setFare(entity.getFare());
+        dto.setConfirmationCode(entity.getConfirmationCode());
 
         if (entity.getFlight() != null) {
             dto.setFlightId(entity.getFlight().getFlightId());
@@ -52,6 +53,7 @@ public class TicketMapper implements BaseMapper<Ticket, TicketDto> {
         entity.setTicketStatus(dto.getTicketStatus());
         entity.setPaymentTime(dto.getPaymentTime());
         entity.setFare(dto.getFare());
+        entity.setConfirmationCode(dto.getConfirmationCode());
 
         // Set entity relationships based on IDs (these will be populated by the service
         // layer)

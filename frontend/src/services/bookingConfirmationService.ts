@@ -169,22 +169,6 @@ export class BookingConfirmationService {
   }
 
   /**
-   * Send confirmation email (placeholder for future implementation)
-   */
-  async sendConfirmationEmail(confirmation: BookingConfirmation): Promise<void> {
-    // TODO: Implement email service integration
-    console.log('Email confirmation would be sent for:', confirmation.confirmationCode);
-    
-    // For now, just show a browser notification if supported
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Booking Confirmed!', {
-        body: `Your booking confirmation code is: ${confirmation.confirmationCode}`,
-        icon: '/vite.svg'
-      });
-    }
-  }
-
-  /**
    * Request notification permission for booking confirmations
    */
   async requestNotificationPermission(): Promise<void> {

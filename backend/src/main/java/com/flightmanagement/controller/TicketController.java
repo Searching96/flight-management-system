@@ -94,4 +94,10 @@ public class TicketController {
         boolean available = ticketService.isSeatAvailable(flightId, seatNumber);
         return ResponseEntity.ok(available);
     }
+
+    @GetMapping("/confirmation-code")
+    public ResponseEntity<String> generateConfirmationCode() {
+        String code = ticketService.generateConfirmationCode();
+        return ResponseEntity.ok(code);
+    }
 }

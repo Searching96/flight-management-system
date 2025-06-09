@@ -68,8 +68,11 @@ export class TicketService {
     return tickets.length;
   }
 
+  async generateConfirmationCode() : Promise<string> {
+    return apiClient.get(`${this.baseUrl}/confirmation-code`);
+  }
+
   transformTicketData(ticket: {
-    // Optional for new tickets
     flightId: number;
     ticketClassId: number;
     bookCustomerId: number | null; // Optional for frequent flyers
@@ -77,16 +80,17 @@ export class TicketService {
     seatNumber: string;
     fare: number;
     paymentTime?: string; // Optional for paid tickets
+    confirmationCode: string
   }): TicketRequest {
     return {
-      //ticketId: ticket.ticketId, // Optional for new tickets
       flightId: ticket.flightId,
       ticketClassId: ticket.ticketClassId,
       bookCustomerId: ticket.bookCustomerId || null,
       passengerId: ticket.passengerId,
       seatNumber: ticket.seatNumber,
       fare: ticket.fare,
-      paymentTime: ticket.paymentTime
+      paymentTime: ticket.paymentTime,
+      confirmationCode: ticket.confirmationCode
     };
   }
 }

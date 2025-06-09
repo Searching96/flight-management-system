@@ -8,6 +8,7 @@ export interface Ticket {
   ticketStatus?: number; // 1: paid, 2: unpaid, 3: canceled
   paymentTime?: string;
   fare?: number;
+  confirmationCode?: string
 }
 
 export interface TicketRequest {
@@ -18,6 +19,7 @@ export interface TicketRequest {
   seatNumber: string;
   fare: number;
   paymentTime?: string; // Optional - only for paid tickets
+  confirmationCode: string
 }
 
 export interface BookingRequest {

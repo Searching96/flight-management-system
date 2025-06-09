@@ -23,4 +23,5 @@ public class TicketDto {
     private Byte ticketStatus;
     private LocalDateTime paymentTime;
     private BigDecimal fare;
+    private String confirmationCode;
 }

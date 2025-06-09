@@ -71,7 +71,9 @@ public class TicketServiceImpl implements TicketService {
         // ticket.setTicketStatus(ticketDto.getTicketStatus());
         ticket.setPaymentTime(ticketDto.getPaymentTime());
         ticket.setFare(ticketDto.getFare());
+        ticket.setConfirmationCode(ticketDto.getConfirmationCode());
         ticket.setDeletedAt(null);
+
 
         // Set entity relationships
         if (ticketDto.getFlightId() != null) {
@@ -260,11 +262,21 @@ public class TicketServiceImpl implements TicketService {
         }
     }
 
-    // private BigDecimal calculateFare(Integer flightId, Integer ticketClassId) {
-    // FlightTicketClassDto flightTicketClass =
-    // flightTicketClassService.getFlightTicketClassById(flightId, ticketClassId);
-    // return flightTicketClass.getSpecifiedFare();
-    // }
+    @Override
+    public String generateConfirmationCode() {
+        LocalDateTime today = LocalDateTime.now();
+        String dateStr = String.format("%04d%02d%02d", today.getYear(), today.getMonthValue(), today.getDayOfMonth());
+
+        // Generate random 4-character suffix
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder suffix = new StringBuilder();
+        for (int i = 0; i < 4; i++) {
+            int idx = (int) (Math.random() * chars.length());
+            suffix.append(chars.charAt(idx));
+        }
+
+        return "FMS-" + dateStr + "-" + suffix;
+    }
 
     @Override
     public TicketDto payTicket(Integer ticketId) {

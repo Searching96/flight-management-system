@@ -32,4 +32,6 @@ public interface TicketService {
     void cancelTicket(Integer ticketId);
     
     boolean isSeatAvailable(Integer flightId, String seatNumber);
+
+    String generateConfirmationCode();
 }
