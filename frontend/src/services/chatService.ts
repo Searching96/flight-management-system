@@ -52,21 +52,17 @@ export class ChatService {
     return apiClient.get(`/api/chatboxes/employee/${employeeId}`);
   }
 
-  async assignChatboxToEmployee(chatboxId: number, employeeId: number): Promise<Chatbox> {
-    return apiClient.put(`/api/chatboxes/${chatboxId}/assign`, { employeeId });
-  }
-
   async createEmployeeMessage(chatboxId: number, content: string): Promise<Message> {
     const messageData = {
       chatboxId,
-      content,
-      messageType: 2 // Employee to customer
+      content
+      // employeeId will be set by backend based on authenticated user
     };
-    return apiClient.post('/api/messages/employee', messageData);
+    return apiClient.post(`${this.messageUrl}/employee`, messageData);
   }
 
   async markChatboxAsRead(chatboxId: number): Promise<void> {
-    return apiClient.patch(`/api/chatboxes/${chatboxId}/read`);
+    return apiClient.patch(`${this.chatboxUrl}/${chatboxId}/read`);
   }
 
   async getUnassignedChatboxes(): Promise<Chatbox[]> {

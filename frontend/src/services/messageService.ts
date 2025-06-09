@@ -83,11 +83,19 @@ export class MessageService {
   }
 
   async createCustomerMessage(chatboxId: number, content: string): Promise<Message> {
-    return apiClient.post(`${this.baseUrl}/customer`, { chatboxId, content });
+    return apiClient.post(`${this.baseUrl}/customer`, { 
+      chatboxId, 
+      content 
+      // employeeId will be null for customer messages
+    });
   }
 
   async createEmployeeMessage(chatboxId: number, content: string): Promise<Message> {
-    return apiClient.post(`${this.baseUrl}/employee`, { chatboxId, content });
+    return apiClient.post(`${this.baseUrl}/employee`, { 
+      chatboxId, 
+      content 
+      // employeeId will be set by backend
+    });
   }
 }
 

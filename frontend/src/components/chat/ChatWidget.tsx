@@ -7,6 +7,7 @@ import { Chatbox, Message as ChatMessage, SendMessageRequest } from '../../model
 interface Message {
   messageId?: number;
   chatboxId: number;
+  employeeId?: number; // null = from customer, not null = from employee
   content: string;
   sendTime: string;
   senderName?: string;

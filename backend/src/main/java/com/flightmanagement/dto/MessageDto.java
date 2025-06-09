@@ -15,9 +15,10 @@ public class MessageDto {
     
     private Integer messageId;
     private Integer chatboxId;
-    private Integer messageType; // 1: customer to employee, 2: employee to customer
+    private Integer employeeId;
     private String content;
     private LocalDateTime sendTime;
     private String senderName;
     private Boolean isFromCustomer;
+    private LocalDateTime deletedAt;
 }

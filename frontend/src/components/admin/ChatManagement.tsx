@@ -49,7 +49,12 @@ const ChatManagement: React.FC = () => {
   const loadMessages = async (chatboxId: number) => {
     try {
       const data = await messageService.getMessagesByChatboxId(chatboxId);
-      setMessages(data);
+      // Map messages to include isFromCustomer based on employeeId
+      const formattedMessages = data.map(msg => ({
+        ...msg,
+        isFromCustomer: !msg.employeeId // If employeeId is null, it's from customer
+      }));
+      setMessages(formattedMessages);
       // Mark as read when loading messages
       await chatService.markChatboxAsRead(chatboxId);
     } catch (err: any) {
@@ -69,13 +74,14 @@ const ChatManagement: React.FC = () => {
     try {
       setSendingMessage(true);
       
-      // Create employee message
-      const message = await chatService.createEmployeeMessage(
+      // Create employee message using messageService
+      await messageService.createEmployeeMessage(
         selectedChatbox.chatboxId!,
         newMessage.trim()
       );
       
-      setMessages(prev => [...prev, message]);
+      // Reload messages to get the updated list
+      await loadMessages(selectedChatbox.chatboxId!);
       setNewMessage('');
       
     } catch (error) {
@@ -86,21 +92,7 @@ const ChatManagement: React.FC = () => {
     }
   };
 
-  const assignChatboxToMe = async (chatboxId: number) => {
-    if (!user?.accountId) return;
-    
-    try {
-      await chatService.assignChatboxToEmployee(chatboxId, user.accountId);
-      loadChatboxes();
-    } catch (err: any) {
-      setError('Failed to assign chatbox');
-    }
-  };
-
   const getChatboxStatusBadge = (chatbox: Chatbox) => {
-    if (!chatbox.employeeId) {
-      return <Badge bg="warning">Unassigned</Badge>;
-    }
     if (chatbox.unreadCount && chatbox.unreadCount > 0) {
       return <Badge bg="danger">{chatbox.unreadCount} new</Badge>;
     }
@@ -176,21 +168,6 @@ const ChatManagement: React.FC = () => {
                           {new Date(chatbox.lastMessageTime).toLocaleString()}
                         </small>
                       )}
-                      
-                      {!chatbox.employeeId && (
-                        <div className="mt-2">
-                          <Button
-                            size="sm"
-                            variant="outline-primary"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              assignChatboxToMe(chatbox.chatboxId!);
-                            }}
-                          >
-                            Assign to Me
-                          </Button>
-                        </div>
-                      )}
                     </div>
                   </ListGroup.Item>
                 ))}
@@ -212,9 +189,6 @@ const ChatManagement: React.FC = () => {
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <h5 className="mb-0">Chat with {selectedChatbox.customerName || 'Customer'}</h5>
-                    <small className="text-muted">
-                      {selectedChatbox.employeeName ? `Assigned to: ${selectedChatbox.employeeName}` : 'Unassigned'}
-                    </small>
                   </div>
                   {getChatboxStatusBadge(selectedChatbox)}
                 </div>

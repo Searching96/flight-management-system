@@ -65,35 +65,21 @@ public class MessageServiceImpl implements MessageService {
     }
     
     @Override
-    public List<MessageDto> getMessagesByType(Integer messageType) {
-        List<Message> messages = messageRepository.findByMessageType(messageType);
-        return messageMapper.toDtoList(messages);
-    }
-    
-    @Override
-    public MessageDto sendMessage(Integer chatboxId, String content, Integer messageType) {
-        MessageDto messageDto = new MessageDto();
-        messageDto.setChatboxId(chatboxId);
-        messageDto.setContent(content);
-        messageDto.setMessageType(messageType);
-        return createMessage(messageDto);
-    }
-    
-    @Override
     public MessageDto createCustomerMessage(Integer chatboxId, String content) {
         MessageDto messageDto = new MessageDto();
         messageDto.setChatboxId(chatboxId);
         messageDto.setContent(content);
-        messageDto.setMessageType(1); // Customer send to employee
+        messageDto.setEmployeeId(null); // Customer message has null employeeId
         return createMessage(messageDto);
     }
     
     @Override
     public MessageDto createEmployeeMessage(Integer chatboxId, String content) {
+        // You'll need to pass employeeId as parameter or get it from security context
         MessageDto messageDto = new MessageDto();
         messageDto.setChatboxId(chatboxId);
         messageDto.setContent(content);
-        messageDto.setMessageType(2); // Employee send to customer
+        messageDto.setEmployeeId(1); // Set actual employee ID here
         return createMessage(messageDto);
     }
 }

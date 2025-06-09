@@ -44,17 +44,6 @@ public class ChatboxServiceImpl implements ChatboxService {
     }
     
     @Override
-    public ChatboxDto createChatboxTest(ChatboxTestDto chatboxTestDto) {
-        ChatboxDto chatboxDto = new ChatboxDto();
-        chatboxDto.setCustomerId(chatboxTestDto.getCustomerId());
-        chatboxDto.setEmployeeId(chatboxTestDto.getEmployeeId());
-        Chatbox chatbox = chatboxMapper.toEntity(chatboxDto);
-        chatbox.setDeletedAt(null);
-        Chatbox savedChatbox = chatboxRepository.save(chatbox);
-        return chatboxMapper.toDto(savedChatbox);
-    }
-    
-    @Override
     public void deleteChatbox(Integer id) {
         Chatbox chatbox = chatboxRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Chatbox not found with id: " + id));
@@ -84,7 +73,6 @@ public class ChatboxServiceImpl implements ChatboxService {
         
         ChatboxDto chatboxDto = new ChatboxDto();
         chatboxDto.setCustomerId(customerId);
-        chatboxDto.setEmployeeId(null); // Employee will be assigned later
         return createChatbox(chatboxDto);
     }
     
@@ -92,30 +80,5 @@ public class ChatboxServiceImpl implements ChatboxService {
     public List<ChatboxDto> getChatboxesByCustomerId(Integer customerId) {
         List<Chatbox> chatboxes = chatboxRepository.findByCustomerId(customerId);
         return chatboxMapper.toDtoList(chatboxes);
-    }
-    
-    @Override
-    public List<ChatboxDto> getChatboxesByEmployeeId(Integer employeeId) {
-        List<Chatbox> chatboxes = chatboxRepository.findByEmployeeId(employeeId);
-        return chatboxMapper.toDtoList(chatboxes);
-    }
-    
-    @Override
-    public ChatboxDto getChatboxByCustomerAndEmployee(Integer customerId, Integer employeeId) {
-        Chatbox chatbox = chatboxRepository.findByCustomerIdAndEmployeeId(customerId, employeeId)
-            .orElseThrow(() -> new RuntimeException("Chatbox not found for customer and employee"));
-        return chatboxMapper.toDto(chatbox);
-    }
-    
-    @Override
-    public ChatboxDto getOrCreateChatbox(Integer customerId, Integer employeeId) {
-        return chatboxRepository.findByCustomerIdAndEmployeeId(customerId, employeeId)
-            .map(chatboxMapper::toDto)
-            .orElseGet(() -> {
-                ChatboxDto newChatboxDto = new ChatboxDto();
-                newChatboxDto.setCustomerId(customerId);
-                newChatboxDto.setEmployeeId(employeeId);
-                return createChatbox(newChatboxDto);
-            });
     }
 }

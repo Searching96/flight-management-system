@@ -91,7 +91,15 @@ const FlightManagement: React.FC = () => {    const { canViewAdmin } = usePermis
             if (editingFlight) {
                 await flightService.updateFlight(editingFlight.flightId!, data);
             } else {
-                await flightService.createFlight(data);
+                // Calculate departureDate and duration
+                const departureDate = data.departureTime;
+                const duration =
+                    (new Date(data.arrivalTime).getTime() - new Date(data.departureTime).getTime()) / (1000 * 60); // duration in minutes
+                await flightService.createFlight({
+                    ...data,
+                    departureDate,
+                    duration: duration.toString()
+                });
             }
 
             loadData();

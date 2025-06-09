@@ -21,21 +21,21 @@ public class MessageMapper implements BaseMapper<Message, MessageDto> {
         
         MessageDto dto = new MessageDto();
         dto.setMessageId(entity.getMessageId());
-        dto.setMessageType(entity.getMessageType());
+        dto.setChatboxId(entity.getChatboxId());
+        dto.setEmployeeId(entity.getEmployeeId());
         dto.setContent(entity.getContent());
         dto.setSendTime(entity.getSendTime());
-        dto.setIsFromCustomer(entity.getMessageType() == 1);
+        dto.setDeletedAt(entity.getDeletedAt());
         
-        if (entity.getChatbox() != null) {
-            dto.setChatboxId(entity.getChatbox().getChatboxId());
-            
-            if (entity.getMessageType() == 1 && entity.getChatbox().getCustomer() != null
-                && entity.getChatbox().getCustomer().getAccount() != null) {
-                dto.setSenderName(entity.getChatbox().getCustomer().getAccount().getAccountName());
-            } else if (entity.getMessageType() == 2 && entity.getChatbox().getEmployee() != null
-                && entity.getChatbox().getEmployee().getAccount() != null) {
-                dto.setSenderName(entity.getChatbox().getEmployee().getAccount().getAccountName());
-            }
+        // Determine sender name based on employeeId
+        if (entity.getEmployeeId() != null) {
+            // Message from employee
+            // You may need to fetch employee name from repository if needed
+            dto.setSenderName("Support Agent");
+        } else {
+            // Message from customer 
+            // You may need to fetch customer name from repository if needed
+            dto.setSenderName("Customer");
         }
         
         return dto;
@@ -47,15 +47,11 @@ public class MessageMapper implements BaseMapper<Message, MessageDto> {
         
         Message entity = new Message();
         entity.setMessageId(dto.getMessageId());
-        entity.setMessageType(dto.getMessageType());
+        entity.setChatboxId(dto.getChatboxId());
+        entity.setEmployeeId(dto.getEmployeeId());
         entity.setContent(dto.getContent());
         entity.setSendTime(dto.getSendTime());
-        
-        // Set chatbox relationship
-        if (dto.getChatboxId() != null) {
-            entity.setChatbox(chatboxRepository.findById(dto.getChatboxId())
-                .orElseThrow(() -> new RuntimeException("Chatbox not found with id: " + dto.getChatboxId())));
-        }
+        entity.setDeletedAt(dto.getDeletedAt());
         
         return entity;
     }

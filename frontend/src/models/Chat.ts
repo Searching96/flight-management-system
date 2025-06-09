@@ -1,31 +1,29 @@
 export interface Chatbox {
   chatboxId?: number;
-  customerId?: number;
+  customerId: number;
   customerName?: string;
-  employeeId?: number;
-  employeeName?: string;
-  lastMessageTime?: string;
   lastMessageContent?: string;
+  lastMessageTime?: string;
   unreadCount?: number;
+  deletedAt?: string;
 }
 
 export interface CreateTestChatboxRequest {
-  customerId: string;
-  employeeId: string;
+  customerId: number;
 }
 
 export interface Message {
   messageId?: number;
   chatboxId?: number;
-  messageType: number; // 1: customer to employee, 2: employee to customer
+  employeeId?: number; // null = from customer, not null = from employee
   content: string;
   sendTime?: string;
   senderName?: string;
-  isFromCustomer?: boolean;
+  isFromCustomer?: boolean; // Derived field for UI
 }
 
 export interface SendMessageRequest {
   chatboxId: number;
   content: string;
-  messageType: number;
+  employeeId?: number; // null for customer messages, employee ID for employee messages
 }

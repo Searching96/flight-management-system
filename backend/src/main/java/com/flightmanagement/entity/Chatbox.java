@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -14,9 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "chatbox", 
-       uniqueConstraints = @UniqueConstraint(name = "unique_chat_box", 
-       columnNames = {"customer_id", "employee_id"}))
+@Table(name = "chatbox")
 public class Chatbox {
     
     @Id
@@ -24,17 +23,16 @@ public class Chatbox {
     @Column(name = "chatbox_id")
     private Integer chatboxId;
     
+    @Column(name = "customer_id", nullable = false)
+    private Integer customerId;
+    
     @ManyToOne
-    @JoinColumn(name = "customer_id", nullable = false)
+    @JoinColumn(name = "customer_id", insertable = false, updatable = false)
     private Customer customer;
     
-    @ManyToOne
-    @JoinColumn(name = "employee_id", nullable = true)
-    private Employee employee;
+    @OneToMany(mappedBy = "chatboxId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Message> messages = new ArrayList<>();
     
-    @Column(name = "deletedAt")
+    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
-    
-    @OneToMany(mappedBy = "chatbox", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Message> messages;
 }
