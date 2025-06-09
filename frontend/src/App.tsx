@@ -13,6 +13,9 @@ import BookingConfirmation from './components/booking/BookingConfirmation';
 import BookingLookup from './components/booking/BookingLookup';
 import AdminPanel from './components/admin/AdminPanel';
 import ChatWidget from './components/chat/ChatWidget';
+import TestForm from './components/test/TestForm';
+import CustomerSupport from './components/admin/CustomerSupport';
+import DebugLogin from './components/debug/DebugLogin';
 
 const App: React.FC = () => {
   return (
@@ -30,6 +33,10 @@ const App: React.FC = () => {
             <Route path="/booking-confirmation" element={<BookingConfirmation />} />
             <Route path="/booking-lookup" element={<BookingLookup />} />
             <Route path="/booking" element={<BookingForm />} />
+            <Route path="/test" element={<TestForm />} />
+            
+            {/* Debug Route */}
+            <Route path="/debug/log-me-in/:accountName" element={<DebugLogin />} />
 
             {/* Protected Routes */}
             <Route
@@ -49,6 +56,16 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+            <Route path="/admin/chat" element={
+              <ProtectedRoute requiredAccountType='Employee'>
+                <CustomerSupport />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/customer-support" element={
+              <ProtectedRoute requiredAccountType='Employee'>
+                <CustomerSupport />
+              </ProtectedRoute>
+            } />
 
             {/* Fallback Route */}
             <Route path="*" element={<div>Page not found</div>} />

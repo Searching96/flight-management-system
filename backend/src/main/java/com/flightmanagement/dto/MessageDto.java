@@ -15,9 +15,10 @@ public class MessageDto {
     
     private Integer messageId;
     private Integer chatboxId;
-    private Integer messageType; // 1: customer to employee, 2: employee to customer
+    private Integer employeeId;  // null = from customer, not null = from employee
+    private String employeeName;
     private String content;
     private LocalDateTime sendTime;
-    private String senderName;
-    private Boolean isFromCustomer;
+    private Boolean isFromCustomer;  // Derived field: true if employeeId is null
+    private LocalDateTime deletedAt;
 }

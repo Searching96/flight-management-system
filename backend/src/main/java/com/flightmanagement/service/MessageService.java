@@ -6,19 +6,9 @@ import java.util.List;
 
 public interface MessageService {
     
-    List<MessageDto> getAllMessages();
-    
-    MessageDto getMessageById(Integer id);
-    
-    MessageDto createMessage(MessageDto messageDto);
-    
-    void deleteMessage(Integer id);
-    
     List<MessageDto> getMessagesByChatboxId(Integer chatboxId);
     
-    List<MessageDto> getRecentMessagesByChatboxId(Integer chatboxId, int limit);
+    MessageDto createEmployeeMessage(Integer chatboxId, Integer employeeId, String content);
     
-    List<MessageDto> getMessagesByType(Integer messageType);
-    
-    MessageDto sendMessage(Integer chatboxId, String content, Integer messageType);
+    MessageDto createCustomerMessage(Integer chatboxId, String content);
 }

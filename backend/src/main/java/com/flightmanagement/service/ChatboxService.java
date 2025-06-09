@@ -11,14 +11,12 @@ public interface ChatboxService {
     ChatboxDto getChatboxById(Integer id);
     
     ChatboxDto createChatbox(ChatboxDto chatboxDto);
-    
+
     void deleteChatbox(Integer id);
     
     List<ChatboxDto> getChatboxesByCustomerId(Integer customerId);
     
-    List<ChatboxDto> getChatboxesByEmployeeId(Integer employeeId);
+    ChatboxDto getChatboxByCustomerId(Integer customerId);
     
-    ChatboxDto getChatboxByCustomerAndEmployee(Integer customerId, Integer employeeId);
-    
-    ChatboxDto getOrCreateChatbox(Integer customerId, Integer employeeId);
+    List<ChatboxDto> getAllChatboxesSortedByCustomerMessageTime();
 }

@@ -5,10 +5,11 @@ import AirportManagement from './AirportManagement';
 import ParameterSettings from './ParameterSettings';
 import PlaneManagement from './PlaneManagement';
 import TicketClassManagement from './TicketClassManagement';
-import { usePermissions } from '../../hooks/useAuth';
+import ChatManagement from './ChatManagement';
 import EmployeeManagement from './EmployeeManagement';
+import { usePermissions } from '../../hooks/useAuth';
 
-type AdminTab = 'overview' | 'flights' | 'employees' | 'airports' | 'planes' | 'ticket-classes' | 'tickets' | 'parameters';
+type AdminTab = 'overview' | 'flights' | 'airports' | 'planes' | 'ticket-classes' | 'parameters' | 'chat' | 'employees';
 
 export const AdminPanel: React.FC = () => {
   const { canViewAdmin } = usePermissions();
@@ -51,6 +52,8 @@ export const AdminPanel: React.FC = () => {
         return <TicketClassManagement showAddModal={quickActionModals.showTicketClassModal} onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showTicketClassModal: false }))} />;
       case 'parameters':
         return <ParameterSettings />;
+      case 'chat':
+        return <ChatManagement />;
       case 'employees':
         return <EmployeeManagement />;
       default:
@@ -79,7 +82,7 @@ export const AdminPanel: React.FC = () => {
         setQuickActionModals(prev => ({ ...prev, showTicketClassModal: true }));
         break;
       case 'add-ticket':
-        setActiveTab('tickets');
+        // setActiveTab('tickets');
         setQuickActionModals(prev => ({ ...prev, showTicketModal: true }));
         break;
       default:
@@ -142,14 +145,14 @@ export const AdminPanel: React.FC = () => {
                 🎟️ Ticket Classes
               </Nav.Link>
             </Nav.Item>
-            <Nav.Item>
+            {/* <Nav.Item>
               <Nav.Link
                 active={activeTab === 'tickets'}
                 onClick={() => setActiveTab('tickets')}
               >
                 🎫 Tickets
               </Nav.Link>
-            </Nav.Item>
+            </Nav.Item> */}
             <Nav.Item>
               <Nav.Link
                 active={activeTab === 'employees'}
@@ -164,6 +167,22 @@ export const AdminPanel: React.FC = () => {
                 onClick={() => setActiveTab('parameters')}
               >
                 ⚙️ Settings
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link
+                active={activeTab === 'chat'}
+                onClick={() => setActiveTab('chat')}
+              >
+                💬 Customer Support
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link
+                active={activeTab === 'employees'}
+                onClick={() => setActiveTab('employees')}
+              >
+                👥 Employee Management
               </Nav.Link>
             </Nav.Item>
           </Nav>

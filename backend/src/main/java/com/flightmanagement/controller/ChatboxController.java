@@ -22,6 +22,12 @@ public class ChatboxController {
         return ResponseEntity.ok(chatboxes);
     }
     
+    @GetMapping("/sorted-by-customer-time")
+    public ResponseEntity<List<ChatboxDto>> getAllChatboxesSortedByCustomerMessageTime() {
+        List<ChatboxDto> chatboxes = chatboxService.getAllChatboxesSortedByCustomerMessageTime();
+        return ResponseEntity.ok(chatboxes);
+    }
+    
     @GetMapping("/{id}")
     public ResponseEntity<ChatboxDto> getChatboxById(@PathVariable Integer id) {
         ChatboxDto chatbox = chatboxService.getChatboxById(id);
@@ -40,27 +46,32 @@ public class ChatboxController {
         return ResponseEntity.noContent().build();
     }
     
-    @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<ChatboxDto>> getChatboxesByCustomerId(@PathVariable Integer customerId) {
-        List<ChatboxDto> chatboxes = chatboxService.getChatboxesByCustomerId(customerId);
-        return ResponseEntity.ok(chatboxes);
-    }
-    
-    @GetMapping("/employee/{employeeId}")
-    public ResponseEntity<List<ChatboxDto>> getChatboxesByEmployeeId(@PathVariable Integer employeeId) {
-        List<ChatboxDto> chatboxes = chatboxService.getChatboxesByEmployeeId(employeeId);
-        return ResponseEntity.ok(chatboxes);
-    }
-    
-    @GetMapping("/customer/{customerId}/employee/{employeeId}")
-    public ResponseEntity<ChatboxDto> getChatboxByCustomerAndEmployee(@PathVariable Integer customerId, @PathVariable Integer employeeId) {
-        ChatboxDto chatbox = chatboxService.getChatboxByCustomerAndEmployee(customerId, employeeId);
-        return ResponseEntity.ok(chatbox);
-    }
-    
-    @PostMapping("/get-or-create")
-    public ResponseEntity<ChatboxDto> getOrCreateChatbox(@RequestParam Integer customerId, @RequestParam Integer employeeId) {
-        ChatboxDto chatbox = chatboxService.getOrCreateChatbox(customerId, employeeId);
-        return ResponseEntity.ok(chatbox);
+    @GetMapping("/customer/{customerId}/chatbox")
+    public ResponseEntity<ChatboxDto> getChatboxByCustomerId(@PathVariable Integer customerId) {
+        System.out.println("=== ChatboxController.getChatboxByCustomerId START ===");
+        System.out.println("Endpoint /customer/{customerId}/chatbox was called");
+        System.out.println("Getting chatbox for customer ID: " + customerId);
+        System.out.println("Request received at: " + java.time.LocalDateTime.now());
+        
+        if (customerId == null) {
+            System.err.println("Customer ID is null");
+            System.out.println("=== ChatboxController.getChatboxByCustomerId END (Bad Request) ===");
+            return ResponseEntity.badRequest().build();
+        }
+        
+        try {
+            System.out.println("Calling chatboxService.getChatboxByCustomerId...");
+            ChatboxDto chatbox = chatboxService.getChatboxByCustomerId(customerId);
+            System.out.println("Successfully retrieved chatbox: " + (chatbox != null ? chatbox.getChatboxId() : "null"));
+            System.out.println("=== ChatboxController.getChatboxByCustomerId END (Success) ===");
+            return ResponseEntity.ok(chatbox);
+        } catch (Exception e) {
+            System.err.println("=== ERROR in ChatboxController.getChatboxByCustomerId ===");
+            System.err.println("Error getting chatbox for customer " + customerId + ": " + e.getMessage());
+            System.err.println("Error type: " + e.getClass().getSimpleName());
+            e.printStackTrace();
+            System.err.println("=== END ERROR ===");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

@@ -1,5 +1,5 @@
 import { apiClient } from './api';
-import { Chatbox, Message, SendMessageRequest } from '../models';
+import { Chatbox, Message } from '../models';
 
 export class ChatService {
   private readonly chatboxUrl = '/chatboxes';
@@ -10,20 +10,12 @@ export class ChatService {
     return apiClient.get(this.chatboxUrl);
   }
 
+  async getAllChatboxesSortedByCustomerTime(): Promise<Chatbox[]> {
+    return apiClient.get(`${this.chatboxUrl}/sorted-by-customer-time`);
+  }
+
   async getChatboxById(id: number): Promise<Chatbox> {
     return apiClient.get(`${this.chatboxUrl}/${id}`);
-  }
-
-  async getChatboxesByCustomerId(customerId: number): Promise<Chatbox[]> {
-    return apiClient.get(`${this.chatboxUrl}/customer/${customerId}`);
-  }
-
-  async getChatboxesByEmployeeId(employeeId: number): Promise<Chatbox[]> {
-    return apiClient.get(`${this.chatboxUrl}/employee/${employeeId}`);
-  }
-
-  async getOrCreateChatbox(customerId: number, employeeId: number): Promise<Chatbox> {
-    return apiClient.post(`${this.chatboxUrl}/get-or-create`, { customerId, employeeId });
   }
 
   async deleteChatbox(id: number): Promise<void> {
@@ -35,16 +27,28 @@ export class ChatService {
     return apiClient.get(`${this.messageUrl}/chatbox/${chatboxId}`);
   }
 
-  async getRecentMessages(chatboxId: number, limit: number = 20): Promise<Message[]> {
-    return apiClient.get(`${this.messageUrl}/chatbox/${chatboxId}/recent`, { limit });
+  async createCustomerMessage(chatboxId: number, content: string): Promise<Message> {
+    return apiClient.post(`${this.messageUrl}/customer`, { 
+      chatboxId, 
+      content 
+    });
   }
 
-  async sendMessage(messageData: SendMessageRequest): Promise<Message> {
-    return apiClient.post(this.messageUrl, messageData);
+  async getChatboxByCustomerId(customerId: number): Promise<Chatbox> {
+    return apiClient.get(`${this.chatboxUrl}/customer/${customerId}/chatbox`);
   }
 
-  async sendQuickMessage(chatboxId: number, content: string, messageType: number): Promise<Message> {
-    return apiClient.post(`${this.messageUrl}/send`, { chatboxId, content, messageType });
+  // Employee chat management methods
+  async getChatboxesByEmployeeId(employeeId: number): Promise<Chatbox[]> {
+    return apiClient.get(`/api/chatboxes/employee/${employeeId}`);
+  }
+
+  async createEmployeeMessage(chatboxId: number, content: string): Promise<Message> {
+    // Note: employeeId should be passed from component
+    return apiClient.post(`${this.messageUrl}/employee`, { 
+      chatboxId, 
+      content 
+    });
   }
 }
 

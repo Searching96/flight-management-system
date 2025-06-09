@@ -24,14 +24,27 @@ const Header: React.FC = () => {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link as={Link} to="/" className="text-decoration-none">Home</Nav.Link>
-            <Nav.Link as={Link} to="/search" className="text-decoration-none">Search Flights</Nav.Link>
-            <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Manage Booking</Nav.Link>
-
+            <Nav.Link as={Link} to="/test" className="text-decoration-none">Test</Nav.Link>
+            {!user && (
+              <>
+                <Nav.Link as={Link} to="/search" className="text-decoration-none">Search Flights</Nav.Link>
+                <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Manage Booking</Nav.Link>
+              </>
+            )}
             {user && (
               <>
+                {user.accountTypeName === "Customer" && (
+                  <>
+                    <Nav.Link as={Link} to="/search" className="text-decoration-none">Search Flights</Nav.Link>
+                    <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Manage Booking</Nav.Link>
+                  </>
+                )}
                 <Nav.Link as={Link} to="/dashboard" className="text-decoration-none">Dashboard</Nav.Link>
                 {user.accountTypeName === 'Employee' && (
+                  <>
+                  <Nav.Link as={Link} to="/admin/customer-support" className="text-decoration-none">Customer Support</Nav.Link>
                   <Nav.Link as={Link} to="/admin" className="text-decoration-none">Admin</Nav.Link>
+                  </>
                 )}
               </>
             )}

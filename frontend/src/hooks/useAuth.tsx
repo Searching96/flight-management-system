@@ -116,11 +116,23 @@ export const useAuth = (): AuthContextType => {
 export const usePermissions = () => {
   const { user } = useAuth();
   return {
-    canViewAdmin: user?.accountTypeName === 'Employee',
-    canManageFlights: user?.accountTypeName === 'Employee',
-    canBookTickets: user?.accountTypeName === 'Customer',
+    // Customer permissions (accountType = 1)
+    canBookTickets: user?.accountTypeName === "Customer",
+    canViewOwnTickets: user?.accountTypeName === "Customer",
+    canUseChat: user?.accountTypeName === "Customer",
+    
+    // Employee permissions (accountType = 2)
+    canViewAdmin: user?.accountTypeName === "Employee",
+    canManageFlights: user?.accountTypeName === "Employee",
+    canManageAirports: user?.accountTypeName === "Employee",
+    canManageEmployees: user?.accountTypeName === "Employee",
+    canManageCustomerSupport: user?.accountTypeName === "Employee",
+    canAccessChatManagement: user?.accountTypeName === "Employee",
+    
+    // General permissions
+    isEmployee: user?.accountTypeName === "Employee",
+    isCustomer: user?.accountTypeName === "Customer",
     canViewOwnBookings: !!user,
-    canManageEmployees: user?.accountTypeName === 'Employee',
     canManageCustomers: user?.accountTypeName === 'Employee',
     canViewReports: user?.accountTypeName === 'Employee',
   };

@@ -20,6 +20,7 @@ export { planeService } from './planeService';
 export { ticketClassService } from './ticketClassService';
 export { ticketService } from './ticketService';
 export { paymentService } from './paymentService';
+export { debugService } from './debugService';
 
 // Configuration
 export * from './config';

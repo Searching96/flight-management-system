@@ -8,31 +8,39 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "message")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "message")
 public class Message {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_id")
     private Integer messageId;
     
-    @ManyToOne
-    @JoinColumn(name = "chatbox_id", nullable = false)
-    private Chatbox chatbox;
+    @Column(name = "chatbox_id", nullable = false)
+    private Integer chatboxId;
     
-    @Column(name = "message_type", nullable = false)
-    private Integer messageType; // 1: customer send to employee, 2: employee send to customer
+    @Column(name = "employee_id")
+    private Integer employeeId;
     
-    @Column(name = "content", nullable = false, length = 1000000)
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
     
     @Column(name = "send_time", nullable = false)
     private LocalDateTime sendTime;
     
-    @Column(name = "deletedAt")
+    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", insertable = false, updatable = false)
+    private Employee employee;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chatbox_id", insertable = false, updatable = false)
+    private Chatbox chatbox;
 }

@@ -7,4 +7,5 @@ public interface AuthService {
 
     AuthResponse authenticate(LoginRequestDto request);
 
+    AuthResponse debugLoginByName(String accountName);
 }

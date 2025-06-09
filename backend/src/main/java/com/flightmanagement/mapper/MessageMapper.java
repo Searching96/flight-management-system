@@ -16,22 +16,11 @@ public class MessageMapper implements BaseMapper<Message, MessageDto> {
         
         MessageDto dto = new MessageDto();
         dto.setMessageId(entity.getMessageId());
-        dto.setMessageType(entity.getMessageType());
+        dto.setChatboxId(entity.getChatboxId());
+        dto.setEmployeeId(entity.getEmployeeId());
         dto.setContent(entity.getContent());
         dto.setSendTime(entity.getSendTime());
-        dto.setIsFromCustomer(entity.getMessageType() == 1);
-        
-        if (entity.getChatbox() != null) {
-            dto.setChatboxId(entity.getChatbox().getChatboxId());
-            
-            if (entity.getMessageType() == 1 && entity.getChatbox().getCustomer() != null
-                && entity.getChatbox().getCustomer().getAccount() != null) {
-                dto.setSenderName(entity.getChatbox().getCustomer().getAccount().getAccountName());
-            } else if (entity.getMessageType() == 2 && entity.getChatbox().getEmployee() != null
-                && entity.getChatbox().getEmployee().getAccount() != null) {
-                dto.setSenderName(entity.getChatbox().getEmployee().getAccount().getAccountName());
-            }
-        }
+        dto.setDeletedAt(entity.getDeletedAt());
         
         return dto;
     }
@@ -42,9 +31,12 @@ public class MessageMapper implements BaseMapper<Message, MessageDto> {
         
         Message entity = new Message();
         entity.setMessageId(dto.getMessageId());
-        entity.setMessageType(dto.getMessageType());
+        entity.setChatboxId(dto.getChatboxId());
+        entity.setEmployeeId(dto.getEmployeeId());
         entity.setContent(dto.getContent());
         entity.setSendTime(dto.getSendTime());
+        entity.setDeletedAt(dto.getDeletedAt());
+        
         return entity;
     }
     

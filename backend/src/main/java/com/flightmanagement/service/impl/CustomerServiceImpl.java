@@ -1,8 +1,10 @@
 package com.flightmanagement.service.impl;
 
 import com.flightmanagement.dto.CustomerDto;
+import com.flightmanagement.entity.Account;
 import com.flightmanagement.entity.Customer;
 import com.flightmanagement.mapper.CustomerMapper;
+import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.repository.CustomerRepository;
 import com.flightmanagement.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,9 +1,7 @@
 import { apiClient } from './api';
 import {
   Employee,
-  CreateEmployeeRequest,
   UpdateEmployeeRequest,
-  ChangePasswordRequest
 } from '../models';
 
 
@@ -25,10 +23,6 @@ class EmployeeService {
     return apiClient.get(`${this.baseUrl}/${id}`);
   }
 
-  async createEmployee(employeeData: CreateEmployeeRequest): Promise<Employee> {
-    return apiClient.post(this.baseUrl, employeeData);
-  }
-
   async updateEmployee(id: number, employeeData: UpdateEmployeeRequest): Promise<Employee> {
     return apiClient.put(`${this.baseUrl}/${id}`, employeeData);
   }
@@ -43,11 +37,6 @@ class EmployeeService {
 
   async deactivateEmployee(id: number): Promise<Employee> {
     return apiClient.patch(`${this.baseUrl}/${id}/deactivate`);
-  }
-
-  // Password management
-  async changePassword(passwordData: ChangePasswordRequest): Promise<void> {
-    return apiClient.patch(`${this.baseUrl}/change-password`, passwordData);
   }
 
   async resetPassword(employeeId: number): Promise<string> {

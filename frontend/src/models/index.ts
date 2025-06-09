@@ -34,7 +34,7 @@ export type {
 } from './Employee';
 
 // Chat related
-export type { Chatbox, Message, SendMessageRequest } from './Chat';
+export type { CreateTestChatboxRequest, Chatbox, Message, SendMessageRequest } from './Chat';
 
 // Plane related
 export type { Plane } from './Plane';

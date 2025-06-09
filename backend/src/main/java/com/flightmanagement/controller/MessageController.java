@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/messages")
@@ -16,54 +17,28 @@ public class MessageController {
     @Autowired
     private MessageService messageService;
     
-    @GetMapping
-    public ResponseEntity<List<MessageDto>> getAllMessages() {
-        List<MessageDto> messages = messageService.getAllMessages();
-        return ResponseEntity.ok(messages);
-    }
-    
-    @GetMapping("/{id}")
-    public ResponseEntity<MessageDto> getMessageById(@PathVariable Integer id) {
-        MessageDto message = messageService.getMessageById(id);
-        return ResponseEntity.ok(message);
-    }
-    
-    @PostMapping
-    public ResponseEntity<MessageDto> createMessage(@RequestBody MessageDto messageDto) {
-        MessageDto createdMessage = messageService.createMessage(messageDto);
-        return new ResponseEntity<>(createdMessage, HttpStatus.CREATED);
-    }
-    
-    @PostMapping("/send")
-    public ResponseEntity<MessageDto> sendMessage(@RequestParam Integer chatboxId, 
-                                                 @RequestParam String content, 
-                                                 @RequestParam Integer messageType) {
-        MessageDto sentMessage = messageService.sendMessage(chatboxId, content, messageType);
-        return new ResponseEntity<>(sentMessage, HttpStatus.CREATED);
-    }
-    
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMessage(@PathVariable Integer id) {
-        messageService.deleteMessage(id);
-        return ResponseEntity.noContent().build();
-    }
-    
     @GetMapping("/chatbox/{chatboxId}")
     public ResponseEntity<List<MessageDto>> getMessagesByChatboxId(@PathVariable Integer chatboxId) {
         List<MessageDto> messages = messageService.getMessagesByChatboxId(chatboxId);
         return ResponseEntity.ok(messages);
     }
     
-    @GetMapping("/chatbox/{chatboxId}/recent")
-    public ResponseEntity<List<MessageDto>> getRecentMessagesByChatboxId(@PathVariable Integer chatboxId, 
-                                                                        @RequestParam(defaultValue = "20") int limit) {
-        List<MessageDto> messages = messageService.getRecentMessagesByChatboxId(chatboxId, limit);
-        return ResponseEntity.ok(messages);
+    @PostMapping("/employee")
+    public ResponseEntity<MessageDto> createEmployeeMessage(@RequestBody Map<String, Object> requestBody) {
+        Integer chatboxId = (Integer) requestBody.get("chatboxId");
+        Integer employeeId = (Integer) requestBody.get("employeeId");
+        String content = (String) requestBody.get("content");
+        
+        MessageDto message = messageService.createEmployeeMessage(chatboxId, employeeId, content);
+        return new ResponseEntity<>(message, HttpStatus.CREATED);
     }
     
-    @GetMapping("/type/{messageType}")
-    public ResponseEntity<List<MessageDto>> getMessagesByType(@PathVariable Integer messageType) {
-        List<MessageDto> messages = messageService.getMessagesByType(messageType);
-        return ResponseEntity.ok(messages);
+    @PostMapping("/customer")
+    public ResponseEntity<MessageDto> createCustomerMessage(@RequestBody Map<String, Object> requestBody) {
+        Integer chatboxId = (Integer) requestBody.get("chatboxId");
+        String content = (String) requestBody.get("content");
+        
+        MessageDto message = messageService.createCustomerMessage(chatboxId, content);
+        return new ResponseEntity<>(message, HttpStatus.CREATED);
     }
 }
