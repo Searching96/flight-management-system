@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Modal } from 'react-bootstrap';
 import { planeService } from '../../services';
 import { Plane } from '../../models';
-import TypeAhead from '../common/TypeAhead';
 import { usePermissions } from '../../hooks/useAuth';
 
 interface PlaneFormData {
@@ -12,7 +11,10 @@ interface PlaneFormData {
     seatQuantity: number;
 }
 
-const PlaneManagement: React.FC = () => {
+const PlaneManagement: React.FC<{
+    showAddModal?: boolean;
+    onCloseAddModal?: () => void;
+}> = ({ showAddModal = false, onCloseAddModal }) => {
     const { canViewAdmin } = usePermissions();
     if (!canViewAdmin) {
         return (
@@ -36,9 +38,6 @@ const PlaneManagement: React.FC = () => {
     const [editingPlane, setEditingPlane] = useState<Plane | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('');
-    const [selectedPlaneType, setSelectedPlaneType] = useState<string>('');
-    // Add this state to track user text input
-    const [typeInputText, setTypeInputText] = useState('');
 
     const {
         register,
@@ -70,6 +69,13 @@ const PlaneManagement: React.FC = () => {
         loadPlanes();
     }, []);
 
+    // Effect to handle external modal trigger
+    useEffect(() => {
+        if (showAddModal) {
+            setShowForm(true);
+        }
+    }, [showAddModal]);
+
     const loadPlanes = async () => {
         try {
             setLoading(true);
@@ -99,7 +105,6 @@ const PlaneManagement: React.FC = () => {
 
     const handleEdit = (plane: Plane) => {
         setEditingPlane(plane);
-        setSelectedPlaneType(plane.planeType);
         reset({
             planeCode: plane.planeCode,
             planeType: plane.planeType,
@@ -122,9 +127,13 @@ const PlaneManagement: React.FC = () => {
     const handleCancel = () => {
         setShowForm(false);
         setEditingPlane(null);
-        setSelectedPlaneType('');
         reset();
         setError('');
+        
+        // Call the external close handler if provided
+        if (onCloseAddModal) {
+            onCloseAddModal();
+        }
     };
 
     // Filter planes based on search term and type

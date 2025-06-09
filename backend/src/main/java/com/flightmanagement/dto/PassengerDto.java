@@ -1,8 +1,11 @@
 package com.flightmanagement.dto;
 
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class PassengerDto {
     private Integer passengerId;
     private String passengerName;

@@ -154,10 +154,7 @@ public class AccountServiceImpl implements AccountService {
         
         // Generate JWT token
         String token = jwtUtil.generateToken(
-            userDetails,
-            account.getAccountId(),
-            account.getAccountType(),
-            employeeType
+            userDetails
         );
         
         // Create response with token

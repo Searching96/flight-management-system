@@ -1,37 +1,49 @@
+import { Flight } from './Flight';
+import { TicketClass } from './TicketClass';
+import { Customer } from './Customer';
+
 export interface Ticket {
   ticketId?: number;
-  flightId?: number;
-  flightCode?: string;
-  ticketClassId?: number;
-  ticketClassName?: string;
-  bookCustomerId?: number | null; // Optional - only for frequent flyers program
-  passengerId?: number;
-  passengerName?: string;
-  seatNumber: string;
-  ticketStatus?: number; // 1: paid, 2: unpaid, 3: canceled
-  paymentTime?: string;
-  fare?: number;
+  customerId: number;
+  flightId: number;
+  ticketClassId: number;
+  bookingDate: string;
+  ticketPrice: number;
+  status: TicketStatus;
+
+  // Related entities (populated)
+  customer?: Customer;
+  flight?: Flight;
+  ticketClass?: TicketClass;
+
+  // Metadata
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export enum TicketStatus {
+  CONFIRMED = 'CONFIRMED',
+  CANCELLED = 'CANCELLED',
+  PENDING = 'PENDING',
+  CHECKED_IN = 'CHECKED_IN',
+  NO_SHOW = 'NO_SHOW'
 }
 
 export interface TicketRequest {
+  customerId: number;
   flightId: number;
   ticketClassId: number;
-  passengerId: number;
-  seatNumber: string;
-  bookCustomerId?: number | null; // Optional - only for frequent flyers program
+  ticketPrice: number;
+  status?: TicketStatus;
 }
 
-export interface BookingRequest {
-  flightId: number;
-  customerId?: number | null; // Optional - only for frequent flyers program
-  ticketClassId: number;
-  passengers: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    citizenId: string;
-    phoneNumber: string;
-  }[];
-  totalFare?: number;
-  seatNumbers: string[];
+export interface TicketFilters {
+  status?: TicketStatus;
+  flightId?: number;
+  customerId?: number;
+  ticketClassId?: number;
+  dateRange?: {
+    from?: string;
+    to?: string;
+  };
 }

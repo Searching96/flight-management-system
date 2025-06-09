@@ -7,11 +7,23 @@ export class CustomerService {
 
   // Customer operations
   async getAllCustomers(): Promise<Customer[]> {
-    return apiClient.get(this.customerUrl);
+    try {
+      const response = await apiClient.get(this.customerUrl);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      throw error;
+    }
   }
 
-  async getCustomerById(id: number): Promise<Customer> {
-    return apiClient.get(`${this.customerUrl}/${id}`);
+  async getCustomerById(customerId: number): Promise<Customer> {
+    try {
+      const response = await apiClient.get(`${this.customerUrl}/${customerId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching customer:', error);
+      throw error;
+    }
   }
 
   async getCustomerByEmail(email: string): Promise<Customer> {
@@ -32,6 +44,18 @@ export class CustomerService {
 
   async deleteCustomer(id: number): Promise<void> {
     return apiClient.delete(`${this.customerUrl}/${id}`);
+  }
+
+  async searchCustomers(query: string): Promise<Customer[]> {
+    try {
+      const response = await apiClient.get(`${this.customerUrl}/search`, {
+        params: { q: query }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error searching customers:', error);
+      throw error;
+    }
   }
 
   // Employee operations

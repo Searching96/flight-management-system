@@ -49,13 +49,13 @@ public class EmployeeMapper implements BaseMapper<Employee, EmployeeDto> {
     }
     
     private String getEmployeeTypeName(Integer employeeType) {
-        switch (employeeType) {
-            case 1: return "Flight Schedule Reception";
-            case 2: return "Ticket Sales/Booking";
-            case 3: return "Customer Service";
-            case 4: return "Accounting";
-            case 5: return "System Administrator";
-            default: return "Unknown";
-        }
+        return switch (employeeType) {
+            case 1 -> "Flight Schedule Reception";
+            case 2 -> "Ticket Sales/Booking";
+            case 3 -> "Customer Service";
+            case 4 -> "Accounting";
+            case 5 -> "System Administrator";
+            default -> "Unknown";
+        };
     }
 }

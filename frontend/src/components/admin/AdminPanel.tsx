@@ -5,14 +5,25 @@ import AirportManagement from './AirportManagement';
 import ParameterSettings from './ParameterSettings';
 import PlaneManagement from './PlaneManagement';
 import TicketClassManagement from './TicketClassManagement';
+import TicketManagement from './TicketManagement';
 import { usePermissions } from '../../hooks/useAuth';
 import EmployeeManagement from './EmployeeManagement';
 
-type AdminTab = 'overview' | 'flights' | 'employees' | 'airports' | 'planes' | 'ticket-classes' | 'flight-ticket-classes' | 'parameters';
+type AdminTab = 'overview' | 'flights' | 'employees' | 'airports' | 'planes' | 'ticket-classes' | 'tickets' | 'parameters';
 
 export const AdminPanel: React.FC = () => {
   const { canViewAdmin } = usePermissions();
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  
+  // Add state for managing quick action modals
+  const [quickActionModals, setQuickActionModals] = useState({
+    showFlightModal: false,
+    showAirportModal: false,
+    showTicketClassModal: false,
+    showPlaneModal: false,
+    showTicketModal: false
+  });
+
   // Redirect if user doesn't have admin permissions (accountType should be 2 for employees)
   if (!canViewAdmin) {
     return (
@@ -31,26 +42,61 @@ export const AdminPanel: React.FC = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'overview':
-        return <AdminOverview />;
       case 'flights':
-        return <FlightManagement />;
+        return <FlightManagement showAddModal={quickActionModals.showFlightModal} onCloseAddModal={() => setQuickActionModals(prev => ({...prev, showFlightModal: false}))} />;
       case 'airports':
-        return <AirportManagement />;
+        return <AirportManagement showAddModal={quickActionModals.showAirportModal} onCloseAddModal={() => setQuickActionModals(prev => ({...prev, showAirportModal: false}))} />;
       case 'planes':
-        return <PlaneManagement />;
+        return <PlaneManagement showAddModal={quickActionModals.showPlaneModal} onCloseAddModal={() => setQuickActionModals(prev => ({...prev, showPlaneModal: false}))} />;
       case 'ticket-classes':
-        return <TicketClassManagement />;
+        return <TicketClassManagement showAddModal={quickActionModals.showTicketClassModal} onCloseAddModal={() => setQuickActionModals(prev => ({...prev, showTicketClassModal: false}))} />;
+      case 'tickets':
+        return <TicketManagement showAddModal={quickActionModals.showTicketModal} onCloseAddModal={() => setQuickActionModals(prev => ({...prev, showTicketModal: false}))} />;
       case 'parameters':
         return <ParameterSettings />;
       case 'employees':
         return <EmployeeManagement />;
       default:
-        return <AdminOverview />;
+      case 'overview':
+        return <AdminOverview onNavigate={handleQuickAction} />;
     }
   };
+
+  // Update the navigation handler to support quick actions
+  const handleQuickAction = (action: AdminTab | 'add-flight' | 'add-airport' | 'add-plane' | 'add-ticket-class' | 'add-ticket') => {
+    switch (action) {
+      case 'add-flight':
+        setActiveTab('flights');
+        setQuickActionModals(prev => ({...prev, showFlightModal: true}));
+        break;
+      case 'add-airport':
+        setActiveTab('airports');
+        setQuickActionModals(prev => ({...prev, showAirportModal: true}));
+        break;
+      case 'add-plane':
+        setActiveTab('planes');
+        setQuickActionModals(prev => ({...prev, showPlaneModal: true}));
+        break;
+      case 'add-ticket-class':
+        setActiveTab('ticket-classes');
+        setQuickActionModals(prev => ({...prev, showTicketClassModal: true}));
+        break;
+      case 'add-ticket':
+        setActiveTab('tickets');
+        setQuickActionModals(prev => ({...prev, showTicketModal: true}));
+        break;
+      default:
+        setActiveTab(action);
+        break;
+    }
+  };
+
   return (
-    <Container fluid className="py-4">
+    <Container fluid className="py-4" data-admin-panel ref={(el) => {
+      if (el) {
+        (el as any).setActiveTab = setActiveTab;
+      }
+    }}>
       <Row>
         <Col>
           <div className="text-center mb-4">
@@ -101,6 +147,14 @@ export const AdminPanel: React.FC = () => {
             </Nav.Item>
             <Nav.Item>
               <Nav.Link
+                active={activeTab === 'tickets'}
+                onClick={() => setActiveTab('tickets')}
+              >
+                🎫 Tickets
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link
                 active={activeTab === 'employees'}
                 onClick={() => setActiveTab('employees')}
               >
@@ -127,7 +181,7 @@ export const AdminPanel: React.FC = () => {
 };
 
 // Admin Overview Component
-const AdminOverview: React.FC = () => {
+const AdminOverview: React.FC<{ onNavigate: (action: AdminTab | 'add-flight' | 'add-airport' | 'add-plane' | 'add-ticket-class' | 'add-ticket') => void }> = ({ onNavigate }) => {
   return (
     <Container fluid>
       {/* Statistics Cards */}
@@ -180,25 +234,78 @@ const AdminOverview: React.FC = () => {
             <Card.Body>
               <Row>
                 <Col md={6} className="mb-3">
-                  <Button variant="outline-primary" className="w-100 text-start" size="lg">
+                  <Button
+                    variant="outline-primary"
+                    className="w-100 text-start"
+                    size="lg"
+                    onClick={() => onNavigate('add-flight')}
+                  >
                     <span className="me-2">➕</span>
                     Add New Flight
                   </Button>
                 </Col>
                 <Col md={6} className="mb-3">
-                  <Button variant="outline-info" className="w-100 text-start" size="lg">
+                  <Button
+                    variant="outline-info"
+                    className="w-100 text-start"
+                    size="lg"
+                    onClick={() => onNavigate('add-airport')}
+                  >
                     <span className="me-2">🏢</span>
                     Add New Airport
                   </Button>
                 </Col>
                 <Col md={6} className="mb-3">
-                  <Button variant="outline-success" className="w-100 text-start" size="lg">
+                  <Button
+                    variant="outline-warning"
+                    className="w-100 text-start"
+                    size="lg"
+                    onClick={() => onNavigate('add-plane')}
+                  >
+                    <span className="me-2">🛩️</span>
+                    Add New Aircraft
+                  </Button>
+                </Col>
+                <Col md={6} className="mb-3">
+                  <Button
+                    variant="outline-dark"
+                    className="w-100 text-start"
+                    size="lg"
+                    onClick={() => onNavigate('add-ticket-class')}
+                  >
+                    <span className="me-2">🎟️</span>
+                    Add Ticket Class
+                  </Button>
+                </Col>
+                <Col md={6} className="mb-3">
+                  <Button
+                    variant="outline-purple"
+                    className="w-100 text-start"
+                    size="lg"
+                    onClick={() => onNavigate('add-ticket')}
+                  >
+                    <span className="me-2">🎫</span>
+                    Add New Ticket
+                  </Button>
+                </Col>
+                <Col md={6} className="mb-3">
+                  <Button
+                    variant="outline-success"
+                    className="w-100 text-start"
+                    size="lg"
+                    onClick={() => alert('Reports feature coming soon!')}
+                  >
                     <span className="me-2">📊</span>
                     View Reports
                   </Button>
                 </Col>
                 <Col md={6} className="mb-3">
-                  <Button variant="outline-secondary" className="w-100 text-start" size="lg">
+                  <Button
+                    variant="outline-secondary"
+                    className="w-100 text-start"
+                    size="lg"
+                    onClick={() => onNavigate('parameters')}
+                  >
                     <span className="me-2">⚙️</span>
                     System Settings
                   </Button>

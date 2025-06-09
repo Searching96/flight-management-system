@@ -10,7 +10,10 @@ interface TicketClassFormData {
   color: string;
 }
 
-const TicketClassManagement: React.FC = () => {
+const TicketClassManagement: React.FC<{
+    showAddModal?: boolean;
+    onCloseAddModal?: () => void;
+}> = ({ showAddModal = false, onCloseAddModal }) => {
   const { canViewAdmin } = usePermissions();
   if (!canViewAdmin) {
     return (
@@ -43,6 +46,13 @@ const TicketClassManagement: React.FC = () => {
   useEffect(() => {
     loadTicketClasses();
   }, []);
+
+  // Effect to handle external modal trigger
+  useEffect(() => {
+    if (showAddModal) {
+        setShowForm(true);
+    }
+  }, [showAddModal]);
 
   const loadTicketClasses = async () => {
     try {
@@ -96,6 +106,11 @@ const TicketClassManagement: React.FC = () => {
     setEditingClass(null);
     reset();
     setError('');
+    
+    // Call the external close handler if provided
+    if (onCloseAddModal) {
+        onCloseAddModal();
+    }
   };
 
   if (loading) {

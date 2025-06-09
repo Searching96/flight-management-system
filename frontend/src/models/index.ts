@@ -20,7 +20,7 @@ export type { Airport } from './Airport';
 
 // Ticket related
 export type { TicketClass, TicketClassRequest } from './TicketClass';
-export type { Ticket, TicketRequest, BookingRequest } from './Ticket';
+export type { Ticket, TicketRequest, TicketFilters, TicketStatus } from './Ticket';
 
 // User related
 export type { Customer } from './Customer';
@@ -116,3 +116,5 @@ export interface PaymentResponse {
   transactionId: string;
   message?: string;
 }
+
+export * from './Ticket';

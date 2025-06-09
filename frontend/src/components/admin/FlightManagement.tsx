@@ -28,7 +28,10 @@ import DataTable from 'datatables.net-react';
 import DT from 'datatables.net-dt';
 DataTable.use(DT);
 
-const FlightManagement: React.FC = () => {
+const FlightManagement: React.FC<{
+    showAddModal?: boolean;
+    onCloseAddModal?: () => void;
+}> = ({ showAddModal = false, onCloseAddModal }) => {
     const { canViewAdmin } = usePermissions();
     if (!canViewAdmin) {
         return (
@@ -103,6 +106,13 @@ const FlightManagement: React.FC = () => {
     useEffect(() => {
         setError(flightsError || detailsError || '');
     }, [flightsError, detailsError]);
+
+    // Effect to handle external modal trigger
+    useEffect(() => {
+        if (showAddModal) {
+            setShowForm(true);
+        }
+    }, [showAddModal]);
 
     const loadData = async () => {
         try {
@@ -179,6 +189,11 @@ const FlightManagement: React.FC = () => {
         setDetailErrors({});
         reset();
         setError('');
+        
+        // Call the external close handler if provided
+        if (onCloseAddModal) {
+            onCloseAddModal();
+        }
     };
 
     // Add handler for FlightForm to add flight details

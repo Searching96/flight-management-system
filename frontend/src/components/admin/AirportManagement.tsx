@@ -12,7 +12,10 @@ interface AirportFormData {
   countryName: string;
 }
 
-const AirportManagement: React.FC = () => {
+const AirportManagement: React.FC<{
+    showAddModal?: boolean;
+    onCloseAddModal?: () => void;
+}> = ({ showAddModal = false, onCloseAddModal }) => {
   const { canViewAdmin } = usePermissions();
   if (!canViewAdmin) {
         return (
@@ -65,6 +68,12 @@ const AirportManagement: React.FC = () => {
   useEffect(() => {
     loadAirports();
   }, []);
+
+  useEffect(() => {
+    if (showAddModal) {
+        setShowForm(true);
+    }
+  }, [showAddModal]);
 
   const loadAirports = async () => {
     try {
@@ -121,6 +130,11 @@ const AirportManagement: React.FC = () => {
     setSelectedCountry('');
     reset();
     setError('');
+    
+    // Call the external close handler if provided
+    if (onCloseAddModal) {
+      onCloseAddModal();
+    }
   };
 
     if (loading) {
