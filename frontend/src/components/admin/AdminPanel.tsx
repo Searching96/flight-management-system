@@ -6,8 +6,9 @@ import ParameterSettings from './ParameterSettings';
 import PlaneManagement from './PlaneManagement';
 import TicketClassManagement from './TicketClassManagement';
 import { usePermissions } from '../../hooks/useAuth';
+import EmployeeManagement from './EmployeeManagement';
 
-type AdminTab = 'overview' | 'flights' | 'airports' | 'planes' | 'ticket-classes' | 'flight-ticket-classes' | 'parameters';
+type AdminTab = 'overview' | 'flights' | 'employees' | 'airports' | 'planes' | 'ticket-classes' | 'flight-ticket-classes' | 'parameters';
 
 export const AdminPanel: React.FC = () => {
   const { canViewAdmin } = usePermissions();
@@ -42,6 +43,8 @@ export const AdminPanel: React.FC = () => {
         return <TicketClassManagement />;
       case 'parameters':
         return <ParameterSettings />;
+      case 'employees':
+        return <EmployeeManagement />;
       default:
         return <AdminOverview />;
     }
@@ -94,6 +97,14 @@ export const AdminPanel: React.FC = () => {
                 onClick={() => setActiveTab('ticket-classes')}
               >
                 🎟️ Ticket Classes
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link
+                active={activeTab === 'employees'}
+                onClick={() => setActiveTab('employees')}
+              >
+                👥 Employees
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>

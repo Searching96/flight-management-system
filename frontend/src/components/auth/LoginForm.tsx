@@ -3,11 +3,8 @@ import { useForm } from 'react-hook-form';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { LoginRequest } from '../../models';
 
-interface LoginFormData {
-  email: string;
-  password: string;
-}
 
 const LoginForm: React.FC = () => {
   const { login } = useAuth();
@@ -19,13 +16,13 @@ const LoginForm: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors }
-  } = useForm<LoginFormData>();
+  } = useForm<LoginRequest>();
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: LoginRequest) => {
     try {
       setLoading(true);
       setError('');
-      await login(data.email, data.password);
+      await login(data);
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.');
