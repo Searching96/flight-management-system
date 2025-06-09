@@ -23,7 +23,6 @@ const FlightSearch: React.FC = () => {
   const [ticketClasses, setTicketClasses] = useState<TicketClass[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isRoundTrip, setIsRoundTrip] = useState(false);
   const [selectedDepartureAirport, setSelectedDepartureAirport] = useState<number | ''>('');
   const [selectedArrivalAirport, setSelectedArrivalAirport] = useState<number | ''>('');
   const [selectedTicketClass, setSelectedTicketClass] = useState<number | 'all'>('all'); // Changed to support 'all'
@@ -95,7 +94,6 @@ const FlightSearch: React.FC = () => {
         departureAirportId: selectedDepartureAirport as number,
         arrivalAirportId: selectedArrivalAirport as number,
         departureDate: data.departureDate + 'T00:00:00',
-        returnDate: isRoundTrip && data.returnDate ? data.returnDate + 'T00:00:00' : undefined,
         passengerCount: data.passengerCount,
         // Send 0 for "all classes" or the specific class ID
         ticketClassId: selectedTicketClass === 'all' ? 0 : (selectedTicketClass as number)
@@ -178,30 +176,6 @@ const FlightSearch: React.FC = () => {
             </Card.Header>
             <Card.Body className="p-4">
               <Form onSubmit={handleSubmit(onSubmit)}>
-                {/* Trip Type Selection */}
-                <Row className="mb-4">
-                  <Col>
-                    <Form.Label className="fw-bold">Trip Type</Form.Label>
-                    <ButtonGroup className="d-block">
-                      <Button
-                        variant={!isRoundTrip ? "primary" : "outline-primary"}
-                        onClick={() => setIsRoundTrip(false)}
-                        className="me-2"
-                      >
-                        <i className="bi bi-arrow-right me-1"></i>
-                        One Way
-                      </Button>
-                      <Button
-                        variant={isRoundTrip ? "primary" : "outline-primary"}
-                        onClick={() => setIsRoundTrip(true)}
-                      >
-                        <i className="bi bi-arrow-left-right me-1"></i>
-                        Round Trip
-                      </Button>
-                    </ButtonGroup>
-                  </Col>
-                </Row>
-
                 {/* Airport Selection */}
                 <Row className="mb-4">
                   <Col md={5}>
@@ -284,7 +258,7 @@ const FlightSearch: React.FC = () => {
 
                 {/* Date Selection */}
                 <Row className="mb-4">
-                  <Col md={isRoundTrip ? 6 : 12}>
+                  <Col md={6}>
                     <Form.Group>
                       <Form.Label htmlFor="departureDate" className="fw-bold">
                         <i className="bi bi-calendar-event me-1"></i>
@@ -303,30 +277,6 @@ const FlightSearch: React.FC = () => {
                     </Form.Group>
                   </Col>
 
-                  {isRoundTrip && (
-                    <Col md={6}>
-                      <Form.Group>
-                        <Form.Label htmlFor="returnDate" className="fw-bold">
-                          <i className="bi bi-calendar-check me-1"></i>
-                          Return Date
-                        </Form.Label>
-                        <Form.Control
-                          id="returnDate"
-                          type="date"
-                          min={watch('departureDate') || new Date().toISOString().split('T')[0]}
-                          {...register('returnDate', { required: isRoundTrip ? 'Return date is required' : false })}
-                          isInvalid={!!errors.returnDate}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.returnDate?.message}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                  )}
-                </Row>
-
-                {/* Passengers and Class Selection */}
-                <Row className="mb-4">
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label htmlFor="passengerCount" className="fw-bold">
@@ -347,30 +297,6 @@ const FlightSearch: React.FC = () => {
                       <Form.Control.Feedback type="invalid">
                         {errors.passengerCount?.message}
                       </Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
-
-                  <Col md={6}>
-                    <Form.Group>
-                      <Form.Label htmlFor="ticketClassId" className="fw-bold">
-                        <i className="bi bi-star me-1"></i>
-                        Ticket Class
-                      </Form.Label>
-                      <Form.Select
-                        id="ticketClassId"
-                        value={selectedTicketClass}
-                        onChange={e => setSelectedTicketClass(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                      >
-                        <option value="all">All Classes</option>
-                        {ticketClassOptions.map(tc => (
-                          <option key={tc.value} value={tc.value}>{tc.label}</option>
-                        ))}
-                      </Form.Select>
-                      <Form.Control
-                        type="hidden"
-                        {...register('ticketClassId')}
-                        value={selectedTicketClass === 'all' ? 0 : selectedTicketClass}
-                      />
                     </Form.Group>
                   </Col>
                 </Row>
