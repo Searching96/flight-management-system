@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, ListGroup } from 'react-bootstrap';
 import { bookingConfirmationService, BookingConfirmation } from '../../services/bookingConfirmationService';
-import { ticketService, flightService, passengerService } from '../../services';
+import { ticketService, flightService, passengerService, flightTicketClassService } from '../../services';
 
 const BookingLookup: React.FC = () => {
   const navigate = useNavigate();
@@ -89,6 +89,11 @@ const BookingLookup: React.FC = () => {
         for (const ticket of booking.tickets) {
           if (ticket.ticketId) {
             await ticketService.deleteTicket(ticket.ticketId);
+            await flightTicketClassService.updateRemainingTickets(
+              ticket.flightId, 
+              ticket.ticketClassId, 
+              -1
+            ); 
           }
         }
  
