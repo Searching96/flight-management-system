@@ -283,8 +283,9 @@ const BookingForm: React.FC = () => {
       }
 
       const confirmationData = bookingConfirmationService.createConfirmation(
+        confirmationCode,
         tickets,
-        data.passengers.map(p => p.email),
+        data.passengers.map(p => p.firstName + ' ' + p.lastName),
         flight!
       );
 

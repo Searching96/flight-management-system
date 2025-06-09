@@ -5,7 +5,7 @@ export interface BookingConfirmation {
   confirmationCode: string;
   bookingDate: string;
   tickets: Ticket[];
-  passengerEmails: string[];
+  passengers: string[];
   totalAmount: number;
   flightInfo: {
     flightCode: string;
@@ -89,37 +89,37 @@ export class BookingConfirmationService {
    * Look up booking by confirmation code and optional email/citizen ID
    * This would typically call a backend endpoint, but for now uses local storage
    */
-  async lookupBooking(request: BookingLookupRequest): Promise<BookingConfirmation | null> {
-    // For guest bookings, check local storage first
-    const localBooking = this.findGuestBooking(request.confirmationCode);
-    if (localBooking) {
-      // Verify email or citizen ID if provided
-      if (request.email) {
-        const hasMatchingEmail = localBooking.passengerEmails.some(
-          email => email.toLowerCase() === request.email!.toLowerCase()
-        );
-        if (!hasMatchingEmail) {
-          return null; // Email doesn't match
-        }
-      }
-      return localBooking;
-    }
+  // async lookupBooking(request: BookingLookupRequest): Promise<BookingConfirmation | null> {
+  //   // For guest bookings, check local storage first
+  //   const localBooking = this.findGuestBooking(request.confirmationCode);
+  //   if (localBooking) {
+  //     // Verify email or citizen ID if provided
+  //     if (request.email) {
+  //       const hasMatchingEmail = localBooking.passengerEmails.some(
+  //         email => email.toLowerCase() === request.email!.toLowerCase()
+  //       );
+  //       if (!hasMatchingEmail) {
+  //         return null; // Email doesn't match
+  //       }
+  //     }
+  //     return localBooking;
+  //   }
 
-    // TODO: Add backend API call for registered user bookings
-    try {
-      return await apiClient.get(`${this.baseUrl}/lookup/${request.confirmationCode}`, {
-        params: {
-          email: request.email,
-          citizenId: request.citizenId
-        }
-      });
-    } catch (error: any) {
-      if (error.response?.status === 404) {
-        return null; // Booking not found
-      }
-      throw error;
-    }
-  }
+  //   // TODO: Add backend API call for registered user bookings
+  //   try {
+  //     return await apiClient.get(`${this.baseUrl}/lookup/${request.confirmationCode}`, {
+  //       params: {
+  //         email: request.email,
+  //         citizenId: request.citizenId
+  //       }
+  //     });
+  //   } catch (error: any) {
+  //     if (error.response?.status === 404) {
+  //       return null; // Booking not found
+  //     }
+  //     throw error;
+  //   }
+  // }
 
   /**
    * Cancel booking by confirmation code
@@ -146,17 +146,18 @@ export class BookingConfirmationService {
    * Create booking confirmation from ticket booking response
    */
   createConfirmation(
+    confirmationCode: string,
     tickets: Ticket[], 
-    passengerEmails: string[], 
+    passengers: any[], 
     flightInfo: any
   ): BookingConfirmation {
     const totalAmount = tickets.reduce((sum, ticket) => sum + (ticket.fare || 0), 0);
     
     return {
-      confirmationCode: this.generateConfirmationCode(),
+      confirmationCode,
       bookingDate: new Date().toISOString(),
       tickets,
-      passengerEmails,
+      passengers,
       totalAmount,
       flightInfo: {
         flightCode: flightInfo.flightCode || '',
