@@ -1,8 +1,5 @@
 import { apiClient } from './api';
 import { API_URL } from './config';
-<<<<<<< HEAD
-import { Flight, FlightSearchCriteria, FlightRequest } from '../models';
-=======
 import { Flight } from '../models';
 
 export interface FlightRequest {
@@ -29,7 +26,6 @@ export interface FlightSearchCriteria {
   passengerCount: number;
   ticketClassId: number; // Keep this required to match backend
 }
->>>>>>> origin/ticket-api
 
 export class FlightService {
   private readonly baseUrl = API_URL.FLIGHTS;
