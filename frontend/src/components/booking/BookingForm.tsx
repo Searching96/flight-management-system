@@ -203,7 +203,6 @@ const BookingForm: React.FC = () => {
         return `${seatPrefix}${occupiedSeats + index + 1}`;
       });
 
-    
       const booking = {
         customerId: user!.accountId! ?? null,
         flightId: Number(flightId),
@@ -214,14 +213,9 @@ const BookingForm: React.FC = () => {
 
       // Book the tickets
       console.log("Booking data:", booking);
-      //await ticketService.bookTickets(booking);
 
       const confirmationCode = bookingConfirmationService.generateConfirmationCode();
-      // Create confirmation data compatible with BookingConfirmation interface
-      //const ticketCount = await ticketService.countAllTickets();
-      // Convert to TicketRequest format
       const tickets = data.passengers.map((passenger, index) => ({
-        //ticketId: ticketCount + index + 1, // Generate new ticket ID
         flightId: Number(flightId),
         ticketClassId: data.ticketClassId,
         bookCustomerId: user?.accountType === 1 && user.accountId !== undefined ? user.accountId : null, // Ensure never undefined
@@ -236,6 +230,7 @@ const BookingForm: React.FC = () => {
         try {
           const newTicket = ticketService.transformTicketData(ticket);
           await ticketService.createTicket(newTicket);
+          await flightTicketClassService.updateRemainingTickets(ticket.flightId, ticket.ticketClassId, 1);
           console.log("Ticket created:", newTicket);
         } catch (err: any) {
           console.error("Error creating ticket:", err);
