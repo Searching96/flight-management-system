@@ -13,7 +13,6 @@ interface BookingFormData {
     firstName: string;
     lastName: string;
     dateOfBirth: string;
-    gender: string;
     citizenId: string;
     phoneNumber: string;
     email: string;
@@ -79,7 +78,6 @@ const BookingForm: React.FC = () => {
         firstName: '',
         lastName: '',
         dateOfBirth: '',
-        gender: '',
         citizenId: '',
         phoneNumber: '',
         email: ''
@@ -326,16 +324,8 @@ const BookingForm: React.FC = () => {
     );
   }
 
-  // Gender options for TypeAhead
-  const genderOptions = [
-    { value: 'MALE', label: 'Male' },
-    { value: 'FEMALE', label: 'Female' },
-    { value: 'OTHER', label: 'Other' }
-  ];
-
   const renderPassengerForm = (index: number) => {
     // Get current values from form state
-    const currentGender = watch(`passengers.${index}.gender`) || '';
     const currentPhone = watch(`passengers.${index}.phoneNumber`) || '';
 
     return (
@@ -394,21 +384,22 @@ const BookingForm: React.FC = () => {
 
             <Col md={6}>
               <Form.Group>
-                <Form.Label>Gender</Form.Label>
-                <TypeAhead
-                  options={genderOptions}
-                  value={currentGender}
-                  onChange={(option) => {
-                    const gender = option?.value as string || '';
-                    setValue(`passengers.${index}.gender`, gender);
-                  }}
-                  placeholder="Select gender..."
-                  allowClear={false}
-                />
-                <input
-                  type="hidden"
-                  {...register(`passengers.${index}.gender`)}
-                />
+                <Form.Label>Phone Number</Form.Label>
+                <div className="d-flex gap-2">
+                  <Form.Control
+                    type="tel"
+                    placeholder="Phone number"
+                    value={currentPhone.replace(/^\+\d+\s*/, '')}
+                    onChange={(e) => {
+                      const phoneNumber = `${e.target.value}`;
+                      setValue(`passengers.${index}.phoneNumber`, phoneNumber);
+                    }}
+                  />
+                  <input
+                    type="hidden"
+                    {...register(`passengers.${index}.phoneNumber`)}
+                  />
+                </div>
               </Form.Group>
             </Col>
           </Row>
@@ -449,29 +440,6 @@ const BookingForm: React.FC = () => {
                 <Form.Control.Feedback type="invalid">
                   {errors.passengers?.[index]?.citizenId?.message}
                 </Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-          </Row>
-
-          <Row>
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label>Phone Number</Form.Label>
-                <div className="d-flex gap-2">
-                  <Form.Control
-                    type="tel"
-                    placeholder="Phone number"
-                    value={currentPhone.replace(/^\+\d+\s*/, '')}
-                    onChange={(e) => {
-                      const phoneNumber = `${e.target.value}`;
-                      setValue(`passengers.${index}.phoneNumber`, phoneNumber);
-                    }}
-                  />
-                  <input
-                    type="hidden"
-                    {...register(`passengers.${index}.phoneNumber`)}
-                  />
-                </div>
               </Form.Group>
             </Col>
           </Row>
