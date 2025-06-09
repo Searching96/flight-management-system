@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, ListGroup } from 'react-bootstrap';
 import { bookingConfirmationService, BookingConfirmation } from '../../services/bookingConfirmationService';
+import { ticketService, flightService } from '../../services';
 
 const BookingLookup: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const BookingLookup: React.FC = () => {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!searchData.confirmationCode.trim()) {
       setError('Please enter a confirmation code');
       return;
@@ -24,7 +25,42 @@ const BookingLookup: React.FC = () => {
     setError('');
     setBooking(null);
 
-    
+    try {
+      // Get tickets by confirmation code from backend
+      const tickets = await ticketService.getTicketsOnConfirmationCode(searchData.confirmationCode);
+
+      if (!tickets || tickets.length === 0) {
+        setError('No booking found with this confirmation code');
+        return;
+      }
+
+      // Get flight information for the first ticket (all tickets should have same flight)
+      const firstTicket = tickets[0];
+      const flight = await flightService.getFlightById(firstTicket.flightId);
+
+      // Create booking confirmation object similar to BookingConfirmation
+      const bookingData: BookingConfirmation = {
+        confirmationCode: searchData.confirmationCode,
+        bookingDate: new Date().toISOString(), // You might want to get actual booking date from ticket
+        tickets: tickets,
+        passengers: tickets.map((_, index) => `Passenger ${index + 1}`), // You'll need to get actual passenger names
+        totalAmount: tickets.reduce((sum, ticket) => sum + (ticket.fare || 0), 0),
+        flightInfo: {
+          flightCode: flight.flightCode || '',
+          departureTime: flight.departureTime || '',
+          arrivalTime: flight.arrivalTime || '',
+          departureCity: flight.departureCityName || '',
+          arrivalCity: flight.arrivalCityName || ''
+        }
+      };
+
+      setBooking(bookingData);
+    } catch (err: any) {
+      console.error('Error looking up booking:', err);
+      setError('Failed to find booking. Please check your confirmation code and try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancelBooking = async () => {
