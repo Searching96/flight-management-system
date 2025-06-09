@@ -1,7 +1,6 @@
 package com.flightmanagement.service;
 
 import com.flightmanagement.dto.ChatboxDto;
-import com.flightmanagement.dto.ChatboxTestDto;
 
 import java.util.List;
 
