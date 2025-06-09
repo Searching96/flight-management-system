@@ -1,0 +1,459 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Row, Col, Card, Form, Button, Badge, ListGroup, Spinner, InputGroup } from 'react-bootstrap';
+import { chatService, messageService } from '../../services';
+import { Chatbox, Message } from '../../models/Chat';
+import { useAuth } from '../../hooks/useAuth';
+
+interface FormattedMessage {
+  messageId?: number;
+  chatboxId: number;
+  employeeId?: number;
+  content: string;
+  sendTime: string;
+  employeeName?: string;
+  isFromCustomer: boolean;
+}
+
+const CustomerSupport: React.FC = () => {
+  const { user } = useAuth();
+  const [chatboxes, setChatboxes] = useState<Chatbox[]>([]);
+  const [selectedChatbox, setSelectedChatbox] = useState<Chatbox | null>(null);
+  const [messages, setMessages] = useState<FormattedMessage[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    loadChatboxes();
+  }, []);
+
+  useEffect(() => {
+    if (selectedChatbox) {
+      loadMessages(selectedChatbox.chatboxId!);
+      startPolling();
+      // Reset to bottom when selecting new chat
+      setIsNearBottom(true);
+    } else {
+      stopPolling();
+    }
+    return () => stopPolling();
+  }, [selectedChatbox]);
+
+  useEffect(() => {
+    // Only auto-scroll messages container if user is near bottom of chat
+    if (messages.length > 0 && isNearBottom && selectedChatbox) {
+      const timer = setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [messages.length, isNearBottom, selectedChatbox]);
+
+  const scrollToBottom = () => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50; // 50px threshold
+    setIsNearBottom(isAtBottom);
+  };
+
+  const loadChatboxes = async () => {
+    try {
+      setLoading(true);
+      const data = await chatService.getAllChatboxes();
+      setChatboxes(data);
+    } catch (err: any) {
+      setError('Failed to load chatboxes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMessages = async (chatboxId: number) => {
+    try {
+      const data = await messageService.getMessagesByChatboxId(chatboxId);
+      const formattedMessages = data.map(msg => ({
+        ...msg,
+        isFromCustomer: !msg.employeeId
+      }));
+      setMessages(formattedMessages);
+    } catch (err: any) {
+      setError('Failed to load messages');
+    }
+  };
+
+  const startPolling = () => {
+    if (pollingIntervalRef.current) return;
+    
+    pollingIntervalRef.current = setInterval(async () => {
+      if (selectedChatbox?.chatboxId) {
+        try {
+          const data = await messageService.getMessagesByChatboxId(selectedChatbox.chatboxId);
+          const formattedMessages = data.map(msg => ({
+            ...msg,
+            isFromCustomer: !msg.employeeId
+          }));
+          // Only update if there are actually new messages
+          if (JSON.stringify(formattedMessages) !== JSON.stringify(messages)) {
+            setMessages(formattedMessages);
+          }
+        } catch (error) {
+          console.error('Failed to poll messages:', error);
+        }
+      }
+    }, 200);
+  };
+
+  const stopPolling = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  };
+
+  const handleChatboxSelect = (chatbox: Chatbox) => {
+    setSelectedChatbox(chatbox);
+    setError('');
+  };
+
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedChatbox || !user) return;
+
+    try {
+      setSendingMessage(true);
+      
+      await messageService.createEmployeeMessage(
+        selectedChatbox.chatboxId!,
+        user.accountId!,
+        newMessage.trim()
+      );
+      
+      await loadMessages(selectedChatbox.chatboxId!);
+      setNewMessage('');
+      
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      setError('Failed to send message. Please try again.');
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  const getAvatarLetter = (name?: string, isFromCustomer?: boolean) => {
+    if (name && name.trim()) {
+      const words = name.trim().split(' ');
+      if (words.length >= 2) {
+        const lastTwo = words.slice(-2);
+        return (lastTwo[0].charAt(0) + lastTwo[1].charAt(0)).toUpperCase();
+      } else {
+        return words[0].charAt(0).toUpperCase();
+      }
+    }
+    return isFromCustomer ? 'KH' : 'NV';
+  };
+
+  const getAvatarColor = (name?: string, isFromCustomer?: boolean) => {
+    if (isFromCustomer) {
+      return '#0084ff';
+    }
+    
+    let hash = 0;
+    const str = name || 'Employee';
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 60%, 50%)`;
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+    
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    } else {
+      return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+    }
+  };
+
+  const filteredChatboxes = chatboxes.filter(chatbox =>
+    chatbox.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    chatbox.lastMessageContent?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <Container className="py-5">
+        <Row className="justify-content-center">
+          <Col md={8} className="text-center">
+            <Spinner animation="border" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </Spinner>
+            <p className="mt-3">Loading customer support...</p>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
+
+  return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <div className="bg-white border-bottom px-4 py-3">
+        <h4 className="mb-0 d-flex align-items-center">
+          <i className="bi bi-headset me-2 text-primary"></i>
+          Customer Support
+        </h4>
+      </div>
+
+      <div className="flex-grow-1 d-flex" style={{ overflow: 'hidden' }}>
+        {/* Sidebar - Chat List */}
+        <div className="bg-white border-end" style={{ width: '350px', display: 'flex', flexDirection: 'column' }}>
+          {/* Search */}
+          <div className="p-3 border-bottom">
+            <InputGroup>
+              <InputGroup.Text>
+                <i className="bi bi-search"></i>
+              </InputGroup.Text>
+              <Form.Control
+                type="text"
+                placeholder="Tìm kiếm hội thoại..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </InputGroup>
+          </div>
+
+          {/* Chat List */}
+          <div className="flex-grow-1" style={{ overflowY: 'auto' }}>
+            {filteredChatboxes.map(chatbox => (
+              <div
+                key={chatbox.chatboxId}
+                className={`d-flex align-items-center p-3 border-bottom cursor-pointer ${
+                  selectedChatbox?.chatboxId === chatbox.chatboxId ? 'bg-light' : ''
+                }`}
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleChatboxSelect(chatbox)}
+                onMouseEnter={(e) => {
+                  if (selectedChatbox?.chatboxId !== chatbox.chatboxId) {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedChatbox?.chatboxId !== chatbox.chatboxId) {
+                    e.currentTarget.style.backgroundColor = '';
+                  }
+                }}
+              >
+                {/* Avatar */}
+                <div 
+                  className="rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0 me-3"
+                  style={{
+                    width: '50px',
+                    height: '50px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    backgroundColor: getAvatarColor(chatbox.customerName, true)
+                  }}
+                >
+                  {getAvatarLetter(chatbox.customerName, true)}
+                </div>
+
+                {/* Chat Info */}
+                <div className="flex-grow-1 min-width-0">
+                  <div className="d-flex justify-content-between align-items-center mb-1">
+                    <h6 className="mb-0 text-truncate">{chatbox.customerName || 'Khách hàng'}</h6>
+                    {chatbox.lastMessageTime && (
+                      <small className="text-muted ms-2">
+                        {formatTime(chatbox.lastMessageTime)}
+                      </small>
+                    )}
+                  </div>
+                  
+                  {chatbox.lastMessageContent && (
+                    <p className="mb-0 text-muted small text-truncate">
+                      {chatbox.lastMessageContent}
+                    </p>
+                  )}
+                  
+                  {chatbox.unreadCount && chatbox.unreadCount > 0 && (
+                    <Badge bg="primary" className="mt-1">{chatbox.unreadCount}</Badge>
+                  )}
+                </div>
+              </div>
+            ))}
+            
+            {filteredChatboxes.length === 0 && (
+              <div className="text-center p-4 text-muted">
+                <i className="bi bi-chat-square-dots fs-1 mb-3 d-block"></i>
+                Không có hội thoại nào
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Main Chat Area */}
+        <div className="flex-grow-1 d-flex flex-column">
+          {selectedChatbox ? (
+            <>
+              {/* Chat Header */}
+              <div className="bg-white border-bottom px-4 py-3 d-flex align-items-center">
+                <div 
+                  className="rounded-circle text-white d-flex align-items-center justify-content-center me-3"
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    backgroundColor: getAvatarColor(selectedChatbox.customerName, true)
+                  }}
+                >
+                  {getAvatarLetter(selectedChatbox.customerName, true)}
+                </div>
+                <div>
+                  <h6 className="mb-0">{selectedChatbox.customerName || 'Khách hàng'}</h6>
+                  <small className="text-success">
+                    <i className="bi bi-circle-fill me-1" style={{ fontSize: '8px' }}></i>
+                    Đang hoạt động
+                  </small>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div 
+                ref={messagesContainerRef}
+                className="flex-grow-1 p-3" 
+                style={{ overflowY: 'auto', backgroundColor: '#f5f5f5' }}
+                onScroll={handleScroll}
+              >
+                {messages.map((message, index) => (
+                  <div
+                    key={message.messageId || index}
+                    className={`mb-3 d-flex ${message.isFromCustomer ? 'justify-content-start' : 'justify-content-end'}`}
+                  >
+                    {message.isFromCustomer && (
+                      <div 
+                        className="rounded-circle text-white d-flex align-items-center justify-content-center me-2 flex-shrink-0"
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          fontSize: '12px',
+                          fontWeight: 'bold',
+                          backgroundColor: getAvatarColor(selectedChatbox.customerName, true)
+                        }}
+                      >
+                        {getAvatarLetter(selectedChatbox.customerName, true)}
+                      </div>
+                    )}
+                    
+                    <div style={{ maxWidth: '70%' }}>
+                      <div 
+                        className={`p-3 rounded-3 ${
+                          message.isFromCustomer 
+                            ? 'bg-white text-dark' 
+                            : 'text-white'
+                        }`}
+                        style={{ 
+                          backgroundColor: message.isFromCustomer ? '#ffffff' : '#0084ff',
+                          borderRadius: message.isFromCustomer ? '18px 18px 18px 4px' : '18px 18px 4px 18px'
+                        }}
+                      >
+                        {!message.isFromCustomer && message.employeeName && (
+                          <div className="small fw-bold mb-1 opacity-75">
+                            {message.employeeName}
+                          </div>
+                        )}
+                        <div>{message.content}</div>
+                      </div>
+                      
+                      <div className={`small text-muted mt-1 ${message.isFromCustomer ? 'text-start' : 'text-end'}`}>
+                        {formatTime(message.sendTime)}
+                      </div>
+                    </div>
+
+                    {!message.isFromCustomer && (
+                      <div 
+                        className="rounded-circle text-white d-flex align-items-center justify-content-center ms-2 flex-shrink-0"
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          fontSize: '12px',
+                          fontWeight: 'bold',
+                          backgroundColor: getAvatarColor(message.employeeName, false)
+                        }}
+                      >
+                        {getAvatarLetter(message.employeeName, false)}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Message Input */}
+              <div className="bg-white border-top p-3">
+                <Form onSubmit={sendMessage}>
+                  <InputGroup>
+                    <Form.Control
+                      type="text"
+                      placeholder="Nhập tin nhắn..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      disabled={sendingMessage}
+                      style={{ borderRadius: '20px 0 0 20px', border: '1px solid #ddd' }}
+                    />
+                    <Button 
+                      type="submit" 
+                      variant="primary"
+                      disabled={sendingMessage || !newMessage.trim()}
+                      style={{ borderRadius: '0 20px 20px 0', minWidth: '60px' }}
+                    >
+                      {sendingMessage ? (
+                        <Spinner animation="border" size="sm" />
+                      ) : (
+                        <i className="bi bi-send-fill"></i>
+                      )}
+                    </Button>
+                  </InputGroup>
+                </Form>
+                {error && (
+                  <div className="text-danger small mt-2">
+                    <i className="bi bi-exclamation-triangle me-1"></i>
+                    {error}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex-grow-1 d-flex align-items-center justify-content-center text-muted">
+              <div className="text-center">
+                <i className="bi bi-chat-square-dots" style={{ fontSize: '4rem' }}></i>
+                <h5 className="mt-3">Chọn một hội thoại để bắt đầu</h5>
+                <p>Chọn một khách hàng từ danh sách bên trái để xem và trả lời tin nhắn</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CustomerSupport;

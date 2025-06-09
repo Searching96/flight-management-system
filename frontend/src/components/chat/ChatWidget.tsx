@@ -129,7 +129,7 @@ const ChatWidget: React.FC = () => {
           console.error('Failed to poll messages:', error);
         }
       }
-    }, 10); // Poll every 0.01 seconds
+    }, 200); // Poll every 0.2 seconds
   };
 
   const stopPolling = () => {

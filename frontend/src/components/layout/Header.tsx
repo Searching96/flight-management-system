@@ -41,7 +41,10 @@ const Header: React.FC = () => {
                 )}
                 <Nav.Link as={Link} to="/dashboard" className="text-decoration-none">Dashboard</Nav.Link>
                 {user.accountType === 2 && (
-                  <Nav.Link as={Link} to="/admin" className="text-decoration-none">Admin</Nav.Link>
+                  <>
+                    <Nav.Link as={Link} to="/admin" className="text-decoration-none">Admin</Nav.Link>
+                    <Nav.Link as={Link} to="/admin/customer-support" className="text-decoration-none">Customer Support</Nav.Link>
+                  </>
                 )}
               </>
             )}

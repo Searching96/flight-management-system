@@ -14,6 +14,7 @@ import BookingLookup from './components/booking/BookingLookup';
 import AdminPanel from './components/admin/AdminPanel';
 import ChatWidget from './components/chat/ChatWidget';
 import TestForm from './components/test/TestForm';
+import CustomerSupport from './components/admin/CustomerSupport';
 
 const App: React.FC = () => {
   return (
@@ -50,6 +51,16 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               } 
             />
+            <Route path="/admin/chat" element={
+              <ProtectedRoute requiredAccountType={2}>
+                <CustomerSupport />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/customer-support" element={
+              <ProtectedRoute requiredAccountType={2}>
+                <CustomerSupport />
+              </ProtectedRoute>
+            } />
 
             {/* Fallback Route */}
             <Route path="*" element={<div>Page not found</div>} />

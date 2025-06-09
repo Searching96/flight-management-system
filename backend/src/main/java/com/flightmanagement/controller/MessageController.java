@@ -51,11 +51,13 @@ public class MessageController {
         return new ResponseEntity<>(message, HttpStatus.CREATED);
     }
     
-    @PostMapping("/employee")
+    @PostMapping("/employee/{employeeId}")
     public ResponseEntity<MessageDto> createEmployeeMessage(
-            @RequestParam Integer chatboxId,
-            @RequestParam Integer employeeId,
-            @RequestParam String content) {
+            @PathVariable Integer employeeId,
+            @RequestBody Map<String, Object> requestBody) {
+        Integer chatboxId = (Integer) requestBody.get("chatboxId");
+        String content = (String) requestBody.get("content");
+        
         MessageDto message = messageService.createEmployeeMessage(chatboxId, employeeId, content);
         return new ResponseEntity<>(message, HttpStatus.CREATED);
     }

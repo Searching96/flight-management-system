@@ -77,6 +77,7 @@ const ChatManagement: React.FC = () => {
       // Create employee message using messageService
       await messageService.createEmployeeMessage(
         selectedChatbox.chatboxId!,
+        user.accountId!,
         newMessage.trim()
       );
       
