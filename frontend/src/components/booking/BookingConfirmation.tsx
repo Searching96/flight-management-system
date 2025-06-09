@@ -35,24 +35,6 @@ const BookingConfirmation: React.FC = () => {
     window.print();
   };
 
-  const handleEmailCopy = () => {
-    const emailText = `
-Booking Confirmation: ${booking.confirmationCode}
-
-Flight: ${booking.flightInfo.flightCode}
-Route: ${booking.flightInfo.departureCity} → ${booking.flightInfo.arrivalCity}
-Departure: ${new Date(booking.flightInfo.departureTime).toLocaleString()}
-Passengers: ${booking.passengerEmails.length}
-Total Amount: $${booking.totalAmount}
-
-Please save this confirmation code for future reference.
-    `;
-    
-    navigator.clipboard.writeText(emailText).then(() => {
-      alert('Booking details copied to clipboard!');
-    });
-  };
-
   return (
     <Container className="py-5">
       <Row className="justify-content-center">
@@ -174,36 +156,27 @@ Please save this confirmation code for future reference.
           <Card className="mb-4">
             <Card.Body>
               <Row className="g-3">
-                <Col md={6} lg={3}>
-                  <Button 
-                    onClick={handlePrint} 
+                <Col xs={12} md={4}>
+                  <Button
+                    onClick={handlePrint}
                     variant="outline-secondary"
                     className="w-100"
                   >
                     Print Confirmation
                   </Button>
                 </Col>
-                <Col md={6} lg={3}>
-                  <Button 
-                    onClick={handleEmailCopy} 
-                    variant="outline-secondary"
-                    className="w-100"
-                  >
-                    Copy Details
-                  </Button>
-                </Col>
-                <Col md={6} lg={3}>
-                  <Button 
-                    onClick={() => navigate('/booking-lookup')} 
+                <Col xs={12} md={4}>
+                  <Button
+                    onClick={() => navigate('/booking-lookup')}
                     variant="primary"
                     className="w-100"
                   >
                     Manage Booking
                   </Button>
                 </Col>
-                <Col md={6} lg={3}>
-                  <Button 
-                    onClick={() => navigate('/')} 
+                <Col xs={12} md={4}>
+                  <Button
+                    onClick={() => navigate('/')}
                     variant="success"
                     className="w-100"
                   >
