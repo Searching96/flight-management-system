@@ -69,7 +69,7 @@ const ChatWidget: React.FC = () => {
           content: msg.content,
           sendTime: msg.sendTime || new Date().toISOString(),
           senderName: msg.senderName,
-          isFromCustomer: msg.messageType === 1
+          isFromCustomer: !msg.employeeId // If employeeId is null, it's from customer
         }));
         setMessages(formattedMessages); // Cache trong state
       } else {
@@ -146,14 +146,14 @@ const ChatWidget: React.FC = () => {
             content: msg.content,
             sendTime: msg.sendTime || new Date().toISOString(),
             senderName: msg.senderName,
-            isFromCustomer: msg.messageType === 1
+            isFromCustomer: !msg.employeeId // If employeeId is null, it's from customer
           }));
           setMessages(formattedMessages);
         } catch (error) {
           console.error('Failed to poll messages:', error);
         }
       }
-    }, 10); // Poll every 0.2 seconds
+    }, 10); // Poll every 0.01 seconds
   };
 
   const stopPolling = () => {
@@ -178,7 +178,7 @@ const ChatWidget: React.FC = () => {
         content: msg.content,
         sendTime: msg.sendTime || new Date().toISOString(),
         senderName: msg.senderName,
-        isFromCustomer: msg.messageType === 1
+        isFromCustomer: !msg.employeeId // If employeeId is null, it's from customer
       }));
       setMessages(formattedMessages);
     } catch (error) {

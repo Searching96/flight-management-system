@@ -141,20 +141,18 @@ CREATE TABLE IF NOT EXISTS chatbox
 (
     chatbox_id INT AUTO_INCREMENT PRIMARY KEY,
     customer_id INT NOT NULL,
-    employee_id INT,
     deleted_at DATETIME DEFAULT NULL,
-    CONSTRAINT unique_chat_box UNIQUE (customer_id, employee_id),
-    FOREIGN KEY (customer_id) REFERENCES customer(customer_id),
-    FOREIGN KEY (employee_id) REFERENCES employee(employee_id)
+    FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
 );
 
 CREATE TABLE IF NOT EXISTS message
 (
     message_id INT AUTO_INCREMENT PRIMARY KEY,
     chatbox_id INT NOT NULL,
-    message_type INT NOT NULL, -- 1: customer send to employee, 2: employee send to customer
+    employee_id INT NULL,
     content TEXT NOT NULL,
     send_time DATETIME NOT NULL,
     deleted_at DATETIME DEFAULT NULL,
-    FOREIGN KEY (chatbox_id) REFERENCES chatbox(chatbox_id)
+    FOREIGN KEY (chatbox_id) REFERENCES chatbox(chatbox_id),
+    FOREIGN KEY (employee_id) REFERENCES employee(employee_id)
 );
