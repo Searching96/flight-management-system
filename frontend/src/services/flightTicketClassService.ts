@@ -32,6 +32,10 @@ class FlightTicketClassService {
   async deleteFlightTicketClass(flightId: number, ticketClassId: number): Promise<void> {
     return apiClient.delete(`${this.baseUrl}/${flightId}/${ticketClassId}`);
   }
+
+  async getOccupiedSeats(flightId: number, ticketClassId: number): Promise<number> {
+    return apiClient.get(`/flight-ticket-classes/occupied-seats/${flightId}/${ticketClassId}`);
+  }
 }
 
 export const flightTicketClassService = new FlightTicketClassService();

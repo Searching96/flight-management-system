@@ -1,6 +1,35 @@
 import { apiClient } from './api';
 import { API_URL } from './config';
+<<<<<<< HEAD
 import { Flight, FlightSearchCriteria, FlightRequest } from '../models';
+=======
+import { Flight } from '../models';
+
+export interface FlightRequest {
+  flightCode: string;
+  departureDate: string;
+  departureTime: string;
+  duration: string;
+  planeId: number;
+  departureAirportId: number;
+  arrivalAirportId: number;
+}
+
+export interface TicketClassAssignment {
+  ticketClassId: number;
+  ticketQuantity: number;
+  specifiedFare: number;
+}
+
+export interface FlightSearchCriteria {
+  departureAirportId: number;
+  arrivalAirportId: number;
+  departureDate: string;
+  returnDate?: string;
+  passengerCount: number;
+  ticketClassId: number; // Keep this required to match backend
+}
+>>>>>>> origin/ticket-api
 
 export class FlightService {
   private readonly baseUrl = API_URL.FLIGHTS;
@@ -16,6 +45,7 @@ export class FlightService {
   async getFlightByCode(flightCode: string): Promise<Flight> {
     return apiClient.get(`${this.baseUrl}/code/${flightCode}`);
   }
+  
   async searchFlights(criteria: FlightSearchCriteria): Promise<Flight[]> {
     const params: any = {
       departureAirportId: criteria.departureAirportId,

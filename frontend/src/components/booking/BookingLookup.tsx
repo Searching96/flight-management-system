@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, ListGroup } from 'react-bootstrap';
 import { bookingConfirmationService, BookingConfirmation } from '../../services/bookingConfirmationService';
+import { ticketService, flightService, passengerService, flightTicketClassService } from '../../services';
 
 const BookingLookup: React.FC = () => {
   const navigate = useNavigate();
   const [searchData, setSearchData] = useState({
     confirmationCode: '',
-    email: ''
   });
   const [booking, setBooking] = useState<BookingConfirmation | null>(null);
   const [loading, setLoading] = useState(false);
@@ -15,7 +15,7 @@ const BookingLookup: React.FC = () => {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!searchData.confirmationCode.trim()) {
       setError('Please enter a confirmation code');
       return;
@@ -26,18 +26,51 @@ const BookingLookup: React.FC = () => {
     setBooking(null);
 
     try {
-      const result = await bookingConfirmationService.lookupBooking({
-        confirmationCode: searchData.confirmationCode.trim(),
-        email: searchData.email.trim() || undefined
-      });
+      // Get tickets by confirmation code from backend
+      const tickets = await ticketService.getTicketsOnConfirmationCode(searchData.confirmationCode);
 
-      if (result) {
-        setBooking(result);
-      } else {
-        setError('Booking not found. Please check your confirmation code and try again.');
+      if (!tickets || tickets.length === 0) {
+        setError('No booking found with this confirmation code');
+        return;
       }
+
+      // Get flight information for the first ticket (all tickets should have same flight)
+      const firstTicket = tickets[0];
+      const flight = await flightService.getFlightById(firstTicket.flightId);
+
+      // Get passenger names for each ticket
+      const passengerNames = await Promise.all(
+        tickets.map(async (ticket) => {
+          try {
+            const passenger = await passengerService.getPassengerById(ticket.passengerId);
+            return passenger.passengerName;
+          } catch (error) {
+            console.error(`Error getting passenger ${ticket.passengerId}:`, error);
+            return `Passenger ${ticket.passengerId}`;
+          }
+        })
+      );
+
+      // Create booking confirmation object similar to BookingConfirmation
+      const bookingData: BookingConfirmation = {
+        confirmationCode: searchData.confirmationCode,
+        bookingDate: new Date().toISOString(), // You might want to get actual booking date from ticket
+        tickets: tickets,
+        passengers: passengerNames, // Now contains actual passenger names
+        totalAmount: tickets.reduce((sum, ticket) => sum + (ticket.fare || 0), 0),
+        flightInfo: {
+          flightCode: flight.flightCode || '',
+          departureTime: flight.departureTime || '',
+          arrivalTime: flight.arrivalTime || '',
+          departureCity: flight.departureCityName || '',
+          arrivalCity: flight.arrivalCityName || ''
+        }
+      };
+
+      setBooking(bookingData);
     } catch (err: any) {
-      setError(err.message || 'An error occurred while looking up your booking.');
+      console.error('Error looking up booking:', err);
+      setError('Failed to find booking. Please check your confirmation code and try again.');
     } finally {
       setLoading(false);
     }
@@ -45,18 +78,30 @@ const BookingLookup: React.FC = () => {
 
   const handleCancelBooking = async () => {
     if (!booking) return;
-
+  
     const confirmed = window.confirm(
       'Are you sure you want to cancel this booking? This action cannot be undone.'
     );
-
+  
     if (confirmed) {
       try {
-        await bookingConfirmationService.cancelBooking(booking.confirmationCode);
-        alert('Booking cancelled successfully.');
+        // Cancel all tickets in the booking
+        for (const ticket of booking.tickets) {
+          if (ticket.ticketId) {
+            await ticketService.deleteTicket(ticket.ticketId);
+            await flightTicketClassService.updateRemainingTickets(
+              ticket.flightId, 
+              ticket.ticketClassId, 
+              -1
+            ); 
+          }
+        }
+ 
+        alert('Booking and all tickets cancelled successfully.');
         setBooking(null);
-        setSearchData({ confirmationCode: '', email: '' });
+        setSearchData({ confirmationCode: '' });
       } catch (err: any) {
+        console.error('Error canceling booking:', err);
         alert('Failed to cancel booking: ' + (err.message || 'Unknown error'));
       }
     }
@@ -84,39 +129,21 @@ const BookingLookup: React.FC = () => {
             <Card.Body>
               <Form onSubmit={handleSearch}>
                 <Row>
-                  <Col md={6}>
+                  <Col md={12}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Confirmation Code *</Form.Label>
+                      <Form.Label className="w-100 text-center fw-bold fs-4">Confirmation Code *</Form.Label>
                       <Form.Control
                         type="text"
                         value={searchData.confirmationCode}
-                        onChange={(e) => setSearchData(prev => ({ 
-                          ...prev, 
-                          confirmationCode: e.target.value.toUpperCase() 
+                        onChange={(e) => setSearchData(prev => ({
+                          ...prev,
+                          confirmationCode: e.target.value.toUpperCase()
                         }))}
                         placeholder="FMS-YYYYMMDD-XXXX"
                         required
                       />
                       <Form.Text className="text-muted">
                         Format: FMS-YYYYMMDD-XXXX (e.g., FMS-20240527-A1B2)
-                      </Form.Text>
-                    </Form.Group>
-                  </Col>
-
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Email (Optional)</Form.Label>
-                      <Form.Control
-                        type="email"
-                        value={searchData.email}
-                        onChange={(e) => setSearchData(prev => ({ 
-                          ...prev, 
-                          email: e.target.value 
-                        }))}
-                        placeholder="Enter email for verification"
-                      />
-                      <Form.Text className="text-muted">
-                        Enter email for additional verification (recommended)
                       </Form.Text>
                     </Form.Group>
                   </Col>
@@ -129,8 +156,8 @@ const BookingLookup: React.FC = () => {
                 )}
 
                 <div className="d-flex gap-3">
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     variant="primary"
                     disabled={loading}
                   >
@@ -143,7 +170,7 @@ const BookingLookup: React.FC = () => {
                       'Find Booking'
                     )}
                   </Button>
-                  <Button 
+                  <Button
                     variant="outline-secondary"
                     onClick={() => navigate('/')}
                   >
@@ -198,7 +225,7 @@ const BookingLookup: React.FC = () => {
                     {booking.tickets.map((ticket, index) => (
                       <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
                         <div>
-                          <strong>Passenger {index + 1}</strong>
+                          <strong>Passenger {index + 1} : {booking.passengers[index]}</strong>
                           <div className="text-muted">Seat: {ticket.seatNumber}</div>
                         </div>
                         <Badge bg="primary" className="fs-6">${ticket.fare}</Badge>
@@ -234,12 +261,12 @@ const BookingLookup: React.FC = () => {
                   </Row>
                 </div>
               </Card.Body>
-              
+
               {/* Booking Actions */}
               <Card.Footer className="bg-light">
                 <Row className="g-2">
                   <Col md={4}>
-                    <Button 
+                    <Button
                       onClick={handlePrintBooking}
                       variant="outline-secondary"
                       className="w-100"
@@ -248,7 +275,7 @@ const BookingLookup: React.FC = () => {
                     </Button>
                   </Col>
                   <Col md={4}>
-                    <Button 
+                    <Button
                       onClick={() => navigate('/booking-confirmation', {
                         state: {
                           confirmationCode: booking.confirmationCode,
@@ -263,7 +290,7 @@ const BookingLookup: React.FC = () => {
                     </Button>
                   </Col>
                   <Col md={4}>
-                    <Button 
+                    <Button
                       onClick={handleCancelBooking}
                       variant="danger"
                       className="w-100"

@@ -48,6 +48,9 @@ public class Ticket {
     
     @Column(name = "fare", nullable = false, precision = 10, scale = 2)
     private BigDecimal fare;
+
+    @Column(name = "confirmation_code", nullable = false, length = 20)
+    private String confirmationCode;
     
     @Column(name = "deletedAt")
     private LocalDateTime deletedAt;

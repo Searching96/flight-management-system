@@ -4,52 +4,40 @@ import { Customer } from './Customer';
 
 export interface Ticket {
   ticketId?: number;
-  customerId: number;
-  flightId: number;
-  ticketClassId: number;
-  bookingDate: string;
-  ticketPrice: number;
-  status: TicketStatus;
-
-  // Related entities (populated)
-  customer?: Customer;
-  flight?: Flight;
-  ticketClass?: TicketClass;
-
-  // Metadata
-  createdAt?: string;
-  updatedAt?: string;
+  flightId?: number;
+  ticketClassId?: number;
+  bookCustomerId?: number | null; // Optional - only for frequent flyers program
+  passengerId?: number;
+  seatNumber?: string;
+  ticketStatus?: number; // 1: paid, 2: unpaid, 3: canceled
+  paymentTime?: string;
+  fare?: number;
+  confirmationCode?: string
 }
 
 export interface TicketRequest {
   customerId: number;
   flightId: number;
   ticketClassId: number;
-  ticketPrice: number;
-  status?: TicketStatus;
+  bookCustomerId: number | null;
+  passengerId: number;
+  seatNumber: string;
+  fare: number;
+  paymentTime?: string; // Optional - only for paid tickets
+  confirmationCode: string
 }
 
-export interface TicketFilters {
-  status?: TicketStatus;
-  flightId?: number;
-  customerId?: number;
-  ticketClassId?: number;
-  dateRange?: {
-    from?: string;
-    to?: string;
-  };
+export interface BookingRequest {
+  flightId: number;
+  customerId: number; // Required - only for frequent flyers program
+  ticketClassId: number;
+  passengers: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    citizenId: string;
+    phoneNumber: string;
+  }[];
+  totalFare?: number;
+  seatNumbers: string[];
 }
-
-// In your models or utils file
-export enum TicketStatus {
-  PAID = 1,
-  UNPAID = 2,
-  CANCELLED = 3,
-}
-
-export const TicketStatusText: Record<TicketStatus, string> = {
-  [TicketStatus.PAID]: 'Paid',
-  [TicketStatus.UNPAID]: 'Unpaid',
-  [TicketStatus.CANCELLED]: 'Cancelled',
-};
-

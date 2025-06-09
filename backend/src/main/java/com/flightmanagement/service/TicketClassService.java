@@ -17,4 +17,5 @@ public interface TicketClassService {
     void deleteTicketClass(Integer id);
     
     TicketClassDto getTicketClassByName(String ticketClassName);
+
 }

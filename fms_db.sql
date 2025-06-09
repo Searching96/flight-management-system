@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS flight_ticket_class
 
 CREATE TABLE IF NOT EXISTS ticket
 (
-    ticket_id INT PRIMARY KEY,
+    ticket_id INT auto_increment PRIMARY KEY,
     flight_id INT NOT NULL,
     ticket_class_id INT NOT NULL,
     book_customer_id INT, -- nullable
@@ -132,6 +132,7 @@ CREATE TABLE IF NOT EXISTS ticket
     ticket_status TINYINT DEFAULT 0, -- 0: unpaid, 1: paid,
     payment_time DATETIME, -- nullable
     fare DECIMAL(10,2) NOT NULL,
+    confirmation_code varchar(20) not null,
     deleted_at DATETIME DEFAULT NULL,
     FOREIGN KEY (flight_id) REFERENCES flight(flight_id),
     FOREIGN KEY (ticket_class_id) REFERENCES ticket_class(ticket_class_id),
@@ -158,3 +159,18 @@ CREATE TABLE IF NOT EXISTS message
     FOREIGN KEY (chatbox_id) REFERENCES chatbox(chatbox_id),
     FOREIGN KEY (employee_id) REFERENCES employee(employee_id)
 );
+-- insert into customer values (3, 0, null);
+select * from account;
+select * from airport;
+select * from chatbox;
+select * from customer;
+select * from employee;
+select * from flight;
+select * from flight_detail;
+select * from flight_ticket_class;
+select * from message;
+select * from parameter;
+select * from passenger;
+select * from plane;
+select * from ticket;
+select * from ticket_class;

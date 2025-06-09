@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Alert, Badge, ListGroup } from 'react-bootstrap';
 import { BookingConfirmation as BookingConfirmationType } from '../../services/bookingConfirmationService';
+import { ticketService } from '../../services';
 
 const BookingConfirmation: React.FC = () => {
   const location = useLocation();
@@ -33,24 +34,6 @@ const BookingConfirmation: React.FC = () => {
 
   const handlePrint = () => {
     window.print();
-  };
-
-  const handleEmailCopy = () => {
-    const emailText = `
-Booking Confirmation: ${booking.confirmationCode}
-
-Flight: ${booking.flightInfo.flightCode}
-Route: ${booking.flightInfo.departureCity} → ${booking.flightInfo.arrivalCity}
-Departure: ${new Date(booking.flightInfo.departureTime).toLocaleString()}
-Passengers: ${booking.passengerEmails.length}
-Total Amount: $${booking.totalAmount}
-
-Please save this confirmation code for future reference.
-    `;
-    
-    navigator.clipboard.writeText(emailText).then(() => {
-      alert('Booking details copied to clipboard!');
-    });
   };
 
   return (
@@ -125,21 +108,23 @@ Please save this confirmation code for future reference.
                 </Row>
               </div>
 
-              {/* Passenger Information */}
-              <div className="mb-4">
-                <h5 className="text-primary mb-3">Passenger Information</h5>
-                <ListGroup>
+                {/* Passenger Information */}
+                <div className="mb-4">
+                  <h5 className="text-primary mb-3">Passenger Information</h5>
+                  <ListGroup>
                   {booking.tickets.map((ticket, index) => (
-                    <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong>Passenger {index + 1}</strong>
-                        <div className="text-muted">Seat: {ticket.seatNumber}</div>
-                      </div>
-                      <Badge bg="primary" className="fs-6">${ticket.fare}</Badge>
-                    </ListGroup.Item>
+                  <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
+                    <div>
+                    <strong>
+                      Passenger {index + 1}: {booking.passengers && booking.passengers[index]}
+                    </strong>
+                    <div className="text-muted">Seat: {ticket.seatNumber}</div>
+                    </div>
+                    <Badge bg="primary" className="fs-6">${ticket.fare}</Badge>
+                  </ListGroup.Item>
                   ))}
-                </ListGroup>
-              </div>
+                  </ListGroup>
+                </div>
 
               {/* Booking Summary */}
               <div className="mb-0">
@@ -174,36 +159,27 @@ Please save this confirmation code for future reference.
           <Card className="mb-4">
             <Card.Body>
               <Row className="g-3">
-                <Col md={6} lg={3}>
-                  <Button 
-                    onClick={handlePrint} 
+                <Col xs={12} md={4}>
+                  <Button
+                    onClick={handlePrint}
                     variant="outline-secondary"
                     className="w-100"
                   >
                     Print Confirmation
                   </Button>
                 </Col>
-                <Col md={6} lg={3}>
-                  <Button 
-                    onClick={handleEmailCopy} 
-                    variant="outline-secondary"
-                    className="w-100"
-                  >
-                    Copy Details
-                  </Button>
-                </Col>
-                <Col md={6} lg={3}>
-                  <Button 
-                    onClick={() => navigate('/booking-lookup')} 
+                <Col xs={12} md={4}>
+                  <Button
+                    onClick={() => navigate('/booking-lookup')}
                     variant="primary"
                     className="w-100"
                   >
                     Manage Booking
                   </Button>
                 </Col>
-                <Col md={6} lg={3}>
-                  <Button 
-                    onClick={() => navigate('/')} 
+                <Col xs={12} md={4}>
+                  <Button
+                    onClick={() => navigate('/')}
                     variant="success"
                     className="w-100"
                   >

@@ -68,4 +68,6 @@ public class TicketClassServiceImpl implements TicketClassService {
             .orElseThrow(() -> new RuntimeException("TicketClass not found with name: " + ticketClassName));
         return ticketClassMapper.toDto(ticketClass);
     }
+
+    
 }

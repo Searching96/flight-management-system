@@ -62,6 +62,15 @@ public class FlightTicketClassController {
         List<FlightTicketClassDto> availableFlightTicketClasses = flightTicketClassService.getAvailableFlightTicketClasses();
         return ResponseEntity.ok(availableFlightTicketClasses);
     }
+
+    @GetMapping("/occupied-seats/{flightId}/{ticketClassId}")
+    public ResponseEntity<Integer> calculateOccupiedSeatsByFlightIdAndTicketClassId(
+            @PathVariable Integer flightId,
+            @PathVariable Integer ticketClassId) {
+        Integer occupiedSeats = flightTicketClassService.calculateOccupiedSeatsByFlightIdAndTicketClassId(flightId, ticketClassId);
+        System.out.println("Occupied seats for flightId: " + flightId + ", ticketClassId: " + ticketClassId + " is " + occupiedSeats);
+        return ResponseEntity.ok(occupiedSeats);
+    }
     
     @PutMapping("/{flightId}/{ticketClassId}/update-remaining")
     public ResponseEntity<Void> updateRemainingTickets(

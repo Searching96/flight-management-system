@@ -120,4 +120,15 @@ public class FlightTicketClassServiceImpl implements FlightTicketClassService {
         List<FlightTicketClass> available = flightTicketClassRepository.findAvailable();
         return flightTicketClassMapper.toDtoList(available);
     }
+
+    @Override
+    public Integer calculateOccupiedSeatsByFlightIdAndTicketClassId(Integer flightId, Integer ticketClassId) {
+        Integer occupiedSeats = flightTicketClassRepository.calculateOccupiedSeatsByFlightIdAndTicketClassId(flightId, ticketClassId);
+        System.out.println("Occupied seats for flightId: " + flightId + ", ticketClassId: " + ticketClassId + " is " + occupiedSeats);
+        if (occupiedSeats == null) {
+            throw new RuntimeException(
+                    "No occupied seats found for flightId: " + flightId + " and ticketClassId: " + ticketClassId);
+        }
+        return occupiedSeats;
+    }
 }

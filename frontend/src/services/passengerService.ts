@@ -37,14 +37,14 @@ class PassengerService {
    * Returns passenger if found, null if not found (for creating new passenger)
    */
   async findExistingPassenger(citizenId: string): Promise<Passenger | null> {
-    try {
-      return await this.getPassengerByCitizenId(citizenId);
-    } catch (error: any) {
-      if (error.response?.status === 404) {
-        return null; // Passenger not found, can create new one
-      }
-      throw error; // Re-throw other errors
-    }
+    return await this.getPassengerByCitizenId(citizenId)
+      .then(response => response)
+      .catch(error => {
+        if (error?.response?.status === 404) {
+          return null; // Passenger not found
+        }
+        throw error; // Rethrow other errors
+      });
   }
 
   /**

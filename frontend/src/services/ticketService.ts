@@ -14,14 +14,24 @@ class TicketService {
     }
   }
 
-  async getTicketById(ticketId: number): Promise<Ticket> {
-    try {
-      const response = await apiClient.get(`${this.baseURL}/${ticketId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching ticket:', error);
-      throw error;
-    }
+  async getTicketsByFlightId(flightId: number): Promise<Ticket[]> {
+    return apiClient.get(`${this.baseUrl}/flight/${flightId}`);
+  }
+
+  async bookTickets(booking: BookingRequest): Promise<Ticket[]> {
+    // Transform passenger data format to match backend expectations
+    const transformedBooking = {
+      ...booking,
+      passengers: booking.passengers.map(p => ({
+        passengerName: `${p.firstName} ${p.lastName}`.trim(), // Combine names
+        email: p.email,
+        citizenId: p.citizenId,
+        phoneNumber: p.phoneNumber,
+      }))
+    };
+
+    console.log(transformedBooking);
+    return apiClient.post('/tickets/book', transformedBooking);
   }
 
   async createTicket(ticketData: TicketRequest): Promise<Ticket> {
@@ -74,15 +84,42 @@ class TicketService {
   }
 
   async searchTickets(query: string): Promise<Ticket[]> {
-    try {
-      const response = await apiClient.get(`${this.baseURL}/search`, {
-        params: { q: query }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error searching tickets:', error);
-      throw error;
-    }
+    return apiClient.get(`${this.baseUrl}/search`, { params: { q: query } });
+  }
+
+  async countAllTickets(): Promise<number> {
+    const tickets = await this.getAllTickets();
+    return tickets.length;
+  }
+
+  async generateConfirmationCode() : Promise<string> {
+    return apiClient.get(`${this.baseUrl}/confirmation-code`);
+  }
+
+  async getTicketsOnConfirmationCode(code: string) : Promise<Ticket[]> {
+    return apiClient.get(`${this.baseUrl}/booking-lookup/${code}`);
+  } 
+
+  transformTicketData(ticket: {
+    flightId: number;
+    ticketClassId: number;
+    bookCustomerId: number | null; // Optional for frequent flyers
+    passengerId: number;
+    seatNumber: string;
+    fare: number;
+    paymentTime?: string; // Optional for paid tickets
+    confirmationCode: string
+  }): TicketRequest {
+    return {
+      flightId: ticket.flightId,
+      ticketClassId: ticket.ticketClassId,
+      bookCustomerId: ticket.bookCustomerId || null,
+      passengerId: ticket.passengerId,
+      seatNumber: ticket.seatNumber,
+      fare: ticket.fare,
+      paymentTime: ticket.paymentTime,
+      confirmationCode: ticket.confirmationCode
+    };
   }
 }
 

@@ -25,48 +25,6 @@ public class TicketController {
         return ResponseEntity.ok(tickets);
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<List<TicketDto>> searchTickets(
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) Integer flightId,
-            @RequestParam(required = false) Integer customerId,
-            @RequestParam(required = false) Integer ticketClassId,
-
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-
-        try {
-            // Log the search request for debugging
-            System.out.println("Ticket search request received:");
-            System.out.println("Ticket status: " + status);
-            System.out.println("Flight ID: " + flightId);
-            System.out.println("Start Date: " + startDate);
-            System.out.println("End Date: " + endDate);
-            System.out.println("Customer ID: " + customerId);
-            System.out.println("Ticket Class ID: " + ticketClassId);
-
-            // Create search criteria
-            TicketSearchCriteria criteria = new TicketSearchCriteria();
-            criteria.setStatus(status);
-            criteria.setFlightId(flightId);
-            criteria.setCustomerId(customerId);
-            criteria.setStartDate(startDate);
-            criteria.setEndDate(endDate);
-            criteria.setTicketClassId(ticketClassId);
-
-            List<TicketDto> tickets = ticketService.getAllTickets();
-            System.out.println("Found " + tickets.size() + " tickets");
-
-            return ResponseEntity.ok(tickets);
-        } catch (Exception e) {
-            System.err.println("Error in flight search: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Flight search failed: " + e.getMessage(), e);
-        }
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<TicketDto> getTicketById(@PathVariable Integer id) {
         TicketDto ticket = ticketService.getTicketById(id);
@@ -74,24 +32,15 @@ public class TicketController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createTicket(@RequestBody TicketDto ticketDto) {
-        try {
-            TicketDto createdTicket = ticketService.createTicket(ticketDto);
-            return new ResponseEntity<>(createdTicket, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Invalid date format. Please use yyyy-MM-ddTHH:mm:ss format for datetime fields.");
-        }
+    public ResponseEntity<TicketDto> createTicket(@RequestBody TicketDto ticketDto) {
+        TicketDto createdTicket = ticketService.createTicket(ticketDto);
+        return new ResponseEntity<>(createdTicket, HttpStatus.CREATED);
     }
 
     @PostMapping("/book")
-    public ResponseEntity<?> bookTickets(@RequestBody BookingDto bookingDto) {
-        try {
-            List<TicketDto> bookedTickets = ticketService.bookTickets(bookingDto);
-            return new ResponseEntity<>(bookedTickets, HttpStatus.CREATED);
-        } catch (Exception e) {
-            e.printStackTrace(); // For debugging
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
-        }
+    public ResponseEntity<List<TicketDto>> bookTickets(@RequestBody BookingDto bookingDto) {
+        List<TicketDto> bookedTickets = ticketService.bookTickets(bookingDto);
+        return new ResponseEntity<>(bookedTickets, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
@@ -146,5 +95,17 @@ public class TicketController {
     public ResponseEntity<Boolean> isSeatAvailable(@RequestParam Integer flightId, @RequestParam String seatNumber) {
         boolean available = ticketService.isSeatAvailable(flightId, seatNumber);
         return ResponseEntity.ok(available);
+    }
+
+    @GetMapping("/confirmation-code")
+    public ResponseEntity<String> generateConfirmationCode() {
+        String code = ticketService.generateConfirmationCode();
+        return ResponseEntity.ok(code);
+    }
+
+    @GetMapping("/booking-lookup/{code}")
+    public ResponseEntity<List<TicketDto>> getTicketsOnConfirmationCode(@PathVariable String code) {
+        List<TicketDto> tickets = ticketService.getTicketsOnConfirmationCode(code);
+        return ResponseEntity.ok(tickets);
     }
 }
