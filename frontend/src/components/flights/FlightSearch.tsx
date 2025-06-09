@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, ButtonGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { flightService, airportService, ticketClassService } from '../../services';
 import { Flight, Airport, TicketClass } from '../../models';
 import TypeAhead from '../common/TypeAhead';
@@ -63,13 +63,6 @@ const FlightSearch: React.FC = () => {
     city: airport.cityName,
     name: airport.airportName,
     country: airport.countryName
-  }));
-
-  // Transform ticket classes for TypeAhead
-  const ticketClassOptions = ticketClasses.map(tc => ({
-    value: tc.ticketClassId!,
-    label: tc.ticketClassName,
-    color: tc.color
   }));
 
   const onSubmit = async (data: SearchFormData) => {

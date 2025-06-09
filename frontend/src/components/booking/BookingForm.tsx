@@ -3,9 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
-import { flightService, ticketService, passengerService, bookingConfirmationService, flightTicketClassService } from '../../services';
-import { Flight, TicketRequest } from '../../models';
-import TypeAhead from '../common/TypeAhead';
+import { flightService, ticketService, passengerService, bookingConfirmationService, flightTicketClassService, accountService } from '../../services';
+import { Flight } from '../../models';
 
 interface BookingFormData {
   passengers: {
@@ -29,16 +28,33 @@ const BookingForm: React.FC = () => {
   // Get booking data from sessionStorage (preferred) or fallback to query parameters
   const getBookingData = () => {
     const sessionData = sessionStorage.getItem('bookingData');
+    const getAccountFromId = async (accountId: number) => {
+      try {
+        const account = await accountService.getAccountById(accountId);
+        return account;
+      } catch (error) {
+        console.error('Failed to get account by ID:', error);
+        return null;
+      }
+    };
+
+    const logUserInfo = async () => {
+      const userInfo = await getAccountFromId(user?.accountId ?? 0);
+      console.log('User info from session:', userInfo);
+      return userInfo;
+    };
 
     if (sessionData) {
       try {
         const parsed = JSON.parse(sessionData);
 
         console.log('Parsed booking data from sessionStorage:', parsed);
+        console.log('Current user:', user);
         return {
           flightId: parsed.flightId?.toString(),
           queryPassengers: parsed.passengers?.toString(),
           queryClass: parsed.class?.toString()
+          //user: user === null ? undefined : user.email
         };
       } catch (error) {
         console.warn('Failed to parse booking data from sessionStorage:', error);
@@ -54,6 +70,9 @@ const BookingForm: React.FC = () => {
     };
   };
 
+  // write a function to get account from accountId
+  
+
   const { flightId, queryPassengers, queryClass } = getBookingData();
 
   const [flight, setFlight] = useState<Flight | null>(null);
@@ -64,6 +83,20 @@ const BookingForm: React.FC = () => {
 
   // Get passenger count from query param or location state
   const passengerCount = parseInt(queryPassengers || '0') || location.state?.passengerCount || 1;
+
+  // Helper to get user info for default values
+  const [accountInfo, setAccountInfo] = useState<any>(null);
+  useEffect(() => {
+    const logUserInfo = async () => {
+      if (user?.accountType === 1 && user?.accountId) {
+        const userInfo = await accountService.getAccountById(user.accountId);
+        setAccountInfo(userInfo);
+      }
+    };
+    logUserInfo();
+    // eslint-disable-next-line
+  }, [user]);
+
   const {
     register,
     handleSubmit,
@@ -73,19 +106,28 @@ const BookingForm: React.FC = () => {
     control
   } = useForm<BookingFormData>({
     defaultValues: {
-      passengers: Array(passengerCount).fill(null).map(() => ({
+      passengers: Array(passengerCount).fill(null).map((_, i) => ({
         passengerId: undefined,
         firstName: '',
         lastName: '',
         dateOfBirth: '',
-        citizenId: '',
-        phoneNumber: '',
-        email: ''
+        citizenId: user?.accountType === 1 && i === 0 ? accountInfo?.citizenId || '' : '',
+        phoneNumber: user?.accountType === 1 && i === 0 ? accountInfo?.phoneNumber || '' : '',
+        email: user?.accountType === 1 && i === 0 ? user.email || '' : ''
       })),
       ticketClassId: parseInt(queryClass || '0') || 0,
       useFrequentFlyer: false
     }
   });
+
+  // Update default values for first passenger when accountInfo is loaded
+  useEffect(() => {
+    if (user?.accountType === 1 && accountInfo) {
+      setValue('passengers.0.citizenId', accountInfo.citizenId || '');
+      setValue('passengers.0.phoneNumber', accountInfo.phoneNumber || '');
+    }
+    // eslint-disable-next-line
+  }, [accountInfo]);
 
   const { fields } = useFieldArray({
     control,
@@ -191,6 +233,11 @@ const BookingForm: React.FC = () => {
           }
         }
       }
+
+      // if (user?.accountType === 1) {
+      //   const accountPassenger = accountService.getAccountByEmail(user.email);
+      //   console.log("Account passenger data:", accountPassenger);
+      // }
 
       // Generate seat numbers for demonstration
       const occupiedSeats = await flightTicketClassService.getOccupiedSeats(Number(flightId), Number(data.ticketClassId));
@@ -327,6 +374,7 @@ const BookingForm: React.FC = () => {
   const renderPassengerForm = (index: number) => {
     // Get current values from form state
     const currentPhone = watch(`passengers.${index}.phoneNumber`) || '';
+    const isAccountPassenger = user?.accountType === 1 && index === 0;
 
     return (
       <Card key={index} className="mb-4">
@@ -394,6 +442,7 @@ const BookingForm: React.FC = () => {
                       const phoneNumber = `${e.target.value}`;
                       setValue(`passengers.${index}.phoneNumber`, phoneNumber);
                     }}
+                    disabled={isAccountPassenger}
                   />
                   <input
                     type="hidden"
@@ -419,6 +468,7 @@ const BookingForm: React.FC = () => {
                   })}
                   placeholder="Enter email address"
                   isInvalid={!!errors.passengers?.[index]?.email}
+                  disabled={isAccountPassenger}
                 />
                 <Form.Control.Feedback type="invalid">
                   {errors.passengers?.[index]?.email?.message}
@@ -436,6 +486,7 @@ const BookingForm: React.FC = () => {
                   })}
                   placeholder="Enter citizen ID number"
                   isInvalid={!!errors.passengers?.[index]?.citizenId}
+                  disabled={isAccountPassenger}
                 />
                 <Form.Control.Feedback type="invalid">
                   {errors.passengers?.[index]?.citizenId?.message}
