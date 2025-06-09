@@ -185,6 +185,13 @@ const BookingForm: React.FC = () => {
           try {
             const existing = await passengerService.findExistingPassenger(passenger.citizenId);
             if (existing) {
+              try {
+                const created = await passengerService.transformPassengerData(passenger);
+                await passengerService.updatePassenger(existing.passengerId!, created);
+              } catch (updateErr: any) {
+                setError('Error updating passenger: ' + (updateErr.message || 'Unknown error'));
+                return;
+              }
               // Set passengerId if found
               data.passengers[i] = {
                 ...data.passengers[i],

@@ -259,8 +259,8 @@ public class DataInitializer implements CommandLineRunner {
                 // Create demo passengers for testing bookings
                 PassengerDto passenger1 = new PassengerDto();
                 passenger1.setPassengerName("Nguyen Van A");
-                passenger1.setCitizenId("123456789");
-                passenger1.setPhoneNumber("0987654321");
+                passenger1.setCitizenId("123456788");
+                passenger1.setPhoneNumber("0987654322");
                 passenger1.setEmail("nguyenvana@email.com");
                 passengerService.createPassenger(passenger1);
                 
