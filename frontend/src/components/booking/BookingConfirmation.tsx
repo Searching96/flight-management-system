@@ -107,21 +107,23 @@ const BookingConfirmation: React.FC = () => {
                 </Row>
               </div>
 
-              {/* Passenger Information */}
-              <div className="mb-4">
-                <h5 className="text-primary mb-3">Passenger Information</h5>
-                <ListGroup>
+                {/* Passenger Information */}
+                <div className="mb-4">
+                  <h5 className="text-primary mb-3">Passenger Information</h5>
+                  <ListGroup>
                   {booking.tickets.map((ticket, index) => (
-                    <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong>Passenger {index + 1}</strong>
-                        <div className="text-muted">Seat: {ticket.seatNumber}</div>
-                      </div>
-                      <Badge bg="primary" className="fs-6">${ticket.fare}</Badge>
-                    </ListGroup.Item>
+                  <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
+                    <div>
+                    <strong>
+                      Passenger {index + 1}: {booking.passengers && booking.passengers[index]}
+                    </strong>
+                    <div className="text-muted">Seat: {ticket.seatNumber}</div>
+                    </div>
+                    <Badge bg="primary" className="fs-6">${ticket.fare}</Badge>
+                  </ListGroup.Item>
                   ))}
-                </ListGroup>
-              </div>
+                  </ListGroup>
+                </div>
 
               {/* Booking Summary */}
               <div className="mb-0">
