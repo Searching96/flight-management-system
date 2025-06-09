@@ -22,23 +22,31 @@ public class MessageMapper implements BaseMapper<Message, MessageDto> {
         dto.setSendTime(entity.getSendTime());
         dto.setIsFromCustomer(entity.getEmployeeId() == null);
         
-        // Set sender name based on who sent the message
-        if (entity.getEmployeeId() == null) {
-            // Message from customer - get customer name from chatbox
-            if (entity.getChatbox() != null && entity.getChatbox().getCustomer() != null
-                && entity.getChatbox().getCustomer().getAccount() != null) {
-                dto.setSenderName(entity.getChatbox().getCustomer().getAccount().getAccountName());
+        // Set employee name only if message is from employee
+        if (entity.getEmployeeId() != null) {
+            System.out.println("DEBUG - Message from employee ID: " + entity.getEmployeeId());
+            // Message from employee - get employee name
+            if (entity.getEmployee() != null) {
+                System.out.println("DEBUG - Employee entity found: " + entity.getEmployee().getEmployeeId());
+                if (entity.getEmployee().getAccount() != null) {
+                    String employeeName = entity.getEmployee().getAccount().getAccountName();
+                    System.out.println("DEBUG - Employee name found: " + employeeName);
+                    dto.setEmployeeName(employeeName);
+                } else {
+                    System.out.println("DEBUG - Employee account is null");
+                    dto.setEmployeeName("Support Agent"); // Fallback
+                }
             } else {
-                dto.setSenderName("Customer"); // Fallback
+                System.out.println("DEBUG - Employee entity is null for employee ID: " + entity.getEmployeeId());
+                dto.setEmployeeName("Support Agent"); // Fallback
             }
         } else {
-            // Message from employee - get employee name
-            if (entity.getEmployee() != null && entity.getEmployee().getAccount() != null) {
-                dto.setSenderName(entity.getEmployee().getAccount().getAccountName());
-            } else {
-                dto.setSenderName("Support Agent"); // Fallback
-            }
+            System.out.println("DEBUG - Message from customer");
+            // Message from customer - no employee name
+            dto.setEmployeeName(null);
         }
+        
+        dto.setDeletedAt(entity.getDeletedAt());
         
         return dto;
     }

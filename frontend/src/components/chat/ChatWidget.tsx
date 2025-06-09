@@ -10,7 +10,7 @@ interface Message {
   employeeId?: number; // null = from customer, not null = from employee
   content: string;
   sendTime: string;
-  senderName?: string;
+  employeeName?: string;
   isFromCustomer: boolean;
 }
 
@@ -69,7 +69,7 @@ const ChatWidget: React.FC = () => {
           chatboxId: msg.chatboxId || chatboxData.chatboxId!,
           content: msg.content,
           sendTime: msg.sendTime || new Date().toISOString(),
-          senderName: msg.senderName,
+          employeeName: msg.employeeName,
           isFromCustomer: !msg.employeeId // If employeeId is null, it's from customer
         }));
         setMessages(formattedMessages); // Cache trong state
@@ -93,7 +93,7 @@ const ChatWidget: React.FC = () => {
         chatboxId: chatbox.chatboxId,
         content: newMessage.trim(),
         sendTime: new Date().toISOString(),
-        senderName: user.accountName,
+        employeeName: undefined,
         isFromCustomer: true
       };
       
@@ -121,7 +121,7 @@ const ChatWidget: React.FC = () => {
             chatboxId: msg.chatboxId || chatbox.chatboxId!,
             content: msg.content,
             sendTime: msg.sendTime || new Date().toISOString(),
-            senderName: msg.senderName,
+            employeeName: msg.employeeName,
             isFromCustomer: !msg.employeeId // If employeeId is null, it's from customer
           }));
           setMessages(formattedMessages);
@@ -153,7 +153,7 @@ const ChatWidget: React.FC = () => {
         chatboxId: msg.chatboxId || chatbox.chatboxId!,
         content: msg.content,
         sendTime: msg.sendTime || new Date().toISOString(),
-        senderName: msg.senderName,
+        employeeName: msg.employeeName,
         isFromCustomer: !msg.employeeId // If employeeId is null, it's from customer
       }));
       setMessages(formattedMessages);
@@ -163,11 +163,35 @@ const ChatWidget: React.FC = () => {
     }
   };
 
-  const getAvatarLetter = (senderName?: string, isFromCustomer?: boolean) => {
-    if (senderName && senderName.trim()) {
-      return senderName.trim().charAt(0).toUpperCase();
+  const getAvatarLetter = (employeeName?: string, isFromCustomer?: boolean) => {
+    if (employeeName && employeeName.trim()) {
+      const words = employeeName.trim().split(' ');
+      if (words.length >= 2) {
+        // Lấy 2 từ cuối
+        const lastTwo = words.slice(-2);
+        return (lastTwo[0].charAt(0) + lastTwo[1].charAt(0)).toUpperCase();
+      } else {
+        return words[0].charAt(0).toUpperCase();
+      }
     }
     return isFromCustomer ? 'C' : 'S';
+  };
+
+  const getAvatarColor = (employeeName?: string, isFromCustomer?: boolean) => {
+    if (!employeeName && isFromCustomer) {
+      return '#007bff'; // Primary color for customer
+    }
+    
+    // Generate color based on name
+    let hash = 0;
+    const name = employeeName || 'Support';
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    // Convert to HSL for better color distribution
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 60%, 50%)`;
   };
 
   if (!user) {
@@ -234,11 +258,16 @@ const ChatWidget: React.FC = () => {
                     >
                       {!message.isFromCustomer && (
                         <div 
-                          className="me-2 rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0"
-                          style={{ width: '32px', height: '32px', fontSize: '14px', fontWeight: 'bold' }}
-                          title={message.senderName || 'Support Agent'}
+                          className="me-2 rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                          style={{ 
+                            width: '32px', 
+                            height: '32px', 
+                            fontSize: '12px', 
+                            fontWeight: 'bold',
+                            backgroundColor: getAvatarColor(message.employeeName, message.isFromCustomer)
+                          }}
                         >
-                          {getAvatarLetter(message.senderName, message.isFromCustomer)}
+                          {getAvatarLetter(message.employeeName, message.isFromCustomer)}
                         </div>
                       )}
                       
@@ -250,6 +279,11 @@ const ChatWidget: React.FC = () => {
                         }`}
                         style={{ maxWidth: '70%' }}
                       >
+                        {!message.isFromCustomer && message.employeeName && (
+                          <div className="small fw-bold text-muted mb-1">
+                            {message.employeeName}
+                          </div>
+                        )}
                         <div className="small">{message.content}</div>
                         <div className={`text-xs mt-1 ${message.isFromCustomer ? 'text-light' : 'text-muted'}`} style={{ fontSize: '0.7rem' }}>
                           {new Date(message.sendTime).toLocaleTimeString()}

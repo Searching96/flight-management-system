@@ -99,6 +99,37 @@ const ChatManagement: React.FC = () => {
     return <Badge bg="success">Active</Badge>;
   };
 
+  const getAvatarLetter = (employeeName?: string, isFromCustomer?: boolean) => {
+    if (employeeName && employeeName.trim()) {
+      const words = employeeName.trim().split(' ');
+      if (words.length >= 2) {
+        // Lấy 2 từ cuối
+        const lastTwo = words.slice(-2);
+        return (lastTwo[0].charAt(0) + lastTwo[1].charAt(0)).toUpperCase();
+      } else {
+        return words[0].charAt(0).toUpperCase();
+      }
+    }
+    return isFromCustomer ? 'C' : 'S';
+  };
+
+  const getAvatarColor = (employeeName?: string, isFromCustomer?: boolean) => {
+    if (!employeeName && isFromCustomer) {
+      return '#007bff'; // Primary color for customer
+    }
+    
+    // Generate color based on name
+    let hash = 0;
+    const name = employeeName || 'Support';
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    // Convert to HSL for better color distribution
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 60%, 50%)`;
+  };
+
   if (loading) {
     return (
       <Container className="py-5">
@@ -211,13 +242,27 @@ const ChatManagement: React.FC = () => {
                         style={{ maxWidth: '70%' }}
                       >
                         <div className="fw-bold small mb-1">
-                          {message.senderName || (message.isFromCustomer ? 'Customer' : 'Support')}
+                          {message.employeeName || (message.isFromCustomer ? 'Customer' : 'Support')}
                         </div>
                         <div>{message.content}</div>
                         <div className={`small mt-1 ${message.isFromCustomer ? 'text-muted' : 'text-light'}`}>
                           {message.sendTime && new Date(message.sendTime).toLocaleTimeString()}
                         </div>
                       </div>
+                      {!message.isFromCustomer && (
+                        <div 
+                          className="me-2 rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                          style={{ 
+                            width: '32px', 
+                            height: '32px', 
+                            fontSize: '12px', 
+                            fontWeight: 'bold',
+                            backgroundColor: getAvatarColor(message.employeeName, message.isFromCustomer)
+                          }}
+                        >
+                          {getAvatarLetter(message.employeeName, message.isFromCustomer)}
+                        </div>
+                      )}
                     </div>
                   ))}
                   <div ref={messagesEndRef} />

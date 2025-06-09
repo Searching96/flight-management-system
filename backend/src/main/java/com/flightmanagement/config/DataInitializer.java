@@ -118,82 +118,92 @@ public class DataInitializer implements CommandLineRunner {
                 RegisterDto admin = new RegisterDto();
                 admin.setAccountName("System Administrator");
                 admin.setEmail("admin@flightms.com");
-                admin.setPassword("admin123");
+                admin.setPassword("123Abc");
                 admin.setCitizenId("999999999");
                 admin.setPhoneNumber("0123456789");
-                admin.setAccountType(2); // Admin
+                admin.setAccountType(2); // Employee
                 AccountDto adminAccount = accountService.createAccount(admin);
                 
-                // Create employee record based on account type
-                if (adminAccount.getAccountType() == 2) {
-                    EmployeeDto adminEmployee = new EmployeeDto();
-                    adminEmployee.setEmployeeId(adminAccount.getAccountId());
-                    adminEmployee.setEmployeeType(5); // System Admin
-                    employeeService.createEmployee(adminEmployee);
-                }
+                // Create employee record
+                EmployeeDto adminEmployee = new EmployeeDto();
+                adminEmployee.setEmployeeId(adminAccount.getAccountId());
+                adminEmployee.setEmployeeType(5); // System Admin
+                employeeService.createEmployee(adminEmployee);
                 
                 // Create employee account
                 RegisterDto employee = new RegisterDto();
                 employee.setAccountName("Flight Operations Employee");
                 employee.setEmail("employee@flightms.com");
-                employee.setPassword("employee123");
+                employee.setPassword("123Abc");
                 employee.setCitizenId("888888888");
                 employee.setPhoneNumber("0123456788");
-                employee.setAccountType(2); // Employee/Admin
+                employee.setAccountType(2); // Employee
                 AccountDto employeeAccount = accountService.createAccount(employee);
                 
-                // Create employee record based on account type
-                if (employeeAccount.getAccountType() == 2) {
-                    EmployeeDto empRecord = new EmployeeDto();
-                    empRecord.setEmployeeId(employeeAccount.getAccountId());
-                    empRecord.setEmployeeType(3); // Customer Service
-                    employeeService.createEmployee(empRecord);
-                }
+                // Create employee record
+                EmployeeDto empRecord = new EmployeeDto();
+                empRecord.setEmployeeId(employeeAccount.getAccountId());
+                empRecord.setEmployeeType(3); // Customer Service
+                employeeService.createEmployee(empRecord);
+                
+                // Create another support employee
+                RegisterDto supportEmployee = new RegisterDto();
+                supportEmployee.setAccountName("de bo may giup");
+                supportEmployee.setEmail("support@flightms.com");
+                supportEmployee.setPassword("123Abc");
+                supportEmployee.setCitizenId("777777777");
+                supportEmployee.setPhoneNumber("0123456787");
+                supportEmployee.setAccountType(2); // Employee
+                AccountDto supportAccount = accountService.createAccount(supportEmployee);
+                
+                // Create employee record
+                EmployeeDto supportRecord = new EmployeeDto();
+                supportRecord.setEmployeeId(supportAccount.getAccountId());
+                supportRecord.setEmployeeType(2); // ban/dat ve
+                employeeService.createEmployee(supportRecord);
                 
                 // Create demo customer
                 RegisterDto customer = new RegisterDto();
                 customer.setAccountName("John Doe");
                 customer.setEmail("customer@flightms.com");
-                customer.setPassword("customer123");
+                customer.setPassword("123Abc");
                 customer.setCitizenId("123456789");
                 customer.setPhoneNumber("0987654321");
                 customer.setAccountType(1); // Customer
                 AccountDto customerAccount = accountService.createAccount(customer);
                 
-                // Create customer record based on account type
-                if (customerAccount.getAccountType() == 1) {
-                    CustomerDto custRecord = new CustomerDto();
-                    custRecord.setCustomerId(customerAccount.getAccountId());
-                    custRecord.setScore(0);
-                    customerService.createCustomer(custRecord);
-                }
+                // Create customer record
+                CustomerDto custRecord = new CustomerDto();
+                custRecord.setCustomerId(customerAccount.getAccountId());
+                custRecord.setScore(0);
+                customerService.createCustomer(custRecord);
                 
                 // Create additional test customer
                 RegisterDto testCustomer = new RegisterDto();
                 testCustomer.setAccountName("Jane Smith");
                 testCustomer.setEmail("john.doe@email.com");
-                testCustomer.setPassword("password123");
+                testCustomer.setPassword("123Abc");
                 testCustomer.setCitizenId("987654321");
                 testCustomer.setPhoneNumber("0987654322");
                 testCustomer.setAccountType(1); // Customer
                 AccountDto testCustomerAccount = accountService.createAccount(testCustomer);
                 
-                // Create customer record based on account type
-                if (testCustomerAccount.getAccountType() == 1) {
-                    CustomerDto testCustRecord = new CustomerDto();
-                    testCustRecord.setCustomerId(testCustomerAccount.getAccountId());
-                    testCustRecord.setScore(0);
-                    customerService.createCustomer(testCustRecord);
-                }
+                // Create customer record
+                CustomerDto testCustRecord = new CustomerDto();
+                testCustRecord.setCustomerId(testCustomerAccount.getAccountId());
+                testCustRecord.setScore(0);
+                customerService.createCustomer(testCustRecord);
                 
                 System.out.println("✓ Demo accounts created with correct email addresses");
-                System.out.println("  - Admin: admin@flightms.com / admin123");
-                System.out.println("  - Employee: employee@flightms.com / employee123");
-                System.out.println("  - Customer: customer@flightms.com / customer123");
-                System.out.println("  - Test Customer: john.doe@email.com / password123");
+                System.out.println("  - Admin: admin@flightms.com / 123Abc");
+                System.out.println("  - Employee: employee@flightms.com / 123Abc");
+                System.out.println("  - Support: support@flightms.com / 123Abc");
+                System.out.println("  - Customer: customer@flightms.com / 123Abc");
+                System.out.println("  - Test Customer: john.doe@email.com / 123Abc");
             }
         } catch (Exception e) {
             System.err.println("⚠️ Error creating demo accounts: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     

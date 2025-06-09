@@ -14,12 +14,13 @@ export interface CreateTestChatboxRequest {
 
 export interface Message {
   messageId?: number;
-  chatboxId?: number;
-  employeeId?: number; // null = from customer, not null = from employee
+  chatboxId: number;
+  employeeId?: number;
+  employeeName?: string;  // Employee name for display
   content: string;
-  sendTime?: string;
-  senderName?: string; // Employee name from backend or customer name
-  isFromCustomer?: boolean; // Derived field for UI
+  sendTime: string;
+  isFromCustomer?: boolean;
+  deletedAt?: string;
 }
 
 export interface SendMessageRequest {

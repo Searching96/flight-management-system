@@ -158,4 +158,4 @@ CREATE TABLE IF NOT EXISTS message
 );
 
 INSERT INTO message (chatbox_id, employee_id, content, send_time) 
-VALUES (1, 2, 'Hello, how can I help you?', NOW());
+VALUES (1, 11, 'Hi am Hèng', NOW());

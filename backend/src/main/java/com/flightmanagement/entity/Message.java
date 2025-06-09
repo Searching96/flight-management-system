@@ -24,16 +24,8 @@ public class Message {
     @Column(name = "chatbox_id", nullable = false)
     private Integer chatboxId;
     
-    @ManyToOne
-    @JoinColumn(name = "chatbox_id", insertable = false, updatable = false)
-    private Chatbox chatbox;
-    
     @Column(name = "employee_id")
     private Integer employeeId;
-    
-    @ManyToOne
-    @JoinColumn(name = "employee_id", insertable = false, updatable = false)
-    private Employee employee;
     
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
@@ -43,4 +35,12 @@ public class Message {
     
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", insertable = false, updatable = false)
+    private Employee employee;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chatbox_id", insertable = false, updatable = false)
+    private Chatbox chatbox;
 }

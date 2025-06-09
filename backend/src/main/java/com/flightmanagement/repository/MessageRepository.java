@@ -14,9 +14,9 @@ public interface MessageRepository extends JpaRepository<Message, Integer> {
     @Query("SELECT m FROM Message m WHERE m.deletedAt IS NULL")
     List<Message> findAllActive();
     
-    @Query("SELECT m FROM Message m WHERE m.chatboxId = ?1 AND m.deletedAt IS NULL ORDER BY m.sendTime ASC")
+    @Query("SELECT m FROM Message m LEFT JOIN FETCH m.employee e LEFT JOIN FETCH e.account a WHERE m.chatboxId = ?1 AND m.deletedAt IS NULL ORDER BY m.sendTime ASC")
     List<Message> findByChatboxIdOrderBySendTime(Integer chatboxId);
     
-    @Query("SELECT m FROM Message m WHERE m.chatboxId = ?1 AND m.deletedAt IS NULL ORDER BY m.sendTime DESC")
+    @Query("SELECT m FROM Message m WHERE m.chatbox.chatboxId = ?1 AND m.deletedAt IS NULL ORDER BY m.sendTime DESC")
     List<Message> findByChatboxIdOrderBySendTimeDesc(Integer chatboxId, Pageable pageable);
 }
