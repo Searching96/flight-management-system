@@ -5,6 +5,8 @@ import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-b
 import { useAuth } from '../../hooks/useAuth';
 import { RegisterRequest } from '../../models';
 
+type RegisterRequestWithConfirm = RegisterRequest & { confirmPassword: string };
+
 const RegisterForm: React.FC = () => {
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
@@ -16,20 +18,20 @@ const RegisterForm: React.FC = () => {
     handleSubmit,
     watch,
     formState: { errors }
-  } = useForm<RegisterRequest>();
+  } = useForm<RegisterRequestWithConfirm>();
 
-  const password = watch('password');
-
-  const onSubmit = async (data: RegisterRequest) => {
+  const onSubmit = async (data: RegisterRequestWithConfirm) => {
     try {
       setLoading(true);
       setError('');
       // Set account type to customer (type 1) - matches backend schema
       data.accountType = 1;
 
-      await registerUser(data);
+      const { confirmPassword, ...submitData } = data; // Remove confirmPassword from data
 
-      navigate('/login', {
+      await registerUser(submitData);
+
+      navigate('/home', {
         state: { message: 'Registration successful! Please sign in.' }
       });
     } catch (err: any) {
@@ -66,7 +68,7 @@ const RegisterForm: React.FC = () => {
                           required: 'Họ và tên là bắt buộc',
                           minLength: { value: 3, message: 'Họ và tên phải ít nhất 3 kí tự' },
                           pattern: {
-                            value: /^(?![a-zA-Z_]+$)[\p{L}]+$/u, message: 'Họ và tên chỉ có thể chứa kí tự'
+                            value: /^[\p{L}\s'.-]+$/u, message: 'Họ và tên chỉ có thể chứa kí tự'
                           }
                         })}
                         isInvalid={!!errors.accountName}

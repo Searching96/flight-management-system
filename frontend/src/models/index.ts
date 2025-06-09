@@ -29,11 +29,7 @@ export type { Ticket, TicketRequest, TicketFilters } from './Ticket';
 export type { Customer } from './Customer';
 export type {
   Employee,
-  CreateEmployeeRequest,
   UpdateEmployeeRequest,
-  EmployeeLoginRequest,
-  EmployeeLoginResponse,
-  ChangePasswordRequest,
   EmployeeSearchFilters
 } from './Employee';
 

@@ -491,6 +491,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
                         <TypeAhead
                             options={airportOptions}
                             value={selectedDepartureAirport}
+                            allowClear = {false}
                             onChange={(option) => {
                                 const airportId = option?.value as number || '';
                                 setSelectedDepartureAirport(airportId);
@@ -526,6 +527,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
                         <TypeAhead
                             options={airportOptions}
                             value={selectedArrivalAirport}
+                            allowClear = {false}
                             onChange={(option) => {
                                 const airportId = option?.value as number || '';
                                 setSelectedArrivalAirport(airportId);

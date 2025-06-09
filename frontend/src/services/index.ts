@@ -2,6 +2,7 @@
 export { apiClient } from './api';
 
 // Services
+export { authService } from './authService';
 export { accountService } from './accountService';
 export { airportService } from './airportService';
 export { bookingConfirmationService } from './bookingConfirmationService';

@@ -352,7 +352,7 @@ describe('useAuth', () => {
 
     // Assert user is logged in
     expect(result.current.user).toBeTruthy();
-    expect(result.current.user?.accountId).toBe(1);
+    expect(result.current.user?.id).toBe(1);
 
     // Act - Logout
     act(() => {
