@@ -23,10 +23,10 @@ public class Chatbox {
     @Column(name = "chatbox_id")
     private Integer chatboxId;
     
-    @Column(name = "customer_id", nullable = false)
+    @Column(name = "customer_id", nullable = false, insertable = true, updatable = true)
     private Integer customerId;
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", insertable = false, updatable = false)
     private Customer customer;
     

@@ -45,8 +45,18 @@ public class ChatboxMapper implements BaseMapper<Chatbox, ChatboxDto> {
         
         Chatbox entity = new Chatbox();
         entity.setChatboxId(dto.getChatboxId());
-        entity.setCustomer(customerRepository.findById(dto.getCustomerId())
-            .orElseThrow(() -> new RuntimeException("Customer not found with id: " + dto.getCustomerId())));
+        
+        // Lấy customer từ repository
+        var customer = customerRepository.findById(dto.getCustomerId())
+            .orElseThrow(() -> new RuntimeException("Customer not found with id: " + dto.getCustomerId()));
+        
+        // Đặt cả customer và customerId để đảm bảo consistency
+        entity.setCustomer(customer);
+        entity.setCustomerId(dto.getCustomerId());
+        
+        System.out.println("ChatboxMapper.toEntity - Set customerId: " + dto.getCustomerId());
+        System.out.println("ChatboxMapper.toEntity - Entity customerId after set: " + entity.getCustomerId());
+        
         return entity;
     }
     

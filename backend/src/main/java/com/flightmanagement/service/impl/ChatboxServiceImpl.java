@@ -6,6 +6,7 @@ import com.flightmanagement.mapper.ChatboxMapper;
 import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.repository.ChatboxRepository;
 import com.flightmanagement.repository.MessageRepository;
+import com.flightmanagement.repository.CustomerRepository;
 import com.flightmanagement.service.ChatboxService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,9 @@ public class ChatboxServiceImpl implements ChatboxService {
     
     @Autowired
     private AccountRepository accountRepository;
+
+    @Autowired
+    private CustomerRepository customerRepository;
 
     @Override
     public List<ChatboxDto> getAllChatboxes() {
@@ -73,9 +77,29 @@ public class ChatboxServiceImpl implements ChatboxService {
     
     @Override
     public ChatboxDto createChatbox(ChatboxDto chatboxDto) {
+        System.out.println("=== ChatboxServiceImpl.createChatbox START ===");
+        System.out.println("Creating chatbox with customerId: " + chatboxDto.getCustomerId());
+        
+        if (chatboxDto.getCustomerId() == null) {
+            throw new IllegalArgumentException("Customer ID cannot be null");
+        }
+        
         Chatbox chatbox = chatboxMapper.toEntity(chatboxDto);
+        
+        // Đảm bảo customerId không bị null
+        if (chatbox.getCustomerId() == null) {
+            System.out.println("WARNING: customerId is null after mapping, setting manually...");
+            chatbox.setCustomerId(chatboxDto.getCustomerId());
+        }
+        
+        System.out.println("Entity before save - customerId: " + chatbox.getCustomerId());
+        
         chatbox.setDeletedAt(null);
         Chatbox savedChatbox = chatboxRepository.save(chatbox);
+        
+        System.out.println("Chatbox saved with ID: " + savedChatbox.getChatboxId());
+        System.out.println("=== ChatboxServiceImpl.createChatbox END ===");
+        
         return chatboxMapper.toDto(savedChatbox);
     }
     
@@ -105,11 +129,36 @@ public class ChatboxServiceImpl implements ChatboxService {
     }
     
     private ChatboxDto createChatboxWithCustomerId(Integer customerId) {
+        System.out.println("=== ChatboxServiceImpl.createChatboxWithCustomerId START ===");
         System.out.println("Creating new chatbox for customer ID: " + customerId);
         
-        ChatboxDto chatboxDto = new ChatboxDto();
-        chatboxDto.setCustomerId(customerId);
-        return createChatbox(chatboxDto);
+        if (customerId == null) {
+            throw new IllegalArgumentException("Cannot create chatbox - customer ID is null");
+        }
+        
+        try {
+            // Kiểm tra khách hàng có tồn tại không
+            boolean customerExists = customerRepository.findById(customerId).isPresent();
+            if (!customerExists) {
+                throw new RuntimeException("Customer not found with ID: " + customerId);
+            }
+            
+            ChatboxDto chatboxDto = new ChatboxDto();
+            chatboxDto.setCustomerId(customerId);
+            System.out.println("Created ChatboxDto with customerId: " + chatboxDto.getCustomerId());
+            
+            ChatboxDto result = createChatbox(chatboxDto);
+            
+            System.out.println("=== ChatboxServiceImpl.createChatboxWithCustomerId END ===");
+            return result;
+        } catch (Exception e) {
+            System.err.println("=== ERROR in createChatboxWithCustomerId ===");
+            System.err.println("Error type: " + e.getClass().getName());
+            System.err.println("Error message: " + e.getMessage());
+            e.printStackTrace();
+            System.err.println("=== END ERROR in createChatboxWithCustomerId ===");
+            throw e;
+        }
     }
     
     @Override

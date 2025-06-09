@@ -42,19 +42,29 @@ public class ChatboxController {
     
     @GetMapping("/customer/{customerId}/chatbox")
     public ResponseEntity<ChatboxDto> getChatboxByCustomerId(@PathVariable Integer customerId) {
+        System.out.println("=== ChatboxController.getChatboxByCustomerId START ===");
+        System.out.println("Endpoint /customer/{customerId}/chatbox was called");
         System.out.println("Getting chatbox for customer ID: " + customerId);
+        System.out.println("Request received at: " + java.time.LocalDateTime.now());
         
         if (customerId == null) {
             System.err.println("Customer ID is null");
+            System.out.println("=== ChatboxController.getChatboxByCustomerId END (Bad Request) ===");
             return ResponseEntity.badRequest().build();
         }
         
         try {
+            System.out.println("Calling chatboxService.getChatboxByCustomerId...");
             ChatboxDto chatbox = chatboxService.getChatboxByCustomerId(customerId);
+            System.out.println("Successfully retrieved chatbox: " + (chatbox != null ? chatbox.getChatboxId() : "null"));
+            System.out.println("=== ChatboxController.getChatboxByCustomerId END (Success) ===");
             return ResponseEntity.ok(chatbox);
         } catch (Exception e) {
+            System.err.println("=== ERROR in ChatboxController.getChatboxByCustomerId ===");
             System.err.println("Error getting chatbox for customer " + customerId + ": " + e.getMessage());
+            System.err.println("Error type: " + e.getClass().getSimpleName());
             e.printStackTrace();
+            System.err.println("=== END ERROR ===");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
