@@ -56,7 +56,7 @@ const FlightSearch: React.FC = () => {
     country: airport.countryName
   }));
 
-  const onSubmit = async (data: SearchFormData) => {
+  const onSubmit = async (data: FlightSearchCriteria) => {
     try {
       setLoading(true);
       setError('');
@@ -78,7 +78,7 @@ const FlightSearch: React.FC = () => {
         departureAirportId: selectedDepartureAirport as number,
         arrivalAirportId: selectedArrivalAirport as number,
         departureDate: data.departureDate + 'T00:00:00',
-        passengerCount: data.passengerCount,
+        passengerCount: data.passengers,
         // Send 0 for "all classes" or the specific class ID
         ticketClassId: selectedTicketClass === 'all' ? 0 : (selectedTicketClass as number)
       };

@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/debug")
 public class DebugController {
-    
+
     @Autowired
     private AuthService authService;
-    
+
     @GetMapping("/login-by-name/{accountName}")
     public ResponseEntity<AuthResponse> debugLoginByName(@PathVariable String accountName) {
         System.out.println("=== Debug Login by Name START ===");

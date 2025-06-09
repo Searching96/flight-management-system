@@ -47,8 +47,7 @@ export class FlightService {
       departureAirportId: criteria.departureAirportId,
       arrivalAirportId: criteria.arrivalAirportId,
       departureDate: criteria.departureDate,
-      passengerCount: criteria.passengers,
-      isRoundTrip: criteria.isRoundTrip || false,
+      passengerCount: criteria.passengerCount,
       ticketClassId: criteria.ticketClassId || 0, // Default to 0 if not specified
     };
 

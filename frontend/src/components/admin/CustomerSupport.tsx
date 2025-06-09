@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Row, Col, Card, Form, Button, Badge, ListGroup, Spinner, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Spinner, InputGroup } from 'react-bootstrap';
 import { chatService, messageService } from '../../services';
 import { Chatbox, Message } from '../../models/Chat';
 import { useAuth } from '../../hooks/useAuth';
@@ -182,7 +182,7 @@ const CustomerSupport: React.FC = () => {
       
       await messageService.createEmployeeMessage(
         selectedChatbox.chatboxId!,
-        user.accountId!,
+        user.id!,
         newMessage.trim()
       );
       
@@ -247,7 +247,7 @@ const CustomerSupport: React.FC = () => {
     }
     
     // If message is from current user (employee), show "Bạn: "
-    if (chatbox.lastMessageEmployeeId === user?.accountId) {
+    if (chatbox.lastMessageEmployeeId === user?.id) {
       return 'Bạn: ';
     }
     
@@ -409,7 +409,7 @@ const CustomerSupport: React.FC = () => {
                 onScroll={handleScroll}
               >
                 {messages.map((message, index) => {
-                  const isCurrentUser = !message.isFromCustomer && message.employeeId === user?.accountId;
+                  const isCurrentUser = !message.isFromCustomer && message.employeeId === user?.id;
                   const shouldShowOnRight = isCurrentUser;
                   
                   return (

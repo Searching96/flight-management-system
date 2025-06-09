@@ -45,7 +45,6 @@ class AuthService {
   logout(): void {
     this.clearAuthData();
     // Optional: Add API call to invalidate token on server
-    apiClient.post('/auth/logout');
   }
 
   // Store auth data in localStorage

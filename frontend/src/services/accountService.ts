@@ -3,7 +3,7 @@ import { } from '../models/LoginResponse';
 import { Account } from '../models/Account';
 
 export class AccountService {
-  private readonly baseUrl = '/auth';
+  private readonly baseUrl = '/accounts';
 
   async getAccountById(id: number): Promise<Account> {
     return apiClient.get(`${this.baseUrl}/${id}`);

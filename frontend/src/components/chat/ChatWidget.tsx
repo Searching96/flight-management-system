@@ -51,14 +51,14 @@ const ChatWidget: React.FC = () => {
   };
 
   const initializeChat = async () => {
-    if (!user?.accountId) return;
+    if (!user?.id) return;
     
     try {
       setLoading(true);
       setError(null);
       
       // Get or create chatbox for customer
-      const chatboxData = await chatService.getChatboxByCustomerId(user.accountId);
+      const chatboxData = await chatService.getChatboxByCustomerId(user.id);
       setChatbox(chatboxData);
       
       // Load existing messages if chatbox exists
@@ -199,7 +199,7 @@ const ChatWidget: React.FC = () => {
   }
 
   // Only show chat widget for customers
-  if (user.accountType !== 1) {
+  if (user.accountTypeName !== "Customer") {
     return null;
   }
 

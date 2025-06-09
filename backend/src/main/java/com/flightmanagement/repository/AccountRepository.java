@@ -20,6 +20,9 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     @Query("SELECT a FROM Account a WHERE a.email = ?1 AND a.deletedAt IS NULL")
     Optional<Account> findByEmail(String email);
 
+    @Query("SELECT a FROM Account a WHERE a.accountName = ?1 AND a.deletedAt IS NULL")
+    Optional<Account> findByAccountName(String accountName);
+
     @Query("SELECT a FROM Account a WHERE a.citizenId = ?1 AND a.deletedAt IS NULL")
     Optional<Account> findByCitizenId(String citizenId);
 

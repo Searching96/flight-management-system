@@ -23,7 +23,7 @@ export type { AuthResponse, LoginRequest, UserDetails, RegisterRequest } from '.
 
 // Ticket related
 export type { TicketClass, TicketClassRequest } from './TicketClass';
-export type { Ticket, TicketRequest, TicketFilters } from './Ticket';
+export type { Ticket, TicketRequest } from './Ticket';
 
 // User related
 export type { Customer } from './Customer';

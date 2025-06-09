@@ -41,7 +41,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Autowired
     private CustomerService customerService;
-    
+
     @Override
     public void run(String... args) {
         System.out.println("🚀 Initializing Flight Management System Demo Data...");
@@ -118,20 +118,9 @@ public class DataInitializer implements CommandLineRunner {
                 admin.setCitizenId("999999999");
                 admin.setPhoneNumber("0123456789");
                 admin.setAccountType(2); // Admin
+                admin.setEmployeeType(5);
                 accountService.createAccount(admin);
 
-                AccountDto result = accountService.getAccountByEmail(admin.getEmail());
-
-                // Employee account
-                admin.setAccountType(2); // Employee
-                AccountDto adminAccount = accountService.createAccount(admin);
-                
-                // Create employee record
-                EmployeeDto adminEmployee = new EmployeeDto();
-                adminEmployee.setEmployeeId(adminAccount.getAccountId());
-                adminEmployee.setEmployeeType(5); // System Admin
-                employeeService.createEmployee(adminEmployee);
-                
                 // Create employee account
                 RegisterDto employee = new RegisterDto();
                 employee.setAccountName("Flight Operations Employee");
@@ -140,19 +129,11 @@ public class DataInitializer implements CommandLineRunner {
                 employee.setCitizenId("888888888");
                 employee.setPhoneNumber("0123456788");
                 employee.setAccountType(2); // Employee
+                employee.setEmployeeType(1);
                 accountService.createAccount(employee);
 
+
                 // Customer account
-                employee.setAccountType(2); // Employee
-                AccountDto employeeAccount = accountService.createAccount(employee);
-                
-                // Create employee record
-                EmployeeDto empRecord = new EmployeeDto();
-                empRecord.setEmployeeId(employeeAccount.getAccountId());
-                empRecord.setEmployeeType(3); // Customer Service
-                employeeService.createEmployee(empRecord);
-                
-                // Create another support employee
                 RegisterDto supportEmployee = new RegisterDto();
                 supportEmployee.setAccountName("de bo may giup");
                 supportEmployee.setEmail("support@flightms.com");
@@ -160,14 +141,10 @@ public class DataInitializer implements CommandLineRunner {
                 supportEmployee.setCitizenId("777777777");
                 supportEmployee.setPhoneNumber("0123456787");
                 supportEmployee.setAccountType(2); // Employee
-                AccountDto supportAccount = accountService.createAccount(supportEmployee);
-                
-                // Create employee record
-                EmployeeDto supportRecord = new EmployeeDto();
-                supportRecord.setEmployeeId(supportAccount.getAccountId());
-                supportRecord.setEmployeeType(2); // ban/dat ve
-                employeeService.createEmployee(supportRecord);
-                
+                supportEmployee.setEmployeeType(2);
+                accountService.createAccount(supportEmployee);
+
+
                 // Create demo customer
                 RegisterDto customer = new RegisterDto();
                 customer.setAccountName("John Doe");
@@ -178,15 +155,6 @@ public class DataInitializer implements CommandLineRunner {
                 customer.setAccountType(1); // Customer
                 accountService.createAccount(customer);
 
-                // Test customer
-                AccountDto customerAccount = accountService.createAccount(customer);
-                
-                // Create customer record
-                CustomerDto custRecord = new CustomerDto();
-                custRecord.setCustomerId(customerAccount.getAccountId());
-                custRecord.setScore(0);
-                customerService.createCustomer(custRecord);
-                
                 // Create additional test customer
                 RegisterDto testCustomer = new RegisterDto();
                 testCustomer.setAccountName("Jane Smith");
@@ -197,14 +165,6 @@ public class DataInitializer implements CommandLineRunner {
                 testCustomer.setAccountType(1); // Customer
                 accountService.createAccount(testCustomer);
 
-                AccountDto testCustomerAccount = accountService.createAccount(testCustomer);
-                
-                // Create customer record
-                CustomerDto testCustRecord = new CustomerDto();
-                testCustRecord.setCustomerId(testCustomerAccount.getAccountId());
-                testCustRecord.setScore(0);
-                customerService.createCustomer(testCustRecord);
-                
                 System.out.println("✓ Demo accounts created with correct email addresses");
                 System.out.println("  - Admin: admin@flightms.com / 123Abc");
                 System.out.println("  - Employee: employee@flightms.com / 123Abc");

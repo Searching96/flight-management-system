@@ -13,18 +13,20 @@ import java.util.List;
 // AccountController.java - Secured account management
 @RestController
 @RequestMapping("/api/accounts")
-@PreAuthorize("hasRole('EMPLOYEE_ADMIN')")
 public class AccountController {
 
     @Autowired
     private AccountService accountService;
 
     @GetMapping
+    @PreAuthorize("hasRole('EMPLOYEE_ADMIN')")
     public ResponseEntity<List<AccountDto>> getAllAccounts() {
         return ResponseEntity.ok(accountService.getAllAccounts());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMIN') or (hasRole('CUSTOMER') and #id == principal.id)")
+
     public ResponseEntity<AccountDto> getAccountById(@PathVariable Integer id) {
         return ResponseEntity.ok(accountService.getAccountById(id));
     }

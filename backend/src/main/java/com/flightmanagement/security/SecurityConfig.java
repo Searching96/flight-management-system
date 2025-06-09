@@ -45,7 +45,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Add CORS configuration
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/api/demo/**", "/api/flights/search", "/api/flights/{id}",
-                                "/api/airports", "/api/ticket-classes", "/api/flight-ticket-classes/flight/**").permitAll()
+                                "/api/airports", "/api/ticket-classes", "/api/flight-ticket-classes/flight/**"
+                                , "/api/passengers/**", "/api/flight-ticket-classes/occupied-seats/**"
+                                , "/api/flight-ticket-classes/{flightId}/{ticketClassId}/update-remaining"
+                                , "/api/tickets/confirmation-code", "/api/tickets/").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

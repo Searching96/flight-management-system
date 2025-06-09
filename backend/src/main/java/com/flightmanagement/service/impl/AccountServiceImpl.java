@@ -47,21 +47,19 @@ public class AccountServiceImpl implements AccountService {
         account.setPassword(passwordEncoder.encode(dto.getPassword()));
         account.setDeletedAt(null);
 
-        Account savedAccount = accountRepository.save(account);
-
-        // Create associated customer/employee
+        // Create associated entity BEFORE saving
         if (dto.getAccountType() == 1) {
             Customer customer = new Customer();
-            customer.setCustomerId(savedAccount.getAccountId());
-            customer.setAccount(savedAccount);
-            customerRepository.save(customer);
+            customer.setAccount(account); // Set bidirectional relationship
+            account.setCustomer(customer); // Attach to account
         } else if (dto.getAccountType() == 2) {
             Employee employee = new Employee();
-            employee.setEmployeeId(savedAccount.getAccountId());
-            employee.setAccount(savedAccount);
-            employeeRepository.save(employee);
+            employee.setAccount(account); // Set bidirectional relationship
+            employee.setEmployeeType(dto.getEmployeeType());
+            account.setEmployee(employee); // Attach to account
         }
 
+        Account savedAccount = accountRepository.save(account); // Cascades save to Customer/Employee
         return accountMapper.toDto(savedAccount);
     }
 
@@ -78,6 +76,14 @@ public class AccountServiceImpl implements AccountService {
                 .map(accountMapper::toDto)
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
     }
+
+    @Override
+    public Account getAccountByName(String accountName)
+    {
+        return accountRepository.findByAccountName(accountName)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+    }
+
 
     @Override
     public List<AccountDto> getAllAccounts() {

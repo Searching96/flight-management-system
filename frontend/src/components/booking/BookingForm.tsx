@@ -33,7 +33,7 @@ const BookingForm: React.FC = () => {
       try {
         const parsed = JSON.parse(sessionData);
 
-        console.log('Parsed booking data from sessionStorage:', parsed);
+        // console.log('Parsed booking data from sessionStorage:', parsed);
         return {
           flightId: parsed.flightId?.toString(),
           queryPassengers: parsed.passengers?.toString(),
@@ -71,8 +71,8 @@ const BookingForm: React.FC = () => {
   const [accountInfo, setAccountInfo] = useState<any>(null);
   useEffect(() => {
     const logUserInfo = async () => {
-      if (user?.accountType === 1 && user?.accountId) {
-        const userInfo = await accountService.getAccountById(user.accountId);
+      if (user?.accountTypeName === "Customer" && user?.id) {
+        const userInfo = await accountService.getAccountById(user.id);
         console.log('User account info:', userInfo);
         setAccountInfo(userInfo);
       }
@@ -92,12 +92,12 @@ const BookingForm: React.FC = () => {
     defaultValues: {
       passengers: Array(passengerCount).fill(null).map((_, i) => ({
         passengerId: undefined,
-        firstName: user?.accountType === 1 && i === 0 ? accountInfo?.accountName || '' : '',
-        lastName: user?.accountType === 1 && i === 0 ? accountInfo?.accountName || '' : '',
+        firstName: user?.accountTypeName === "Customer" && i === 0 ? accountInfo?.accountName || '' : '',
+        lastName: user?.accountTypeName === "Customer" && i === 0 ? accountInfo?.accountName || '' : '',
         dateOfBirth: '',
-        citizenId: user?.accountType === 1 && i === 0 ? accountInfo?.citizenId || '' : '',
-        phoneNumber: user?.accountType === 1 && i === 0 ? accountInfo?.phoneNumber || '' : '',
-        email: user?.accountType === 1 && i === 0 ? user.email || '' : ''
+        citizenId: user?.accountTypeName === "Customer" && i === 0 ? accountInfo?.citizenId || '' : '',
+        phoneNumber: user?.accountTypeName === "Customer" && i === 0 ? accountInfo?.phoneNumber || '' : '',
+        email: user?.accountTypeName === "Customer" && i === 0 ? user.email || '' : ''
       })),
       ticketClassId: parseInt(queryClass || '0') || 0,
       useFrequentFlyer: false
@@ -106,7 +106,8 @@ const BookingForm: React.FC = () => {
 
   // Update default values for first passenger when accountInfo is loaded
   useEffect(() => {
-    if (user?.accountType === 1 && accountInfo?.accountName) {
+    if (user?.accountTypeName === "Customer" && accountInfo?.accountName) {
+      console.log('Setting default passenger values from account info:', accountInfo);
       const nameParts = accountInfo.accountName.trim().split(' ');
       const firstName = nameParts.slice(0, -1).join(' ') || '';
       const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0] || '';
@@ -240,7 +241,7 @@ const BookingForm: React.FC = () => {
       });
 
       const booking = {
-        customerId: user!.accountId! ?? null,
+        customerId: user?.id! ?? null,
         flightId: Number(flightId),
         passengers: data.passengers, // Keep original format for BookingReques
         seatNumbers: seatNumbers,
@@ -261,12 +262,13 @@ const BookingForm: React.FC = () => {
       const tickets = data.passengers.map((passenger, index) => ({
         flightId: Number(flightId),
         ticketClassId: data.ticketClassId,
-        bookCustomerId: user?.accountType === 1 && user.accountId !== undefined ? user.accountId : null, // Ensure never undefined
+        bookCustomerId: user ? user?.accountTypeName === "Customer" && user?.id != null ? user.id : null : null,
         passengerId: passenger.passengerId,
         seatNumber: seatNumbers[index],
         fare: selectedClass?.specifiedFare || 0,
         confirmationCode: confirmationCode
       }));
+
 
       console.log("Tickets to be confirmed:", tickets);
 
@@ -373,7 +375,7 @@ const BookingForm: React.FC = () => {
   const renderPassengerForm = (index: number) => {
     // Get current values from form state
     const currentPhone = watch(`passengers.${index}.phoneNumber`) || '';
-    const isAccountPassenger = user?.accountType === 1 && index === 0;
+    const isAccountPassenger = user?.accountTypeName === "Customer" && index === 0;
 
     return (
       <Card key={index} className="mb-4">

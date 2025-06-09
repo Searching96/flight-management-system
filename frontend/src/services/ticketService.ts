@@ -1,5 +1,5 @@
 import { apiClient } from './api';
-import { Ticket, TicketRequest, TicketFilters } from '../models/Ticket';
+import { Ticket, TicketRequest, BookingRequest } from '../models/Ticket';
 
 class TicketService {
   private readonly baseURL = '/tickets';
@@ -14,8 +14,15 @@ class TicketService {
     }
   }
 
+
   async getTicketsByFlightId(flightId: number): Promise<Ticket[]> {
-    return apiClient.get(`${this.baseUrl}/flight/${flightId}`);
+    try {
+      const response = await apiClient.get(`${this.baseURL}/flight/${flightId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching tickets by flight:', error);
+      throw error;
+    }
   }
 
   async bookTickets(booking: BookingRequest): Promise<Ticket[]> {
@@ -63,15 +70,6 @@ class TicketService {
     }
   }
 
-  async getTicketsByFlightId(flightId: number): Promise<Ticket[]> {
-    try {
-      const response = await apiClient.get(`${this.baseURL}/flight/${flightId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching tickets by flight:', error);
-      throw error;
-    }
-  }
 
   async getTicketsByCustomerId(customerId: number): Promise<Ticket[]> {
     try {
@@ -84,7 +82,7 @@ class TicketService {
   }
 
   async searchTickets(query: string): Promise<Ticket[]> {
-    return apiClient.get(`${this.baseUrl}/search`, { params: { q: query } });
+    return apiClient.get(`${this.baseURL}/search`, { params: { q: query } });
   }
 
   async countAllTickets(): Promise<number> {
@@ -92,13 +90,13 @@ class TicketService {
     return tickets.length;
   }
 
-  async generateConfirmationCode() : Promise<string> {
-    return apiClient.get(`${this.baseUrl}/confirmation-code`);
+  async generateConfirmationCode(): Promise<string> {
+    return apiClient.get(`${this.baseURL}/confirmation-code`);
   }
 
-  async getTicketsOnConfirmationCode(code: string) : Promise<Ticket[]> {
-    return apiClient.get(`${this.baseUrl}/booking-lookup/${code}`);
-  } 
+  async getTicketsOnConfirmationCode(code: string): Promise<Ticket[]> {
+    return apiClient.get(`${this.baseURL}/booking-lookup/${code}`);
+  }
 
   transformTicketData(ticket: {
     flightId: number;
@@ -111,6 +109,7 @@ class TicketService {
     confirmationCode: string
   }): TicketRequest {
     return {
+      customerId: ticket.bookCustomerId || 0, // Default to 0 if not provided
       flightId: ticket.flightId,
       ticketClassId: ticket.ticketClassId,
       bookCustomerId: ticket.bookCustomerId || null,

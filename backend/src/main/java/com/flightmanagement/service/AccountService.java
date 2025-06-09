@@ -2,6 +2,7 @@ package com.flightmanagement.service;
 
 import com.flightmanagement.dto.AccountDto;
 import com.flightmanagement.dto.RegisterDto;
+import com.flightmanagement.entity.Account;
 
 import java.util.List;
 
@@ -12,6 +13,8 @@ public interface AccountService {
     AccountDto getAccountById(Integer id);
 
     AccountDto getAccountByEmail(String email);
+
+    Account getAccountByName(String accountName);
 
     List<AccountDto> getAllAccounts();
 

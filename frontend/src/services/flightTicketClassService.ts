@@ -36,6 +36,10 @@ class FlightTicketClassService {
   async getOccupiedSeats(flightId: number, ticketClassId: number): Promise<number> {
     return apiClient.get(`/flight-ticket-classes/occupied-seats/${flightId}/${ticketClassId}`);
   }
+
+  async updateRemainingTickets(flightId: number, ticketClassId: number, quantity: number): Promise<void> {
+    return apiClient.put(`/flight-ticket-classes/${flightId}/${ticketClassId}/update-remaining?quantity=${quantity}`);
+  }
 }
 
 export const flightTicketClassService = new FlightTicketClassService();
