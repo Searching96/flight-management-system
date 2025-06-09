@@ -56,12 +56,11 @@ export class ChatService {
   }
 
   async createEmployeeMessage(chatboxId: number, content: string): Promise<Message> {
-    const messageData = {
-      chatboxId,
-      content
-      // employeeId will be set by backend based on authenticated user
-    };
-    return apiClient.post(`${this.messageUrl}/employee`, messageData);
+    // Note: employeeId should be passed from component
+    return apiClient.post(`${this.messageUrl}/employee`, { 
+      chatboxId, 
+      content 
+    });
   }
 
   async markChatboxAsRead(chatboxId: number): Promise<void> {

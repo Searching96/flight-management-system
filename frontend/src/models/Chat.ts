@@ -4,6 +4,9 @@ export interface Chatbox {
   customerName?: string;
   lastMessageContent?: string;
   lastMessageTime?: string;
+  isLastMessageFromCustomer?: boolean;
+  lastMessageEmployeeId?: number;
+  lastMessageSenderName?: string;
   unreadCount?: number;
   deletedAt?: string;
 }

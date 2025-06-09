@@ -25,15 +25,15 @@ public class ChatboxMapper implements BaseMapper<Chatbox, ChatboxDto> {
         
         ChatboxDto dto = new ChatboxDto();
         dto.setChatboxId(entity.getChatboxId());
+        dto.setCustomerId(entity.getCustomerId());
+        dto.setDeletedAt(entity.getDeletedAt());
         
-        if (entity.getCustomer() != null) {
-            dto.setCustomerId(entity.getCustomer().getCustomerId());
-            if (entity.getCustomer().getAccount() != null) {
-                dto.setCustomerName(entity.getCustomer().getAccount().getAccountName());
-            }
+        // Get customer name from account
+        if (entity.getCustomer() != null && entity.getCustomer().getAccount() != null) {
+            dto.setCustomerName(entity.getCustomer().getAccount().getAccountName());
         }
         
-        // Set default values for message metadata (can be populated by service layer)
+        // Initialize default values
         dto.setUnreadCount(0);
         
         return dto;

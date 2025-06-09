@@ -1,17 +1,18 @@
 package com.flightmanagement.service.impl;
 
 import com.flightmanagement.dto.ChatboxDto;
-import com.flightmanagement.dto.ChatboxTestDto;
 import com.flightmanagement.entity.Chatbox;
 import com.flightmanagement.mapper.ChatboxMapper;
+import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.repository.ChatboxRepository;
+import com.flightmanagement.repository.MessageRepository;
 import com.flightmanagement.service.ChatboxService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ChatboxServiceImpl implements ChatboxService {
@@ -21,11 +22,46 @@ public class ChatboxServiceImpl implements ChatboxService {
     
     @Autowired
     private ChatboxMapper chatboxMapper;
+    
+    @Autowired
+    private MessageRepository messageRepository;
+    
+    @Autowired
+    private AccountRepository accountRepository;
 
     @Override
     public List<ChatboxDto> getAllChatboxes() {
         List<Chatbox> chatboxes = chatboxRepository.findAllActive();
-        return chatboxMapper.toDtoList(chatboxes);
+        return chatboxes.stream()
+                .map(this::enrichChatboxWithMessageInfo)
+                .collect(Collectors.toList());
+    }
+    
+    private ChatboxDto enrichChatboxWithMessageInfo(Chatbox chatbox) {
+        ChatboxDto dto = chatboxMapper.toDto(chatbox);
+        
+        // Get last message with detailed info
+        messageRepository.findTopByChatboxIdOrderBySendTimeDesc(chatbox.getChatboxId())
+                .ifPresent(lastMessage -> {
+                    dto.setLastMessageContent(lastMessage.getContent());
+                    dto.setLastMessageTime(lastMessage.getSendTime());
+                    dto.setIsLastMessageFromCustomer(lastMessage.getEmployeeId() == null);
+                    dto.setLastMessageEmployeeId(lastMessage.getEmployeeId());
+                    
+                    // Set sender name
+                    if (lastMessage.getEmployeeId() != null) {
+                        // Message from employee
+                        String employeeName = accountRepository.findById(lastMessage.getEmployeeId())
+                                .map(account -> account.getAccountName())
+                                .orElse("Employee");
+                        dto.setLastMessageSenderName(employeeName);
+                    } else {
+                        // Message from customer
+                        dto.setLastMessageSenderName(dto.getCustomerName());
+                    }
+                });
+        
+        return dto;
     }
     
     @Override

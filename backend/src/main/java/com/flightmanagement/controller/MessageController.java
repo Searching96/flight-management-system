@@ -17,48 +17,28 @@ public class MessageController {
     @Autowired
     private MessageService messageService;
     
-    @GetMapping
-    public ResponseEntity<List<MessageDto>> getAllMessages() {
-        List<MessageDto> messages = messageService.getAllMessages();
-        return ResponseEntity.ok(messages);
-    }
-    
-    @GetMapping("/{id}")
-    public ResponseEntity<MessageDto> getMessageById(@PathVariable Integer id) {
-        MessageDto message = messageService.getMessageById(id);
-        return ResponseEntity.ok(message);
-    }
-    
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMessage(@PathVariable Integer id) {
-        messageService.deleteMessage(id);
-        return ResponseEntity.noContent().build();
-    }
-    
     @GetMapping("/chatbox/{chatboxId}")
     public ResponseEntity<List<MessageDto>> getMessagesByChatboxId(@PathVariable Integer chatboxId) {
         List<MessageDto> messages = messageService.getMessagesByChatboxId(chatboxId);
         return ResponseEntity.ok(messages);
     }
     
+    @PostMapping("/employee")
+    public ResponseEntity<MessageDto> createEmployeeMessage(@RequestBody Map<String, Object> requestBody) {
+        Integer chatboxId = (Integer) requestBody.get("chatboxId");
+        Integer employeeId = (Integer) requestBody.get("employeeId");
+        String content = (String) requestBody.get("content");
+        
+        MessageDto message = messageService.createEmployeeMessage(chatboxId, employeeId, content);
+        return new ResponseEntity<>(message, HttpStatus.CREATED);
+    }
+    
     @PostMapping("/customer")
-    public ResponseEntity<MessageDto> createCustomerMessage(
-            @RequestBody Map<String, Object> requestBody) {
+    public ResponseEntity<MessageDto> createCustomerMessage(@RequestBody Map<String, Object> requestBody) {
         Integer chatboxId = (Integer) requestBody.get("chatboxId");
         String content = (String) requestBody.get("content");
         
         MessageDto message = messageService.createCustomerMessage(chatboxId, content);
-        return new ResponseEntity<>(message, HttpStatus.CREATED);
-    }
-    
-    @PostMapping("/employee/{employeeId}")
-    public ResponseEntity<MessageDto> createEmployeeMessage(
-            @PathVariable Integer employeeId,
-            @RequestBody Map<String, Object> requestBody) {
-        Integer chatboxId = (Integer) requestBody.get("chatboxId");
-        String content = (String) requestBody.get("content");
-        
-        MessageDto message = messageService.createEmployeeMessage(chatboxId, employeeId, content);
         return new ResponseEntity<>(message, HttpStatus.CREATED);
     }
 }

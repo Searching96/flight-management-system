@@ -791,10 +791,15 @@ Get all chatboxes.
 
 **Response**: `List<ChatboxDto>`
 
-#### GET /api/chatboxes/customer/{customerId}/chatbox
-Get or create chatbox for a specific customer.
+#### GET /api/chatboxes/customer/{customerId}
+Get chatboxes for a specific customer.
 
-**Response**: `ChatboxDto`
+**Response**: `List<ChatboxDto>`
+
+#### GET /api/chatboxes/employee/{employeeId}
+Get chatboxes assigned to a specific employee.
+
+**Response**: `List<ChatboxDto>`
 
 #### POST /api/chatboxes
 Create new chatbox.
@@ -807,16 +812,10 @@ Get all messages in a chatbox.
 
 **Response**: `List<MessageDto>`
 
-#### POST /api/messages/customer
-Send customer message.
+#### POST /api/messages
+Send new message.
 
-**Request Body**: `{ "chatboxId": number, "content": string }`
-**Response**: `MessageDto`
-
-#### POST /api/messages/employee
-Send employee message.
-
-**Request Body**: `{ "chatboxId": number, "content": string }`
+**Request Body**: `MessageDto`
 **Response**: `MessageDto`
 
 ### System Parameters

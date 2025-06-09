@@ -272,7 +272,7 @@ const ChatWidget: React.FC = () => {
                       )}
                       
                       <div 
-                        className={`p-2 rounded max-width-75 ${
+                        className={`p-2 rounded ${
                           message.isFromCustomer 
                             ? 'bg-primary text-white' 
                             : 'bg-white border'
@@ -280,13 +280,18 @@ const ChatWidget: React.FC = () => {
                         style={{ maxWidth: '70%' }}
                       >
                         {!message.isFromCustomer && message.employeeName && (
-                          <div className="small fw-bold text-muted mb-1">
+                          <div className="small fw-bold text-muted">
                             {message.employeeName}
                           </div>
                         )}
                         <div className="small">{message.content}</div>
                         <div className={`text-xs mt-1 ${message.isFromCustomer ? 'text-light' : 'text-muted'}`} style={{ fontSize: '0.7rem' }}>
-                          {new Date(message.sendTime).toLocaleTimeString()}
+                          {new Date(message.sendTime).toLocaleTimeString('en-US', { 
+                            hour: '2-digit', 
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: true 
+                          })}
                         </div>
                       </div>
                     </div>

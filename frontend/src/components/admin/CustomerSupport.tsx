@@ -189,7 +189,33 @@ const CustomerSupport: React.FC = () => {
     if (diffInHours < 24) {
       return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
     } else {
-      return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+      const diffInDays = Math.floor(diffInHours / 24);
+      return `${diffInDays} ngày`;
+    }
+  };
+
+  const getLastMessagePrefix = (chatbox: Chatbox) => {
+    if (!chatbox.lastMessageContent) return '';
+    
+    // If message is from customer, no prefix
+    if (chatbox.isLastMessageFromCustomer) {
+      return '';
+    }
+    
+    // If message is from current user (employee), show "Bạn: "
+    if (chatbox.lastMessageEmployeeId === user?.accountId) {
+      return 'Bạn: ';
+    }
+    
+    // If message is from another employee, show their name (max 2 last words)
+    // Using placeholder data for now
+    const senderName = chatbox.lastMessageSenderName || 'Nhân viên ABC';
+    const words = senderName.trim().split(' ');
+    if (words.length >= 2) {
+      const lastTwoWords = words.slice(-2).join(' ');
+      return `${lastTwoWords}: `;
+    } else {
+      return `${words[0]}: `;
     }
   };
 
@@ -280,22 +306,18 @@ const CustomerSupport: React.FC = () => {
                 <div className="flex-grow-1 min-width-0">
                   <div className="d-flex justify-content-between align-items-center mb-1">
                     <h6 className="mb-0 text-truncate">{chatbox.customerName || 'Khách hàng'}</h6>
-                    {chatbox.lastMessageTime && (
-                      <small className="text-muted ms-2">
-                        {formatTime(chatbox.lastMessageTime)}
-                      </small>
-                    )}
+                    <small className="text-muted flex-shrink-0 ms-2">
+                      {chatbox.lastMessageTime ? formatTime(chatbox.lastMessageTime) : '14:30'}
+                    </small>
                   </div>
                   
-                  {chatbox.lastMessageContent && (
+                  {(chatbox.lastMessageContent || 'Tin nhắn mẫu từ khách hàng') && (
                     <p className="mb-0 text-muted small text-truncate">
-                      {chatbox.lastMessageContent}
+                      {getLastMessagePrefix(chatbox)}{chatbox.lastMessageContent || 'Tin nhắn mẫu từ khách hàng'}
                     </p>
                   )}
                   
-                  {chatbox.unreadCount && chatbox.unreadCount > 0 && (
-                    <Badge bg="primary" className="mt-1">{chatbox.unreadCount}</Badge>
-                  )}
+                  {/* Removed unread count badge */}
                 </div>
               </div>
             ))}
@@ -343,67 +365,82 @@ const CustomerSupport: React.FC = () => {
                 style={{ overflowY: 'auto', backgroundColor: '#f5f5f5' }}
                 onScroll={handleScroll}
               >
-                {messages.map((message, index) => (
-                  <div
-                    key={message.messageId || index}
-                    className={`mb-3 d-flex ${message.isFromCustomer ? 'justify-content-start' : 'justify-content-end'}`}
-                  >
-                    {message.isFromCustomer && (
-                      <div 
-                        className="rounded-circle text-white d-flex align-items-center justify-content-center me-2 flex-shrink-0"
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          fontSize: '12px',
-                          fontWeight: 'bold',
-                          backgroundColor: getAvatarColor(selectedChatbox.customerName, true)
-                        }}
-                      >
-                        {getAvatarLetter(selectedChatbox.customerName, true)}
-                      </div>
-                    )}
-                    
-                    <div style={{ maxWidth: '70%' }}>
-                      <div 
-                        className={`p-3 rounded-3 ${
-                          message.isFromCustomer 
-                            ? 'bg-white text-dark' 
-                            : 'text-white'
-                        }`}
-                        style={{ 
-                          backgroundColor: message.isFromCustomer ? '#ffffff' : '#0084ff',
-                          borderRadius: message.isFromCustomer ? '18px 18px 18px 4px' : '18px 18px 4px 18px'
-                        }}
-                      >
-                        {!message.isFromCustomer && message.employeeName && (
-                          <div className="small fw-bold mb-1 opacity-75">
-                            {message.employeeName}
-                          </div>
-                        )}
-                        <div>{message.content}</div>
-                      </div>
+                {messages.map((message, index) => {
+                  const isCurrentUser = !message.isFromCustomer && message.employeeId === user?.accountId;
+                  const shouldShowOnRight = isCurrentUser;
+                  
+                  return (
+                    <div
+                      key={message.messageId || index}
+                      className={`mb-3 d-flex ${shouldShowOnRight ? 'justify-content-end' : 'justify-content-start'}`}
+                    >
+                      {!shouldShowOnRight && (
+                        <div 
+                          className="rounded-circle text-white d-flex align-items-center justify-content-center me-2 flex-shrink-0"
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                            backgroundColor: message.isFromCustomer 
+                              ? getAvatarColor(selectedChatbox.customerName, true)
+                              : getAvatarColor(message.employeeName, false)
+                          }}
+                        >
+                          {message.isFromCustomer 
+                            ? getAvatarLetter(selectedChatbox.customerName, true)
+                            : getAvatarLetter(message.employeeName, false)
+                          }
+                        </div>
+                      )}
                       
-                      <div className={`small text-muted mt-1 ${message.isFromCustomer ? 'text-start' : 'text-end'}`}>
-                        {formatTime(message.sendTime)}
+                      <div style={{ maxWidth: '70%' }}>
+                        <div 
+                          className={`p-2 rounded-3 ${
+                            isCurrentUser 
+                              ? 'text-white'
+                              : message.isFromCustomer
+                                ? 'bg-white text-dark'
+                                : 'text-dark'
+                          }`}
+                          style={{ 
+                            backgroundColor: isCurrentUser 
+                              ? '#0084ff'
+                              : message.isFromCustomer 
+                                ? '#ffffff'
+                                : '#e9ecef',
+                            borderRadius: shouldShowOnRight ? '18px 18px 4px 18px' : '18px 18px 18px 4px'
+                          }}
+                        >
+                          {!isCurrentUser && (
+                            <div className="small fw-bold text-muted">
+                              {message.isFromCustomer ? selectedChatbox.customerName : message.employeeName}
+                            </div>
+                          )}
+                          <div>{message.content}</div>
+                          <div className={`text-xs mt-1 ${isCurrentUser ? 'text-light' : 'text-muted'}`} style={{ fontSize: '0.7rem' }}>
+                            {formatTime(message.sendTime)}
+                          </div>
+                        </div>
                       </div>
-                    </div>
 
-                    {!message.isFromCustomer && (
-                      <div 
-                        className="rounded-circle text-white d-flex align-items-center justify-content-center ms-2 flex-shrink-0"
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          fontSize: '12px',
-                          fontWeight: 'bold',
-                          backgroundColor: getAvatarColor(message.employeeName, false)
-                        }}
-                      >
-                        {getAvatarLetter(message.employeeName, false)}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      {shouldShowOnRight && (
+                        <div 
+                          className="rounded-circle text-white d-flex align-items-center justify-content-center ms-2 flex-shrink-0"
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                            backgroundColor: getAvatarColor(user?.accountName, false)
+                          }}
+                        >
+                          {getAvatarLetter(user?.accountName, false)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
                 <div ref={messagesEndRef} />
               </div>
 

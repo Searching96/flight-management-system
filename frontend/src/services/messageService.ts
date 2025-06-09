@@ -90,8 +90,9 @@ export class MessageService {
   }
 
   async createEmployeeMessage(chatboxId: number, employeeId: number, content: string): Promise<Message> {
-    return apiClient.post(`${this.baseUrl}/employee/${employeeId}`, { 
+    return apiClient.post(`${this.baseUrl}/employee`, { 
       chatboxId, 
+      employeeId,
       content 
     });
   }
