@@ -24,6 +24,7 @@ const CustomerSupport: React.FC = () => {
   const [error, setError] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState('Thời điểm yêu cầu tư vấn');
   const [isNearBottom, setIsNearBottom] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -240,9 +241,9 @@ const CustomerSupport: React.FC = () => {
   }
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '90vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <div className="bg-white border-bottom px-4 py-3">
+      <div className="bg-white border-bottom px-4 pb-2">
         <h4 className="mb-0 d-flex align-items-center">
           <i className="bi bi-headset me-2 text-primary"></i>
           Customer Support
@@ -252,19 +253,18 @@ const CustomerSupport: React.FC = () => {
       <div className="flex-grow-1 d-flex" style={{ overflow: 'hidden' }}>
         {/* Sidebar - Chat List */}
         <div className="bg-white border-end" style={{ width: '350px', display: 'flex', flexDirection: 'column' }}>
-          {/* Search */}
-          <div className="p-3 border-bottom">
-            <InputGroup>
-              <InputGroup.Text>
-                <i className="bi bi-search"></i>
-              </InputGroup.Text>
-              <Form.Control
-                type="text"
-                placeholder="Tìm kiếm hội thoại..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </InputGroup>
+          {/* Sort */}
+          <div className="px-3 pb-2 border-bottom">
+            <Form.Label className="small text-muted mb-2">Sắp xếp theo</Form.Label>
+            <Form.Select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              size="sm"
+            >
+              <option value="Thời điểm yêu cầu tư vấn">Thời điểm yêu cầu tư vấn</option>
+              <option value="Số lượng nhân viên đã hỗ trợ">Số lượng nhân viên đã hỗ trợ</option>
+              <option value="Liên quan đến bạn nhất">Liên quan đến bạn nhất</option>
+            </Form.Select>
           </div>
 
           {/* Chat List */}
@@ -336,7 +336,7 @@ const CustomerSupport: React.FC = () => {
           {selectedChatbox ? (
             <>
               {/* Chat Header */}
-              <div className="bg-white border-bottom px-4 py-3 d-flex align-items-center">
+              <div className="bg-white border-bottom px-4 py-1 d-flex align-items-center">
                 <div 
                   className="rounded-circle text-white d-flex align-items-center justify-content-center me-3"
                   style={{
@@ -454,7 +454,16 @@ const CustomerSupport: React.FC = () => {
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       disabled={sendingMessage}
-                      style={{ borderRadius: '20px 0 0 20px', border: '1px solid #ddd' }}
+                      style={{ 
+                        borderRadius: '20px 0 0 20px', 
+                        border: '1px solid #ddd',
+                        outline: 'none',
+                        boxShadow: 'none'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#ddd';
+                        e.target.style.boxShadow = 'none';
+                      }}
                     />
                     <Button 
                       type="submit" 

@@ -56,7 +56,6 @@ const ChatManagement: React.FC = () => {
       }));
       setMessages(formattedMessages);
       // Mark as read when loading messages
-      await chatService.markChatboxAsRead(chatboxId);
     } catch (err: any) {
       setError('Failed to load messages');
     }
