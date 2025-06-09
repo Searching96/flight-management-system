@@ -25,7 +25,7 @@ export interface FlightRequest {
   arrivalAirportId: number;
 }
 
-export interface FlightSearch {
+export interface FlightSearchCriteria {
   departureAirportId: number;
   arrivalAirportId: number;
   departureDate: string;

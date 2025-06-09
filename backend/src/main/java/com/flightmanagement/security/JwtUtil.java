@@ -1,15 +1,24 @@
 package com.flightmanagement.security;
 
-import com.flightmanagement.config.JwtConfig;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import com.flightmanagement.config.JwtConfig;
+
 import javax.crypto.SecretKey;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -18,9 +27,20 @@ public class JwtUtil {
 
     @Autowired
     private JwtConfig jwtConfig;
-
     @Autowired
     private SecretKey jwtSecret;
+
+    private final JwtParser jwtParser;
+
+    @Autowired
+    public JwtUtil(JwtConfig jwtConfig) {
+        this.jwtConfig = jwtConfig;
+        this.jwtSecret = Keys.hmacShaKeyFor(
+                jwtConfig.getJwtSecret().getBytes(StandardCharsets.UTF_8));
+        this.jwtParser = Jwts.parser()
+                .verifyWith(jwtSecret)
+                .build();
+    }
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -35,16 +55,12 @@ public class JwtUtil {
         return claimsResolver.apply(claims);
     }
 
-    Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .setSigningKey(jwtSecret)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+    private Claims extractAllClaims(String token) {
+        return jwtParser.parseSignedClaims(token).getPayload();
     }
 
     private Boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        return extractExpiration(token).toInstant().isBefore(Instant.now());
     }
 
     public String generateToken(UserDetails userDetails) {
@@ -53,21 +69,20 @@ public class JwtUtil {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
         claims.put("authorities", authorities);
-        return createToken(claims, userDetails.getUsername());
-    }
 
-    private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtConfig.getJwtExpiration()))
-                .signWith(jwtSecret, SignatureAlgorithm.HS256)
+                .claims(claims)
+                .subject(userDetails.getUsername())
+                .issuedAt(Date.from(Instant.now()))
+                .expiration(Date.from(Instant.now().plus(
+                        jwtConfig.getJwtExpiration(),
+                        ChronoUnit.MILLIS)))
+                .signWith(jwtSecret)
                 .compact();
     }
 
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
 }

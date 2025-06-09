@@ -3,7 +3,7 @@ import { } from '../models/LoginResponse';
 import { Account, LoginRequest, RegisterRequest, LoginResponse } from '../models/Account';
 
 export class AccountService {
-  private readonly baseUrl = '/accounts';
+  private readonly baseUrl = '/auth';
 
   async login(loginRequest: LoginRequest): Promise<LoginResponse> {
     const response = await apiClient.post<LoginResponse>(`${this.baseUrl}/login`, loginRequest);

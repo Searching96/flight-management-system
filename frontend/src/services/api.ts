@@ -1,51 +1,91 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { AuthResponse } from '../models';
 import { DOMAIN_URL_DEFAULT } from './config';
 
 class ApiClient {
   private baseUrl = `${DOMAIN_URL_DEFAULT}/api`;
   private client: AxiosInstance;
-  private authContext: any;
+  private isRefreshing = false;
+  private refreshSubscribers: ((token: string) => void)[] = [];
 
   constructor() {
     this.client = axios.create({
       baseURL: this.baseUrl,
-      withCredentials: true, // For session cookies
+      withCredentials: true,
     });
 
     this.setupInterceptors();
   }
 
-  setupInterceptors() {
-    // Request interceptor - simplified to just include credentials
+  private setAuthData(data: AuthResponse) {
+    localStorage.setItem('accessToken', data.accessToken);
+    localStorage.setItem('refreshToken', data.refreshToken);
+    localStorage.setItem('user', JSON.stringify(data.userDetails));
+  }
+
+  private clearAuth() {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+  }
+
+  // Update response interceptor
+  private setupInterceptors() {
+    // Request interceptor
     this.client.interceptors.request.use(
       (config) => {
-        // Get user info from localStorage (simplified approach)
-        const userAccount = localStorage.getItem('userAccount');
-
-        if (userAccount) {
-          // Just for development - add user type as a header
-          const user = JSON.parse(userAccount);
-          config.headers['X-User-Type'] = user.accountType === 1 ? 'CUSTOMER' : 'EMPLOYEE';
+        const accessToken = localStorage.getItem('accessToken');
+        if (accessToken) {
+          config.headers.Authorization = `Bearer ${accessToken}`;
         }
-
-        // Ensure CORS headers are properly handled
-        config.withCredentials = true;
-
         return config;
       },
       (error) => Promise.reject(error)
     );
 
-    // Response interceptor - simplified error handling
     this.client.interceptors.response.use(
-      (response: AxiosResponse) => response.data,
-      (error) => {
-        console.error('API Error:', error.response?.data || error.message);
+      (response) => response.data,
+      async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+
+          try {
+            const newToken = await this.handleTokenRefresh();
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            return this.client(originalRequest);
+          } catch (refreshError) {
+            this.clearAuth();
+            window.location.href = '/login';
+            return Promise.reject(refreshError);
+          }
+        }
+
         return Promise.reject(error);
       }
     );
   }
 
+  private async handleTokenRefresh() {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) throw new Error('No refresh token available');
+
+      const response = await axios.post<AuthResponse>(
+        `${this.baseUrl}/auth/refresh`,
+        { refreshToken }
+      );
+
+      this.setAuthData(response.data);
+      return response.data.accessToken;
+    } catch (error) {
+      this.clearAuth();
+      throw error;
+    }
+  }
+
+  // Existing HTTP methods
   async get<T = any>(url: string, options?: { params?: any }): Promise<T> {
     return this.client.get(url, options);
   }
@@ -64,10 +104,6 @@ class ApiClient {
 
   async delete<T = any>(url: string, config?: any): Promise<T> {
     return this.client.delete(url, config);
-  }
-
-  setAuthContext(authContext: any) {
-    this.authContext = authContext;
   }
 }
 

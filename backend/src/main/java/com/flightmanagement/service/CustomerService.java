@@ -5,18 +5,17 @@ import com.flightmanagement.dto.CustomerDto;
 import java.util.List;
 
 public interface CustomerService {
-    
-    List<CustomerDto> getAllCustomers();
-    
     CustomerDto getCustomerById(Integer id);
-    
-    CustomerDto createCustomer(CustomerDto customerDto);
-    
-    CustomerDto updateCustomer(Integer id, CustomerDto customerDto);
-    
+
+    List<CustomerDto> getAllCustomers();
+
+    CustomerDto createCustomer(CustomerDto dto);
+
+    CustomerDto updateCustomer(Integer id, CustomerDto dto);
+
     void deleteCustomer(Integer id);
-    
+
     CustomerDto getCustomerByEmail(String email);
-    
-    void updateCustomerScore(Integer customerId, Integer score);
+
+    void updateCustomerScore(Integer id, Integer score);
 }

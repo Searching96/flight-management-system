@@ -4,8 +4,8 @@ export const DOMAIN_URL_DEFAULT = 'http://localhost:8080';
 export const API_URL = {
   // Authentication
   AUTH: '/auth',
-  LOGIN: '/accounts/login',
-  REGISTER: '/accounts/register',
+  LOGIN: '/auth',
+  REGISTER: '/auth/register',
   LOGOUT: '/auth/logout',
   REFRESH_TOKEN: '/auth/refresh',
 

@@ -1,10 +1,10 @@
 import { Ticket } from './Ticket';
 
 // Account related
-export type { Account, LoginRequest, LoginResponse, RegisterRequest } from './Account';
+export type { Account, LoginResponse, RegisterRequest } from './Account';
 
 // Flight related
-export type { Flight, FlightSearch, FlightRequest } from './Flight';
+export type { Flight, FlightSearchCriteria, FlightRequest } from './Flight';
 export type { FlightDetail } from './FlightDetail';
 export type {
   FlightTicketClass,
@@ -17,6 +17,9 @@ export type {
 
 // Airport related
 export type { Airport } from './Airport';
+
+// Auth related
+export type { AuthResponse, LoginRequest, UserDetails } from './Auth';
 
 // Ticket related
 export type { TicketClass, TicketClassRequest } from './TicketClass';

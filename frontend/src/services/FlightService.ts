@@ -1,6 +1,6 @@
 import { apiClient } from './api';
 import { API_URL } from './config';
-import { Flight, FlightSearch, FlightRequest } from '../models';
+import { Flight, FlightSearchCriteria, FlightRequest } from '../models';
 
 export class FlightService {
   private readonly baseUrl = API_URL.FLIGHTS;
@@ -16,7 +16,7 @@ export class FlightService {
   async getFlightByCode(flightCode: string): Promise<Flight> {
     return apiClient.get(`${this.baseUrl}/code/${flightCode}`);
   }
-  async searchFlights(criteria: FlightSearch): Promise<Flight[]> {
+  async searchFlights(criteria: FlightSearchCriteria): Promise<Flight[]> {
     const params: any = {
       departureAirportId: criteria.departureAirportId,
       arrivalAirportId: criteria.arrivalAirportId,

@@ -5,18 +5,19 @@ import com.flightmanagement.dto.EmployeeDto;
 import java.util.List;
 
 public interface EmployeeService {
-    
-    List<EmployeeDto> getAllEmployees();
-    
     EmployeeDto getEmployeeById(Integer id);
-    
-    EmployeeDto createEmployee(EmployeeDto employeeDto);
-    
-    EmployeeDto updateEmployee(Integer id, EmployeeDto employeeDto);
-    
+
+    List<EmployeeDto> getAllEmployees();
+
+    EmployeeDto createEmployee(EmployeeDto dto);
+
+    EmployeeDto updateEmployee(Integer id, EmployeeDto dto);
+
     void deleteEmployee(Integer id);
-    
-    List<EmployeeDto> getEmployeesByType(Integer employeeType);
-    
+
+    List<EmployeeDto> getEmployeesByType(Integer type);
+
     EmployeeDto getEmployeeByEmail(String email);
+
+    EmployeeDto updateRole(Integer id, Integer newRole);
 }

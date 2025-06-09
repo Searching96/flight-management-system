@@ -17,13 +17,13 @@ class EmployeeService {
   async login(loginData: LoginRequest): Promise<LoginResponse> {
     const response = await apiClient.post('/accounts/login', loginData);
     if (response.token) {
-      localStorage.setItem('authToken', response.token);
+      localStorage.setItem('accessToken', response.token);
     }
     return response;
   }
 
   async logout(): Promise<void> {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('accessToken');
     await apiClient.post('/auth/logout');
   }
 
@@ -85,11 +85,11 @@ class EmployeeService {
 
   // Utility methods
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('authToken');
+    return !!localStorage.getItem('accessToken');
   }
 
   getToken(): string | null {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem('accessToken');
   }
 }
 

@@ -3,18 +3,9 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, ButtonGroup } from 'react-bootstrap';
 import { flightService, airportService, ticketClassService } from '../../services';
-import { Flight, Airport, TicketClass } from '../../models';
+import { Flight, Airport, TicketClass, FlightSearchCriteria } from '../../models';
 import TypeAhead from '../common/TypeAhead';
 import FlightCard from '../flights/FlightCard';
-
-interface SearchFormData {
-  departureAirportId: number;
-  arrivalAirportId: number;
-  departureDate: string;
-  returnDate?: string;
-  passengerCount: number;
-  ticketClassId: number; // Keep this but we'll use it differently
-}
 
 const FlightSearch: React.FC = () => {
   const navigate = useNavigate();
@@ -34,9 +25,9 @@ const FlightSearch: React.FC = () => {
     watch,
     setValue,
     formState: { errors }
-  } = useForm<SearchFormData>({
+  } = useForm<FlightSearchCriteria>({
     defaultValues: {
-      passengerCount: 1
+      passengers: 1
     }
   });
 
@@ -72,7 +63,7 @@ const FlightSearch: React.FC = () => {
     label: tc.ticketClassName,
     color: tc.color
   }));
-  const onSubmit = async (data: SearchFormData) => {
+  const onSubmit = async (data: FlightSearchCriteria) => {
     try {
       setLoading(true);
       setError('');
@@ -95,7 +86,7 @@ const FlightSearch: React.FC = () => {
         arrivalAirportId: selectedArrivalAirport as number,
         departureDate: data.departureDate + 'T00:00:00',
         returnDate: isRoundTrip && data.returnDate ? data.returnDate + 'T00:00:00' : undefined,
-        passengerCount: data.passengerCount,
+        passengers: data.passengers,
         // Send 0 for "all classes" or the specific class ID
         ticketClassId: selectedTicketClass === 'all' ? 0 : (selectedTicketClass as number)
       };
@@ -145,7 +136,7 @@ const FlightSearch: React.FC = () => {
       departureAirportId: selectedDepartureAirport,
       arrivalAirportId: selectedArrivalAirport,
       departureDate: watch('departureDate'),
-      passengerCount: watch('passengerCount'),
+      passengerCount: watch('passengers'),
       ticketClassId: ticketClassId
     };
 
@@ -155,7 +146,7 @@ const FlightSearch: React.FC = () => {
     // Store booking data in sessionStorage instead of URL parameters
     sessionStorage.setItem('bookingData', JSON.stringify({
       flightId,
-      passengers: watch('passengerCount'),
+      passengers: watch('passengers'),
       class: ticketClassId
     }));
 
@@ -332,8 +323,8 @@ const FlightSearch: React.FC = () => {
                       </Form.Label>
                       <Form.Select
                         id="passengerCount"
-                        {...register('passengerCount', { required: 'Passenger count is required', valueAsNumber: true })}
-                        isInvalid={!!errors.passengerCount}
+                        {...register('passengers', { required: 'Passenger count is required', valueAsNumber: true })}
+                        isInvalid={!!errors.passengers}
                       >
                         {[...Array(9)].map((_, i) => (
                           <option key={i + 1} value={i + 1}>
@@ -342,7 +333,7 @@ const FlightSearch: React.FC = () => {
                         ))}
                       </Form.Select>
                       <Form.Control.Feedback type="invalid">
-                        {errors.passengerCount?.message}
+                        {errors.passengers?.message}
                       </Form.Control.Feedback>
                     </Form.Group>
                   </Col>
@@ -446,7 +437,7 @@ const FlightSearch: React.FC = () => {
                     key={flight.flightId}
                     flight={flight}
                     onBookFlight={handleBookFlight} searchContext={{
-                      passengerCount: watch('passengerCount'),
+                      passengerCount: watch('passengers'),
                       allTicketClasses: ticketClasses,
                       selectedTicketClass: selectedTicketClass === 'all' ? null : (selectedTicketClass as number),
                       searchedForAllClasses: selectedTicketClass === 'all'

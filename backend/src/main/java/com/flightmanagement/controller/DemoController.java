@@ -36,6 +36,11 @@ public class DemoController {
     
     @Autowired
     private FlightTicketClassService flightTicketClassService;
+
+    @GetMapping("/health")
+    public String healthCheck() {
+        return "Demo API is running!";
+    }
     
     @GetMapping("/info")
     public Map<String, Object> getDemoInfo() {

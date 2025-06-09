@@ -10,7 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountDto {
-    
+
     private Integer accountId;
     private String accountName;
     private String email;
@@ -18,4 +18,10 @@ public class AccountDto {
     private String phoneNumber;
     private Integer accountType;
     private String accountTypeName;
+
+    private Integer score;
+
+    private Integer employeeType;
+    private String role;
+
 }

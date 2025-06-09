@@ -56,4 +56,10 @@ public class Account {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
+    private Employee employee;
+
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
+    private Customer customer;
 }

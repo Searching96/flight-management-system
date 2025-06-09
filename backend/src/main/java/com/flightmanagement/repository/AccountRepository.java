@@ -10,19 +10,23 @@ import java.util.Optional;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Integer> {
-    
+
     @Query("SELECT a FROM Account a WHERE a.deletedAt IS NULL")
     List<Account> findAllActive();
-    
+
     @Query("SELECT a FROM Account a WHERE a.accountId = ?1 AND a.deletedAt IS NULL")
     Optional<Account> findActiveById(Integer id);
-    
+
     @Query("SELECT a FROM Account a WHERE a.email = ?1 AND a.deletedAt IS NULL")
     Optional<Account> findByEmail(String email);
-    
+
     @Query("SELECT a FROM Account a WHERE a.citizenId = ?1 AND a.deletedAt IS NULL")
     Optional<Account> findByCitizenId(String citizenId);
-    
+
     @Query("SELECT a FROM Account a WHERE a.accountType = ?1 AND a.deletedAt IS NULL")
     List<Account> findByAccountType(Integer accountType);
+
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
+            "FROM Account a WHERE a.email = :email AND a.deletedAt IS NULL")
+    boolean existsByEmailAndNotDeleted(String email);
 }

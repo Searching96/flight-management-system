@@ -7,72 +7,86 @@ import com.flightmanagement.repository.CustomerRepository;
 import com.flightmanagement.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
-    
+
+    private final CustomerRepository customerRepository;
+    private final CustomerMapper customerMapper;
+
     @Autowired
-    private CustomerRepository customerRepository;
-    
-    @Autowired
-    private CustomerMapper customerMapper;
-    
-    @Override
-    public List<CustomerDto> getAllCustomers() {
-        List<Customer> customers = customerRepository.findAllActive();
-        return customerMapper.toDtoList(customers);
+    public CustomerServiceImpl(CustomerRepository customerRepository, CustomerMapper customerMapper) {
+        this.customerRepository = customerRepository;
+        this.customerMapper = customerMapper;
     }
-    
+
     @Override
     public CustomerDto getCustomerById(Integer id) {
-        Customer customer = customerRepository.findActiveById(id)
-            .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
-        return customerMapper.toDto(customer);
+        return customerMapper.toDto(
+                customerRepository.findActiveById(id)
+                        .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id))
+        );
     }
-    
+
     @Override
-    public CustomerDto createCustomer(CustomerDto customerDto) {
-        Customer customer = customerMapper.toEntity(customerDto);
+    public List<CustomerDto> getAllCustomers() {
+        return customerRepository.findAllActive()
+                .stream()
+                .map(customerMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public CustomerDto createCustomer(CustomerDto dto) {
+        Customer customer = customerMapper.toEntity(dto);
         customer.setDeletedAt(null);
+        customer.setScore(0); // default score
         Customer savedCustomer = customerRepository.save(customer);
         return customerMapper.toDto(savedCustomer);
     }
-    
+
     @Override
-    public CustomerDto updateCustomer(Integer id, CustomerDto customerDto) {
+    @Transactional
+    public CustomerDto updateCustomer(Integer id, CustomerDto dto) {
         Customer existingCustomer = customerRepository.findActiveById(id)
-            .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
-        
-        existingCustomer.setScore(customerDto.getScore());
-        
+                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
+
+        // Update only allowed fields (e.g., score, phone, etc.)
+        existingCustomer.setScore(dto.getScore());
+        // Add more fields as needed
+
         Customer updatedCustomer = customerRepository.save(existingCustomer);
         return customerMapper.toDto(updatedCustomer);
     }
-    
+
     @Override
+    @Transactional
     public void deleteCustomer(Integer id) {
         Customer customer = customerRepository.findActiveById(id)
-            .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
-        
+                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
         customer.setDeletedAt(LocalDateTime.now());
         customerRepository.save(customer);
     }
-    
+
     @Override
     public CustomerDto getCustomerByEmail(String email) {
-        Customer customer = customerRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Customer not found with email: " + email));
-        return customerMapper.toDto(customer);
+        return customerMapper.toDto(
+                customerRepository.findByEmail(email)
+                        .orElseThrow(() -> new RuntimeException("Customer not found with email: " + email))
+        );
     }
-    
+
     @Override
-    public void updateCustomerScore(Integer customerId, Integer score) {
-        Customer customer = customerRepository.findActiveById(customerId)
-            .orElseThrow(() -> new RuntimeException("Customer not found with id: " + customerId));
-        
+    @Transactional
+    public void updateCustomerScore(Integer id, Integer score) {
+        Customer customer = customerRepository.findActiveById(id)
+                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
         customer.setScore(score);
         customerRepository.save(customer);
     }

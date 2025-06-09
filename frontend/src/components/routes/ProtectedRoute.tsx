@@ -4,12 +4,12 @@ import { useAuth } from '../../hooks/useAuth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredAccountType?: number; // 1 for customer, 2 for employee (matches backend)
+  requiredAccountType?: string;  // e.g. "Customer", "Employee"
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  requiredAccountType 
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  requiredAccountType, // e.g. "Customer", "Employee"
 }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
@@ -25,25 +25,23 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (!user) {
     // Redirect to login with return path
     return (
-      <Navigate 
-        to="/login" 
-        state={{ 
+      <Navigate
+        to="/login"
+        state={{
           message: 'Please sign in to access this page',
-          returnTo: location.pathname 
-        }} 
-        replace 
+          returnTo: location.pathname
+        }}
+        replace
       />
     );
   }
-  if (requiredAccountType && user.accountType !== requiredAccountType) {
+  if (requiredAccountType && user.accountTypeName !== requiredAccountType) {
     // Redirect to appropriate dashboard if wrong account type
-    // accountType: 1 = customer, 2 = employee (corrected to match backend database)
+    // accountTypeName: Customer, Employee (corrected to match backend database)
     return (
       <Navigate 
-        to={user.accountType === 2 ? '/admin' : '/dashboard'} 
-        state={{ 
-          message: 'You do not have permission to access that page' 
-        }} 
+        to="/" 
+        state={{ message: 'Insufficient permissions' }} 
         replace 
       />
     );

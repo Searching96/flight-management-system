@@ -1,171 +1,127 @@
 package com.flightmanagement.service.impl;
 
 import com.flightmanagement.dto.AccountDto;
-import com.flightmanagement.dto.LoginDto;
-import com.flightmanagement.dto.LoginResponseDto;
 import com.flightmanagement.dto.RegisterDto;
 import com.flightmanagement.entity.Account;
+import com.flightmanagement.entity.Customer;
 import com.flightmanagement.entity.Employee;
 import com.flightmanagement.mapper.AccountMapper;
 import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.repository.EmployeeRepository;
-import com.flightmanagement.security.CustomUserDetailsService;
-import com.flightmanagement.security.JwtUtil;
+import com.flightmanagement.repository.CustomerRepository;
 import com.flightmanagement.service.AccountService;
+
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class AccountServiceImpl implements AccountService {
-    
+
     @Autowired
     private AccountRepository accountRepository;
-    
     @Autowired
     private AccountMapper accountMapper;
-    
     @Autowired
     private PasswordEncoder passwordEncoder;
-    
     @Autowired
-    private JwtUtil jwtUtil;
-    
-    @Autowired
-    private CustomUserDetailsService userDetailsService;
-    
+    private CustomerRepository customerRepository;
     @Autowired
     private EmployeeRepository employeeRepository;
-    
+
     @Override
-    public List<AccountDto> getAllAccounts() {
-        List<Account> accounts = accountRepository.findAll();
-        return accountMapper.toDtoList(accounts);
-    }
-    
-    @Override
-    public AccountDto getAccountById(Integer id) {
-        Account account = accountRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Account not found with id: " + id));
-        return accountMapper.toDto(account);
-    }
-    
-    @Override
-    public AccountDto createAccount(RegisterDto registerDto) {
-        // Check if email already exists
-        try {
-            getAccountByEmail(registerDto.getEmail());
-            throw new RuntimeException("Email already exists: " + registerDto.getEmail());
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("already exists")) {
-                throw e;
-            }
-            // Email doesn't exist, proceed with creation
+    @Transactional
+    public AccountDto createAccount(RegisterDto dto) {
+        if (existsByEmail(dto.getEmail())) {
+            throw new DataIntegrityViolationException("Email already exists");
         }
-        
-        Account account = new Account();
-        account.setAccountName(registerDto.getAccountName());
-        account.setPassword(passwordEncoder.encode(registerDto.getPassword()));
-        account.setEmail(registerDto.getEmail());
-        account.setCitizenId(registerDto.getCitizenId());
-        account.setPhoneNumber(registerDto.getPhoneNumber());
-        account.setAccountType(registerDto.getAccountType());
-        
+
+        Account account = accountMapper.toEntity(dto);
+        account.setPassword(passwordEncoder.encode(dto.getPassword()));
+        account.setDeletedAt(null);
+
         Account savedAccount = accountRepository.save(account);
+
+        // Create associated customer/employee
+        if (dto.getAccountType() == 1) {
+            Customer customer = new Customer();
+            customer.setCustomerId(savedAccount.getAccountId());
+            customer.setAccount(savedAccount);
+            customerRepository.save(customer);
+        } else if (dto.getAccountType() == 2) {
+            Employee employee = new Employee();
+            employee.setEmployeeId(savedAccount.getAccountId());
+            employee.setAccount(savedAccount);
+            employeeRepository.save(employee);
+        }
+
         return accountMapper.toDto(savedAccount);
     }
-    
+
     @Override
-    public AccountDto updateAccount(Integer id, AccountDto accountDto) {
-        Account existingAccount = accountRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Account not found with id: " + id));
-        
-        existingAccount.setAccountName(accountDto.getAccountName());
-        existingAccount.setEmail(accountDto.getEmail());
-        existingAccount.setCitizenId(accountDto.getCitizenId());
-        existingAccount.setPhoneNumber(accountDto.getPhoneNumber());
-        existingAccount.setAccountType(accountDto.getAccountType());
-        
-        Account updatedAccount = accountRepository.save(existingAccount);
-        return accountMapper.toDto(updatedAccount);
+    public AccountDto getAccountById(Integer id) {
+        return accountRepository.findActiveById(id)
+                .map(accountMapper::toDto)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
     }
-    
-    @Override
-    public void deleteAccount(Integer id) {
-        Account account = accountRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Account not found with id: " + id));
-        
-        accountRepository.delete(account); // Hard delete instead of soft delete
-    }
-    
+
     @Override
     public AccountDto getAccountByEmail(String email) {
-        Account account = accountRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Account not found with email: " + email));
-        return accountMapper.toDto(account);
+        return accountRepository.findByEmail(email)
+                .map(accountMapper::toDto)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
     }
-    
+
     @Override
-    public AccountDto getAccountByCitizenId(String citizenId) {
-        Account account = accountRepository.findByCitizenId(citizenId)
-            .orElseThrow(() -> new RuntimeException("Account not found with citizen ID: " + citizenId));
-        return accountMapper.toDto(account);
+    public List<AccountDto> getAllAccounts() {
+        return accountRepository.findAllActive()
+                .stream()
+                .map(accountMapper::toDto)
+                .toList();
     }
-    
+
     @Override
-    public AccountDto login(LoginDto loginDto) {
-        Account account = accountRepository.findByEmail(loginDto.getEmail())
-            .orElseThrow(() -> new RuntimeException("Invalid email or password"));
-        
-        if (!passwordEncoder.matches(loginDto.getPassword(), account.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
+    @Transactional
+    public AccountDto updateAccount(Integer id, AccountDto dto) {
+        Account account = accountRepository.findActiveById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+
+        // Prevent account type changes
+        if (!account.getAccountType().equals(dto.getAccountType())) {
+            throw new IllegalArgumentException("Account type cannot be modified");
         }
-        
-        return accountMapper.toDto(account);
+
+        account = accountMapper.toEntity(dto);
+        return accountMapper.toDto(accountRepository.save(account));
     }
-    
+
+    @Override
+    @Transactional
+    public void deleteAccount(Integer id) {
+        Account account = accountRepository.findActiveById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+        account.setDeletedAt(LocalDateTime.now());
+        accountRepository.save(account);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return accountRepository.existsByEmailAndNotDeleted(email);
+    }
+
     @Override
     public List<AccountDto> getAccountsByType(Integer accountType) {
-        List<Account> accounts = accountRepository.findByAccountType(accountType);
-        return accountMapper.toDtoList(accounts);
-    }    @Override
-    public LoginResponseDto login(String email, String password) {
-        Account account = accountRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Invalid email or password"));
-        
-        if (!passwordEncoder.matches(password, account.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
-        }
-        
-        // Load user details for JWT generation
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-        
-        // Get employee type if this is an employee account
-        Integer employeeType = null;
-        if (account.getAccountType() == 2) { // Employee account
-            Employee employee = employeeRepository.findByEmail(email).orElse(null);
-            if (employee != null) {
-                employeeType = employee.getEmployeeType();
-            }
-        }
-        
-        // Generate JWT token
-        String token = jwtUtil.generateToken(
-            userDetails
-        );
-        
-        // Create response with token
-        LoginResponseDto response = new LoginResponseDto(
-            account.getAccountId(),
-            account.getAccountName(),
-            account.getEmail(),
-            account.getAccountType()
-        );
-        response.setToken(token);
-        
-        return response;
+        return accountRepository.findByAccountType(accountType)
+                .stream()
+                .filter(acc -> acc.getDeletedAt() == null)
+                .map(accountMapper::toDto)
+                .toList();
     }
 }

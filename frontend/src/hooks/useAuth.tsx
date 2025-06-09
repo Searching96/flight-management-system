@@ -1,18 +1,96 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Account, LoginRequest, RegisterRequest } from '../models';
-import { accountService } from '../services';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { LoginRequest, AuthResponse, UserDetails } from '../models';
+import { authService } from '../services/authService';
 
+// Define the context type
 interface AuthContextType {
-  user: Account | null;
-  login: (loginRequest: LoginRequest) => Promise<void>;
-  register: (registerRequest: RegisterRequest) => Promise<void>;
-  logout: () => void;
+  user: UserDetails | null;
   loading: boolean;
+  login: (loginRequest: LoginRequest) => Promise<void>;
+  logout: () => void;
+  refresh: () => Promise<void>;
 }
 
+// Create the context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
+// Define the provider component
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<UserDetails | null>(() => {
+    const storedUser = localStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+
+  // Add periodic token refresh
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        await authService.silentRefresh();
+      } catch (error) {
+        setUser(null);
+      }
+    }, 300000); // Refresh every 5 minutes
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
+
+  const login = useCallback(async (loginRequest: LoginRequest) => {
+    setLoading(true);
+    try {
+      const response: UserDetails = await authService.login(loginRequest);
+      setUser(response);
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      throw err;
+    }
+  }, []);
+
+  const logout = useCallback(() => {
+    authService.logout();
+    setUser(null);
+  }, []);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response: AuthResponse = await authService.refreshToken();
+      setUser(response.userDetails);
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      setUser(null);
+      throw err;
+    }
+  }, []);
+
+  const value = {
+    user,
+    loading,
+    login,
+    logout,
+    refresh,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+// Custom hook to use the auth context
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
@@ -20,103 +98,17 @@ export const useAuth = () => {
   return context;
 };
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<Account | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const checkAuthStatus = async () => {
-    try {
-      // Check for stored user account first
-      const storedUser = localStorage.getItem('userAccount');
-      if (storedUser) {
-        const userData = JSON.parse(storedUser);
-        setUser(userData);
-      }
-    } catch (error) {
-      localStorage.removeItem('userAccount');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const login = async (loginRequest: LoginRequest) => {
-    try {
-      setLoading(true);
-      const response = await accountService.login(loginRequest);
-      
-      // Map the response to match frontend Account interface
-      const userAccount: Account = {
-        accountId: response.accountId,
-        accountName: response.accountName,
-        email: response.email,
-        accountType: response.accountType
-      };
-      
-      setUser(userAccount);
-      
-      // Store user info (simplified - no tokens)
-      localStorage.setItem('userAccount', JSON.stringify(userAccount));
-    } catch (error) {
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const register = async (registerRequest: RegisterRequest) => {
-    await accountService.register(registerRequest);
-  };
-
-  const logout = async () => {
-    try {
-      // Call logout endpoint if we have a token
-      // if (accessToken) {
-        await logout();
-      // }
-    } catch (error) {
-      console.error("Logout failed:", error);
-    } finally {
-      // Clear memory and storage regardless of API result
-      localStorage.removeItem('userAccount');
-      // setAccessToken(null);
-      setUser(null);
-    }
-  };
-
-  const value: AuthContextType = {
-    user,
-    loading,
-    login,
-    register,
-    logout,
-  };
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-// Simplified permission checking to only use accountType
+// In useAuth.tsx
 export const usePermissions = () => {
   const { user } = useAuth();
-  
   return {
-    canViewAdmin: user?.accountType === 2,        // Employee per database schema
-    canManageFlights: user?.accountType === 2,    // Employee per database schema
-    canBookTickets: user?.accountType === 1,      // Customer per database schema
+    canViewAdmin: user?.accountTypeName === 'Employee',
+    canManageFlights: user?.accountTypeName === 'Employee',
+    canBookTickets: user?.accountTypeName === 'Customer',
     canViewOwnBookings: !!user,
-    canManageEmployees: user?.accountType === 2,
-    canManageCustomers: user?.accountType === 2,
-    canViewReports: user?.accountType === 2
+    canManageEmployees: user?.accountTypeName === 'Employee',
+    canManageCustomers: user?.accountTypeName === 'Employee',
+    canViewReports: user?.accountTypeName === 'Employee',
   };
 };
+

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import FlightSearch from '../FlightSearch';
+import FlightSearchCriteria from '../FlightSearch';
 import { flightService, airportService, ticketClassService } from '../../../services';
 
 // Mock the services
@@ -59,7 +59,7 @@ describe('FlightSearch', () => {
 
   it('should render flight search form', async () => {
     // Arrange & Act
-    render(<FlightSearch />);
+    render(<FlightSearchCriteria />);
 
     // Assert
     expect(screen.getByText('Search Flights')).toBeInTheDocument();
@@ -73,7 +73,7 @@ describe('FlightSearch', () => {
 
   it('should load airports and ticket classes on mount', async () => {
     // Arrange & Act
-    render(<FlightSearch />);
+    render(<FlightSearchCriteria />);
 
     // Assert
     await waitFor(() => {
@@ -84,7 +84,7 @@ describe('FlightSearch', () => {
 
   it('should display trip type options', () => {
     // Arrange & Act
-    render(<FlightSearch />);
+    render(<FlightSearchCriteria />);
 
     // Assert
     expect(screen.getByLabelText('One Way')).toBeInTheDocument();
@@ -94,7 +94,7 @@ describe('FlightSearch', () => {
   it('should show return date field when round trip is selected', async () => {
     // Arrange
     const user = userEvent.setup();
-    render(<FlightSearch />);
+    render(<FlightSearchCriteria />);
 
     // Act
     await user.click(screen.getByLabelText('Round Trip'));
@@ -106,7 +106,7 @@ describe('FlightSearch', () => {
   it('should hide return date field when one way is selected', async () => {
     // Arrange
     const user = userEvent.setup();
-    render(<FlightSearch />);
+    render(<FlightSearchCriteria />);
 
     // First select round trip, then one way
     await user.click(screen.getByLabelText('Round Trip'));
@@ -119,7 +119,7 @@ describe('FlightSearch', () => {
   it('should perform flight search with valid data', async () => {
     // Arrange
     const user = userEvent.setup();
-    render(<FlightSearch />);
+    render(<FlightSearchCriteria />);
 
     // Wait for airports to load
     await waitFor(() => {
@@ -154,7 +154,7 @@ describe('FlightSearch', () => {
   it('should display validation errors for required fields', async () => {
     // Arrange
     const user = userEvent.setup();
-    render(<FlightSearch />);
+    render(<FlightSearchCriteria />);
 
     // Act - Submit form without filling required fields
     const searchButton = screen.getByRole('button', { name: 'Search Flights' });
@@ -171,7 +171,7 @@ describe('FlightSearch', () => {
   it('should swap airports when swap button is clicked', async () => {
     // Arrange
     const user = userEvent.setup();
-    render(<FlightSearch />);
+    render(<FlightSearchCriteria />);
 
     // Wait for component to initialize
     await waitFor(() => {
@@ -189,7 +189,7 @@ describe('FlightSearch', () => {
   it('should display search results when flights are found', async () => {
     // Arrange
     const user = userEvent.setup();
-    render(<FlightSearch />);
+    render(<FlightSearchCriteria />);
 
     // Setup form data
     await waitFor(() => {
@@ -217,7 +217,7 @@ describe('FlightSearch', () => {
     // Arrange
     mockedFlightService.searchFlights.mockResolvedValueOnce([]);
     const user = userEvent.setup();
-    render(<FlightSearch />);
+    render(<FlightSearchCriteria />);
 
     await waitFor(() => {
       expect(mockedAirportService.getAllAirports).toHaveBeenCalled();
@@ -240,7 +240,7 @@ describe('FlightSearch', () => {
     // Arrange
     mockedFlightService.searchFlights.mockRejectedValueOnce(new Error('Network error'));
     const user = userEvent.setup();
-    render(<FlightSearch />);
+    render(<FlightSearchCriteria />);
 
     await waitFor(() => {
       expect(mockedAirportService.getAllAirports).toHaveBeenCalled();
@@ -262,7 +262,7 @@ describe('FlightSearch', () => {
   it('should disable search button while loading', async () => {
     // Arrange
     const user = userEvent.setup();
-    render(<FlightSearch />);
+    render(<FlightSearchCriteria />);
 
     // Setup a delayed promise to simulate loading
     mockedFlightService.searchFlights.mockImplementationOnce(

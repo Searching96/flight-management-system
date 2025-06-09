@@ -1,60 +1,33 @@
-    package com.flightmanagement.controller;
+package com.flightmanagement.controller;
 
-    import com.flightmanagement.dto.EmployeeDto;
-    import com.flightmanagement.service.EmployeeService;
-    import org.springframework.beans.factory.annotation.Autowired;
-    import org.springframework.http.HttpStatus;
-    import org.springframework.http.ResponseEntity;
-    import org.springframework.web.bind.annotation.*;
+import com.flightmanagement.dto.EmployeeDto;
+import com.flightmanagement.service.EmployeeService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
-    import java.util.List;
+import java.util.List;
 
-    @RestController
-    @RequestMapping("/api/employees")
-    public class EmployeeController {
+// EmployeeController.java - Admin-restricted employee management
+@RestController
+@RequestMapping("/api/employees")
+@PreAuthorize("hasRole('EMPLOYEE')")
+@RequiredArgsConstructor
+public class EmployeeController {
+    @Autowired
+    private final EmployeeService employeeService;
 
-        @Autowired
-        private EmployeeService employeeService;
-
-        @GetMapping
-        public ResponseEntity<List<EmployeeDto>> getAllEmployees() {
-            List<EmployeeDto> employees = employeeService.getAllEmployees();
-            return ResponseEntity.ok(employees);
-        }
-
-        @GetMapping("/{id}")
-        public ResponseEntity<EmployeeDto> getEmployeeById(@PathVariable Integer id) {
-            EmployeeDto employee = employeeService.getEmployeeById(id);
-            return ResponseEntity.ok(employee);
-        }
-
-        @PostMapping
-        public ResponseEntity<EmployeeDto> createEmployee(@RequestBody EmployeeDto employeeDto) {
-            EmployeeDto createdEmployee = employeeService.createEmployee(employeeDto);
-            return new ResponseEntity<>(createdEmployee, HttpStatus.CREATED);
-        }
-
-        @PutMapping("/{id}")
-        public ResponseEntity<EmployeeDto> updateEmployee(@PathVariable Integer id, @RequestBody EmployeeDto employeeDto) {
-            EmployeeDto updatedEmployee = employeeService.updateEmployee(id, employeeDto);
-            return ResponseEntity.ok(updatedEmployee);
-        }
-
-        @DeleteMapping("/{id}")
-        public ResponseEntity<Void> deleteEmployee(@PathVariable Integer id) {
-            employeeService.deleteEmployee(id);
-            return ResponseEntity.noContent().build();
-        }
-
-        @GetMapping("/type/{type}")
-        public ResponseEntity<List<EmployeeDto>> getEmployeesByType(@PathVariable Integer type) {
-            List<EmployeeDto> employees = employeeService.getEmployeesByType(type);
-            return ResponseEntity.ok(employees);
-        }
-
-        @GetMapping("/email/{email}")
-        public ResponseEntity<EmployeeDto> getEmployeeByEmail(@PathVariable String email) {
-            EmployeeDto employee = employeeService.getEmployeeByEmail(email);
-            return ResponseEntity.ok(employee);
-        }
+    @GetMapping
+    @PreAuthorize("hasRole('EMPLOYEE_ADMIN')")
+    public ResponseEntity<List<EmployeeDto>> getAllEmployees() {
+        return ResponseEntity.ok(employeeService.getAllEmployees());
     }
+
+    @PutMapping("/{id}/role")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMIN')")
+    public ResponseEntity<EmployeeDto> updateRole(@PathVariable Integer id, @RequestParam Integer newRole) {
+        return ResponseEntity.ok(employeeService.updateRole(id, newRole));
+    }
+}
