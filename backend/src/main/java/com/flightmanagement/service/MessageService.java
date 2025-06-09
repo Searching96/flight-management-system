@@ -10,15 +10,11 @@ public interface MessageService {
     
     MessageDto getMessageById(Integer id);
     
-    MessageDto createMessage(MessageDto messageDto);
-    
     void deleteMessage(Integer id);
     
     List<MessageDto> getMessagesByChatboxId(Integer chatboxId);
     
-    List<MessageDto> getRecentMessagesByChatboxId(Integer chatboxId, int limit);
-            
     MessageDto createCustomerMessage(Integer chatboxId, String content);
     
-    MessageDto createEmployeeMessage(Integer chatboxId, String content);
+    MessageDto createEmployeeMessage(Integer chatboxId, Integer employeeId, String content);
 }

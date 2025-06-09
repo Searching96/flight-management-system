@@ -73,17 +73,6 @@ const ChatWidget: React.FC = () => {
           isFromCustomer: !msg.employeeId // If employeeId is null, it's from customer
         }));
         setMessages(formattedMessages); // Cache trong state
-      } else {
-        // Add welcome message for new chatbox
-        const welcomeMessage: Message = {
-          messageId: Date.now(),
-          chatboxId: chatboxData.chatboxId!,
-          content: "Hello! How can we help you today?",
-          sendTime: new Date().toISOString(),
-          senderName: "Support Agent",
-          isFromCustomer: false
-        };
-        setMessages([welcomeMessage]);
       }
     } catch (error) {
       console.error('Failed to initialize chat:', error);
@@ -114,20 +103,6 @@ const ChatWidget: React.FC = () => {
       
       // Send message to API using createCustomerMessage
       await chatService.createCustomerMessage(chatbox.chatboxId, messageContent);
-      
-      // Simulate employee response for demo
-      setTimeout(() => {
-        const autoResponse: Message = {
-          messageId: Date.now() + 1,
-          chatboxId: chatbox.chatboxId!,
-          content: "Thank you for your message. Our team will assist you shortly.",
-          sendTime: new Date().toISOString(),
-          senderName: "Support Agent",
-          isFromCustomer: false
-        };
-        setMessages(prev => [...prev, autoResponse]);
-      }, 1000);
-      
     } catch (error) {
       console.error('Failed to send message:', error);
       setError('Failed to send message. Please try again.');
@@ -186,6 +161,13 @@ const ChatWidget: React.FC = () => {
       console.error('Failed to send message:', error);
       setError('Failed to send message. Please try again.');
     }
+  };
+
+  const getAvatarLetter = (senderName?: string, isFromCustomer?: boolean) => {
+    if (senderName && senderName.trim()) {
+      return senderName.trim().charAt(0).toUpperCase();
+    }
+    return isFromCustomer ? 'C' : 'S';
   };
 
   if (!user) {
@@ -250,13 +232,23 @@ const ChatWidget: React.FC = () => {
                       key={message.messageId}
                       className={`mb-3 d-flex ${message.isFromCustomer ? 'justify-content-end' : 'justify-content-start'}`}
                     >
+                      {!message.isFromCustomer && (
+                        <div 
+                          className="me-2 rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                          style={{ width: '32px', height: '32px', fontSize: '14px', fontWeight: 'bold' }}
+                          title={message.senderName || 'Support Agent'}
+                        >
+                          {getAvatarLetter(message.senderName, message.isFromCustomer)}
+                        </div>
+                      )}
+                      
                       <div 
                         className={`p-2 rounded max-width-75 ${
                           message.isFromCustomer 
                             ? 'bg-primary text-white' 
                             : 'bg-white border'
                         }`}
-                        style={{ maxWidth: '75%' }}
+                        style={{ maxWidth: '70%' }}
                       >
                         <div className="small">{message.content}</div>
                         <div className={`text-xs mt-1 ${message.isFromCustomer ? 'text-light' : 'text-muted'}`} style={{ fontSize: '0.7rem' }}>

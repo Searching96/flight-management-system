@@ -156,3 +156,6 @@ CREATE TABLE IF NOT EXISTS message
     FOREIGN KEY (chatbox_id) REFERENCES chatbox(chatbox_id),
     FOREIGN KEY (employee_id) REFERENCES employee(employee_id)
 );
+
+INSERT INTO message (chatbox_id, employee_id, content, send_time) 
+VALUES (1, 2, 'Hello, how can I help you?', NOW());

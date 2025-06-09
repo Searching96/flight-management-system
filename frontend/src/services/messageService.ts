@@ -86,7 +86,6 @@ export class MessageService {
     return apiClient.post(`${this.baseUrl}/customer`, { 
       chatboxId, 
       content 
-      // employeeId will be null for customer messages
     });
   }
 

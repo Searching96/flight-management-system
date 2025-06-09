@@ -2,8 +2,6 @@ package com.flightmanagement.mapper;
 
 import com.flightmanagement.dto.MessageDto;
 import com.flightmanagement.entity.Message;
-import com.flightmanagement.repository.ChatboxRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -11,9 +9,6 @@ import java.util.stream.Collectors;
 
 @Component
 public class MessageMapper implements BaseMapper<Message, MessageDto> {
-    
-    @Autowired
-    private ChatboxRepository chatboxRepository;
     
     @Override
     public MessageDto toDto(Message entity) {
@@ -25,17 +20,24 @@ public class MessageMapper implements BaseMapper<Message, MessageDto> {
         dto.setEmployeeId(entity.getEmployeeId());
         dto.setContent(entity.getContent());
         dto.setSendTime(entity.getSendTime());
-        dto.setDeletedAt(entity.getDeletedAt());
+        dto.setIsFromCustomer(entity.getEmployeeId() == null);
         
-        // Determine sender name based on employeeId
-        if (entity.getEmployeeId() != null) {
-            // Message from employee
-            // You may need to fetch employee name from repository if needed
-            dto.setSenderName("Support Agent");
+        // Set sender name based on who sent the message
+        if (entity.getEmployeeId() == null) {
+            // Message from customer - get customer name from chatbox
+            if (entity.getChatbox() != null && entity.getChatbox().getCustomer() != null
+                && entity.getChatbox().getCustomer().getAccount() != null) {
+                dto.setSenderName(entity.getChatbox().getCustomer().getAccount().getAccountName());
+            } else {
+                dto.setSenderName("Customer"); // Fallback
+            }
         } else {
-            // Message from customer 
-            // You may need to fetch customer name from repository if needed
-            dto.setSenderName("Customer");
+            // Message from employee - get employee name
+            if (entity.getEmployee() != null && entity.getEmployee().getAccount() != null) {
+                dto.setSenderName(entity.getEmployee().getAccount().getAccountName());
+            } else {
+                dto.setSenderName("Support Agent"); // Fallback
+            }
         }
         
         return dto;
@@ -51,8 +53,6 @@ public class MessageMapper implements BaseMapper<Message, MessageDto> {
         entity.setEmployeeId(dto.getEmployeeId());
         entity.setContent(dto.getContent());
         entity.setSendTime(dto.getSendTime());
-        entity.setDeletedAt(dto.getDeletedAt());
-        
         return entity;
     }
     

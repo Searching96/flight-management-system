@@ -7,15 +7,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.flightmanagement.repository.CustomerRepository;
+import com.flightmanagement.repository.EmployeeRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
 public class ChatboxMapper implements BaseMapper<Chatbox, ChatboxDto> {
-    
     @Autowired
     CustomerRepository customerRepository;
+    @Autowired
+    EmployeeRepository employeeRepository;
     
     @Override
     public ChatboxDto toDto(Chatbox entity) {
@@ -23,13 +25,16 @@ public class ChatboxMapper implements BaseMapper<Chatbox, ChatboxDto> {
         
         ChatboxDto dto = new ChatboxDto();
         dto.setChatboxId(entity.getChatboxId());
-        dto.setCustomerId(entity.getCustomerId());
-        dto.setDeletedAt(entity.getDeletedAt());
         
-        // Add customer name if customer relationship is loaded
-        if (entity.getCustomer() != null && entity.getCustomer().getAccount() != null) {
-            dto.setCustomerName(entity.getCustomer().getAccount().getAccountName());
+        if (entity.getCustomer() != null) {
+            dto.setCustomerId(entity.getCustomer().getCustomerId());
+            if (entity.getCustomer().getAccount() != null) {
+                dto.setCustomerName(entity.getCustomer().getAccount().getAccountName());
+            }
         }
+        
+        // Set default values for message metadata (can be populated by service layer)
+        dto.setUnreadCount(0);
         
         return dto;
     }
@@ -40,9 +45,8 @@ public class ChatboxMapper implements BaseMapper<Chatbox, ChatboxDto> {
         
         Chatbox entity = new Chatbox();
         entity.setChatboxId(dto.getChatboxId());
-        entity.setCustomerId(dto.getCustomerId());
-        entity.setDeletedAt(dto.getDeletedAt());
-        
+        entity.setCustomer(customerRepository.findById(dto.getCustomerId())
+            .orElseThrow(() -> new RuntimeException("Customer not found with id: " + dto.getCustomerId())));
         return entity;
     }
     

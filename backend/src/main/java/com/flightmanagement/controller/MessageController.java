@@ -29,12 +29,6 @@ public class MessageController {
         return ResponseEntity.ok(message);
     }
     
-    @PostMapping
-    public ResponseEntity<MessageDto> createMessage(@RequestBody MessageDto messageDto) {
-        MessageDto createdMessage = messageService.createMessage(messageDto);
-        return new ResponseEntity<>(createdMessage, HttpStatus.CREATED);
-    }
-    
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMessage(@PathVariable Integer id) {
         messageService.deleteMessage(id);
@@ -48,30 +42,21 @@ public class MessageController {
     }
     
     @PostMapping("/customer")
-    public ResponseEntity<MessageDto> createCustomerMessage(@RequestBody Map<String, Object> request) {
-        try {
-            Integer chatboxId = (Integer) request.get("chatboxId");
-            String content = (String) request.get("content");
-            
-            MessageDto message = messageService.createCustomerMessage(chatboxId, content);
-            return new ResponseEntity<>(message, HttpStatus.CREATED);
-        } catch (Exception e) {
-            System.err.println("Error creating customer message: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<MessageDto> createCustomerMessage(
+            @RequestBody Map<String, Object> requestBody) {
+        Integer chatboxId = (Integer) requestBody.get("chatboxId");
+        String content = (String) requestBody.get("content");
+        
+        MessageDto message = messageService.createCustomerMessage(chatboxId, content);
+        return new ResponseEntity<>(message, HttpStatus.CREATED);
     }
     
     @PostMapping("/employee")
-    public ResponseEntity<MessageDto> createEmployeeMessage(@RequestBody Map<String, Object> request) {
-        try {
-            Integer chatboxId = (Integer) request.get("chatboxId");
-            String content = (String) request.get("content");
-            
-            MessageDto message = messageService.createEmployeeMessage(chatboxId, content);
-            return new ResponseEntity<>(message, HttpStatus.CREATED);
-        } catch (Exception e) {
-            System.err.println("Error creating employee message: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<MessageDto> createEmployeeMessage(
+            @RequestParam Integer chatboxId,
+            @RequestParam Integer employeeId,
+            @RequestParam String content) {
+        MessageDto message = messageService.createEmployeeMessage(chatboxId, employeeId, content);
+        return new ResponseEntity<>(message, HttpStatus.CREATED);
     }
 }

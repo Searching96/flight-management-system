@@ -16,8 +16,9 @@ public class ChatboxDto {
     private Integer chatboxId;
     private Integer customerId;
     private String customerName;
-    private String lastMessageContent;
+    private Integer employeeId;
+    private String employeeName;
     private LocalDateTime lastMessageTime;
+    private String lastMessageContent;
     private Integer unreadCount;
-    private LocalDateTime deletedAt;
 }

@@ -40,7 +40,10 @@ export class ChatService {
   }
 
   async createCustomerMessage(chatboxId: number, content: string): Promise<Message> {
-    return apiClient.post(`${this.messageUrl}/customer`, { chatboxId, content });
+    return apiClient.post(`${this.messageUrl}/customer`, { 
+      chatboxId, 
+      content 
+    });
   }
 
   async getChatboxByCustomerId(customerId: number): Promise<Chatbox> {

@@ -35,15 +35,6 @@ public class MessageServiceImpl implements MessageService {
     }
     
     @Override
-    public MessageDto createMessage(MessageDto messageDto) {
-        Message message = messageMapper.toEntity(messageDto);
-        message.setDeletedAt(null);
-        message.setSendTime(LocalDateTime.now());
-        Message savedMessage = messageRepository.save(message);
-        return messageMapper.toDto(savedMessage);
-    }
-    
-    @Override
     public void deleteMessage(Integer id) {
         Message message = messageRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Message not found with id: " + id));
@@ -57,29 +48,30 @@ public class MessageServiceImpl implements MessageService {
         List<Message> messages = messageRepository.findByChatboxIdOrderBySendTime(chatboxId);
         return messageMapper.toDtoList(messages);
     }
-    
-    @Override
-    public List<MessageDto> getRecentMessagesByChatboxId(Integer chatboxId, int limit) {
-        List<Message> messages = messageRepository.findByChatboxIdOrderBySendTimeDesc(chatboxId, PageRequest.of(0, limit));
-        return messageMapper.toDtoList(messages);
-    }
-    
+
     @Override
     public MessageDto createCustomerMessage(Integer chatboxId, String content) {
-        MessageDto messageDto = new MessageDto();
-        messageDto.setChatboxId(chatboxId);
-        messageDto.setContent(content);
-        messageDto.setEmployeeId(null); // Customer message has null employeeId
-        return createMessage(messageDto);
+        Message message = new Message();
+        message.setChatboxId(chatboxId);
+        message.setEmployeeId(null); // null means from customer
+        message.setContent(content);
+        message.setSendTime(LocalDateTime.now());
+        message.setDeletedAt(null);
+        
+        Message savedMessage = messageRepository.save(message);
+        return messageMapper.toDto(savedMessage);
     }
-    
+
     @Override
-    public MessageDto createEmployeeMessage(Integer chatboxId, String content) {
-        // You'll need to pass employeeId as parameter or get it from security context
-        MessageDto messageDto = new MessageDto();
-        messageDto.setChatboxId(chatboxId);
-        messageDto.setContent(content);
-        messageDto.setEmployeeId(1); // Set actual employee ID here
-        return createMessage(messageDto);
+    public MessageDto createEmployeeMessage(Integer chatboxId, Integer employeeId, String content) {
+        Message message = new Message();
+        message.setChatboxId(chatboxId);
+        message.setEmployeeId(employeeId);
+        message.setContent(content);
+        message.setSendTime(LocalDateTime.now());
+        message.setDeletedAt(null);
+        
+        Message savedMessage = messageRepository.save(message);
+        return messageMapper.toDto(savedMessage);
     }
 }

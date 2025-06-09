@@ -18,7 +18,7 @@ export interface Message {
   employeeId?: number; // null = from customer, not null = from employee
   content: string;
   sendTime?: string;
-  senderName?: string;
+  senderName?: string; // Employee name from backend or customer name
   isFromCustomer?: boolean; // Derived field for UI
 }
 
