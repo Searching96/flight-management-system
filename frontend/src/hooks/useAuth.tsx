@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { LoginRequest, AuthResponse, UserDetails } from '../models';
+import { LoginRequest, AuthResponse, UserDetails, RegisterRequest } from '../models';
 import { authService } from '../services/authService';
 
 // Define the context type
@@ -7,6 +7,7 @@ interface AuthContextType {
   user: UserDetails | null;
   loading: boolean;
   login: (loginRequest: LoginRequest) => Promise<void>;
+  register: (registerRequest: RegisterRequest) => Promise<void>;
   logout: () => void;
   refresh: () => Promise<void>;
 }
@@ -29,7 +30,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        await authService.silentRefresh();
+        await authService.refreshToken();
       } catch (error) {
         setUser(null);
       }
@@ -60,6 +61,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const register = useCallback(async (registerRequest: RegisterRequest) => {
+    setLoading(true);
+    try {
+      const response: UserDetails = await authService.register(registerRequest);
+      setUser(response);
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      throw err;
+    }
+  }, []);
+
   const logout = useCallback(() => {
     authService.logout();
     setUser(null);
@@ -82,6 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     loading,
     login,
+    register,
     logout,
     refresh,
   };

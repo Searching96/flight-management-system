@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 // CustomerController.java - Role-specific customer management
 // CustomerController.java
 @RestController
@@ -17,6 +19,12 @@ import org.springframework.web.bind.annotation.*;
 public class CustomerController {
     @Autowired
     private final CustomerService customerService;
+
+    @GetMapping
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    public ResponseEntity<List<CustomerDto>> getAllCustomers() {
+        return ResponseEntity.ok(customerService.getAllCustomers());
+    }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('CUSTOMER') and #id == principal.id or hasRole('EMPLOYEE_SUPPORT')")

@@ -1,5 +1,6 @@
 package com.flightmanagement.dto;
 
+import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,13 +12,11 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FlightSearchDto {
-    
-    private Integer departureAirportId;
-    private Integer arrivalAirportId;
-    private LocalDateTime departureDate;
-    private LocalDateTime returnDate;
-    private Integer passengerCount;
+public class TicketSearchCriteria {
+    private String status;
+    private Integer flightId;
+    private Integer customerId;
     private Integer ticketClassId;
-    private Boolean isRoundTrip;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
 }

@@ -234,13 +234,13 @@ const TicketClassManagement: React.FC<{
                     >
                       Edit
                     </Button>
-                    <Button
+                    {/* <Button
                       variant="outline-danger"
                       size="sm"
                       onClick={() => handleDelete(ticketClass.ticketClassId!)}
                     >
                       Delete
-                    </Button>
+                    </Button> */}
                   </div>
                 </Card.Header>
                 <Card.Body>

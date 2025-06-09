@@ -4,23 +4,9 @@ import { Ticket, TicketRequest, TicketFilters } from '../models/Ticket';
 class TicketService {
   private readonly baseURL = '/tickets';
 
-  async getAllTickets(filters?: TicketFilters): Promise<Ticket[]> {
+  async getAllTickets(): Promise<Ticket[]> {
     try {
-      const params = new URLSearchParams();
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== '' && value !== null) {
-            if (key === 'dateRange' && typeof value === 'object') {
-              if (value.from) params.append('fromDate', value.from);
-              if (value.to) params.append('toDate', value.to);
-            } else {
-              params.append(key, value.toString());
-            }
-          }
-        });
-      }
-      
-      const response = await apiClient.get(`${this.baseURL}?${params}`);
+      const response = await apiClient.get(`${this.baseURL}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching tickets:', error);

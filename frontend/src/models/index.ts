@@ -1,7 +1,7 @@
 import { Ticket } from './Ticket';
 
 // Account related
-export type { Account, LoginResponse, RegisterRequest } from './Account';
+export type { Account } from './Account';
 
 // Flight related
 export type { Flight, FlightSearchCriteria, FlightRequest } from './Flight';
@@ -19,11 +19,11 @@ export type {
 export type { Airport } from './Airport';
 
 // Auth related
-export type { AuthResponse, LoginRequest, UserDetails } from './Auth';
+export type { AuthResponse, LoginRequest, UserDetails, RegisterRequest } from './Auth';
 
 // Ticket related
 export type { TicketClass, TicketClassRequest } from './TicketClass';
-export type { Ticket, TicketRequest, TicketFilters, TicketStatus } from './Ticket';
+export type { Ticket, TicketRequest, TicketFilters } from './Ticket';
 
 // User related
 export type { Customer } from './Customer';

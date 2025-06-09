@@ -361,13 +361,13 @@ const PlaneManagement: React.FC<{
                                         >
                                             Edit
                                         </Button>
-                                        <Button
+                                        {/* <Button
                                             size="sm"
                                             variant="outline-danger"
                                             onClick={() => handleDelete(plane.planeId!)}
                                         >
                                             Delete
-                                        </Button>
+                                        </Button> */}
                                     </div>
                                 </Card.Header>
                                 <Card.Body>

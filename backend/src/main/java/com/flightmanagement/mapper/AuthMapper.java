@@ -11,11 +11,16 @@ import com.flightmanagement.security.CustomUserDetails;
 // AuthMapper.java
 @Component
 public class AuthMapper {
-    public String resolveRole(Collection<? extends GrantedAuthority> authorities) {
+    private String resolveRole(Collection<? extends GrantedAuthority> authorities) {
         return authorities.stream()
-                .findFirst()
                 .map(GrantedAuthority::getAuthority)
-                .map(role -> role.replace("ROLE_", ""))
+                .filter(auth -> auth.startsWith("ROLE_EMPLOYEE_")) // Prioritize specific roles
+                .findFirst()
+                .or(() -> authorities.stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .findFirst()
+                )
+                .map(auth -> auth.replace("ROLE_", ""))
                 .orElse("USER");
     }
 

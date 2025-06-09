@@ -5,7 +5,6 @@ import AirportManagement from './AirportManagement';
 import ParameterSettings from './ParameterSettings';
 import PlaneManagement from './PlaneManagement';
 import TicketClassManagement from './TicketClassManagement';
-import TicketManagement from './TicketManagement';
 import { usePermissions } from '../../hooks/useAuth';
 import EmployeeManagement from './EmployeeManagement';
 
@@ -14,7 +13,7 @@ type AdminTab = 'overview' | 'flights' | 'employees' | 'airports' | 'planes' | '
 export const AdminPanel: React.FC = () => {
   const { canViewAdmin } = usePermissions();
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
-  
+
   // Add state for managing quick action modals
   const [quickActionModals, setQuickActionModals] = useState({
     showFlightModal: false,
@@ -43,15 +42,13 @@ export const AdminPanel: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'flights':
-        return <FlightManagement showAddModal={quickActionModals.showFlightModal} onCloseAddModal={() => setQuickActionModals(prev => ({...prev, showFlightModal: false}))} />;
+        return <FlightManagement showAddModal={quickActionModals.showFlightModal} onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showFlightModal: false }))} />;
       case 'airports':
-        return <AirportManagement showAddModal={quickActionModals.showAirportModal} onCloseAddModal={() => setQuickActionModals(prev => ({...prev, showAirportModal: false}))} />;
+        return <AirportManagement showAddModal={quickActionModals.showAirportModal} onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showAirportModal: false }))} />;
       case 'planes':
-        return <PlaneManagement showAddModal={quickActionModals.showPlaneModal} onCloseAddModal={() => setQuickActionModals(prev => ({...prev, showPlaneModal: false}))} />;
+        return <PlaneManagement showAddModal={quickActionModals.showPlaneModal} onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showPlaneModal: false }))} />;
       case 'ticket-classes':
-        return <TicketClassManagement showAddModal={quickActionModals.showTicketClassModal} onCloseAddModal={() => setQuickActionModals(prev => ({...prev, showTicketClassModal: false}))} />;
-      case 'tickets':
-        return <TicketManagement showAddModal={quickActionModals.showTicketModal} onCloseAddModal={() => setQuickActionModals(prev => ({...prev, showTicketModal: false}))} />;
+        return <TicketClassManagement showAddModal={quickActionModals.showTicketClassModal} onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showTicketClassModal: false }))} />;
       case 'parameters':
         return <ParameterSettings />;
       case 'employees':
@@ -67,23 +64,23 @@ export const AdminPanel: React.FC = () => {
     switch (action) {
       case 'add-flight':
         setActiveTab('flights');
-        setQuickActionModals(prev => ({...prev, showFlightModal: true}));
+        setQuickActionModals(prev => ({ ...prev, showFlightModal: true }));
         break;
       case 'add-airport':
         setActiveTab('airports');
-        setQuickActionModals(prev => ({...prev, showAirportModal: true}));
+        setQuickActionModals(prev => ({ ...prev, showAirportModal: true }));
         break;
       case 'add-plane':
         setActiveTab('planes');
-        setQuickActionModals(prev => ({...prev, showPlaneModal: true}));
+        setQuickActionModals(prev => ({ ...prev, showPlaneModal: true }));
         break;
       case 'add-ticket-class':
         setActiveTab('ticket-classes');
-        setQuickActionModals(prev => ({...prev, showTicketClassModal: true}));
+        setQuickActionModals(prev => ({ ...prev, showTicketClassModal: true }));
         break;
       case 'add-ticket':
         setActiveTab('tickets');
-        setQuickActionModals(prev => ({...prev, showTicketModal: true}));
+        setQuickActionModals(prev => ({ ...prev, showTicketModal: true }));
         break;
       default:
         setActiveTab(action);

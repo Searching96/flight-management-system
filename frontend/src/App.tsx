@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider, useAuth } from './hooks/useAuth';
-import { apiClient } from './services/api';
+import { AuthProvider } from './hooks/useAuth';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import HomePage from './components/home/HomePage';

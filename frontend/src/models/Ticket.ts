@@ -21,14 +21,6 @@ export interface Ticket {
   updatedAt?: string;
 }
 
-export enum TicketStatus {
-  CONFIRMED = 'CONFIRMED',
-  CANCELLED = 'CANCELLED',
-  PENDING = 'PENDING',
-  CHECKED_IN = 'CHECKED_IN',
-  NO_SHOW = 'NO_SHOW'
-}
-
 export interface TicketRequest {
   customerId: number;
   flightId: number;
@@ -47,3 +39,17 @@ export interface TicketFilters {
     to?: string;
   };
 }
+
+// In your models or utils file
+export enum TicketStatus {
+  PAID = 1,
+  UNPAID = 2,
+  CANCELLED = 3,
+}
+
+export const TicketStatusText: Record<TicketStatus, string> = {
+  [TicketStatus.PAID]: 'Paid',
+  [TicketStatus.UNPAID]: 'Unpaid',
+  [TicketStatus.CANCELLED]: 'Cancelled',
+};
+

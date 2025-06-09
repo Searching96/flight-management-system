@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS ticket
     book_customer_id INT, -- nullable
     passenger_id INT NOT NULL,
     seat_number VARCHAR(7) NOT NULL,
-    ticket_status TINYINT DEFAULT 2, -- 1: paid, 2: unpaid, 3: canceled
+    ticket_status TINYINT DEFAULT 0, -- 0: unpaid, 1: paid,
     payment_time DATETIME, -- nullable
     fare DECIMAL(10,2) NOT NULL,
     deleted_at DATETIME DEFAULT NULL,

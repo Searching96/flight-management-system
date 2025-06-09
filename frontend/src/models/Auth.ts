@@ -19,3 +19,13 @@ export interface UserDetails {
   role: string;
   accountTypeName: string;
 }
+
+export interface RegisterRequest {
+  accountName: string;
+  password: string;
+  email: string;
+  citizenId: string;
+  phoneNumber: string;
+  accountType: number;
+  employeeType?: number;
+}

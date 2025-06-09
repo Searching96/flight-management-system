@@ -1,6 +1,6 @@
 // services/authService.ts
 import { apiClient } from './api';
-import { LoginRequest, AuthResponse, UserDetails } from '../models';
+import { LoginRequest, AuthResponse, UserDetails, RegisterRequest } from '../models';
 
 class AuthService {
   async login(credentials: LoginRequest): Promise<UserDetails> {
@@ -11,18 +11,22 @@ class AuthService {
     return response.userDetails;
   }
 
-  // Add silent refresh method
-  async silentRefresh(): Promise<void> {
-    await apiClient.post('/auth/refresh');
+  async register(userData: RegisterRequest): Promise<UserDetails> {
+    const response = await apiClient.post<AuthResponse>('/auth/register', userData);
+    localStorage.setItem('accessToken', response.accessToken);
+    localStorage.setItem('refreshToken', response.refreshToken);
+    localStorage.setItem('user', JSON.stringify(response.userDetails));
+    return response.userDetails;
   }
 
   // Refresh access token
   async refreshToken(): Promise<AuthResponse> {
     const refreshToken = localStorage.getItem('refreshToken');
+    console.log('Refreshing token with refreshToken:', refreshToken);
     if (!refreshToken) throw new Error('No refresh token available');
 
     try {
-      const response = await apiClient.post<AuthResponse>('/auth/refresh', { refreshToken });
+      const response = await apiClient.post<AuthResponse>('/auth/refresh', refreshToken);
       this.setAuthData(response);
       return response;
     } catch (error) {

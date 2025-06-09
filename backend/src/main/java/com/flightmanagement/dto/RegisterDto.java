@@ -16,5 +16,6 @@ public class RegisterDto {
     private String citizenId;
     private String phoneNumber;
     private Integer accountType;
+    private Integer employeeType;
 }
 

@@ -72,10 +72,11 @@ class ApiClient {
       const refreshToken = localStorage.getItem('refreshToken');
       if (!refreshToken) throw new Error('No refresh token available');
 
+      console.log('Refreshing token... : ' + refreshToken);
       const response = await axios.post<AuthResponse>(
-        `${this.baseUrl}/auth/refresh`,
-        { refreshToken }
+        `${this.baseUrl}/auth/refresh`, refreshToken
       );
+      console.log('Response from token refresh: ', response.data);
 
       this.setAuthData(response.data);
       return response.data.accessToken;

@@ -1,14 +1,12 @@
 package com.flightmanagement.service.impl;
 
-import com.flightmanagement.dto.BookingDto;
-import com.flightmanagement.dto.FlightTicketClassDto;
-import com.flightmanagement.dto.PassengerDto;
-import com.flightmanagement.dto.TicketDto;
+import com.flightmanagement.dto.*;
 import com.flightmanagement.entity.*;
 import com.flightmanagement.mapper.TicketMapper;
 import com.flightmanagement.repository.*;
 import com.flightmanagement.service.FlightTicketClassService;
 import com.flightmanagement.service.PassengerService;
+import com.flightmanagement.service.PaymentService;
 import com.flightmanagement.service.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,7 +48,8 @@ public class TicketServiceImpl implements TicketService {
     
     @Autowired
     private AccountRepository accountRepository;
-    
+    private PaymentService paymentService;
+
     @Override
     public List<TicketDto> getAllTickets() {
         List<Ticket> tickets = ticketRepository.findAllActive();
@@ -254,16 +253,12 @@ public class TicketServiceImpl implements TicketService {
         }
     }
     
-    // private BigDecimal calculateFare(Integer flightId, Integer ticketClassId) {
-    //     FlightTicketClassDto flightTicketClass = flightTicketClassService.getFlightTicketClassById(flightId, ticketClassId);
-    //     return flightTicketClass.getSpecifiedFare();
-    // }
-    
     @Override
     public TicketDto payTicket(Integer ticketId) {
         Ticket ticket = ticketRepository.findActiveById(ticketId)
             .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + ticketId));
-        
+
+//        paymentService.createPayment(ticket.getFare(), );
         ticket.setTicketStatus((byte) 1); // 1: paid
         ticket.setPaymentTime(LocalDateTime.now());
         

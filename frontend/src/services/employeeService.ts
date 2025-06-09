@@ -1,8 +1,6 @@
 import { apiClient } from './api';
 import {
   Employee,
-  LoginRequest,
-  LoginResponse,
   CreateEmployeeRequest,
   UpdateEmployeeRequest,
   ChangePasswordRequest
@@ -13,19 +11,6 @@ import { API_URL } from './config';
 
 class EmployeeService {
   private readonly baseUrl = API_URL.EMPLOYEES;
-  // Authentication
-  async login(loginData: LoginRequest): Promise<LoginResponse> {
-    const response = await apiClient.post('/accounts/login', loginData);
-    if (response.token) {
-      localStorage.setItem('accessToken', response.token);
-    }
-    return response;
-  }
-
-  async logout(): Promise<void> {
-    localStorage.removeItem('accessToken');
-    await apiClient.post('/auth/logout');
-  }
 
   async getCurrentEmployee(): Promise<Employee> {
     return apiClient.get(`${this.baseUrl}/current`);

@@ -15,15 +15,11 @@ import java.util.stream.Collectors;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
-
-    private final CustomerRepository customerRepository;
-    private final CustomerMapper customerMapper;
-
     @Autowired
-    public CustomerServiceImpl(CustomerRepository customerRepository, CustomerMapper customerMapper) {
-        this.customerRepository = customerRepository;
-        this.customerMapper = customerMapper;
-    }
+    private CustomerRepository customerRepository;
+    @Autowired
+    private CustomerMapper customerMapper;
+
 
     @Override
     public CustomerDto getCustomerById(Integer id) {

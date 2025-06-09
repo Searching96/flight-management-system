@@ -7,24 +7,6 @@ import TicketCard from '../tickets/TicketCard';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  // Only allow customers (accountType === 1) to access dashboard
-  if (!user || user.accountType !== 1) {
-    return (
-      <Container className="py-5">
-        <Row className="justify-content-center">
-          <Col md={6}>
-            <Alert variant="danger" className="text-center">
-              <Alert.Heading>
-                <i className="bi bi-shield-x me-2"></i>
-                Access Denied
-              </Alert.Heading>
-              <p className="mb-0">You do not have permission to access the customer dashboard.</p>
-            </Alert>
-          </Col>
-        </Row>
-      </Container>
-    );
-  }
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -39,7 +21,7 @@ const Dashboard: React.FC = () => {
   const loadUserTickets = async () => {
     try {
       setLoading(true);
-      const userTickets = await ticketService.getTicketsByCustomerId(user!.accountId!);
+      const userTickets = await ticketService.getTicketsByCustomerId(user!.id!);
       setTickets(userTickets);
     } catch (err: any) {
       setError('Failed to load your bookings');

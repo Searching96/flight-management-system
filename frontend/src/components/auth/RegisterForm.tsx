@@ -3,15 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
-
-interface RegisterFormData {
-  accountName: string;
-  password: string;
-  confirmPassword: string;
-  email: string;
-  phoneNumber: string;
-  citizenId: string;
-}
+import { RegisterRequest } from '../../models';
 
 const RegisterForm: React.FC = () => {
   const { register: registerUser } = useAuth();
@@ -24,24 +16,20 @@ const RegisterForm: React.FC = () => {
     handleSubmit,
     watch,
     formState: { errors }
-  } = useForm<RegisterFormData>();
+  } = useForm<RegisterRequest>();
 
   const password = watch('password');
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (data: RegisterRequest) => {
     try {
       setLoading(true);
       setError('');
-        const { confirmPassword, ...registerData } = data;
       // Set account type to customer (type 1) - matches backend schema
-      const registerRequest = {
-        ...registerData,
-        accountType: 1
-      };
-      
-      await registerUser(registerRequest);
-      
-      navigate('/login', { 
+      data.accountType = 1;
+
+      await registerUser(data);
+
+      navigate('/login', {
         state: { message: 'Registration successful! Please sign in.' }
       });
     } catch (err: any) {
@@ -70,17 +58,19 @@ const RegisterForm: React.FC = () => {
                 <Row>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label htmlFor="accountName">Username</Form.Label>
+                      <Form.Label htmlFor="accountName">Họ và tên</Form.Label>
                       <Form.Control
                         id="accountName"
                         type="text"
                         {...register('accountName', {
-                          required: 'Username is required',
-                          minLength: { value: 3, message: 'Username must be at least 3 characters' },
-                          pattern: { value: /^[a-zA-Z0-9_]+$/, message: 'Username can only contain letters, numbers, and underscores' }
+                          required: 'Họ và tên là bắt buộc',
+                          minLength: { value: 3, message: 'Họ và tên phải ít nhất 3 kí tự' },
+                          pattern: {
+                            value: /^(?![a-zA-Z_]+$)[\p{L}]+$/u, message: 'Họ và tên chỉ có thể chứa kí tự'
+                          }
                         })}
                         isInvalid={!!errors.accountName}
-                        placeholder="Choose a username"
+                        placeholder="Nhập họ và tên"
                       />
                       <Form.Control.Feedback type="invalid">
                         {errors.accountName?.message}
@@ -158,7 +148,7 @@ const RegisterForm: React.FC = () => {
                         {...register('password', {
                           required: 'Password is required',
                           minLength: { value: 6, message: 'Password must be at least 6 characters' },
-                          pattern: { 
+                          pattern: {
                             value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
                             message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
                           }
@@ -180,7 +170,8 @@ const RegisterForm: React.FC = () => {
                         type="password"
                         {...register('confirmPassword', {
                           required: 'Please confirm your password',
-                          validate: value => value === password || 'Passwords do not match'
+                          validate: value =>
+                            value === watch('password') || 'Passwords do not match'
                         })}
                         isInvalid={!!errors.confirmPassword}
                         placeholder="Confirm your password"
@@ -188,12 +179,13 @@ const RegisterForm: React.FC = () => {
                       <Form.Control.Feedback type="invalid">
                         {errors.confirmPassword?.message}
                       </Form.Control.Feedback>
+
                     </Form.Group>
                   </Col>
                 </Row>
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   variant="primary"
                   size="lg"
                   className="w-100"
