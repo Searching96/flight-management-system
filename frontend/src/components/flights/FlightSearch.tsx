@@ -161,7 +161,7 @@ const FlightSearch: React.FC = () => {
             <Card.Body className="p-4">
               <Form onSubmit={handleSubmit(onSubmit)}>
                 {/* Airport Selection */}
-                <Row className="mb-4">
+                <Row className="mb-4 align-items-end">
                   <Col md={5}>
                     <Form.Group>
                       <Form.Label className="fw-bold">
@@ -195,12 +195,12 @@ const FlightSearch: React.FC = () => {
                     </Form.Group>
                   </Col>
 
-                  <Col md={2} className="d-flex align-items-end justify-content-center">
+                  <Col md={2} className="d-flex justify-content-center">
                     <Button
                       variant="outline-secondary"
                       onClick={swapAirports}
-                      className="mb-3"
                       title="Swap airports"
+                      style={{ height: '38px' }}
                     >
                       <i className="bi bi-arrow-left-right"></i>
                     </Button>
