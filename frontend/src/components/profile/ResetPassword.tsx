@@ -120,6 +120,7 @@ const ResetPassword: React.FC = () => {
                               onChange={handleInputChange}
                               required
                               placeholder="Enter your current password"
+                              autoComplete="off"
                            />
                         </Form.Group>
 
@@ -133,6 +134,7 @@ const ResetPassword: React.FC = () => {
                               required
                               placeholder="Enter your new password"
                               minLength={6}
+                              autoComplete="new-password"
                            />
                            <Form.Text className="text-muted">
                               Password must be at least 6 characters long
@@ -149,6 +151,7 @@ const ResetPassword: React.FC = () => {
                               required
                               placeholder="Confirm your new password"
                               minLength={6}
+                              autoComplete="new-password"
                            />
                         </Form.Group>
 

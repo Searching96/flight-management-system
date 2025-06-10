@@ -73,6 +73,7 @@ const LoginForm: React.FC = () => {
                     })}
                     isInvalid={!!errors.password}
                     placeholder="Enter your password"
+                    autoComplete="off"
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.password?.message}
