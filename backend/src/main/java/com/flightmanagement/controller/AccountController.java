@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Map;
 import java.util.List;
 
@@ -19,9 +18,6 @@ public class AccountController {
 
     @Autowired
     private AccountService accountService;
-    
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     @GetMapping
     @PreAuthorize("hasRole('EMPLOYEE_ADMIN')")

@@ -1,7 +1,6 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.CustomerDto;
-import com.flightmanagement.entity.Customer;
 import com.flightmanagement.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 

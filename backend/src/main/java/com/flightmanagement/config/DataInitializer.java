@@ -179,8 +179,8 @@ public class DataInitializer implements CommandLineRunner {
     private void initializeDemoFlights() {
         try {
             if (flightService.getAllFlights().isEmpty()) {
-                LocalDateTime tomorrow = LocalDateTime.now().plusDays(1);
-                LocalDateTime dayAfter = LocalDateTime.now().plusDays(2);
+                LocalDateTime tomorrow = LocalDateTime.now().plusDays(2);
+                LocalDateTime dayAfter = LocalDateTime.now().plusDays(3);
 
                 // Flight 1: SGN -> HAN
                 FlightDto flight1 = new FlightDto();

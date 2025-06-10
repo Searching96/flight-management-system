@@ -96,7 +96,7 @@ public class ParameterServiceImpl implements ParameterService {
         parameter.setMinFlightDuration(30);
         parameter.setMinLayoverDuration(30);
         parameter.setMaxLayoverDuration(720);
-        parameter.setMinBookingInAdvanceDuration(4);
+        parameter.setMinBookingInAdvanceDuration(1);
         parameter.setMaxBookingHoldDuration(24);
         parameter.setDeletedAt(null);
         parameterRepository.save(parameter);
