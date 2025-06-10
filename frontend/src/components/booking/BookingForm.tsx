@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, Table } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
 import { flightService, ticketService, passengerService, bookingConfirmationService, flightTicketClassService, accountService } from '../../services';
+import { flightDetailService } from '../../services/flightDetailService';
 import { Flight } from '../../models';
 
 interface BookingFormData {
@@ -63,6 +64,7 @@ const BookingForm: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [flightDetails, setFlightDetails] = useState<any[]>([]);
 
   // Get passenger count from query param or location state
   const passengerCount = parseInt(queryPassengers || '0') || location.state?.passengerCount || 1;
@@ -128,6 +130,7 @@ const BookingForm: React.FC = () => {
   useEffect(() => {
     if (flightId) {
       loadBookingData();
+      fetchFlightDetails();
     }
   }, [flightId]);
 
@@ -156,6 +159,19 @@ const BookingForm: React.FC = () => {
       setError('Failed to load booking information');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFlightDetails = async () => {
+    if (flightId) {
+      try {
+        const flightDetail = await flightDetailService.getFlightDetailsById(Number(flightId));
+        console.log('Flight Detail:', flightDetail);
+        setFlightDetails(flightDetail || []);
+      } catch (error) {
+        console.error('Error fetching flight detail:', error);
+        setFlightDetails([]);
+      }
     }
   };
 
@@ -314,6 +330,14 @@ const BookingForm: React.FC = () => {
   const calculateTotalPrice = () => {
     if (!selectedClass) return 0;
     return selectedClass.specifiedFare * passengerCount;
+  };
+
+  const formatTime = (dateTimeString: string) => {
+    return new Date(dateTimeString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
   };
 
   // Guard: Check if flightId is provided
@@ -530,6 +554,43 @@ const BookingForm: React.FC = () => {
                   <h4 className="mb-3">Passenger Information</h4>
                   {fields.map((_, index) => renderPassengerForm(index))}
                 </div>
+
+                {/* Flight Details Table */}
+                {flightDetails.length > 0 && (
+                  <div className="mb-5 pb-4 border-bottom">
+                    <h4 className="mb-3">Flight Details</h4>
+                    <Table striped bordered hover size="sm" className="mb-0">
+                      <thead className="table-secondary">
+                        <tr>
+                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '40%' }}>Medium Airport</th>
+                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Arrival Time</th>
+                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Layover Duration</th>
+                        </tr>
+                      </thead>
+                      <tbody className="table-light">
+                        {flightDetails.map((detail, index) => (
+                          <tr key={index}>
+                            <td className="text-center align-middle py-3">
+                              <strong>{detail.mediumAirportName || 'N/A'}</strong>
+                            </td>
+                            <td className="text-center align-middle py-3">
+                              {detail.arrivalTime 
+                                ? <span className="badge bg-info">{formatTime(detail.arrivalTime)}</span>
+                                : <span className="text-muted">N/A</span>
+                              }
+                            </td>
+                            <td className="text-center align-middle py-3">
+                              {detail.layoverDuration 
+                                ? <span className="badge bg-secondary">{detail.layoverDuration}</span>
+                                : <span className="text-muted">N/A</span>
+                              }
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                )}
 
                 {/* Frequent Flyer Program */}
                 {user && (
