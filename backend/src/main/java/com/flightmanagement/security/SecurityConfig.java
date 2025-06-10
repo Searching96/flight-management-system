@@ -49,7 +49,8 @@ public class SecurityConfig {
                                 , "/api/passengers/**", "/api/flight-ticket-classes/occupied-seats/**"
                                 , "/api/flight-ticket-classes/{flightId}/{ticketClassId}/update-remaining"
                                 , "/api/tickets/confirmation-code", "/api/tickets/{id}", "api/tickets"
-                                , "/api/debug/login-by-name/{name}").permitAll()
+                                , "/api/debug/login-by-name/{name}", "/api/payment/create", "/api/payment/return"
+                                , "/api/tickets/booking-lookup/{id}" ,"/api/payment/IPN").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

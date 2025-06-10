@@ -2,12 +2,12 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Alert, Badge, ListGroup } from 'react-bootstrap';
 import { BookingConfirmation as BookingConfirmationType } from '../../services/bookingConfirmationService';
-import { ticketService } from '../../services';
+import { paymentService, ticketService } from '../../services';
 
 const BookingConfirmation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const { confirmationCode, confirmationData, message } = location.state || {};
   if (!confirmationCode || !confirmationData) {
     return (
@@ -31,10 +31,27 @@ const BookingConfirmation: React.FC = () => {
   }
 
   const booking: BookingConfirmationType = confirmationData;
+  const isPaid = booking.status === 1; // Check if booking status is paid (1)
 
   const handlePrint = () => {
     window.print();
   };
+
+  const handlePayment = async () => {
+    try {
+      const response = await paymentService.createPayment(booking.confirmationCode);
+      // Use window.location.href for a full page redirect to the payment URL
+      if (response && response.data) {
+        console.log('Redirecting to payment URL:', response.data);
+        window.location.href = response.data;
+      } else {
+        alert('Invalid payment URL received. Please try again.');
+      }
+    } catch (error) {
+      console.error('Payment creation failed:', error);
+      alert('Failed to create payment. Please try again later.');
+    }
+  }
 
   return (
     <Container className="py-5">
@@ -45,6 +62,14 @@ const BookingConfirmation: React.FC = () => {
             <Card.Body className="text-center py-4">
               <div className="display-1 text-success mb-3">✅</div>
               <h1 className="text-success mb-3">Booking Confirmed!</h1>
+              <div className="mb-3">
+                <Badge bg={isPaid ? "success" : "warning"} className="fs-5 px-3 py-2">
+                  {isPaid ? 
+                    <><i className="bi bi-check-circle me-2"></i>Đã thanh toán</> : 
+                    <><i className="bi bi-clock-history me-2"></i>Chờ thanh toán</>
+                  }
+                </Badge>
+              </div>
               {message && (
                 <Alert variant="success" className="mb-0">
                   {message}
@@ -65,7 +90,7 @@ const BookingConfirmation: React.FC = () => {
                 </h2>
               </div>
               <Alert variant="warning" className="mb-0">
-                <strong>⚠️ Important:</strong> Please save this confirmation code. 
+                <strong>⚠️ Important:</strong> Please save this confirmation code.
                 You'll need it to retrieve or manage your booking later.
               </Alert>
             </Card.Body>
@@ -108,23 +133,30 @@ const BookingConfirmation: React.FC = () => {
                 </Row>
               </div>
 
-                {/* Passenger Information */}
-                <div className="mb-4">
-                  <h5 className="text-primary mb-3">Passenger Information</h5>
-                  <ListGroup>
+              {/* Passenger Information */}
+              <div className="mb-4">
+                <h5 className="text-primary mb-3">Passenger Information</h5>
+                <ListGroup>
                   {booking.tickets.map((ticket, index) => (
-                  <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
-                    <div>
-                    <strong>
-                      Passenger {index + 1}: {booking.passengers && booking.passengers[index]}
-                    </strong>
-                    <div className="text-muted">Seat: {ticket.seatNumber}</div>
-                    </div>
-                    <Badge bg="primary" className="fs-6">${ticket.fare}</Badge>
-                  </ListGroup.Item>
+                    <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong>
+                          Passenger {index + 1}: {booking.passengers && booking.passengers[index]}
+                        </strong>
+                        <div className="text-muted">
+                          Seat: {ticket.seatNumber}{' '}
+                          {ticket.ticketStatus !== undefined && (
+                            <Badge bg={ticket.ticketStatus === 1 ? "success" : "warning"} className="ms-2">
+                              {ticket.ticketStatus === 1 ? "Đã thanh toán" : "Chờ thanh toán"}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <Badge bg="primary" className="fs-6">${ticket.fare}</Badge>
+                    </ListGroup.Item>
                   ))}
-                  </ListGroup>
-                </div>
+                </ListGroup>
+              </div>
 
               {/* Booking Summary */}
               <div className="mb-0">
@@ -137,6 +169,14 @@ const BookingConfirmation: React.FC = () => {
                   <Col sm={6}>
                     <strong>Total Passengers:</strong>
                     <div>{booking.tickets.length}</div>
+                  </Col>
+                  <Col sm={6}>
+                    <strong>Payment Status:</strong>
+                    <div>
+                      <Badge bg={isPaid ? "success" : "warning"}>
+                        {isPaid ? "Đã thanh toán" : "Chờ thanh toán"}
+                      </Badge>
+                    </div>
                   </Col>
                   <Col xs={12}>
                     <div className="border-top pt-3">
@@ -159,33 +199,45 @@ const BookingConfirmation: React.FC = () => {
           <Card className="mb-4">
             <Card.Body>
               <Row className="g-3">
-                <Col xs={12} md={4}>
+                <Col xs={12} lg={isPaid ? 4 : 3}>
                   <Button
                     onClick={handlePrint}
                     variant="outline-secondary"
-                    className="w-100"
+                    className="w-100 mb-2"
                   >
-                    Print Confirmation
+                    In phiếu đặt chỗ
                   </Button>
                 </Col>
-                <Col xs={12} md={4}>
+                <Col xs={12} lg={isPaid ? 4 : 3}>
                   <Button
                     onClick={() => navigate('/booking-lookup')}
                     variant="primary"
-                    className="w-100"
+                    className="w-100 mb-2"
                   >
-                    Manage Booking
+                    Quản lý đặt chỗ
                   </Button>
                 </Col>
-                <Col xs={12} md={4}>
+                <Col xs={12} lg={isPaid ? 4 : 3}>
                   <Button
                     onClick={() => navigate('/')}
-                    variant="success"
-                    className="w-100"
+                    variant="primary"
+                    className="w-100 mb-2"
                   >
-                    Book Another Flight
+                    Đặt vé khác
                   </Button>
                 </Col>
+                {!isPaid && (
+                  <Col xs={12} lg={3}>
+                    <Button
+                      onClick={() => handlePayment()}
+                      variant="success"
+                      className="w-100 mb-2"
+                    >
+                      <i className="bi bi-credit-card me-2"></i>
+                      Thanh toán
+                    </Button>
+                  </Col>
+                )}
               </Row>
             </Card.Body>
           </Card>

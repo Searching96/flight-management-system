@@ -16,6 +16,7 @@ import ChatWidget from './components/chat/ChatWidget';
 import TestForm from './components/test/TestForm';
 import CustomerSupport from './components/admin/CustomerSupport';
 import DebugLogin from './components/debug/DebugLogin';
+import PaymentResult from './components/payment/PaymentResult';
 
 const App: React.FC = () => {
   return (
@@ -34,7 +35,8 @@ const App: React.FC = () => {
             <Route path="/booking-lookup" element={<BookingLookup />} />
             <Route path="/booking" element={<BookingForm />} />
             <Route path="/test" element={<TestForm />} />
-            
+            <Route path="/payment/result" element={<PaymentResult />} />
+
             {/* Debug Route */}
             <Route path="/debug/log-me-in/:accountName" element={<DebugLogin />} />
 

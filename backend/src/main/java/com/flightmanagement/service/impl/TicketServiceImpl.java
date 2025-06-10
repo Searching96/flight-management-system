@@ -109,9 +109,11 @@ public class TicketServiceImpl implements TicketService {
         Ticket existingTicket = ticketRepository.findActiveById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
 
+        System.out.println("Updating ticket with details: " + ticketDto);
         existingTicket.setSeatNumber(ticketDto.getSeatNumber());
         existingTicket.setTicketStatus(ticketDto.getTicketStatus());
         existingTicket.setFare(ticketDto.getFare());
+        existingTicket.setPaymentTime(ticketDto.getPaymentTime());
 
         Ticket updatedTicket = ticketRepository.save(existingTicket);
         return ticketMapper.toDto(updatedTicket);

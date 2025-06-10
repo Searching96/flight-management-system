@@ -1,20 +1,28 @@
 import { apiClient } from './api';
 
 export interface PaymentResponse {
-    success: boolean;
-    paymentUrl?: string;
-    message?: string;
-    data?: any;
+    code: string;  // Changed from number to string to match "00" format
+    message: string;
+    data?: string;
+    orderInfo?: string;
+    orderCode: number;
 }
 
 export interface PaymentReturnResponse {
-    success: boolean;
+    code: string;
+    message: string;
+    signatureValid: boolean;
+    amount?: string;
     orderId?: string;
-    amount?: number;
-    responseCode?: string;
-    message?: string;
+    orderInfo?: string;
     transactionId?: string;
+    bankCode?: string;
+    cardType?: string;
+    paymentDate?: string;
+    transactionStatus?: string;
+    data?: any; // Optionally keep this for all raw fields
 }
+
 
 export interface TransactionQueryResponse {
     success: boolean;
@@ -43,25 +51,20 @@ class PaymentService {
      * @param amount - Payment amount in VND
      * @returns Payment response with payment URL
      */
-    async createPayment(amount: number): Promise<PaymentResponse> {
+    async createPayment(confirmationCode: string): Promise<PaymentResponse> {
         try {
-            const response = await apiClient.post(`${this.baseUrl}/create`, {
-                params: {
-                    amount: amount.toString()
-                }
-            });
+            const response = await apiClient.post(`${this.baseUrl}/create?confirmationCode=${confirmationCode}`);
 
-            return {
-                success: true,
-                paymentUrl: response.data.paymentUrl,
-                message: response.data.message,
-                data: response.data
-            };
+            // Correctly access response data properties from backend
+            console.log('Payment creation response:', response.payment);
+            return response.payment;
         } catch (error: any) {
             console.error('Payment creation failed:', error);
+            // Return error response that matches PaymentResponse interface
             return {
-                success: false,
-                message: error.response?.data?.message || 'Failed to create payment'
+                code: error.response?.data?.code || "99", // Error code
+                message: error.response?.data?.message || 'Failed to create payment',
+                orderCode: 0 // Default value for errors
             };
         }
     }
@@ -71,25 +74,16 @@ class PaymentService {
      * @param queryParams - URL query parameters from VNPay return
      * @returns Payment processing result
      */
-    async processPaymentReturn(queryParams: URLSearchParams): Promise<PaymentReturnResponse> {
+    async processPaymentReturn(queryParams: string): Promise<PaymentReturnResponse> {
         try {
-            const response = await apiClient.get(`${this.baseUrl}/return`, {
-                params: Object.fromEntries(queryParams.entries())
-            });
-
-            return {
-                success: response.data.success || false,
-                orderId: response.data.orderId,
-                amount: response.data.amount,
-                responseCode: response.data.responseCode,
-                message: response.data.message,
-                transactionId: response.data.transactionId
-            };
+            const response = await apiClient.get(`${this.baseUrl}/return${queryParams}`);
+            return response.data;
         } catch (error: any) {
             console.error('Payment return processing failed:', error);
             return {
-                success: false,
-                message: error.response?.data?.message || 'Failed to process payment return'
+                code: error.response?.data?.code || "99", // Error code
+                message: error.response?.data?.message || 'Failed to create payment',
+                signatureValid: false // Default value for errors
             };
         }
     }
@@ -185,17 +179,6 @@ class PaymentService {
         const seconds = String(date.getSeconds()).padStart(2, '0');
 
         return `${year}${month}${day}${hours}${minutes}${seconds}`;
-    }
-
-    /**
-     * Generate unique order ID
-     * @param prefix - Optional prefix for order ID
-     * @returns Unique order ID
-     */
-    generateOrderId(prefix: string = 'ORDER'): string {
-        const timestamp = Date.now();
-        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        return `${prefix}${timestamp}${random}`;
     }
 }
 

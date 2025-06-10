@@ -7,13 +7,13 @@ public interface PaymentService {
     
     /**
      * Creates a payment URL for the specified amount
-     * @param amount The payment amount
+     * @param confirmationCode The payment amount
      * @param bankCode The bank code (optional)
      * @param language The language (optional)
      * @param request The HTTP request
      * @return A map containing the payment URL and additional information
      */
-    Map<String, Object> createPayment(String amount, String bankCode, String language, HttpServletRequest request);
+    Map<String, Object> createPayment(String confirmationCode, String bankCode, String language, HttpServletRequest request);
     
     /**
      * Process the payment return from VNPay
@@ -21,6 +21,8 @@ public interface PaymentService {
      * @return A map containing the payment result
      */
     Map<String, Object> processPaymentReturn(HttpServletRequest request);
+
+    public Map<String, String> processIPN(HttpServletRequest request);
     
     /**
      * Query a transaction status

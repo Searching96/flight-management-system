@@ -6,13 +6,17 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Configuration for VNPAY payment gateway
@@ -41,9 +45,14 @@ public class VNPayConfig {
     public static String vnp_ReturnUrl;
     public static String vnp_TmnCode;
     public static String vnp_ApiUrl;
-    
+
     // Private instance reference to avoid static access to sensitive data
     private static VNPayConfig instance;
+
+    private static final AtomicInteger sequence = new AtomicInteger(0);
+
+    private static volatile String lastDate = "";
+
 
     // Initialize static fields after Spring has injected the values
     @PostConstruct
@@ -52,16 +61,17 @@ public class VNPayConfig {
         vnp_ReturnUrl = returnUrl;
         vnp_TmnCode = tmnCode;
         vnp_ApiUrl = apiUrl;
-        
+
         // Store instance for controlled access to sensitive data
         instance = this;
-        
+
         // Log non-sensitive initialization only
         System.out.println("✓ VNPAY payment gateway initialized");
     }
 
     /**
      * Generate HMAC_SHA512 signature with proper key handling
+     *
      * @param data The data to sign
      * @return The signature
      */
@@ -110,21 +120,17 @@ public class VNPayConfig {
         List<String> fieldNames = new ArrayList<>(fields.keySet());
         Collections.sort(fieldNames);
         StringBuilder sb = new StringBuilder();
-        Iterator<String> itr = fieldNames.iterator();
-        while (itr.hasNext()) {
-            String fieldName = itr.next();
-            String fieldValue = fields.get(fieldName);
-            if ((fieldValue != null) && (!fieldValue.isEmpty())) {
-                sb.append(fieldName);
-                sb.append("=");
-                sb.append(fieldValue);
-            }
-            if (itr.hasNext()) {
-                sb.append("&");
-            }
+        for (int i = 0; i < fieldNames.size(); i++) {
+            String key = fieldNames.get(i);
+            String value = fields.get(key);
+            sb.append(URLEncoder.encode(key, StandardCharsets.US_ASCII));
+            sb.append("=");
+            sb.append(URLEncoder.encode(value, StandardCharsets.US_ASCII));
+            if (i < fieldNames.size() - 1) sb.append("&");
         }
         return generateHmacSHA512Signature(sb.toString());
     }
+
 
     // Keep as private static to limit exposure
     private static String hmacSHA512(final String key, final String data) {
@@ -133,7 +139,7 @@ public class VNPayConfig {
                 throw new NullPointerException();
             }
             final Mac hmac512 = Mac.getInstance("HmacSHA512");
-            byte[] hmacKeyBytes = key.getBytes();
+            byte[] hmacKeyBytes = key.getBytes(StandardCharsets.UTF_8);
             final SecretKeySpec secretKey = new SecretKeySpec(hmacKeyBytes, "HmacSHA512");
             hmac512.init(secretKey);
             byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
@@ -161,13 +167,13 @@ public class VNPayConfig {
         return ipAdress;
     }
 
-    public static String getRandomNumber(int len) {
-        Random rnd = new Random();
-        String chars = "0123456789";
-        StringBuilder sb = new StringBuilder(len);
-        for (int i = 0; i < len; i++) {
-            sb.append(chars.charAt(rnd.nextInt(chars.length())));
+    public static Long getRandomNumber() {
+        String today = LocalDate.now().toString().replace("-", ""); // e.g., 20250610
+        if (!today.equals(lastDate)) {
+            sequence.set(0);
+            lastDate = today;
         }
-        return sb.toString();
+        int seq = sequence.incrementAndGet();
+        return ((Long.parseLong(today) * 10000 + seq) * 13579 + 24680) % 1000000000;
     }
 }

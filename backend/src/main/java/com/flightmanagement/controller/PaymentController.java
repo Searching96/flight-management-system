@@ -22,8 +22,8 @@ public class PaymentController {
 
     @PostMapping("/create")
     public ResponseEntity<Map<String, Object>> createPayment(
-            @RequestParam("amount") @NotBlank(message = "Amount is required")
-            @Pattern(regexp = "^[0-9]+$", message = "Amount must be a number") String amountParam,
+            @RequestParam("confirmationCode") @NotBlank(message = "Confirmation code is required")
+            String confirmationCodeParam,
 
             @RequestParam(value = "bankCode", required = false) String bankCode,
 
@@ -32,17 +32,18 @@ public class PaymentController {
 
             HttpServletRequest request) {
 
-        Map<String, Object> response = paymentService.createPayment(amountParam, bankCode, language, request);
+        Map<String, Object> response = paymentService.createPayment(confirmationCodeParam, bankCode, language, request);
 
         return ResponseEntity.ok(response);
     }
 
     // Both IPN and return endpoints process the payment callback from VNPay
-    @GetMapping("/ipn")
-    public ResponseEntity<Map<String, Object>> ipn(HttpServletRequest request) {
-        Map<String, Object> response = paymentService.processPaymentReturn(request);
+    @GetMapping("/IPN")
+    public ResponseEntity<Map<String, String>> ipn(HttpServletRequest request) {
+        Map<String, String> response = paymentService.processIPN(request);
         return ResponseEntity.ok(response);
     }
+
 
     @GetMapping("/return")
     public ResponseEntity<Map<String, Object>> processReturn(HttpServletRequest request) {
