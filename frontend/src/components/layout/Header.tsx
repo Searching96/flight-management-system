@@ -114,6 +114,11 @@ const Header: React.FC = () => {
                     <small className="text-muted">{user.role?.replace('EMPLOYEE_', '').replace('_', ' ')}</small>
                   </Dropdown.ItemText>
                   <Dropdown.Divider />
+                <Dropdown.Item as={Link} to="/profile/edit" className="text-decoration-none">
+                    <i className="bi bi-person-gear me-2"></i>
+                    Edit profile
+                  </Dropdown.Item>
+                  
                   <Dropdown.Item onClick={handleLogout}>
                     <i className="bi bi-box-arrow-right me-2"></i>
                     Logout

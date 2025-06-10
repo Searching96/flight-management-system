@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
-import { flightService, airportService, ticketClassService } from '../../services';
+import { flightService, airportService, ticketClassService, parameterService } from '../../services';
 import { Flight, Airport, TicketClass, FlightSearchCriteria } from '../../models';
 import TypeAhead from '../common/TypeAhead';
 import FlightCard from '../flights/FlightCard';
@@ -17,6 +17,7 @@ const FlightSearch: React.FC = () => {
   const [selectedDepartureAirport, setSelectedDepartureAirport] = useState<number | ''>('');
   const [selectedArrivalAirport, setSelectedArrivalAirport] = useState<number | ''>('');
   const [selectedTicketClass, setSelectedTicketClass] = useState<number | 'all'>('all'); // Changed to support 'all'
+  const [minBookingDate, setMinBookingDate] = useState<string>('');
 
   const {
     register,
@@ -36,14 +37,26 @@ const FlightSearch: React.FC = () => {
 
   const loadInitialData = async () => {
     try {
-      const [airportData, ticketClassData] = await Promise.all([
+      const [airportData, ticketClassData, parameterData] = await Promise.all([
         airportService.getAllAirports(),
-        ticketClassService.getAllTicketClasses()
+        ticketClassService.getAllTicketClasses(),
+        parameterService.getAllParameters()
       ]);
       setAirports(airportData);
       setTicketClasses(ticketClassData);
+      console.log('Parameters:', parameterData);
+      // Set default ticket class to 'all'
+      // Calculate minimum booking date
+      const minAdvanceDuration = parameterData.minBookingInAdvanceDuration;
+      console.log('Minimum booking in advance duration:', minAdvanceDuration);
+      const minDate = new Date();
+      minDate.setDate(minDate.getDate() + minAdvanceDuration + 1);
+      setMinBookingDate(minDate.toISOString().split('T')[0]);
     } catch (err: any) {
+      console.error('Error loading airports and ticket classes:', err);
       setError('Failed to load airports and ticket classes');
+      // Fallback to today's date if parameter fetch fails
+      setMinBookingDate(new Date().toISOString().split('T')[0]);
     }
   };
 
@@ -161,7 +174,7 @@ const FlightSearch: React.FC = () => {
             <Card.Body className="p-4">
               <Form onSubmit={handleSubmit(onSubmit)}>
                 {/* Airport Selection */}
-                <Row className="mb-4">
+                <Row className="mb-4 align-items-end">
                   <Col md={5}>
                     <Form.Group>
                       <Form.Label className="fw-bold">
@@ -195,12 +208,12 @@ const FlightSearch: React.FC = () => {
                     </Form.Group>
                   </Col>
 
-                  <Col md={2} className="d-flex align-items-end justify-content-center">
+                  <Col md={2} className="d-flex justify-content-center">
                     <Button
                       variant="outline-secondary"
                       onClick={swapAirports}
-                      className="mb-3"
                       title="Swap airports"
+                      style={{ height: '38px' }}
                     >
                       <i className="bi bi-arrow-left-right"></i>
                     </Button>
@@ -251,7 +264,8 @@ const FlightSearch: React.FC = () => {
                       <Form.Control
                         id="departureDate"
                         type="date"
-                        min={new Date().toISOString().split('T')[0]}
+                        min={minBookingDate || new Date().toISOString().split('T')[0]}
+                        {...register('departureDate', { required: 'Departure date is required' })}
                         isInvalid={!!errors.departureDate}
                       />
                     </Form.Group>

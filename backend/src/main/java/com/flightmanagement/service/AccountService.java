@@ -25,6 +25,9 @@ public interface AccountService {
     boolean existsByEmail(String email);
 
     List<AccountDto> getAccountsByType(Integer accountType);
+
+    boolean verifyCurrentPassword(Integer accountId, String currentPassword);
+    void resetPassword(Integer accountId, String currentPassword, String newPassword);
 }
 
 

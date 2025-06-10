@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, ListGroup } from 'react-bootstrap';
-import { bookingConfirmationService, BookingConfirmation } from '../../services/bookingConfirmationService';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, ListGroup, Modal } from 'react-bootstrap';
+import { BookingConfirmation } from '../../services/bookingConfirmationService';
 import { ticketService, flightService, passengerService, flightTicketClassService, paymentService } from '../../services';
 
 const BookingLookup: React.FC = () => {
@@ -12,6 +12,7 @@ const BookingLookup: React.FC = () => {
   const [booking, setBooking] = useState<BookingConfirmation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [isPaid, setIsPaid] = useState(false); // Track if booking is paid
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -81,6 +82,10 @@ const BookingLookup: React.FC = () => {
   };
 
   const handleCancelBooking = async () => {
+    setShowCancelModal(true);
+  };
+
+  const confirmCancelBooking = async () => {
     if (!booking) return;
 
     const confirmed = window.confirm(
@@ -108,6 +113,27 @@ const BookingLookup: React.FC = () => {
         console.error('Error canceling booking:', err);
         alert('Failed to cancel booking: ' + (err.message || 'Unknown error'));
       }
+
+    setShowCancelModal(false);
+    
+    try {
+      // Cancel all tickets in the booking
+      for (const ticket of booking.tickets) {
+        if (ticket.ticketId) {
+          await ticketService.deleteTicket(ticket.ticketId);
+          await flightTicketClassService.updateRemainingTickets(
+            ticket.flightId!, 
+            ticket.ticketClassId!, 
+            -1
+          ); 
+        }
+      }
+
+      setBooking(null);
+      setSearchData({ confirmationCode: '' });
+    } catch (err: any) {
+      console.error('Error canceling booking:', err);
+      alert('Failed to cancel booking: ' + (err.message || 'Unknown error'));
     }
   };
 
@@ -130,6 +156,10 @@ const BookingLookup: React.FC = () => {
       console.error('Payment creation failed:', error);
       alert('Failed to create payment. Please try again later.');
     }
+  };
+
+  const handleCloseCancelModal = () => {
+    setShowCancelModal(false);
   };
 
   return (
@@ -415,6 +445,53 @@ const BookingLookup: React.FC = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Cancel Confirmation Modal */}
+      <Modal 
+        show={showCancelModal} 
+        onHide={handleCloseCancelModal}
+        centered
+      >
+        <Modal.Header closeButton className="bg-danger text-white">
+          <Modal.Title>
+            <i className="bi bi-exclamation-triangle me-2"></i>
+            Cancel Booking
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          <div className="text-center mb-3">
+            <i className="bi bi-exclamation-circle text-danger" style={{ fontSize: '3rem' }}></i>
+          </div>
+          <h5 className="text-center mb-3">Are you sure you want to cancel this booking?</h5>
+          <p className="text-center text-muted mb-0">
+            This action cannot be undone. All tickets for this booking will be permanently cancelled.
+          </p>
+          {booking && (
+            <div className="mt-3 p-3 bg-light rounded">
+              <div className="text-center">
+                <strong>Booking: {booking.confirmationCode}</strong><br/>
+                <span className="text-muted">{booking.flightInfo.flightCode} - {booking.tickets.length} passenger(s)</span><br/>
+                <span className="text-primary fw-bold">${booking.totalAmount}</span>
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="secondary" 
+            onClick={handleCloseCancelModal}
+          >
+            Keep Booking
+          </Button>
+          <Button 
+            variant="danger" 
+            onClick={confirmCancelBooking}
+          >
+            <i className="bi bi-trash me-2"></i>
+            Yes, Cancel Booking
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

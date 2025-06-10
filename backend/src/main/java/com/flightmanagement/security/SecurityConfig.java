@@ -44,23 +44,28 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Add CORS configuration
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/register"
-                                , "/api/auth/refresh", "api/auth/validate-token"
-                                , "/api/auth/forget-password", "/api/auth/reset-password"
-                                , "/api/flights/search", "/api/flights/{id}"
-                                , "/api/airports", "/api/ticket-classes"
-                                , "/api/flight-ticket-classes/flight/**"
-                                , "/api/passengers/**", "/api/demo/**"
-                                , "/api/flight-ticket-classes/occupied-seats/**"
-                                , "/api/flight-ticket-classes/{flightId}/{ticketClassId}/update-remaining"
-                                , "/api/tickets/confirmation-code", "/api/tickets/{id}", "/api/tickets"
-                                , "/api/debug/login-by-name/{name}", "/api/payment/create", "/api/payment/return"
-                                , "/api/tickets/booking-lookup/{id}", "/api/payment/IPN").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh",
+                                "/api/auth/validate-token", "/api/auth/forget-password", "/api/auth/reset-password",
+                                "/api/auth/employee/register", // Move this here but it will be handled by role check
+                                                               // below
+                                "/api/demo/**",
+                                "/api/flights/search", "/api/flights/{id}",
+                                "/api/airports", "/api/ticket-classes",
+                                "/api/flight-ticket-classes/flight/**",
+                                "/api/flight-ticket-classes/occupied-seats/**",
+                                "/api/flight-ticket-classes/{flightId}/{ticketClassId}/update-remaining",
+                                "/api/passengers/**",
+                                "/api/tickets/confirmation-code", "/api/tickets", "/api/tickets/{id}",
+                                "/api/flight-details/flight/{flightId}", "/api/parameters",
+                                "/api/tickets/booking-lookup/{confirmationCode}", "/api/tickets/booking-lookup/{id}",
+                                "/api/debug/login-by-name/{name}",
+                                "/api/payment/create", "/api/payment/return", "/api/payment/IPN")
+                        .permitAll()
 
                         .requestMatchers("/api/auth/employee/register")
-                        .hasAnyRole("EMPLOYEE_ADMIN", "EMPLOYEE_ACCOUNTING") // Match @PreAuthorize
-                        .anyRequest().authenticated()
-                )
+                        .hasAnyRole("EMPLOYEE_ADMIN", "EMPLOYEE_ACCOUNTING")
+
+                        .anyRequest().authenticated())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

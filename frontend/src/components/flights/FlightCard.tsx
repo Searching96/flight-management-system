@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Card, Row, Col, Button, Badge, ListGroup } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Card, Row, Col, Button, Badge, ListGroup, Table } from 'react-bootstrap';
 import { Flight, TicketClass } from '../../models';
+import { flightDetailService } from '../../services/flightDetailService';
 
 interface FlightCardProps {
   flight: Flight;
@@ -13,14 +14,32 @@ interface FlightCardProps {
   };
 }
 
-const FlightCard: React.FC<FlightCardProps> = ({ 
-  flight, 
-  onBookFlight, 
-  searchContext 
+const FlightCard: React.FC<FlightCardProps> = ({
+  flight,
+  onBookFlight,
+  searchContext
 }) => {
   const [selectedClassForBooking, setSelectedClassForBooking] = useState<number | null>(
     searchContext?.selectedTicketClass || null
   );
+  const [flightDetails, setFlightDetails] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchFlightDetail = async () => {
+      if (flight.flightId) {
+        try {
+          const flightDetail = await flightDetailService.getFlightDetailsById(flight.flightId);
+          console.log('Flight Detail:', flightDetail);
+          setFlightDetails(flightDetail || []);
+        } catch (error) {
+          console.error('Error fetching flight detail:', error);
+          setFlightDetails([]);
+        }
+      }
+    };
+
+    fetchFlightDetail();
+  }, [flight.flightId]);
 
   const formatTime = (dateTimeString: string) => {
     return new Date(dateTimeString).toLocaleTimeString('en-US', {
@@ -130,15 +149,17 @@ const FlightCard: React.FC<FlightCardProps> = ({
             <div className="text-center">
               <div className="position-relative">
                 <hr className="border-2 border-primary" />
-                <Badge 
-                  bg="primary" 
+                <Badge
+                  bg="primary"
                   className="position-absolute top-50 start-50 translate-middle px-2"
                 >
                   <i className="bi bi-airplane me-1"></i>
                   {calculateDuration()}
                 </Badge>
               </div>
-              <small className="text-muted d-block mt-2">Bay thẳng</small>
+              <small className="text-muted d-block mt-2">
+                {flightDetails.length > 0 ? "With stops" : "Direct"}
+              </small>
             </div>
           </Col>
 
@@ -173,6 +194,48 @@ const FlightCard: React.FC<FlightCardProps> = ({
           </Row>
         )}
 
+        {/* Flight Details Table */}
+        {flightDetails.length > 0 && (
+          <Row className="mb-3">
+            <Col>
+              <h6 className="fw-bold mb-2">
+                <i className="bi bi-route me-1"></i>
+                Flight Details:
+              </h6>
+              <Table striped bordered hover size="sm" className="mb-0">
+                <thead className="table-secondary">
+                  <tr>
+                    <th className="text-center py-2 fs-5 fw-bold" style={{ width: '40%' }}>Medium Airport</th>
+                    <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Arrival Time</th>
+                    <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Layover Duration</th>
+                  </tr>
+                </thead>
+                <tbody className="table-light">
+                  {flightDetails.map((detail, index) => (
+                    <tr key={index}>
+                      <td className="text-center align-middle py-3">
+                        <strong>{detail.mediumAirportName || 'N/A'}</strong>
+                      </td>
+                      <td className="text-center align-middle py-3">
+                        {detail.arrivalTime 
+                          ? <span className="badge bg-info">{formatTime(detail.arrivalTime)}</span>
+                          : <span className="text-muted">N/A</span>
+                        }
+                      </td>
+                      <td className="text-center align-middle py-3">
+                        {detail.layoverDuration 
+                          ? <span className="badge bg-secondary">{detail.layoverDuration}</span>
+                          : <span className="text-muted">N/A</span>
+                        }
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </Col>
+          </Row>
+        )}
+
         {/* Ticket Class Options */}
         {showAllClasses && availableClasses.length > 0 && (
           <Row className="mb-3">
@@ -183,15 +246,21 @@ const FlightCard: React.FC<FlightCardProps> = ({
               </h6>
               <ListGroup variant="flush">
                 {availableClasses.map(classInfo => (
-                  <ListGroup.Item 
+                  <ListGroup.Item
                     key={classInfo.ticketClassId}
                     action
-                    active={selectedClassForBooking === classInfo.ticketClassId}
                     onClick={() => handleClassSelection(classInfo.ticketClassId!)}
-                    className="d-flex justify-content-between align-items-center border rounded mb-2"
+                    className={`d-flex justify-content-between align-items-center border rounded mb-2 ${
+                      selectedClassForBooking === classInfo.ticketClassId 
+                        ? 'border-primary border-3 bg-light' 
+                        : 'border-secondary'
+                    }`}
+                    style={{
+                      backgroundColor: selectedClassForBooking === classInfo.ticketClassId ? '#f8f9fa' : 'white'
+                    }}
                   >
                     <div>
-                      <div 
+                      <div
                         className="fw-bold"
                         style={{ color: classInfo.ticketClass?.color || '#333' }}
                       >
@@ -221,7 +290,7 @@ const FlightCard: React.FC<FlightCardProps> = ({
               <div className="text-success">
                 <i className="bi bi-check-circle me-1"></i>
                 {flight.flightTicketClasses?.reduce(
-                  (total, ftc) => total + (ftc.remainingTicketQuantity || 0), 
+                  (total, ftc) => total + (ftc.remainingTicketQuantity || 0),
                   0
                 )} total seats available
               </div>
@@ -264,7 +333,7 @@ const FlightCard: React.FC<FlightCardProps> = ({
           <Col xs="auto">
             {/* Book Button */}
             {isAvailable ? (
-              <Button 
+              <Button
                 variant="primary"
                 size="lg"
                 onClick={handleBooking}

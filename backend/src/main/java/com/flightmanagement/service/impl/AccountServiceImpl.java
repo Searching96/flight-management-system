@@ -93,12 +93,21 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findActiveById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
 
-        // Prevent account type changes
-        if (!account.getAccountType().equals(dto.getAccountType())) {
-            throw new IllegalArgumentException("Account type cannot be modified");
+        // Update only the allowed fields
+        if (dto.getAccountName() != null) {
+            account.setAccountName(dto.getAccountName());
         }
+        if (dto.getEmail() != null) {
+            account.setEmail(dto.getEmail());
+        }
+        if (dto.getPhoneNumber() != null) {
+            account.setPhoneNumber(dto.getPhoneNumber());
+        }
+        if (dto.getCitizenId() != null) {
+            account.setCitizenId(dto.getCitizenId());
+        }
+        // Don't update accountType, password, or other sensitive fields
 
-        account = accountMapper.toEntity(dto);
         return accountMapper.toDto(accountRepository.save(account));
     }
 
@@ -123,5 +132,30 @@ public class AccountServiceImpl implements AccountService {
                 .filter(acc -> acc.getDeletedAt() == null)
                 .map(accountMapper::toDto)
                 .toList();
+    }
+
+    @Override
+    public boolean verifyCurrentPassword(Integer accountId, String currentPassword) {
+        Account account = accountRepository.findActiveById(accountId)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+        
+        // Use the same password verification logic as login
+        return passwordEncoder.matches(currentPassword, account.getPassword());
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(Integer accountId, String currentPassword, String newPassword) {
+        Account account = accountRepository.findActiveById(accountId)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+        
+        // Verify current password first (same logic as login)
+        if (!passwordEncoder.matches(currentPassword, account.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        
+        // Encode and set new password
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
     }
 }

@@ -16,14 +16,12 @@ export class CustomerService {
     }
   }
 
+  async getCustomerScore(customerId: number): Promise<number> {
+    return apiClient.get(`${this.customerUrl}/${customerId}/score`);
+  }
+
   async getCustomerById(customerId: number): Promise<Customer> {
-    try {
-      const response = await apiClient.get(`${this.customerUrl}/${customerId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching customer:', error);
-      throw error;
-    }
+    return apiClient.get(`${this.customerUrl}/${customerId}`);
   }
 
   async getCustomerByEmail(email: string): Promise<Customer> {

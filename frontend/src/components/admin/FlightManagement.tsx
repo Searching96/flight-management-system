@@ -135,7 +135,7 @@ const FlightManagement: React.FC<{
             setAirports(airportData);
             setPlanes(planeData);
             setTicketClasses(ticketClassData);
-            setParameters(parameterData[0] || null);
+            setParameters(parameterData); // Assuming first item contains all parameters
 
             await loadFlights();
         } catch (err: any) {

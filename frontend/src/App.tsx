@@ -15,6 +15,8 @@ import AdminPanel from './components/admin/AdminPanel';
 import ChatWidget from './components/chat/ChatWidget';
 import CustomerSupport from './components/admin/CustomerSupport';
 import DebugLogin from './components/debug/DebugLogin';
+import EditProfile from './components/profile/EditProfile';
+import ResetPassword from './components/profile/ResetPassword';
 import PaymentResult from './components/payment/PaymentResult';
 import ForgetPasswordForm from './components/auth/ForgetPasswordForm';
 import ResetPasswordForm from './components/auth/ResetPasswordForm';
@@ -45,6 +47,8 @@ const App: React.FC = () => {
             <Route path="/booking-confirmation" element={<BookingConfirmation />} />
             <Route path="/booking-lookup" element={<BookingLookup />} />
             <Route path="/booking" element={<BookingForm />} />
+            <Route path="/profile/edit" element={<EditProfile />} />
+            <Route path="/profile/reset-password" element={<ResetPassword />} />
             <Route path="/payment/result" element={<PaymentResult />} />
 
             {/* Debug Route */}

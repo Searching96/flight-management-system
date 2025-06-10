@@ -27,15 +27,25 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('CUSTOMER') and #id == principal.id or hasRole('EMPLOYEE_SUPPORT')")
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('EMPLOYEE_SUPPORT')")
     public ResponseEntity<CustomerDto> getCustomerById(@PathVariable Integer id) {
         return ResponseEntity.ok(customerService.getCustomerById(id));
     }
 
-    @PutMapping("/{id}/score")
-    @PreAuthorize("hasRole('EMPLOYEE_SUPPORT')")
-    public ResponseEntity<Void> updateScore(@PathVariable Integer id, @RequestParam Integer score) {
-        customerService.updateCustomerScore(id, score);
-        return ResponseEntity.noContent().build();
+    @GetMapping("/email")
+    public ResponseEntity<CustomerDto> getCustomerByEmail(@RequestParam String email) {
+        return ResponseEntity.ok(customerService.getCustomerByEmail(email));
+    }
+
+    @PutMapping("/{id}/score/{score}")
+    public ResponseEntity<CustomerDto> updateScore(@PathVariable Integer id, @PathVariable Integer score) {
+        CustomerDto customer = customerService.updateCustomerScore(id, score);
+        return ResponseEntity.ok(customer);
+    }
+
+    @GetMapping("/{id}/score")
+    public ResponseEntity<Integer> getCustomerScore(@PathVariable Integer id) {
+        Integer score = customerService.getCustomerScore(id);
+        return ResponseEntity.ok(score);
     }
 }

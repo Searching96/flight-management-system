@@ -80,10 +80,17 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     @Transactional
-    public void updateCustomerScore(Integer id, Integer score) {
+    public CustomerDto updateCustomerScore(Integer id, Integer score) {
         Customer customer = customerRepository.findActiveById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
         customer.setScore(score);
         customerRepository.save(customer);
+        return customerMapper.toDto(customer);
+    }
+
+    @Override
+    public Integer getCustomerScore(Integer id) {
+        return customerRepository.findScoreById(id)
+                .orElseThrow(() -> new RuntimeException("Customer score not found with id: " + id));
     }
 }

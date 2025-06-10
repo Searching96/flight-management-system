@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, Table, Modal } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
-import { flightService, ticketService, passengerService, bookingConfirmationService, flightTicketClassService, accountService } from '../../services';
+import { flightService, ticketService, passengerService, bookingConfirmationService, flightTicketClassService, accountService, customerService } from '../../services';
+import { flightDetailService } from '../../services/flightDetailService';
 import { Flight } from '../../models';
 
 interface BookingFormData {
@@ -63,18 +64,32 @@ const BookingForm: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [flightDetails, setFlightDetails] = useState<any[]>([]);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingBookingData, setPendingBookingData] = useState<BookingFormData | null>(null);
 
   // Get passenger count from query param or location state
   const passengerCount = parseInt(queryPassengers || '0') || location.state?.passengerCount || 1;
 
   // Helper to get user info for default values
   const [accountInfo, setAccountInfo] = useState<any>(null);
+  const [customerScore, setCustomerScore] = useState<number>(0);
+  
   useEffect(() => {
     const logUserInfo = async () => {
       if (user?.accountTypeName === "Customer" && user?.id) {
         const userInfo = await accountService.getAccountById(user.id);
         console.log('User account info:', userInfo);
         setAccountInfo(userInfo);
+        
+        // Get customer's current score using customerService
+        try {
+          const customerInfo = await customerService.getCustomerById(user.id);
+          setCustomerScore(customerInfo.score || 0);
+        } catch (error) {
+          console.error('Error fetching customer score:', error);
+          setCustomerScore(0);
+        }
       }
     };
     logUserInfo();
@@ -128,6 +143,7 @@ const BookingForm: React.FC = () => {
   useEffect(() => {
     if (flightId) {
       loadBookingData();
+      fetchFlightDetails();
     }
   }, [flightId]);
 
@@ -159,13 +175,59 @@ const BookingForm: React.FC = () => {
     }
   };
 
+  const fetchFlightDetails = async () => {
+    if (flightId) {
+      try {
+        const flightDetail = await flightDetailService.getFlightDetailsById(Number(flightId));
+        console.log('Flight Detail:', flightDetail);
+        setFlightDetails(flightDetail || []);
+      } catch (error) {
+        console.error('Error fetching flight detail:', error);
+        setFlightDetails([]);
+      }
+    }
+  };
+
+  // Calculate score and discount
+  const calculateScoreAndDiscount = () => {
+    if (!selectedClass) return { score: 0, discount: 0, discountedPrice: 0 };
+    
+    const standardPrice = selectedClass.specifiedFare;
+    const totalStandardPrice = standardPrice * passengerCount;
+    const score = Math.floor(totalStandardPrice / 10000);
+    
+    let discountPercent = 0;
+    if (customerScore >= 200000) {
+      discountPercent = 8;
+    } else if (customerScore >= 50000) {
+      discountPercent = 5;
+    } else if (customerScore >= 10000) {
+      discountPercent = 2;
+    }
+    
+    const discountAmount = (totalStandardPrice * discountPercent) / 100;
+    const discountedPrice = totalStandardPrice - discountAmount;
+    
+    return { score, discount: discountPercent, discountedPrice, discountAmount };
+  };
+
   const onSubmit = async (data: BookingFormData) => {
     try {
       setSubmitting(true);
       setError('');
+      
       /*
         VALIDATION LOGIC
       */
+      // Check for duplicate citizen IDs
+      const citizenIds = data.passengers.map(p => p.citizenId).filter(id => id);
+      const duplicateCitizenIds = citizenIds.filter((id, index) => citizenIds.indexOf(id) !== index);
+      
+      if (duplicateCitizenIds.length > 0) {
+        setError('Duplicate citizen IDs found. Each passenger must have a unique citizen ID.');
+        return;
+      }
+
       // Validate passenger data using the service
       const validationErrors: string[] = [];
       for (const passenger of data.passengers) {
@@ -259,13 +321,17 @@ const BookingForm: React.FC = () => {
         return;
       }
 
+      // Calculate final prices with discount
+      const { score, discountedPrice } = calculateScoreAndDiscount();
+      const pricePerTicket = discountedPrice / passengerCount;
+
       const tickets = data.passengers.map((passenger, index) => ({
         flightId: Number(flightId),
         ticketClassId: data.ticketClassId,
         bookCustomerId: user ? user?.accountTypeName === "Customer" && user?.id != null ? user.id : null : null,
         passengerId: passenger.passengerId,
         seatNumber: seatNumbers[index],
-        fare: selectedClass?.specifiedFare || 0,
+        fare: pricePerTicket, // Use discounted price per ticket
         confirmationCode: confirmationCode
       }));
 
@@ -281,6 +347,18 @@ const BookingForm: React.FC = () => {
         } catch (err: any) {
           console.error("Error creating ticket:", err);
           return;
+        }
+      }
+
+      // Save earned score to customer account after successful booking
+      if (user?.accountTypeName === "Customer" && user?.id && score > 0) {
+        try {
+          const updatedScore = customerScore + score;
+          await customerService.updateCustomerScore(user.id, updatedScore);
+          console.log(`Score updated: ${customerScore} + ${score} = ${updatedScore}`);
+        } catch (err: any) {
+          console.error("Error updating customer score:", err);
+          // Don't fail the booking if score update fails
         }
       }
 
@@ -309,11 +387,37 @@ const BookingForm: React.FC = () => {
     }
   };
 
+  const handleFormSubmit = async (data: BookingFormData) => {
+    // Store the form data and show confirmation modal
+    setPendingBookingData(data);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!pendingBookingData) return;
+
+    setShowConfirmModal(false);
+    await onSubmit(pendingBookingData);
+  };
+
+  const handleCancelBooking = () => {
+    setShowConfirmModal(false);
+    setPendingBookingData(null);
+  };
+
   const selectedTicketClass = watch('ticketClassId');
   const selectedClass = ticketClasses.find(tc => tc.ticketClassId === selectedTicketClass);
   const calculateTotalPrice = () => {
-    if (!selectedClass) return 0;
-    return selectedClass.specifiedFare * passengerCount;
+    const { discountedPrice } = calculateScoreAndDiscount();
+    return discountedPrice || 0;
+  };
+
+  const formatTime = (dateTimeString: string) => {
+    return new Date(dateTimeString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
   };
 
   // Guard: Check if flightId is provided
@@ -517,7 +621,7 @@ const BookingForm: React.FC = () => {
 
           <Card className="shadow">
             <Card.Body className="p-4">
-              <Form onSubmit={handleSubmit(onSubmit)}>
+              <Form onSubmit={handleSubmit(handleFormSubmit)}>
                 {/* Error and Warning Messages */}
                 {error && (
                   <Alert variant="danger" className="mb-4">
@@ -531,20 +635,40 @@ const BookingForm: React.FC = () => {
                   {fields.map((_, index) => renderPassengerForm(index))}
                 </div>
 
-                {/* Frequent Flyer Program */}
-                {user && (
+                {/* Flight Details Table */}
+                {flightDetails.length > 0 && (
                   <div className="mb-5 pb-4 border-bottom">
-                    <h4 className="mb-3">Frequent Flyer Program</h4>
-                    <Form.Check
-                      type="checkbox"
-                      id="useFrequentFlyer"
-                      label="Join frequent flyer program and link this booking to your account"
-                      {...register('useFrequentFlyer')}
-                      className="mb-2"
-                    />
-                    <Form.Text className="text-muted">
-                      Checking this option will link your booking to your customer profile for frequent flyer benefits.
-                    </Form.Text>
+                    <h4 className="mb-3">Flight Details</h4>
+                    <Table striped bordered hover size="sm" className="mb-0">
+                      <thead className="table-secondary">
+                        <tr>
+                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '40%' }}>Medium Airport</th>
+                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Arrival Time</th>
+                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Layover Duration</th>
+                        </tr>
+                      </thead>
+                      <tbody className="table-light">
+                        {flightDetails.map((detail, index) => (
+                          <tr key={index}>
+                            <td className="text-center align-middle py-3">
+                              <strong>{detail.mediumAirportName || 'N/A'}</strong>
+                            </td>
+                            <td className="text-center align-middle py-3">
+                              {detail.arrivalTime
+                                ? <span className="badge bg-info">{formatTime(detail.arrivalTime)}</span>
+                                : <span className="text-muted">N/A</span>
+                              }
+                            </td>
+                            <td className="text-center align-middle py-3">
+                              {detail.layoverDuration
+                                ? <span className="badge bg-secondary">{detail.layoverDuration}</span>
+                                : <span className="text-muted">N/A</span>
+                              }
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
                   </div>
                 )}
 
@@ -583,6 +707,35 @@ const BookingForm: React.FC = () => {
                             ${selectedClass.specifiedFare}
                           </Col>
 
+                          {user?.accountTypeName === "Customer" && (
+                            <>
+                              <Col xs={6}>
+                                <strong>Current Score:</strong>
+                              </Col>
+                              <Col xs={6} className="text-end">
+                                {customerScore.toLocaleString()}
+                              </Col>
+
+                              {calculateScoreAndDiscount().discount > 0 && (
+                                <>
+                                  <Col xs={6}>
+                                    <strong className="text-success">Discount ({calculateScoreAndDiscount().discount}%):</strong>
+                                  </Col>
+                                  <Col xs={6} className="text-end text-success">
+                                    -${(calculateScoreAndDiscount().discountAmount ?? 0).toFixed(2)}
+                                  </Col>
+                                </>
+                              )}
+
+                              <Col xs={6}>
+                                <strong className="text-info">Score to Earn:</strong>
+                              </Col>
+                              <Col xs={6} className="text-end text-info">
+                                +{calculateScoreAndDiscount().score.toLocaleString()}
+                              </Col>
+                            </>
+                          )}
+
                           <Col xs={12}>
                             <hr className="my-2" />
                           </Col>
@@ -591,7 +744,7 @@ const BookingForm: React.FC = () => {
                             <strong className="text-primary fs-5">Total:</strong>
                           </Col>
                           <Col xs={6} className="text-end">
-                            <strong className="text-primary fs-5">${calculateTotalPrice()}</strong>
+                            <strong className="text-primary fs-5">${calculateTotalPrice().toFixed(2)}</strong>
                           </Col>
                         </>
                       )}
@@ -629,6 +782,116 @@ const BookingForm: React.FC = () => {
               </Form>
             </Card.Body>
           </Card>
+
+          {/* Confirmation Modal */}
+          <Modal
+            show={showConfirmModal}
+            onHide={handleCancelBooking}
+            centered
+            size="lg"
+          >
+            <Modal.Header closeButton className="bg-primary text-white">
+              <Modal.Title>
+                <i className="bi bi-exclamation-triangle me-2"></i>
+                Confirm Your Booking
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="p-4">
+              <div className="text-center mb-4">
+                <h5 className="text-primary">Please review your booking details</h5>
+                <p className="text-muted">Once confirmed, this booking cannot be undone</p>
+              </div>
+
+              {flight && selectedClass && (
+                <Card className="bg-light">
+                  <Card.Body>
+                    <h6 className="fw-bold mb-3">Booking Summary</h6>
+                    <Row className="g-2">
+                      <Col xs={6}>
+                        <strong>Flight:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        {flight.flightCode}
+                      </Col>
+
+                      <Col xs={6}>
+                        <strong>Route:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        {flight.departureCityName} → {flight.arrivalCityName}
+                      </Col>
+
+                      <Col xs={6}>
+                        <strong>Departure:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        {new Date(flight.departureTime).toLocaleString()}
+                      </Col>
+
+                      <Col xs={6}>
+                        <strong>Passengers:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        {passengerCount}
+                      </Col>
+
+                      <Col xs={6}>
+                        <strong>Class:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        {selectedClass.ticketClassName}
+                      </Col>
+
+                      <Col xs={6}>
+                        <strong>Price per ticket:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        ${selectedClass.specifiedFare}
+                      </Col>
+
+                      <Col xs={12}>
+                        <hr className="my-2" />
+                      </Col>
+
+                      <Col xs={6}>
+                        <strong className="text-primary fs-5">Total Amount:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        <strong className="text-primary fs-4">${calculateTotalPrice().toFixed(2)}</strong>
+                      </Col>
+                    </Row>
+                  </Card.Body>
+                </Card>
+              )}
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                variant="secondary"
+                onClick={handleCancelBooking}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="success"
+                onClick={handleConfirmBooking}
+                disabled={submitting}
+                size="lg"
+              >
+                {submitting ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-check-circle me-2"></i>
+                    Confirm Booking - ${calculateTotalPrice().toFixed(2)}
+                  </>
+                )}
+              </Button>
+            </Modal.Footer>
+          </Modal>
         </Col>
       </Row>
     </Container>

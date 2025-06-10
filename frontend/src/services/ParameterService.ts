@@ -11,7 +11,7 @@ export interface ParameterRequest {
 export class ParameterService {
   private readonly baseUrl = '/parameters';
 
-  async getAllParameters(): Promise<Parameter[]> {
+  async getAllParameters(): Promise<Parameter> {
     return apiClient.get(this.baseUrl);
   }
 
