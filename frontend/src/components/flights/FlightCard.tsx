@@ -247,9 +247,15 @@ const FlightCard: React.FC<FlightCardProps> = ({
                   <ListGroup.Item
                     key={classInfo.ticketClassId}
                     action
-                    active={selectedClassForBooking === classInfo.ticketClassId}
                     onClick={() => handleClassSelection(classInfo.ticketClassId!)}
-                    className="d-flex justify-content-between align-items-center border rounded mb-2"
+                    className={`d-flex justify-content-between align-items-center border rounded mb-2 ${
+                      selectedClassForBooking === classInfo.ticketClassId 
+                        ? 'border-primary border-3 bg-light' 
+                        : 'border-secondary'
+                    }`}
+                    style={{
+                      backgroundColor: selectedClassForBooking === classInfo.ticketClassId ? '#f8f9fa' : 'white'
+                    }}
                   >
                     <div>
                       <div
