@@ -23,5 +23,7 @@ public class ChatboxDto {
     private String lastMessageSenderName;
     private Integer unreadCount;
     private LocalDateTime lastCustomerMessageTime; // New field for sorting
+    private Integer employeeSupportCount; // New field for employee support sorting
     private LocalDateTime deletedAt;
+    private LocalDateTime createdAt; // Add createdAt for fallback sorting
 }

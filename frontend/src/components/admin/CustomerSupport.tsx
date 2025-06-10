@@ -82,6 +82,8 @@ const CustomerSupport: React.FC = () => {
       // Load chatboxes based on sort option
       if (sortOption === 'Thời điểm yêu cầu tư vấn') {
         data = await chatService.getAllChatboxesSortedByCustomerTime();
+      } else if (sortOption === 'Số lượng nhân viên đã hỗ trợ') {
+        data = await chatService.getAllChatboxesSortedByEmployeeSupportCount();
       } else {
         // For other options, use the default API for now
         data = await chatService.getAllChatboxes();
@@ -147,6 +149,8 @@ const CustomerSupport: React.FC = () => {
         // Use the same sorting logic for polling
         if (sortOption === 'Thời điểm yêu cầu tư vấn') {
           data = await chatService.getAllChatboxesSortedByCustomerTime();
+        } else if (sortOption === 'Số lượng nhân viên đã hỗ trợ') {
+          data = await chatService.getAllChatboxesSortedByEmployeeSupportCount();
         } else {
           data = await chatService.getAllChatboxes();
         }

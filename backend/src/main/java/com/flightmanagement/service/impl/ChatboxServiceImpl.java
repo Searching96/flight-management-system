@@ -207,4 +207,92 @@ public class ChatboxServiceImpl implements ChatboxService {
         List<Chatbox> chatboxes = chatboxRepository.findByCustomerId(customerId);
         return chatboxMapper.toDtoList(chatboxes);
     }
+
+    @Override
+    public List<ChatboxDto> getAllChatboxesSortedByEmployeeSupportCount() {
+        System.out.println("=== ChatboxServiceImpl.getAllChatboxesSortedByEmployeeSupportCount START ===");
+        
+        try {
+            List<Chatbox> chatboxes = chatboxRepository.findAllActive();
+            System.out.println("Found " + chatboxes.size() + " active chatboxes");
+            
+            // Enrich each chatbox with employee support count and customer message info
+            List<ChatboxDto> enrichedChatboxes = chatboxes.stream()
+                .map(this::enrichChatboxWithEmployeeSupportInfo)
+                .collect(Collectors.toList());
+            
+            // Sort by employee support count (ascending: 0, 1, 2...), then by last customer message time (descending: newest first)
+            enrichedChatboxes.sort((a, b) -> {
+                // Primary sort: employee support count (fewer employees = higher priority)
+                int employeeCountA = a.getEmployeeSupportCount() != null ? a.getEmployeeSupportCount() : 0;
+                int employeeCountB = b.getEmployeeSupportCount() != null ? b.getEmployeeSupportCount() : 0;
+                
+                int employeeCountCompare = Integer.compare(employeeCountA, employeeCountB);
+                if (employeeCountCompare != 0) {
+                    return employeeCountCompare; // 0 employee support comes first, then 1, then 2...
+                }
+                
+                // Secondary sort: most recent customer message first when employee count is equal
+                LocalDateTime timeA = a.getLastCustomerMessageTime();
+                LocalDateTime timeB = b.getLastCustomerMessageTime();
+                
+                if (timeA == null && timeB == null) {
+                    return 0; // Both have no customer messages, order doesn't matter
+                }
+                if (timeA == null) {
+                    return 1; // B has customer message, prioritize it
+                }
+                if (timeB == null) {
+                    return -1; // A has customer message, prioritize it
+                }
+                return timeB.compareTo(timeA); // Most recent customer message first
+            });
+            
+            System.out.println("=== Sorting results ===");
+            for (ChatboxDto dto : enrichedChatboxes) {
+                System.out.println("Chatbox " + dto.getChatboxId() + 
+                    " - Employee support: " + dto.getEmployeeSupportCount() + 
+                    " - Last customer msg: " + dto.getLastCustomerMessageTime() +
+                    " - Customer: " + dto.getCustomerName());
+            }
+            
+            System.out.println("=== ChatboxServiceImpl.getAllChatboxesSortedByEmployeeSupportCount END ===");
+            return enrichedChatboxes;
+            
+        } catch (Exception e) {
+            System.err.println("=== ERROR in getAllChatboxesSortedByEmployeeSupportCount ===");
+            System.err.println("Error type: " + e.getClass().getName());
+            System.err.println("Error message: " + e.getMessage());
+            e.printStackTrace();
+            System.err.println("=== END ERROR ===");
+            throw e;
+        }
+    }
+    
+    private ChatboxDto enrichChatboxWithEmployeeSupportInfo(Chatbox chatbox) {
+        ChatboxDto dto = enrichChatboxWithMessageInfo(chatbox);
+        
+        // Count unique employees who have sent messages in this chatbox
+        try {
+            List<Integer> uniqueEmployeeIds = messageRepository.findDistinctEmployeeIdsByChatboxId(chatbox.getChatboxId());
+            dto.setEmployeeSupportCount(uniqueEmployeeIds.size());
+            
+            System.out.println("Chatbox " + chatbox.getChatboxId() + " - Found " + uniqueEmployeeIds.size() + " unique employees: " + uniqueEmployeeIds);
+        } catch (Exception e) {
+            System.err.println("Error counting employees for chatbox " + chatbox.getChatboxId() + ": " + e.getMessage());
+            dto.setEmployeeSupportCount(0);
+        }
+        
+        // Get the latest customer message time specifically
+        messageRepository.findLatestCustomerMessageByChatboxId(chatbox.getChatboxId())
+            .ifPresent(customerMessage -> {
+                dto.setLastCustomerMessageTime(customerMessage.getSendTime());
+            });
+        
+        System.out.println("Chatbox " + chatbox.getChatboxId() + 
+            " - Employee support count: " + dto.getEmployeeSupportCount() + 
+            " - Last customer message: " + dto.getLastCustomerMessageTime());
+        
+        return dto;
+    }
 }

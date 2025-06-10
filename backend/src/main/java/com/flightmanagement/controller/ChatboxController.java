@@ -28,6 +28,20 @@ public class ChatboxController {
         return ResponseEntity.ok(chatboxes);
     }
     
+    @GetMapping("/sorted-by-employee-support")
+    public ResponseEntity<List<ChatboxDto>> getAllChatboxesSortedByEmployeeSupportCount() {
+        System.out.println("=== ChatboxController.getAllChatboxesSortedByEmployeeSupportCount START ===");
+        try {
+            List<ChatboxDto> chatboxes = chatboxService.getAllChatboxesSortedByEmployeeSupportCount();
+            System.out.println("Successfully retrieved " + chatboxes.size() + " chatboxes sorted by employee support count");
+            return ResponseEntity.ok(chatboxes);
+        } catch (Exception e) {
+            System.err.println("Error in getAllChatboxesSortedByEmployeeSupportCount: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
     @GetMapping("/{id}")
     public ResponseEntity<ChatboxDto> getChatboxById(@PathVariable Integer id) {
         ChatboxDto chatbox = chatboxService.getChatboxById(id);
