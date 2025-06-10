@@ -181,9 +181,19 @@ const BookingForm: React.FC = () => {
     try {
       setSubmitting(true);
       setError('');
+      
       /*
         VALIDATION LOGIC
       */
+      // Check for duplicate citizen IDs
+      const citizenIds = data.passengers.map(p => p.citizenId).filter(id => id);
+      const duplicateCitizenIds = citizenIds.filter((id, index) => citizenIds.indexOf(id) !== index);
+      
+      if (duplicateCitizenIds.length > 0) {
+        setError('Duplicate citizen IDs found. Each passenger must have a unique citizen ID.');
+        return;
+      }
+
       // Validate passenger data using the service
       const validationErrors: string[] = [];
       for (const passenger of data.passengers) {
