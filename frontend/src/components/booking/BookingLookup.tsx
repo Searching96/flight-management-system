@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, ListGroup } from 'react-bootstrap';
 import { bookingConfirmationService, BookingConfirmation } from '../../services/bookingConfirmationService';
-import { ticketService, flightService, passengerService, flightTicketClassService } from '../../services';
+import { ticketService, flightService, passengerService, flightTicketClassService, paymentService } from '../../services';
 
 const BookingLookup: React.FC = () => {
   const navigate = useNavigate();
@@ -53,12 +53,14 @@ const BookingLookup: React.FC = () => {
       );
 
 
-      // Create booking confirmation object similar to BookingConfirmation
+      setIsPaid(tickets.every(ticket => ticket.ticketStatus === 1));
+
+      // Add booking status to bookingData
       const bookingData: BookingConfirmation = {
         confirmationCode: searchData.confirmationCode,
-        bookingDate: new Date().toISOString(), // You might want to get actual booking date from ticket
+        bookingDate: new Date().toISOString(),
         tickets: tickets,
-        passengers: passengerNames, // Now contains actual passenger names
+        passengers: passengerNames,
         totalAmount: tickets.reduce((sum, ticket) => sum + (ticket.fare || 0), 0),
         flightInfo: {
           flightCode: flight.flightCode || '',
@@ -68,8 +70,6 @@ const BookingLookup: React.FC = () => {
           arrivalCity: flight.arrivalCityName || ''
         }
       };
-
-      setIsPaid(tickets.every(ticket => ticket.ticketStatus === 1));
 
       setBooking(bookingData);
     } catch (err: any) {
@@ -113,6 +113,23 @@ const BookingLookup: React.FC = () => {
 
   const handlePrintBooking = () => {
     window.print();
+  };
+
+  const handlePayment = async () => {
+    if (!booking) return;
+    
+    try {
+      const response = await paymentService.createPayment(booking.confirmationCode);
+      if (response && response.data) {
+        console.log('Redirecting to payment URL:', response.data);
+        window.location.href = response.data;
+      } else {
+        alert('Invalid payment URL received. Please try again.');
+      }
+    } catch (error) {
+      console.error('Payment creation failed:', error);
+      alert('Failed to create payment. Please try again later.');
+    }
   };
 
   return (
@@ -188,12 +205,27 @@ const BookingLookup: React.FC = () => {
           {/* Booking Details */}
           {booking && (
             <Card className="mb-4">
-              <Card.Header className="bg-success text-white">
+              <Card.Header className={isPaid ? "bg-success text-white" : "bg-warning"}>
                 <div className="d-flex justify-content-between align-items-center">
                   <h4 className="mb-0">Booking Found</h4>
-                  <Badge bg="light" text="dark" className="fs-6">
-                    Code: {booking.confirmationCode}
-                  </Badge>
+                  <div className="d-flex gap-2 align-items-center">
+                    <Badge bg={isPaid ? "success" : "warning"} className="fs-6 py-2 px-3">
+                      {isPaid ? (
+                        <>
+                          <i className="bi bi-check-circle me-2"></i>
+                          Paid
+                        </>
+                      ) : (
+                        <>
+                          <i className="bi bi-hourglass-split me-2"></i>
+                          Payment Pending
+                        </>
+                      )}
+                    </Badge>
+                    <Badge bg="light" text="dark" className="fs-6">
+                      Code: {booking.confirmationCode}
+                    </Badge>
+                  </div>
                 </div>
               </Card.Header>
               <Card.Body>
@@ -230,7 +262,15 @@ const BookingLookup: React.FC = () => {
                       <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
                         <div>
                           <strong>Passenger {index + 1} : {booking.passengers[index]}</strong>
-                          <div className="text-muted">Seat: {ticket.seatNumber}</div>
+                          <div className="text-muted d-flex align-items-center">
+                            Seat: {ticket.seatNumber}
+                            <Badge 
+                              bg={ticket.ticketStatus === 1 ? "success" : "warning"} 
+                              className="ms-2"
+                            >
+                              {ticket.ticketStatus === 1 ? "Paid" : "Pending"}
+                            </Badge>
+                          </div>
                         </div>
                         <Badge bg="primary" className="fs-6">${ticket.fare}</Badge>
                       </ListGroup.Item>
@@ -250,6 +290,24 @@ const BookingLookup: React.FC = () => {
                       <strong>Total Passengers:</strong>
                       <div>{booking.tickets.length}</div>
                     </Col>
+                    <Col sm={6}>
+                      <strong>Payment Status:</strong>
+                      <div>
+                        <Badge bg={isPaid ? "success" : "warning"}>
+                          {isPaid ? "Paid" : "Payment Pending"}
+                        </Badge>
+                      </div>
+                    </Col>
+                    {!isPaid && (
+                      <Col sm={6}>
+                        <strong>Payment Required By:</strong>
+                        <div>
+                          <Badge bg="danger">
+                            {new Date(booking.flightInfo.departureTime).toLocaleDateString()}
+                          </Badge>
+                        </div>
+                      </Col>
+                    )}
                     <Col xs={12}>
                       <div className="border-top pt-3">
                         <Row>
@@ -269,16 +327,17 @@ const BookingLookup: React.FC = () => {
               {/* Booking Actions */}
               <Card.Footer className="bg-light">
                 <Row className="g-2">
-                  <Col>
+                  <Col xs={12} md={isPaid ? 4 : 3}>
                     <Button
                       onClick={handlePrintBooking}
                       variant="outline-secondary"
-                      className="w-100"
+                      className="w-100 mb-2"
                     >
+                      <i className="bi bi-printer me-2"></i>
                       Print Booking
                     </Button>
                   </Col>
-                  <Col>
+                  <Col xs={12} md={isPaid ? 4 : 3}>
                     <Button
                       onClick={() => navigate('/booking-confirmation', {
                         state: {
@@ -288,24 +347,54 @@ const BookingLookup: React.FC = () => {
                         }
                       })}
                       variant="primary"
-                      className="w-100"
+                      className="w-100 mb-2"
                     >
+                      <i className="bi bi-eye me-2"></i>
                       View Full Details
                     </Button>
                   </Col>
-                  <Col>
-
-                    {!isPaid &&
+                  {!isPaid && (
+                    <Col xs={12} md={3}>
+                      <Button
+                        onClick={handlePayment}
+                        variant="success"
+                        className="w-100 mb-2"
+                      >
+                        <i className="bi bi-credit-card me-2"></i>
+                        Pay Now
+                      </Button>
+                    </Col>
+                  )}
+                  <Col xs={12} md={isPaid ? 4 : 3}>
+                    {!isPaid ? (
                       <Button
                         onClick={handleCancelBooking}
                         variant="danger"
-                        className="w-100"
+                        className="w-100 mb-2"
                       >
+                        <i className="bi bi-x-circle me-2"></i>
                         Cancel Booking
                       </Button>
-                    }
+                    ) : (
+                      <Button
+                        variant="outline-primary"
+                        onClick={() => navigate('/')}
+                        className="w-100 mb-2"
+                      >
+                        <i className="bi bi-house me-2"></i>
+                        Home
+                      </Button>
+                    )}
                   </Col>
                 </Row>
+                
+                {!isPaid && (
+                  <Alert variant="info" className="mb-0 mt-3">
+                    <i className="bi bi-info-circle-fill me-2"></i>
+                    <strong>Important:</strong> This booking requires payment to be confirmed. 
+                    Unpaid bookings may be cancelled automatically 24 hours before departure.
+                  </Alert>
+                )}
               </Card.Footer>
             </Card>
           )}
