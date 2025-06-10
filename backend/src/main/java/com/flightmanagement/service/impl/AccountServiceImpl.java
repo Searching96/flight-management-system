@@ -93,12 +93,21 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findActiveById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
 
-        // Prevent account type changes
-        if (!account.getAccountType().equals(dto.getAccountType())) {
-            throw new IllegalArgumentException("Account type cannot be modified");
+        // Update only the allowed fields
+        if (dto.getAccountName() != null) {
+            account.setAccountName(dto.getAccountName());
         }
+        if (dto.getEmail() != null) {
+            account.setEmail(dto.getEmail());
+        }
+        if (dto.getPhoneNumber() != null) {
+            account.setPhoneNumber(dto.getPhoneNumber());
+        }
+        if (dto.getCitizenId() != null) {
+            account.setCitizenId(dto.getCitizenId());
+        }
+        // Don't update accountType, password, or other sensitive fields
 
-        account = accountMapper.toEntity(dto);
         return accountMapper.toDto(accountRepository.save(account));
     }
 

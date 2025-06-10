@@ -19,6 +19,7 @@ public class AccountMapper implements BaseMapper<Account, AccountDto> {
         dto.setAccountId(entity.getAccountId());
         dto.setAccountName(entity.getAccountName());
         dto.setEmail(entity.getEmail());
+        dto.setPassword(entity.getPassword()); // Password should be encoded later
         dto.setCitizenId(entity.getCitizenId());
         dto.setPhoneNumber(entity.getPhoneNumber());
         dto.setAccountType(entity.getAccountType());
@@ -32,6 +33,7 @@ public class AccountMapper implements BaseMapper<Account, AccountDto> {
         Account entity = new Account();
         entity.setAccountName(dto.getAccountName());
         entity.setEmail(dto.getEmail());
+        entity.setPassword(dto.getPassword()); // Password should be encoded later
         entity.setCitizenId(dto.getCitizenId());
         entity.setPhoneNumber(dto.getPhoneNumber());
         entity.setAccountType(dto.getAccountType());
@@ -46,6 +48,7 @@ public class AccountMapper implements BaseMapper<Account, AccountDto> {
         entity.setAccountId(dto.getAccountId());
         entity.setAccountName(dto.getAccountName());
         entity.setEmail(dto.getEmail());
+        entity.setPassword(dto.getPassword()); // Password should be encoded later
         entity.setCitizenId(dto.getCitizenId());
         entity.setPhoneNumber(dto.getPhoneNumber());
         entity.setAccountType(dto.getAccountType());

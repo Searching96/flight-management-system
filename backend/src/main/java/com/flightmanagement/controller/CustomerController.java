@@ -27,9 +27,14 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('CUSTOMER') and #id == principal.id or hasRole('EMPLOYEE_SUPPORT')")
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('EMPLOYEE_SUPPORT')")
     public ResponseEntity<CustomerDto> getCustomerById(@PathVariable Integer id) {
         return ResponseEntity.ok(customerService.getCustomerById(id));
+    }
+
+    @GetMapping("/email")
+    public ResponseEntity<CustomerDto> getCustomerByEmail(@RequestParam String email) {
+        return ResponseEntity.ok(customerService.getCustomerByEmail(email));
     }
 
     @PutMapping("/{id}/score")

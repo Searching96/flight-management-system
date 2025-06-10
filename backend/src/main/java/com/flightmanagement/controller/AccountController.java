@@ -36,4 +36,18 @@ public class AccountController {
         accountService.deleteAccount(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMIN') or (hasRole('CUSTOMER') and #id == principal.id)")
+    public ResponseEntity<AccountDto> updateAccount(
+            @PathVariable Integer id, @RequestBody AccountDto accountDto) {
+        try {
+            return ResponseEntity.ok(accountService.updateAccount(id, accountDto));
+        } catch (Exception e) {
+            // Log the error for debugging
+            System.err.println("Error updating account " + id + ": " + e.getMessage());
+            e.printStackTrace();
+            throw e; // Re-throw to let Spring handle it properly
+        }
+    }
 }

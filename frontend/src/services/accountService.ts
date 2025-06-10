@@ -12,6 +12,10 @@ export class AccountService {
   async getAccountByEmail(email: string): Promise<Account> {
     return apiClient.get(`${this.baseUrl}/email/${email}`);
   }
+
+  async updateAccount(id: number, account: Partial<Account>): Promise<Account> {
+    return apiClient.put(`${this.baseUrl}/${id}`, account);
+  }
 }
 
 export const accountService = new AccountService();

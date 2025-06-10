@@ -57,14 +57,14 @@ const Header: React.FC = () => {
                   {user.accountName}
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
+                <Dropdown.Item as={Link} to="/profile/edit" className="text-decoration-none">
+                    <i className="bi bi-person-gear me-2"></i>
+                    Edit profile
+                  </Dropdown.Item>
+                  
                   <Dropdown.Item onClick={handleLogout}>
                     <i className="bi bi-box-arrow-right me-2"></i>
                     Logout
-                  </Dropdown.Item>
-
-                  <Dropdown.Item>
-                    <i className="bi bi-person-gear me-2"></i>
-                    Edit profile
                   </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>

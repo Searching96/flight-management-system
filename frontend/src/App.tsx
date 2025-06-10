@@ -16,6 +16,8 @@ import ChatWidget from './components/chat/ChatWidget';
 import TestForm from './components/test/TestForm';
 import CustomerSupport from './components/admin/CustomerSupport';
 import DebugLogin from './components/debug/DebugLogin';
+import EditProfile from './components/profile/EditProfile';
+import ResetPassword from './components/profile/ResetPassword';
 
 const App: React.FC = () => {
   return (
@@ -35,6 +37,8 @@ const App: React.FC = () => {
             <Route path="/booking" element={<BookingForm />} />
             <Route path="/test" element={<TestForm />} />
             
+            <Route path="/profile/edit" element={<EditProfile />} />
+            <Route path="/profile/reset-password" element={<ResetPassword />} />
             {/* Debug Route */}
             <Route path="/debug/log-me-in/:accountName" element={<DebugLogin />} />
 
