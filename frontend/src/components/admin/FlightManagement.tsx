@@ -24,9 +24,6 @@ import { useFlights } from '../../hooks/useFlights';
 import { useFlightDetails } from '../../hooks/useFlightDetails';
 import FlightForm from './flights/FlightForm';
 import TypeAhead from '../common/TypeAhead';
-import DataTable from 'datatables.net-react';
-import DT from 'datatables.net-dt';
-DataTable.use(DT);
 
 const FlightManagement: React.FC<{
     showAddModal?: boolean;
