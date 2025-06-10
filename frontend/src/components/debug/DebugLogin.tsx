@@ -25,7 +25,7 @@ const DebugLogin: React.FC = () => {
   const performDebugLogin = async () => {
     console.log('=== DebugLogin Component START ===');
     console.log('Account name from URL:', accountName);
-    
+
     try {
       setLoading(true);
       setError('');
@@ -39,33 +39,27 @@ const DebugLogin: React.FC = () => {
       // Perform debug login
       console.log('Attempting debug login for:', accountName);
       const response = await debugService.loginByName(accountName!);
-      
+
       // Map response to Account interface
       const accountData: Account = {
-        accountId: response.accountId,
-        accountName: response.accountName,
-        email: response.email,
-        accountType: response.accountType
+        accountId: response.userDetails.id,
+        accountName: response.userDetails.accountName,
+        email: response.userDetails.email,
+        accountType: response.userDetails.accountTypeName === 'Customer' ? 1 : 2, // Assuming 1 for Customer, 2 for Employee
       };
-      
+
       setLoginData(accountData);
-      
-      // Store auth data
-      if (response.token) {
-        localStorage.setItem('authToken', response.token);
-      }
-      localStorage.setItem('userAccount', JSON.stringify(accountData));
 
       console.log('Debug login successful, redirecting...');
-      console.log('Account type:', response.accountType);
+      console.log('Account type:', response.userDetails.accountTypeName);
 
       // Redirect based on account type
       setTimeout(() => {
-        if (response.accountType === 1) {
+        if (response.userDetails.accountTypeName === "Customer") {
           // Customer - redirect to dashboard
           console.log('Redirecting customer to dashboard');
           navigate('/dashboard');
-        } else if (response.accountType === 2) {
+        } else if (response.userDetails.accountTypeName === "Employee") {
           // Employee - redirect to admin panel
           console.log('Redirecting employee to admin panel');
           navigate('/admin');

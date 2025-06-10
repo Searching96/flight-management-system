@@ -12,10 +12,13 @@ class DebugService {
   async loginByName(accountName: string): Promise<AuthResponse> {
     console.log('=== DebugService.loginByName START ===');
     console.log('Account name:', accountName);
-    
+
     try {
       const response = await apiClient.get<AuthResponse>(`${this.baseUrl}/login-by-name/${accountName}`);
       console.log('Debug login successful:', response);
+      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem('refreshToken', response.refreshToken);
+      localStorage.setItem('user', JSON.stringify(response.userDetails));
       console.log('=== DebugService.loginByName END ===');
       return response;
     } catch (error) {
@@ -25,6 +28,8 @@ class DebugService {
       console.error('=== END ERROR ===');
       throw error;
     }
+
+
   }
 }
 

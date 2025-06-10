@@ -22,8 +22,8 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserDetails | null>(() => {
-    const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : null;
+    const storedUser = authService.getCurrentUser();
+    return storedUser ? storedUser : null;
   });
 
   // Add periodic token refresh
@@ -42,9 +42,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
+    const storedUser = authService.getCurrentUser();
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      setUser(storedUser);
     }
     setLoading(false);
   }, []);
@@ -120,7 +120,7 @@ export const usePermissions = () => {
     canBookTickets: user?.accountTypeName === "Customer",
     canViewOwnTickets: user?.accountTypeName === "Customer",
     canUseChat: user?.accountTypeName === "Customer",
-    
+
     // Employee permissions (accountType = 2)
     canViewAdmin: user?.accountTypeName === "Employee",
     canManageFlights: user?.accountTypeName === "Employee",
@@ -128,7 +128,7 @@ export const usePermissions = () => {
     canManageEmployees: user?.accountTypeName === "Employee",
     canManageCustomerSupport: user?.accountTypeName === "Employee",
     canAccessChatManagement: user?.accountTypeName === "Employee",
-    
+
     // General permissions
     isEmployee: user?.accountTypeName === "Employee",
     isCustomer: user?.accountTypeName === "Customer",

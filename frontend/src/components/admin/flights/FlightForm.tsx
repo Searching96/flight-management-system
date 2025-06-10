@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Row, Col, Form, Button, Alert} from 'react-bootstrap';
+import { Row, Col, Form, Button, Alert } from 'react-bootstrap';
 import { Flight, FlightRequest, Airport, Plane, Parameter } from '../../../models';
 import TypeAhead from '../../common/TypeAhead';
 import { FlightDetailWithIndex } from '../../../hooks/useFlightDetails';
@@ -186,8 +186,8 @@ const FlightForm: React.FC<FlightFormProps> = ({
         }
 
         // Check for empty arrival times
-        const hasEmptyTimes = flightDetails.some(detail =>
-            !detail.arrivalTime || detail.arrivalTime === ''
+        const hasEmptyTimes = flightDetails.some(detail => detail.flightId !== 0 && (
+            !detail.arrivalTime || detail.arrivalTime === '')
         );
 
         if (hasEmptyTimes && flightDetails.length > 0) {
@@ -328,8 +328,8 @@ const FlightForm: React.FC<FlightFormProps> = ({
         }
 
         const invalidLayovers = flightDetails.filter(detail => {
-            return detail.layoverDuration !== undefined && 
-                   detail.layoverDuration < (parameters?.minLayoverDuration || 20);
+            return detail.layoverDuration !== undefined &&
+                detail.layoverDuration < (parameters?.minLayoverDuration || 20);
         });
 
         if (invalidLayovers.length > 0) {
@@ -343,7 +343,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
                 return rest;
             });
         }
-        
+
         // Check for exceeding max layovers
         const maxLayers = parameters?.maxMediumAirport || 5;
         if (flightDetails.length > maxLayers) {
@@ -414,7 +414,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
             // Validate layovers using system parameters
             const invalidLayovers = flightDetails.filter(detail => {
                 return detail.layoverDuration < (parameters?.minLayoverDuration || 20) ||
-                       detail.layoverDuration > (parameters?.maxLayoverDuration || 180);
+                    detail.layoverDuration > (parameters?.maxLayoverDuration || 180);
             });
 
             if (invalidLayovers.length > 0) {
@@ -428,7 +428,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
 
         // Flight time total validation
         const durationMinutes = (new Date(data.arrivalTime).getTime() - new Date(data.departureTime).getTime()) / (1000 * 60);
-        
+
         if (durationMinutes < (parameters?.minFlightDuration || 30)) {
             setFormErrors(prev => ({
                 ...prev,
@@ -473,7 +473,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
                             type="text"
                             {...register('flightCode', {
                                 required: 'Mã chuyến bay là bắt buộc',
-                                validate: (value) => validateFlightCode(value) || 
+                                validate: (value) => validateFlightCode(value) ||
                                     'Mã chuyến bay không hợp lệ. Định dạng phải là 2 chữ cái + 3-4 số (VD: VN123, QH1234)'
                             })}
                             isInvalid={!!errors.flightCode}
@@ -491,12 +491,12 @@ const FlightForm: React.FC<FlightFormProps> = ({
                         <TypeAhead
                             options={airportOptions}
                             value={selectedDepartureAirport}
-                            allowClear = {false}
+                            allowClear={false}
                             onChange={(option) => {
                                 const airportId = option?.value as number || '';
                                 setSelectedDepartureAirport(airportId);
-                                setValue('departureAirportId', Number(airportId), { 
-                                    shouldValidate: true 
+                                setValue('departureAirportId', Number(airportId), {
+                                    shouldValidate: true
                                 });
                             }}
                             placeholder="Tìm sân bay đi..."
@@ -527,12 +527,12 @@ const FlightForm: React.FC<FlightFormProps> = ({
                         <TypeAhead
                             options={airportOptions}
                             value={selectedArrivalAirport}
-                            allowClear = {false}
+                            allowClear={false}
                             onChange={(option) => {
                                 const airportId = option?.value as number || '';
                                 setSelectedArrivalAirport(airportId);
-                                setValue('arrivalAirportId', Number(airportId), { 
-                                    shouldValidate: true 
+                                setValue('arrivalAirportId', Number(airportId), {
+                                    shouldValidate: true
                                 });
                             }}
                             placeholder="Tìm sân bay đến..."
@@ -571,12 +571,12 @@ const FlightForm: React.FC<FlightFormProps> = ({
                                     futureDate: (value) => {
                                         const now = new Date();
                                         now.setMinutes(now.getMinutes() + 15); // Add buffer
-                                        return new Date(value) >= now || 
+                                        return new Date(value) >= now ||
                                             'Thời gian khởi hành không thể trong quá khứ.';
                                     },
                                     beforeArrival: (value) => {
                                         if (!watchArrivalTime) return true;
-                                        return new Date(value) < new Date(watchArrivalTime) || 
+                                        return new Date(value) < new Date(watchArrivalTime) ||
                                             'Thời gian đến phải sau thời gian khởi hành.';
                                     }
                                 }
@@ -599,7 +599,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
                                 validate: {
                                     afterDeparture: (value) => {
                                         if (!watchDepartureTime) return true;
-                                        return new Date(value) > new Date(watchDepartureTime) || 
+                                        return new Date(value) > new Date(watchDepartureTime) ||
                                             'Thời gian đến phải sau thời gian khởi hành.';
                                     },
                                     flightDuration: (value) => {
@@ -607,15 +607,15 @@ const FlightForm: React.FC<FlightFormProps> = ({
                                         const departureDate = new Date(watchDepartureTime);
                                         const arrivalDate = new Date(value);
                                         const durationMinutes = (arrivalDate.getTime() - departureDate.getTime()) / (1000 * 60);
-                                        
+
                                         if (durationMinutes < (parameters?.minFlightDuration || 30)) {
                                             return `Thời gian bay tối thiểu là ${parameters?.minFlightDuration || 30} phút theo quy định.`;
                                         }
-                                        
+
                                         if (durationMinutes > 24 * 60) {
                                             return 'Thời gian bay không nên vượt quá 24 giờ.';
                                         }
-                                        
+
                                         return true;
                                     }
                                 }
@@ -639,8 +639,8 @@ const FlightForm: React.FC<FlightFormProps> = ({
                             onChange={(option) => {
                                 const planeId = option?.value as number || '';
                                 setSelectedPlane(planeId);
-                                setValue('planeId', Number(planeId), { 
-                                    shouldValidate: true 
+                                setValue('planeId', Number(planeId), {
+                                    shouldValidate: true
                                 });
                             }}
                             placeholder="Tìm máy bay..."
@@ -676,8 +676,8 @@ const FlightForm: React.FC<FlightFormProps> = ({
                         </div>
                     </Alert>
                 )}
-                
-                <FlightDetailsTable 
+
+                <FlightDetailsTable
                     flightDetails={flightDetails}
                     airportOptions={airportOptions}
                     selectedDepartureAirport={selectedDepartureAirport}

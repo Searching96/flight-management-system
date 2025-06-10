@@ -174,7 +174,7 @@ const FlightManagement: React.FC<{
     };
 
     const handleDelete = async (flightId: number) => {
-        if (!window.confirm('Are you sure you want to delete this flight?')) return;
+        if (!window.confirm('Xác nhận xóa chuyến bay?')) return;
         await deleteFlight(flightId);
     };
 
@@ -231,12 +231,12 @@ const FlightManagement: React.FC<{
     };
 
     // Handler for local updates to ticket class data (doesn't save to backend)
-    const handleTicketClassUpdate = (
+    const handleTicketClassUpdate = async (
         ticketClassId: number,
         data: Partial<FlightTicketClass>
     ) => {
         // Get the original association to compare with
-        const originalAssociation = flightTicketClasses.find(ftc => ftc.ticketClassId === ticketClassId);
+        const originalAssociation = await flightTicketClassService.getFlightTicketClassById(selectedFlightForClasses!.flightId, ticketClassId);
         if (!originalAssociation) return;
 
         // Only store fields that have actually changed
