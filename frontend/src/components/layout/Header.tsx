@@ -42,8 +42,8 @@ const Header: React.FC = () => {
                 <Nav.Link as={Link} to="/dashboard" className="text-decoration-none">Dashboard</Nav.Link>
                 {user.accountTypeName === 'Employee' && (
                   <>
-                  <Nav.Link as={Link} to="/admin/customer-support" className="text-decoration-none">Customer Support</Nav.Link>
-                  <Nav.Link as={Link} to="/admin" className="text-decoration-none">Admin</Nav.Link>
+                    <Nav.Link as={Link} to="/admin/customer-support" className="text-decoration-none">Customer Support</Nav.Link>
+                    <Nav.Link as={Link} to="/admin" className="text-decoration-none">Admin</Nav.Link>
                   </>
                 )}
               </>
@@ -60,6 +60,11 @@ const Header: React.FC = () => {
                   <Dropdown.Item onClick={handleLogout}>
                     <i className="bi bi-box-arrow-right me-2"></i>
                     Logout
+                  </Dropdown.Item>
+
+                  <Dropdown.Item>
+                    <i className="bi bi-person-gear me-2"></i>
+                    Edit profile
                   </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
