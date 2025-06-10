@@ -13,7 +13,7 @@ export function useFlightDetails() {
         try {
             setLoading(true);
             console.log("Loading flight details for flight ID:", flightId);
-            const details = await flightDetailService.getFlightDetails(flightId);
+            const details = await flightDetailService.getFlightDetailsById(flightId);
             console.log("Flight details loaded:", details);
 
             if (!details || details.length === 0) {
@@ -58,7 +58,7 @@ export function useFlightDetails() {
             console.log("Flight details to save:", validDetailsToSave);
 
             // First, get any existing flight details if updating
-            const existingDetails = await flightDetailService.getFlightDetails(flightId);
+            const existingDetails = await flightDetailService.getFlightDetailsById(flightId);
             
             try {
                 // Process all operations in parallel

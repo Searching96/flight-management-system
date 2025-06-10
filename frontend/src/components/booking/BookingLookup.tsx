@@ -93,6 +93,8 @@ const BookingLookup: React.FC = () => {
     );
 
     if (confirmed && !isPaid) {
+      setShowCancelModal(false);
+
       try {
         // Cancel all tickets in the booking
         for (const ticket of booking.tickets) {
@@ -113,27 +115,6 @@ const BookingLookup: React.FC = () => {
         console.error('Error canceling booking:', err);
         alert('Failed to cancel booking: ' + (err.message || 'Unknown error'));
       }
-
-    setShowCancelModal(false);
-    
-    try {
-      // Cancel all tickets in the booking
-      for (const ticket of booking.tickets) {
-        if (ticket.ticketId) {
-          await ticketService.deleteTicket(ticket.ticketId);
-          await flightTicketClassService.updateRemainingTickets(
-            ticket.flightId!, 
-            ticket.ticketClassId!, 
-            -1
-          ); 
-        }
-      }
-
-      setBooking(null);
-      setSearchData({ confirmationCode: '' });
-    } catch (err: any) {
-      console.error('Error canceling booking:', err);
-      alert('Failed to cancel booking: ' + (err.message || 'Unknown error'));
     }
   };
 
@@ -143,7 +124,7 @@ const BookingLookup: React.FC = () => {
 
   const handlePayment = async () => {
     if (!booking) return;
-    
+
     try {
       const response = await paymentService.createPayment(booking.confirmationCode);
       if (response && response.data) {
@@ -294,8 +275,8 @@ const BookingLookup: React.FC = () => {
                           <strong>Passenger {index + 1} : {booking.passengers[index]}</strong>
                           <div className="text-muted d-flex align-items-center">
                             Seat: {ticket.seatNumber}
-                            <Badge 
-                              bg={ticket.ticketStatus === 1 ? "success" : "warning"} 
+                            <Badge
+                              bg={ticket.ticketStatus === 1 ? "success" : "warning"}
                               className="ms-2"
                             >
                               {ticket.ticketStatus === 1 ? "Paid" : "Pending"}
@@ -417,11 +398,11 @@ const BookingLookup: React.FC = () => {
                     )}
                   </Col>
                 </Row>
-                
+
                 {!isPaid && (
                   <Alert variant="info" className="mb-0 mt-3">
                     <i className="bi bi-info-circle-fill me-2"></i>
-                    <strong>Important:</strong> This booking requires payment to be confirmed. 
+                    <strong>Important:</strong> This booking requires payment to be confirmed.
                     Unpaid bookings may be cancelled automatically 24 hours before departure.
                   </Alert>
                 )}
@@ -447,8 +428,8 @@ const BookingLookup: React.FC = () => {
       </Row>
 
       {/* Cancel Confirmation Modal */}
-      <Modal 
-        show={showCancelModal} 
+      <Modal
+        show={showCancelModal}
         onHide={handleCloseCancelModal}
         centered
       >
@@ -469,22 +450,22 @@ const BookingLookup: React.FC = () => {
           {booking && (
             <div className="mt-3 p-3 bg-light rounded">
               <div className="text-center">
-                <strong>Booking: {booking.confirmationCode}</strong><br/>
-                <span className="text-muted">{booking.flightInfo.flightCode} - {booking.tickets.length} passenger(s)</span><br/>
+                <strong>Booking: {booking.confirmationCode}</strong><br />
+                <span className="text-muted">{booking.flightInfo.flightCode} - {booking.tickets.length} passenger(s)</span><br />
                 <span className="text-primary fw-bold">${booking.totalAmount}</span>
               </div>
             </div>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             onClick={handleCloseCancelModal}
           >
             Keep Booking
           </Button>
-          <Button 
-            variant="danger" 
+          <Button
+            variant="danger"
             onClick={confirmCancelBooking}
           >
             <i className="bi bi-trash me-2"></i>
