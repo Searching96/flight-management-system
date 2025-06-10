@@ -132,8 +132,8 @@ const ResetPasswordForm: React.FC = () => {
                         <Card.Body className="p-4">
                             {!tokenExpired && (
                                 <div className="text-center mb-4">
-                                    <h2 className="h4 mb-2">Reset Password</h2>
-                                    <p className="text-muted">Enter your new password below</p>
+                                    <h2 className="h4 mb-2">Đặt lại mật khẩu</h2>
+                                    <p className="text-muted">Nhập mật khẩu mới của bạn bên dưới</p>
                                 </div>
                             )}
 
@@ -146,20 +146,20 @@ const ResetPasswordForm: React.FC = () => {
                             {!tokenExpired && (
                                 <Form onSubmit={handleSubmit(onSubmit)}>
                                     <Form.Group className="mb-3">
-                                        <Form.Label htmlFor="password">New Password</Form.Label>
+                                        <Form.Label htmlFor="password">Mật khẩu mới</Form.Label>
                                         <Form.Control
                                             id="password"
                                             type="password"
                                             {...register('password', {
-                                                required: 'Password is required',
-                                                minLength: { value: 6, message: 'Password must be at least 6 characters' },
+                                                required: 'Mật khẩu là bắt buộc',
+                                                minLength: { value: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
                                                 pattern: {
                                                     value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                                                    message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+                                                    message: 'Mật khẩu phải chứa ít nhất một chữ hoa, một chữ thường và một số'
                                                 }
                                             })}
                                             isInvalid={!!errors.password}
-                                            placeholder="Enter new password"
+                                            placeholder="Nhập mật khẩu mới"
                                         />
                                         <Form.Control.Feedback type="invalid">
                                             {errors.password?.message}
@@ -167,16 +167,16 @@ const ResetPasswordForm: React.FC = () => {
                                     </Form.Group>
 
                                     <Form.Group className="mb-4">
-                                        <Form.Label htmlFor="confirmPassword">Confirm New Password</Form.Label>
+                                        <Form.Label htmlFor="confirmPassword">Xác nhận mật khẩu mới</Form.Label>
                                         <Form.Control
                                             id="confirmPassword"
                                             type="password"
                                             {...register('confirmPassword', {
-                                                required: 'Please confirm your password',
-                                                validate: value => value === password || 'Passwords do not match'
+                                                required: 'Vui lòng xác nhận mật khẩu',
+                                                validate: value => value === password || 'Mật khẩu không khớp'
                                             })}
                                             isInvalid={!!errors.confirmPassword}
-                                            placeholder="Confirm new password"
+                                            placeholder="Xác nhận mật khẩu mới"
                                         />
                                         <Form.Control.Feedback type="invalid">
                                             {errors.confirmPassword?.message}
@@ -190,7 +190,7 @@ const ResetPasswordForm: React.FC = () => {
                                         disabled={loading}
                                     >
                                         {loading && <Spinner as="span" animation="border" size="sm" className="me-2" />}
-                                        {loading ? 'Resetting Password...' : 'Reset Password'}
+                                        {loading ? 'Đang đặt lại mật khẩu...' : 'Đặt lại mật khẩu'}
                                     </Button>
                                 </Form>
                             )}

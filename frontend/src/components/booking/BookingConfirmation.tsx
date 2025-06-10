@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Alert, Badge, ListGroup } from 'react-bootstrap';
 import { BookingConfirmation as BookingConfirmationType } from '../../services/bookingConfirmationService';
-import { paymentService, ticketService } from '../../services';
+import { paymentService } from '../../services';
 
 const BookingConfirmation: React.FC = () => {
   const location = useLocation();
@@ -61,7 +61,7 @@ const BookingConfirmation: React.FC = () => {
           <Card className="mb-4 border-success">
             <Card.Body className="text-center py-4">
               <div className="display-1 text-success mb-3">✅</div>
-              <h1 className="text-success mb-3">Booking Confirmed!</h1>
+              <h1 className="text-success mb-3">Đặt chỗ thành công!</h1>
               <div className="mb-3">
                 <Badge bg={isPaid ? "success" : "warning"} className="fs-5 px-3 py-2">
                   {isPaid ? 
@@ -81,7 +81,7 @@ const BookingConfirmation: React.FC = () => {
           {/* Confirmation Code */}
           <Card className="mb-4 border-primary">
             <Card.Header className="bg-primary text-white">
-              <h4 className="mb-0">Your Confirmation Code</h4>
+              <h4 className="mb-0">Mã xác nhận của bạn</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div className="bg-light p-4 rounded mb-3">
@@ -90,8 +90,8 @@ const BookingConfirmation: React.FC = () => {
                 </h2>
               </div>
               <Alert variant="warning" className="mb-0">
-                <strong>⚠️ Important:</strong> Please save this confirmation code.
-                You'll need it to retrieve or manage your booking later.
+                <strong>⚠️ Quan trọng:</strong> Vui lòng lưu mã xác nhận này.
+                Bạn sẽ cần nó để truy xuất hoặc quản lý đặt chỗ sau này.
               </Alert>
             </Card.Body>
           </Card>
@@ -99,33 +99,33 @@ const BookingConfirmation: React.FC = () => {
           {/* Booking Details */}
           <Card className="mb-4">
             <Card.Header>
-              <h4 className="mb-0">Booking Details</h4>
+              <h4 className="mb-0">Chi tiết đặt chỗ</h4>
             </Card.Header>
             <Card.Body>
               {/* Flight Information */}
               <div className="mb-4">
-                <h5 className="text-primary mb-3">Flight Information</h5>
+                <h5 className="text-primary mb-3">Thông tin chuyến bay</h5>
                 <Row className="g-3">
                   <Col sm={6}>
-                    <strong>Flight:</strong>
+                    <strong>Chuyến bay:</strong>
                     <div>{booking.flightInfo.flightCode}</div>
                   </Col>
                   <Col sm={6}>
-                    <strong>Route:</strong>
+                    <strong>Tuyến đường:</strong>
                     <div>{booking.flightInfo.departureCity} → {booking.flightInfo.arrivalCity}</div>
                   </Col>
                   <Col sm={6}>
-                    <strong>Departure:</strong>
+                    <strong>Khởi hành:</strong>
                     <div>
-                      {new Date(booking.flightInfo.departureTime).toLocaleDateString()} at{' '}
+                      {new Date(booking.flightInfo.departureTime).toLocaleDateString()} lúc{' '}
                       {new Date(booking.flightInfo.departureTime).toLocaleTimeString()}
                     </div>
                   </Col>
                   {booking.flightInfo.arrivalTime && (
                     <Col sm={6}>
-                      <strong>Arrival:</strong>
+                      <strong>Đến:</strong>
                       <div>
-                        {new Date(booking.flightInfo.arrivalTime).toLocaleDateString()} at{' '}
+                        {new Date(booking.flightInfo.arrivalTime).toLocaleDateString()} lúc{' '}
                         {new Date(booking.flightInfo.arrivalTime).toLocaleTimeString()}
                       </div>
                     </Col>
@@ -135,16 +135,16 @@ const BookingConfirmation: React.FC = () => {
 
               {/* Passenger Information */}
               <div className="mb-4">
-                <h5 className="text-primary mb-3">Passenger Information</h5>
+                <h5 className="text-primary mb-3">Thông tin hành khách</h5>
                 <ListGroup>
                   {booking.tickets.map((ticket, index) => (
                     <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
                       <div>
                         <strong>
-                          Passenger {index + 1}: {booking.passengers && booking.passengers[index]}
+                          Hành khách {index + 1}: {booking.passengers && booking.passengers[index]}
                         </strong>
                         <div className="text-muted">
-                          Seat: {ticket.seatNumber}{' '}
+                          Ghế: {ticket.seatNumber}{' '}
                           {ticket.ticketStatus !== undefined && (
                             <Badge bg={ticket.ticketStatus === 1 ? "success" : "warning"} className="ms-2">
                               {ticket.ticketStatus === 1 ? "Đã thanh toán" : "Chờ thanh toán"}
@@ -160,18 +160,18 @@ const BookingConfirmation: React.FC = () => {
 
               {/* Booking Summary */}
               <div className="mb-0">
-                <h5 className="text-primary mb-3">Booking Summary</h5>
+                <h5 className="text-primary mb-3">Tóm tắt đặt chỗ</h5>
                 <Row className="g-3">
                   <Col sm={6}>
-                    <strong>Booking Date:</strong>
+                    <strong>Ngày đặt:</strong>
                     <div>{new Date(booking.bookingDate).toLocaleDateString()}</div>
                   </Col>
                   <Col sm={6}>
-                    <strong>Total Passengers:</strong>
+                    <strong>Tổng hành khách:</strong>
                     <div>{booking.tickets.length}</div>
                   </Col>
                   <Col sm={6}>
-                    <strong>Payment Status:</strong>
+                    <strong>Trạng thái thanh toán:</strong>
                     <div>
                       <Badge bg={isPaid ? "success" : "warning"}>
                         {isPaid ? "Đã thanh toán" : "Chờ thanh toán"}
@@ -182,7 +182,7 @@ const BookingConfirmation: React.FC = () => {
                     <div className="border-top pt-3">
                       <Row>
                         <Col>
-                          <strong className="fs-5">Total Amount:</strong>
+                          <strong className="fs-5">Tổng tiền:</strong>
                         </Col>
                         <Col className="text-end">
                           <strong className="fs-4 text-primary">${booking.totalAmount}</strong>
@@ -245,14 +245,14 @@ const BookingConfirmation: React.FC = () => {
           {/* Next Steps */}
           <Card className="bg-light">
             <Card.Header>
-              <h4 className="mb-0">What's Next?</h4>
+              <h4 className="mb-0">Tiếp theo là gì?</h4>
             </Card.Header>
             <Card.Body>
               <ul className="mb-0">
-                <li>Save your confirmation code: <strong className="text-primary">{booking.confirmationCode}</strong></li>
-                <li>Arrive at the airport at least 2 hours before departure</li>
-                <li>Bring valid ID and your confirmation code</li>
-                <li>You can manage your booking using the "Manage Booking" button above</li>
+                <li>Lưu mã xác nhận của bạn: <strong className="text-primary">{booking.confirmationCode}</strong></li>
+                <li>Có mặt tại sân bay ít nhất 2 tiếng trước giờ khởi hành</li>
+                <li>Mang theo giấy tờ tùy thân hợp lệ và mã xác nhận</li>
+                <li>Bạn có thể quản lý đặt chỗ bằng cách sử dụng nút "Quản lý đặt chỗ" ở trên</li>
               </ul>
             </Card.Body>
           </Card>

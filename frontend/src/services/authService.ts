@@ -7,13 +7,12 @@ class AuthService {
     try {
       const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
       if (!response.userDetails) {
-        throw new Error('Invalid response from server');
+        throw new Error('Phản hồi không hợp lệ từ máy chủ');
       }
       else this.setAuthData(response);
     } catch (error) {
-      // Optionally transform or log the error
       // console.error('Login failed:', error);
-      throw new Error('Login failed. Please check your credentials.');
+      throw new Error('Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.');
     }
   }
 
@@ -21,12 +20,12 @@ class AuthService {
     try {
       const response = await apiClient.post<AuthResponse>('/auth/register', userData);
       if (!response.userDetails) {
-        throw new Error('Invalid response from server');
+        throw new Error('Phản hồi không hợp lệ từ máy chủ');
       }
       else this.setAuthData(response);
     } catch (error) {
       // console.error('Registration failed:', error);
-      throw new Error('Registration failed. Email may already be in use.');
+      throw new Error('Đăng ký thất bại. Email có thể đã được sử dụng.');
     }
   }
 
@@ -34,7 +33,7 @@ class AuthService {
   // Refresh access token
   async refreshToken(): Promise<void> {
     const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) throw new Error('No refresh token available');
+    if (!refreshToken) throw new Error('Không có refresh token');
 
     try {
       // Send as { refreshToken: refreshToken } if backend expects it
@@ -43,13 +42,13 @@ class AuthService {
         { token: refreshToken }
       );
       if (!response.userDetails) {
-        throw new Error('Invalid response from server');
+        throw new Error('Phản hồi không hợp lệ từ máy chủ');
       }
       else this.setAuthData(response);
     } catch (error) {
       this.clearAuthData();
       // console.error('Token refresh failed:', error);
-      throw new Error('Session expired. Please log in again.');
+      throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
     }
   }
 
@@ -111,12 +110,12 @@ class AuthService {
         { token, newPassword }
       );
       if (!response.userDetails) {
-        throw new Error('Invalid response from server');
+        throw new Error('Phản hồi không hợp lệ từ máy chủ');
       }
       else this.setAuthData(response); // Only if the backend returns auth data
     } catch (error) {
       console.error('Password reset failed:', error);
-      throw new Error('Password reset failed. Invalid or expired token.');
+      throw new Error('Đặt lại mật khẩu thất bại. Token không hợp lệ hoặc đã hết hạn.');
     }
   }
 

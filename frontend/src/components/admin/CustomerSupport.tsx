@@ -274,9 +274,9 @@ const CustomerSupport: React.FC = () => {
         <Row className="justify-content-center">
           <Col md={8} className="text-center">
             <Spinner animation="border" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </Spinner>
-            <p className="mt-3">Loading customer support...</p>
+                            <span className="visually-hidden">Đang tải...</span>
+                        </Spinner>
+                        <p className="mt-3">Đang tải hỗ trợ khách hàng...</p>
           </Col>
         </Row>
       </Container>
@@ -289,7 +289,7 @@ const CustomerSupport: React.FC = () => {
       <div className="bg-white border-bottom px-4 pb-2">
         <h4 className="mb-0 d-flex align-items-center">
           <i className="bi bi-headset me-2 text-primary"></i>
-          Customer Support
+          Hỗ trợ khách hàng
         </h4>
       </div>
 

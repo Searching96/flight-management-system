@@ -21,9 +21,9 @@ const TicketClassManagement: React.FC<{
         <Row className="justify-content-center">
           <Col md={8}>
             <Alert variant="danger" className="text-center">
-              <Alert.Heading>Access Denied</Alert.Heading>
-              <p>You do not have permission to access ticket class management.</p>
-            </Alert>
+                            <Alert.Heading>Từ chối truy cập</Alert.Heading>
+                            <p>Bạn không có quyền truy cập quản lý hạng vé.</p>
+                        </Alert>
           </Col>
         </Row>
       </Container>
@@ -117,7 +117,7 @@ const TicketClassManagement: React.FC<{
     return (
       <Container className="py-5 text-center">
         <Spinner animation="border" variant="primary" />
-        <p className="mt-3">Loading ticket classes...</p>
+        <p className="mt-3">Đang tải hạng vé...</p>
       </Container>
     );
   }
@@ -131,14 +131,14 @@ const TicketClassManagement: React.FC<{
             <Card.Body>
               <Row className="align-items-center">
                 <Col>
-                  <h2 className="mb-0">Ticket Class Management</h2>
+                  <h2 className="mb-0">Quản lý hạng vé</h2>
                 </Col>
                 <Col xs="auto">
                   <Button
                     variant="primary"
                     onClick={() => setShowForm(true)}
                   >
-                    Add New Ticket Class
+                    Thêm hạng vé mới
                   </Button>
                 </Col>
               </Row>
@@ -162,7 +162,7 @@ const TicketClassManagement: React.FC<{
       <Modal show={showForm} onHide={handleCancel} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>
-            {editingClass ? 'Edit Ticket Class' : 'Add New Ticket Class'}
+            {editingClass ? 'Chỉnh sửa hạng vé' : 'Thêm hạng vé mới'}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -170,14 +170,14 @@ const TicketClassManagement: React.FC<{
             <Row>
               <Col md={8}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Class Name</Form.Label>
+                  <Form.Label>Tên hạng</Form.Label>
                   <Form.Control
                     type="text"
                     {...register('ticketClassName', {
-                      required: 'Class name is required'
+                      required: 'Tên hạng là bắt buộc'
                     })}
                     isInvalid={!!errors.ticketClassName}
-                    placeholder="e.g., Economy, Business, First Class"
+                    placeholder="ví dụ: Phổ thông, Thương gia, Hạng nhất"
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.ticketClassName?.message}
@@ -186,11 +186,11 @@ const TicketClassManagement: React.FC<{
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Color</Form.Label>
+                  <Form.Label>Màu sắc</Form.Label>
                   <Form.Control
                     type="color"
                     {...register('color', {
-                      required: 'Color is required'
+                      required: 'Màu sắc là bắt buộc'
                     })}
                     isInvalid={!!errors.color}
                   />
@@ -204,10 +204,10 @@ const TicketClassManagement: React.FC<{
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCancel}>
-            Cancel
+            Hủy
           </Button>
           <Button variant="primary" onClick={handleSubmit(onSubmit)}>
-            {editingClass ? 'Update Class' : 'Create Class'}
+            {editingClass ? 'Cập nhật hạng' : 'Tạo hạng'}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -232,8 +232,8 @@ const TicketClassManagement: React.FC<{
                       className="me-2"
                       onClick={() => handleEdit(ticketClass)}
                     >
-                      Edit
-                    </Button>
+                                Sửa
+                            </Button>
                     {/* <Button
                       variant="outline-danger"
                       size="sm"
@@ -249,11 +249,11 @@ const TicketClassManagement: React.FC<{
                     <Col xs={8}>{ticketClass.ticketClassId}</Col>
                   </Row>
                   <Row className="mb-2">
-                    <Col xs={4} className="text-muted">Name:</Col>
+                    <Col xs={4} className="text-muted">Tên:</Col>
                     <Col xs={8}>{ticketClass.ticketClassName}</Col>
                   </Row>
                   <Row className="mb-2">
-                    <Col xs={4} className="text-muted">Color:</Col>
+                    <Col xs={4} className="text-muted">Màu:</Col>
                     <Col xs={8} className="d-flex align-items-center">
                       <div
                         className="me-2 rounded"
@@ -278,9 +278,9 @@ const TicketClassManagement: React.FC<{
             <Card>
               <Card.Body className="text-center py-5">
                 <div className="text-muted">
-                  <h4>No ticket classes found</h4>
-                  <p>Add your first ticket class to get started.</p>
-                </div>
+                        <h4>Không tìm thấy hạng vé</h4>
+                        <p>Thêm hạng vé đầu tiên để bắt đầu.</p>
+                    </div>
               </Card.Body>
             </Card>
           </Col>

@@ -40,10 +40,10 @@ public class CustomUserDetails implements UserDetails {
             authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE"));
             if (account.getEmployee() != null) {
                 switch (account.getEmployee().getEmployeeType()) {
-                    case 1 -> authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE_RECEPTION"));
+                    case 1 -> authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE_FLIGHT_OPERATIONS"));
                     case 2 -> authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE_TICKETING"));
                     case 3 -> authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE_SUPPORT"));
-                    case 4 -> authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE_ACCOUNTING"));
+                    case 4 -> authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE_FLIGHT_SCHEDULING"));
                     case 5 -> authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE_ADMIN"));
                 }
             }

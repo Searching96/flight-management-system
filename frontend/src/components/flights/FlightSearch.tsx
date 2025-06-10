@@ -245,19 +245,15 @@ const FlightSearch: React.FC = () => {
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label htmlFor="departureDate" className="fw-bold">
-                        <i className="bi bi-calendar-event me-1"></i>
-                        Departure Date
+                        <i className="bi bi-calendar me-1"></i>
+                        Ngày khởi hành
                       </Form.Label>
                       <Form.Control
                         id="departureDate"
                         type="date"
                         min={new Date().toISOString().split('T')[0]}
-                        {...register('departureDate', { required: 'Departure date is required' })}
                         isInvalid={!!errors.departureDate}
                       />
-                      <Form.Control.Feedback type="invalid">
-                        {errors.departureDate?.message}
-                      </Form.Control.Feedback>
                     </Form.Group>
                   </Col>
 
@@ -265,16 +261,16 @@ const FlightSearch: React.FC = () => {
                     <Form.Group>
                       <Form.Label htmlFor="passengerCount" className="fw-bold">
                         <i className="bi bi-people me-1"></i>
-                        Passengers
+                        Hành khách
                       </Form.Label>
                       <Form.Select
                         id="passengerCount"
-                        {...register('passengers', { required: 'Passenger count is required', valueAsNumber: true })}
+                        {...register('passengers', { required: 'Số lượng hành khách là bắt buộc', valueAsNumber: true })}
                         isInvalid={!!errors.passengers}
                       >
                         {[...Array(9)].map((_, i) => (
                           <option key={i + 1} value={i + 1}>
-                            {i + 1} {i === 0 ? 'Passenger' : 'Passengers'}
+                            {i + 1} {i === 0 ? 'Hành khách' : 'Hành khách'}
                           </option>
                         ))}
                       </Form.Select>

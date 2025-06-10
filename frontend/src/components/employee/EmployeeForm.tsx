@@ -82,8 +82,8 @@ export const EmployeeForm = ({ initialData, onSubmit, isAdding }: EmployeeFormPr
         <input
           type="email"
           {...register('email', {
-            required: 'Email is required',
-            pattern: { value: /^\S+@\S+$/, message: 'Invalid email format' }
+            required: 'Email là bắt buộc',
+            pattern: { value: /^\S+@\S+$/, message: 'Định dạng email không hợp lệ' }
           })}
           className="input input-bordered"
         />
@@ -93,12 +93,12 @@ export const EmployeeForm = ({ initialData, onSubmit, isAdding }: EmployeeFormPr
       </div>
 
       <div className="form-control">
-        <label className="label">Phone Number</label>
+        <label className="label">Số điện thoại</label>
         <input
           type="text"
           {...register('phoneNumber', {
-            required: 'Phone number is required',
-            pattern: { value: /^[0-9-+]+$/, message: 'Invalid phone number format' }
+            required: 'Số điện thoại là bắt buộc',
+            pattern: { value: /^[0-9-+]+$/, message: 'Định dạng số điện thoại không hợp lệ' }
           })}
           className="input input-bordered"
         />
@@ -108,7 +108,7 @@ export const EmployeeForm = ({ initialData, onSubmit, isAdding }: EmployeeFormPr
       </div>
 
       <div className="form-control">
-        <label className="label">Employee Type</label>
+        <label className="label">Loại nhân viên</label>
         <select
           {...register('employeeType', { required: 'Employee type is required', valueAsNumber: true })}
           className="select select-bordered"

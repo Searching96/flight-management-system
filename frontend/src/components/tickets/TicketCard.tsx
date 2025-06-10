@@ -41,7 +41,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onCancel }) => {
 
     try {
       setCancelling(true);
-      await ticketService.cancelTicket(ticket.ticketId!);
+      await ticketService.deleteTicket(ticket.ticketId!);
       alert('Ticket cancelled successfully');
       if (onCancel) onCancel();
     } catch (error: any) {
@@ -58,9 +58,9 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onCancel }) => {
           <Col>
             <div className="d-flex align-items-center gap-3">
               <span className="fw-bold">Ticket #{ticket.ticketId}</span>
-              {ticket.flightCode && (
+              {ticket.flightId && (
                 <Badge bg="light" text="dark" className="fs-6">
-                  {ticket.flightCode}
+                  {ticket.flightId}
                 </Badge>
               )}
             </div>
@@ -77,22 +77,22 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onCancel }) => {
         <Row className="g-3">
           <Col md={4}>
             <div className="text-center">
-              <small className="text-muted d-block">Passenger</small>
-              <strong>{ticket.passengerName || 'N/A'}</strong>
+              <small className="text-muted d-block">Hành khách</small>
+              <strong>{ticket.passengerId || 'Chưa có'}</strong>
             </div>
           </Col>
           
           <Col md={4}>
             <div className="text-center">
-              <small className="text-muted d-block">Seat</small>
-              <strong>{ticket.seatNumber || 'TBA'}</strong>
+              <small className="text-muted d-block">Ghế ngồi</small>
+              <strong>{ticket.seatNumber || 'Chưa phân'}</strong>
             </div>
           </Col>
           
           <Col md={4}>
             <div className="text-center">
-              <small className="text-muted d-block">Class</small>
-              <strong>{ticket.ticketClassName || 'N/A'}</strong>
+              <small className="text-muted d-block">Hạng vé</small>
+              <strong>{ticket.ticketClassId || 'Chưa có'}</strong>
             </div>
           </Col>
 

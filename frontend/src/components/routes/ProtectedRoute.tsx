@@ -5,11 +5,13 @@ import { useAuth } from '../../hooks/useAuth';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredAccountType?: string;  // e.g. "Customer", "Employee"
+  requiredRoles?: string[]; // e.g. ["EMPLOYEE_TICKETING", "EMPLOYEE_ADMIN"]
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   requiredAccountType, // e.g. "Customer", "Employee"
+  requiredRoles
 }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
@@ -35,7 +37,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       />
     );
   }
-  if (requiredAccountType && user.accountTypeName !== requiredAccountType) {
+  if ((requiredAccountType && user.accountTypeName !== requiredAccountType) ||
+      (requiredRoles && !requiredRoles.includes(user.role))) {
     // Redirect to appropriate dashboard if wrong account type
     // accountTypeName: Customer, Employee (corrected to match backend database)
     return (

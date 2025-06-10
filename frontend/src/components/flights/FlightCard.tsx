@@ -138,7 +138,7 @@ const FlightCard: React.FC<FlightCardProps> = ({
                   {calculateDuration()}
                 </Badge>
               </div>
-              <small className="text-muted d-block mt-2">Direct</small>
+              <small className="text-muted d-block mt-2">Bay thẳng</small>
             </div>
           </Col>
 

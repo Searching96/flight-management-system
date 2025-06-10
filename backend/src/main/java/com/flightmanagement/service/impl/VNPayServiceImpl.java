@@ -2,7 +2,6 @@ package com.flightmanagement.service.impl;
 
 import com.flightmanagement.config.VNPayConfig;
 import com.flightmanagement.dto.TicketDto;
-import com.flightmanagement.entity.Ticket;
 import com.flightmanagement.service.PaymentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -19,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -421,7 +421,7 @@ public class VNPayServiceImpl implements PaymentService {
             vnp_Params.put("vnp_SecureHash", vnp_SecureHash);
 
             // Make API call to VNPay
-            URL url = new URL(VNPayConfig.vnp_ApiUrl);
+            URL url = new URI(VNPayConfig.vnp_ApiUrl).toURL();
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
             con.setRequestProperty("Content-Type", "application/json");

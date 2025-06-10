@@ -1,3 +1,4 @@
+// components/admin/AdminPanel.tsx
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Nav, Alert, Button } from 'react-bootstrap';
 import FlightManagement from './FlightManagement';
@@ -8,10 +9,10 @@ import TicketClassManagement from './TicketClassManagement';
 import EmployeeManagement from './EmployeeManagement';
 import { usePermissions } from '../../hooks/useAuth';
 
-type AdminTab = 'overview' | 'flights' | 'airports' | 'planes' | 'ticket-classes' | 'parameters' | 'employees';
+type AdminTab = 'overview' | 'flights' | 'airports' | 'planes' | 'ticket-classes' | 'parameters' | 'employees' | 'reports';
 
 export const AdminPanel: React.FC = () => {
-  const { canViewAdmin } = usePermissions();
+  const permissions = usePermissions();
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
 
   // Add state for managing quick action modals
@@ -23,8 +24,8 @@ export const AdminPanel: React.FC = () => {
     showTicketModal: false
   });
 
-  // Redirect if user doesn't have admin permissions (accountType should be 2 for employees)
-  if (!canViewAdmin) {
+  // Redirect if user doesn't have admin permissions
+  if (!permissions.canViewAdmin()) {
     return (
       <Container className="py-5">
         <Row className="justify-content-center">
@@ -32,6 +33,7 @@ export const AdminPanel: React.FC = () => {
             <Alert variant="danger" className="text-center">
               <Alert.Heading>Access Denied</Alert.Heading>
               <p>You do not have permission to access the admin panel.</p>
+              <p className="text-muted">This section is only available for System Administrators.</p>
             </Alert>
           </Col>
         </Row>
@@ -42,44 +44,85 @@ export const AdminPanel: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'flights':
-        return <FlightManagement showAddModal={quickActionModals.showFlightModal} onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showFlightModal: false }))} />;
+        return permissions.canViewFlightManagement() ? (
+          <FlightManagement 
+            showAddModal={quickActionModals.showFlightModal} 
+            onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showFlightModal: false }))} 
+          />
+        ) : <AccessDeniedAlert section="Flight Management" />;
+        
       case 'airports':
-        return <AirportManagement showAddModal={quickActionModals.showAirportModal} onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showAirportModal: false }))} />;
+        return permissions.canViewAirportManagement() ? (
+          <AirportManagement 
+            showAddModal={quickActionModals.showAirportModal} 
+            onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showAirportModal: false }))} 
+          />
+        ) : <AccessDeniedAlert section="Airport Management" />;
+        
       case 'planes':
-        return <PlaneManagement showAddModal={quickActionModals.showPlaneModal} onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showPlaneModal: false }))} />;
+        return permissions.canViewPlaneManagement() ? (
+          <PlaneManagement 
+            showAddModal={quickActionModals.showPlaneModal} 
+            onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showPlaneModal: false }))} 
+          />
+        ) : <AccessDeniedAlert section="Aircraft Fleet Management" />;
+        
       case 'ticket-classes':
-        return <TicketClassManagement showAddModal={quickActionModals.showTicketClassModal} onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showTicketClassModal: false }))} />;
+        return permissions.canViewTicketClassManagement() ? (
+          <TicketClassManagement 
+            showAddModal={quickActionModals.showTicketClassModal} 
+            onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showTicketClassModal: false }))} 
+          />
+        ) : <AccessDeniedAlert section="Ticket Class Management" />;
+        
       case 'parameters':
-        return <ParameterSettings />;
+        return permissions.canViewParameterSettings() ? (
+          <ParameterSettings />
+        ) : <AccessDeniedAlert section="System Parameters" />;
+        
       case 'employees':
-        return <EmployeeManagement />;
+        return permissions.canViewEmployeeManagement() ? (
+          <EmployeeManagement />
+        ) : <AccessDeniedAlert section="Employee Management" />;
+        
+      case 'reports':
+        return permissions.canViewReports() ? (
+          <div>Reports component coming soon...</div>
+        ) : <AccessDeniedAlert section="Reports" />;
+        
       default:
       case 'overview':
-        return <AdminOverview onNavigate={handleQuickAction} />;
+        return <AdminOverview onNavigate={handleQuickAction} permissions={permissions} />;
     }
   };
 
-  // Update the navigation handler to support quick actions
   const handleQuickAction = (action: AdminTab | 'add-flight' | 'add-airport' | 'add-plane' | 'add-ticket-class' | 'add-ticket') => {
     switch (action) {
       case 'add-flight':
-        setActiveTab('flights');
-        setQuickActionModals(prev => ({ ...prev, showFlightModal: true }));
+        if (permissions.canViewFlightManagement()) {
+          setActiveTab('flights');
+          setQuickActionModals(prev => ({ ...prev, showFlightModal: true }));
+        }
         break;
       case 'add-airport':
-        setActiveTab('airports');
-        setQuickActionModals(prev => ({ ...prev, showAirportModal: true }));
+        if (permissions.canViewAirportManagement()) {
+          setActiveTab('airports');
+          setQuickActionModals(prev => ({ ...prev, showAirportModal: true }));
+        }
         break;
       case 'add-plane':
-        setActiveTab('planes');
-        setQuickActionModals(prev => ({ ...prev, showPlaneModal: true }));
+        if (permissions.canViewPlaneManagement()) {
+          setActiveTab('planes');
+          setQuickActionModals(prev => ({ ...prev, showPlaneModal: true }));
+        }
         break;
       case 'add-ticket-class':
-        setActiveTab('ticket-classes');
-        setQuickActionModals(prev => ({ ...prev, showTicketClassModal: true }));
+        if (permissions.canViewTicketClassManagement()) {
+          setActiveTab('ticket-classes');
+          setQuickActionModals(prev => ({ ...prev, showTicketClassModal: true }));
+        }
         break;
       case 'add-ticket':
-        // setActiveTab('tickets');
         setQuickActionModals(prev => ({ ...prev, showTicketModal: true }));
         break;
       default:
@@ -89,11 +132,7 @@ export const AdminPanel: React.FC = () => {
   };
 
   return (
-    <Container fluid className="py-4" data-admin-panel ref={(el) => {
-      if (el) {
-        (el as any).setActiveTab = setActiveTab;
-      }
-    }}>
+    <Container fluid className="py-4">
       <Row>
         <Col>
           <div className="text-center mb-4">
@@ -110,70 +149,83 @@ export const AdminPanel: React.FC = () => {
                 📊 Overview
               </Nav.Link>
             </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === 'flights'}
-                onClick={() => setActiveTab('flights')}
-              >
-                ✈️ Flights
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === 'airports'}
-                onClick={() => setActiveTab('airports')}
-              >
-                🏢 Airports
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === 'planes'}
-                onClick={() => setActiveTab('planes')}
-              >
-                🛩️ Aircraft Fleet
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === 'ticket-classes'}
-                onClick={() => setActiveTab('ticket-classes')}
-              >
-                🎟️ Ticket Classes
-              </Nav.Link>
-            </Nav.Item>
-            {/* <Nav.Item>
-              <Nav.Link
-                active={activeTab === 'tickets'}
-                onClick={() => setActiveTab('tickets')}
-              >
-                🎫 Tickets
-              </Nav.Link>
-            </Nav.Item> */}
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === 'employees'}
-                onClick={() => setActiveTab('employees')}
-              >
-                👥 Employees
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === 'parameters'}
-                onClick={() => setActiveTab('parameters')}
-              >
-                ⚙️ Settings
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === 'employees'}
-                onClick={() => setActiveTab('employees')}
-              >
-                👥 Employee Management
-              </Nav.Link>
-            </Nav.Item>
+            
+            {permissions.canViewFlightManagement() && (
+              <Nav.Item>
+                <Nav.Link
+                  active={activeTab === 'flights'}
+                  onClick={() => setActiveTab('flights')}
+                >
+                  ✈️ Flights
+                </Nav.Link>
+              </Nav.Item>
+            )}
+            
+            {permissions.canViewAirportManagement() && (
+              <Nav.Item>
+                <Nav.Link
+                  active={activeTab === 'airports'}
+                  onClick={() => setActiveTab('airports')}
+                >
+                  🏢 Airports
+                </Nav.Link>
+              </Nav.Item>
+            )}
+            
+            {permissions.canViewPlaneManagement() && (
+              <Nav.Item>
+                <Nav.Link
+                  active={activeTab === 'planes'}
+                  onClick={() => setActiveTab('planes')}
+                >
+                  🛩️ Aircraft Fleet
+                </Nav.Link>
+              </Nav.Item>
+            )}
+            
+            {permissions.canViewTicketClassManagement() && (
+              <Nav.Item>
+                <Nav.Link
+                  active={activeTab === 'ticket-classes'}
+                  onClick={() => setActiveTab('ticket-classes')}
+                >
+                  🎟️ Ticket Classes
+                </Nav.Link>
+              </Nav.Item>
+            )}
+            
+            {permissions.canViewEmployeeManagement() && (
+              <Nav.Item>
+                <Nav.Link
+                  active={activeTab === 'employees'}
+                  onClick={() => setActiveTab('employees')}
+                >
+                  👥 Employees
+                </Nav.Link>
+              </Nav.Item>
+            )}
+            
+            {permissions.canViewReports() && (
+              <Nav.Item>
+                <Nav.Link
+                  active={activeTab === 'reports'}
+                  onClick={() => setActiveTab('reports')}
+                >
+                  📊 Reports
+                </Nav.Link>
+              </Nav.Item>
+            )}
+            
+            {permissions.canViewParameterSettings() && (
+              <Nav.Item>
+                <Nav.Link
+                  active={activeTab === 'parameters'}
+                  onClick={() => setActiveTab('parameters')}
+                >
+                  ⚙️ Settings
+                </Nav.Link>
+              </Nav.Item>
+            )}
           </Nav>
 
           <div>
@@ -185,8 +237,20 @@ export const AdminPanel: React.FC = () => {
   );
 };
 
-// Admin Overview Component
-const AdminOverview: React.FC<{ onNavigate: (action: AdminTab | 'add-flight' | 'add-airport' | 'add-plane' | 'add-ticket-class' | 'add-ticket') => void }> = ({ onNavigate }) => {
+// Access Denied Alert Component
+const AccessDeniedAlert: React.FC<{ section: string }> = ({ section }) => (
+  <Alert variant="warning" className="text-center">
+    <Alert.Heading>Insufficient Permissions</Alert.Heading>
+    <p>You do not have permission to access <strong>{section}</strong>.</p>
+    <p className="text-muted mb-0">Contact your system administrator if you believe this is an error.</p>
+  </Alert>
+);
+
+// Admin Overview Component with Permission-based Quick Actions
+const AdminOverview: React.FC<{ 
+  onNavigate: (action: AdminTab | 'add-flight' | 'add-airport' | 'add-plane' | 'add-ticket-class' | 'add-ticket') => void;
+  permissions: ReturnType<typeof usePermissions>;
+}> = ({ onNavigate, permissions }) => {
   return (
     <Container fluid>
       {/* Statistics Cards */}
@@ -230,7 +294,7 @@ const AdminOverview: React.FC<{ onNavigate: (action: AdminTab | 'add-flight' | '
       </Row>
 
       <Row>
-        {/* Quick Actions */}
+        {/* Quick Actions - Permission-based */}
         <Col lg={6} className="mb-4">
           <Card className="h-100">
             <Card.Header>
@@ -238,83 +302,89 @@ const AdminOverview: React.FC<{ onNavigate: (action: AdminTab | 'add-flight' | '
             </Card.Header>
             <Card.Body>
               <Row>
-                <Col md={6} className="mb-3">
-                  <Button
-                    variant="outline-primary"
-                    className="w-100 text-start"
-                    size="lg"
-                    onClick={() => onNavigate('add-flight')}
-                  >
-                    <span className="me-2">➕</span>
-                    Add New Flight
-                  </Button>
-                </Col>
-                <Col md={6} className="mb-3">
-                  <Button
-                    variant="outline-info"
-                    className="w-100 text-start"
-                    size="lg"
-                    onClick={() => onNavigate('add-airport')}
-                  >
-                    <span className="me-2">🏢</span>
-                    Add New Airport
-                  </Button>
-                </Col>
-                <Col md={6} className="mb-3">
-                  <Button
-                    variant="outline-warning"
-                    className="w-100 text-start"
-                    size="lg"
-                    onClick={() => onNavigate('add-plane')}
-                  >
-                    <span className="me-2">🛩️</span>
-                    Add New Aircraft
-                  </Button>
-                </Col>
-                <Col md={6} className="mb-3">
-                  <Button
-                    variant="outline-dark"
-                    className="w-100 text-start"
-                    size="lg"
-                    onClick={() => onNavigate('add-ticket-class')}
-                  >
-                    <span className="me-2">🎟️</span>
-                    Add Ticket Class
-                  </Button>
-                </Col>
-                <Col md={6} className="mb-3">
-                  <Button
-                    variant="outline-purple"
-                    className="w-100 text-start"
-                    size="lg"
-                    onClick={() => onNavigate('add-ticket')}
-                  >
-                    <span className="me-2">🎫</span>
-                    Add New Ticket
-                  </Button>
-                </Col>
-                <Col md={6} className="mb-3">
-                  <Button
-                    variant="outline-success"
-                    className="w-100 text-start"
-                    size="lg"
-                    onClick={() => alert('Reports feature coming soon!')}
-                  >
-                    <span className="me-2">📊</span>
-                    View Reports
-                  </Button>
-                </Col>
-                <Col md={6} className="mb-3">
-                  <Button
-                    variant="outline-secondary"
-                    className="w-100 text-start"
-                    size="lg"
-                    onClick={() => onNavigate('parameters')}
-                  >
-                    <span className="me-2">⚙️</span>
-                    System Settings
-                  </Button>
-                </Col>
+                {permissions.canViewFlightManagement() && (
+                  <Col md={6} className="mb-3">
+                    <Button
+                      variant="outline-primary"
+                      className="w-100 text-start"
+                      size="lg"
+                      onClick={() => onNavigate('add-flight')}
+                    >
+                      <span className="me-2">➕</span>
+                      Add New Flight
+                    </Button>
+                  </Col>
+                )}
+                
+                {permissions.canViewAirportManagement() && (
+                  <Col md={6} className="mb-3">
+                    <Button
+                      variant="outline-info"
+                      className="w-100 text-start"
+                      size="lg"
+                      onClick={() => onNavigate('add-airport')}
+                    >
+                      <span className="me-2">🏢</span>
+                      Add New Airport
+                    </Button>
+                  </Col>
+                )}
+                
+                {permissions.canViewPlaneManagement() && (
+                  <Col md={6} className="mb-3">
+                    <Button
+                      variant="outline-warning"
+                      className="w-100 text-start"
+                      size="lg"
+                      onClick={() => onNavigate('add-plane')}
+                    >
+                      <span className="me-2">🛩️</span>
+                      Add New Aircraft
+                    </Button>
+                  </Col>
+                )}
+                
+                {permissions.canViewTicketClassManagement() && (
+                  <Col md={6} className="mb-3">
+                    <Button
+                      variant="outline-dark"
+                      className="w-100 text-start"
+                      size="lg"
+                      onClick={() => onNavigate('add-ticket-class')}
+                    >
+                      <span className="me-2">🎟️</span>
+                      Add Ticket Class
+                    </Button>
+                  </Col>
+                )}
+                
+                {permissions.canViewReports() && (
+                  <Col md={6} className="mb-3">
+                    <Button
+                      variant="outline-success"
+                      className="w-100 text-start"
+                      size="lg"
+                      onClick={() => alert('Reports feature coming soon!')}
+                    >
+                      <span className="me-2">📊</span>
+                      View Reports
+                    </Button>
+                  </Col>
+                )}
+                
+                {permissions.canViewParameterSettings() && (
+                  <Col md={6} className="mb-3">
+                    <Button
+                      variant="outline-secondary"
+                      className="w-100 text-start"
+                      size="lg"
+                      onClick={() => onNavigate('parameters')}
+                    >
+                      <span className="me-2">⚙️</span>
+                      System Settings
+                    </Button>
+                  </Col>
+                )}
               </Row>
             </Card.Body>
           </Card>

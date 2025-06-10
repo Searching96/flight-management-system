@@ -94,9 +94,9 @@ const ChatManagement: React.FC = () => {
 
   const getChatboxStatusBadge = (chatbox: Chatbox) => {
     if (chatbox.unreadCount && chatbox.unreadCount > 0) {
-      return <Badge bg="danger">{chatbox.unreadCount} new</Badge>;
+      return <Badge bg="danger">{chatbox.unreadCount} mới</Badge>;
     }
-    return <Badge bg="success">Active</Badge>;
+    return <Badge bg="success">Hoạt động</Badge>;
   };
 
   const getAvatarLetter = (employeeName?: string, isFromCustomer?: boolean) => {
@@ -138,7 +138,7 @@ const ChatManagement: React.FC = () => {
             <Spinner animation="border" role="status">
               <span className="visually-hidden">Loading...</span>
             </Spinner>
-            <p className="mt-3">Loading chat management...</p>
+            <p className="mt-3">Đang tải quản lý chat...</p>
           </Col>
         </Row>
       </Container>
@@ -149,8 +149,8 @@ const ChatManagement: React.FC = () => {
     <Container fluid className="py-4">
       <Card className="mb-4">
         <Card.Header>
-          <Card.Title as="h2" className="mb-0">💬 Chat Management</Card.Title>
-          <p className="mb-0 text-muted">Manage customer support conversations</p>
+          <Card.Title as="h2" className="mb-0">💬 Quản lý Chat</Card.Title>
+          <p className="mb-0 text-muted">Quản lý các cuộc hội thoại hỗ trợ khách hàng</p>
         </Card.Header>
       </Card>
 
@@ -166,8 +166,8 @@ const ChatManagement: React.FC = () => {
           <Card className="h-100">
             <Card.Header>
               <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0">Customer Chats</h5>
-                <Badge bg="info">{chatboxes.length} total</Badge>
+                <h5 className="mb-0">Chat khách hàng</h5>
+                <Badge bg="info">{chatboxes.length} tổng cộng</Badge>
               </div>
             </Card.Header>
             <Card.Body className="p-0" style={{ overflowY: 'auto' }}>
@@ -204,7 +204,7 @@ const ChatManagement: React.FC = () => {
                 ))}
                 {chatboxes.length === 0 && (
                   <ListGroup.Item>
-                    <p className="text-muted text-center mb-0">No customer chats available</p>
+                    <p className="text-muted text-center mb-0">Không có chat khách hàng nào</p>
                   </ListGroup.Item>
                 )}
               </ListGroup>
@@ -219,7 +219,7 @@ const ChatManagement: React.FC = () => {
               <Card.Header>
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
-                    <h5 className="mb-0">Chat with {selectedChatbox.customerName || 'Customer'}</h5>
+                    <h5 className="mb-0">Chat với {selectedChatbox.customerName || 'Khách hàng'}</h5>
                   </div>
                   {getChatboxStatusBadge(selectedChatbox)}
                 </div>
@@ -242,7 +242,7 @@ const ChatManagement: React.FC = () => {
                         style={{ maxWidth: '70%' }}
                       >
                         <div className="fw-bold small mb-1">
-                          {message.employeeName || (message.isFromCustomer ? 'Customer' : 'Support')}
+                            {message.employeeName || (message.isFromCustomer ? 'Khách hàng' : 'Hỗ trợ')}
                         </div>
                         <div>{message.content}</div>
                         <div className={`small mt-1 ${message.isFromCustomer ? 'text-muted' : 'text-light'}`}>
@@ -274,7 +274,7 @@ const ChatManagement: React.FC = () => {
                     <div className="d-flex gap-2">
                       <Form.Control
                         type="text"
-                        placeholder="Type your response..."
+                        placeholder="Nhập phản hồi của bạn..."
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         disabled={sendingMessage}
@@ -287,10 +287,10 @@ const ChatManagement: React.FC = () => {
                         {sendingMessage ? (
                           <>
                             <Spinner animation="border" size="sm" className="me-1" />
-                            Sending...
+                            Đang gửi...
                           </>
                         ) : (
-                          'Send'
+                          'Gửi'
                         )}
                       </Button>
                     </div>
@@ -302,8 +302,8 @@ const ChatManagement: React.FC = () => {
             <Card className="h-100 d-flex align-items-center justify-content-center">
               <Card.Body className="text-center">
                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💬</div>
-                <h5>Select a chat to start responding</h5>
-                <p className="text-muted">Choose a customer conversation from the list to begin providing support.</p>
+                <h5>Chọn một chat để bắt đầu trả lời</h5>
+                <p className="text-muted">Chọn cuộc hội thoại khách hàng từ danh sách để bắt đầu cung cấp hỗ trợ.</p>
               </Card.Body>
             </Card>
           )}

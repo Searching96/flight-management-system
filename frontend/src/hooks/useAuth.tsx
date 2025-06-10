@@ -142,25 +142,45 @@ export const useAuth = (): AuthContextType => {
 // In useAuth.tsx
 export const usePermissions = () => {
   const { user } = useAuth();
+
+  const hasRole = (role: string) => {
+    if (!user) return false;
+    return user.role === role;
+  };
+
+  const hasAnyRole = (roles: string[]) => {
+    return roles.some(role => hasRole(role));
+  };
+
   return {
-    // Customer permissions (accountType = 1)
-    canBookTickets: user?.accountTypeName === "Customer",
-    canViewOwnTickets: user?.accountTypeName === "Customer",
-    canUseChat: user?.accountTypeName === "Customer",
+    // Customer permissions
+    canSearchFlights: () => !user || hasRole('CUSTOMER') || user?.accountTypeName === "Employee", // All employees can search
+    canManageBookings: () => !user || hasRole('CUSTOMER') || hasAnyRole(['EMPLOYEE_SUPPORT', 'EMPLOYEE_TICKETING', 'EMPLOYEE_ADMIN']),
+    canViewDashboard: () => hasRole('CUSTOMER'),
 
-    // Employee permissions (accountType = 2)
-    canViewAdmin: user?.accountTypeName === "Employee",
-    canManageFlights: user?.accountTypeName === "Employee",
-    canManageAirports: user?.accountTypeName === "Employee",
-    canManageEmployees: user?.accountTypeName === "Employee",
-    canManageCustomerSupport: user?.accountTypeName === "Employee",
-    canAccessChatManagement: user?.accountTypeName === "Employee",
-    canManageCustomers: user?.accountTypeName === 'Employee',
-    canViewReports: user?.accountTypeName === 'Employee',
+    // Employee permissions - Admin Panel sections
+    canViewAdmin: () => hasRole('EMPLOYEE_ADMIN'),
+    canViewFlightManagement: () => hasAnyRole(['EMPLOYEE_ADMIN', 'EMPLOYEE_TICKETING', 'EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_FLIGHT_SCHEDULING']),
+    canViewAirportManagement: () => hasAnyRole(['EMPLOYEE_ADMIN', 'EMPLOYEE_FLIGHT_OPERATIONS']),
+    canViewPlaneManagement: () => hasAnyRole(['EMPLOYEE_ADMIN', 'EMPLOYEE_FLIGHT_OPERATIONS']),
+    canViewTicketClassManagement: () => hasAnyRole(['EMPLOYEE_ADMIN', 'EMPLOYEE_TICKETING', 'EMPLOYEE_FLIGHT_OPERATIONS']),
+    canViewEmployeeManagement: () => hasRole('EMPLOYEE_ADMIN'),
+    canViewParameterSettings: () => hasAnyRole(['EMPLOYEE_ADMIN', 'EMPLOYEE_FLIGHT_OPERATIONS']),
+    canViewReports: () => hasAnyRole(['EMPLOYEE_ADMIN', 'EMPLOYEE_ACCOUNTING']),
 
-    // General permissions
-    isEmployee: user?.accountTypeName === "Employee",
-    isCustomer: user?.accountTypeName === "Customer",
+    // Support permissions
+    canViewCustomerSupport: () => hasAnyRole(['EMPLOYEE_SUPPORT']),
+    canViewTicketing: () => hasAnyRole(['EMPLOYEE_TICKETING', 'EMPLOYEE_ADMIN']),
+    canViewAccounting: () => hasAnyRole(['EMPLOYEE_ACCOUNTING', 'EMPLOYEE_ADMIN']),
+
+    // General checks
+    isCustomer: () => hasRole('CUSTOMER'),
+    isEmployee: () => user?.accountTypeName === "Employee",
+    isAdmin: () => hasRole('EMPLOYEE_ADMIN'),
+
+    // Specific role checks
+    hasRole,
+    hasAnyRole
   };
 };
 

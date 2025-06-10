@@ -46,8 +46,8 @@ const RegisterForm: React.FC = () => {
         <Col xs={12} md={8} lg={6}>
           <Card>
             <Card.Header className="text-center bg-primary text-white">
-              <h2 className="mb-1">Create Account</h2>
-              <p className="mb-0">Join us to start booking flights</p>
+              <h2 className="mb-1">Tạo tài khoản</h2>
+              <p className="mb-0">Tham gia với chúng tôi để bắt đầu đặt vé máy bay</p>
             </Card.Header>
             <Card.Body className="p-4">
               <Form onSubmit={handleSubmit(onSubmit)}>
@@ -87,11 +87,11 @@ const RegisterForm: React.FC = () => {
                         id="email"
                         type="email"
                         {...register('email', {
-                          required: 'Email is required',
-                          pattern: { value: /^\S+@\S+\.\S+$/, message: 'Please enter a valid email address' }
+                          required: 'Email là bắt buộc',
+                          pattern: { value: /^\S+@\S+\.\S+$/, message: 'Vui lòng nhập địa chỉ email hợp lệ' }
                         })}
                         isInvalid={!!errors.email}
-                        placeholder="Enter your email"
+                        placeholder="Nhập email của bạn"
                       />
                       <Form.Control.Feedback type="invalid">
                         {errors.email?.message}
@@ -103,16 +103,16 @@ const RegisterForm: React.FC = () => {
                 <Row>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label htmlFor="phoneNumber">Phone Number</Form.Label>
+                      <Form.Label htmlFor="phoneNumber">Số điện thoại</Form.Label>
                       <Form.Control
                         id="phoneNumber"
                         type="tel"
                         {...register('phoneNumber', {
-                          required: 'Phone number is required',
-                          pattern: { value: /^\+?[\d\s-()]+$/, message: 'Please enter a valid phone number' }
+                          required: 'Số điện thoại là bắt buộc',
+                          pattern: { value: /^\+?[\d\s-()]+$/, message: 'Vui lòng nhập số điện thoại hợp lệ' }
                         })}
                         isInvalid={!!errors.phoneNumber}
-                        placeholder="Enter your phone number"
+                        placeholder="Nhập số điện thoại của bạn"
                       />
                       <Form.Control.Feedback type="invalid">
                         {errors.phoneNumber?.message}
@@ -122,16 +122,16 @@ const RegisterForm: React.FC = () => {
 
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label htmlFor="citizenId">Citizen ID</Form.Label>
+                      <Form.Label htmlFor="citizenId">CCCD</Form.Label>
                       <Form.Control
                         id="citizenId"
                         type="text"
                         {...register('citizenId', {
-                          required: 'Citizen ID is required',
-                          minLength: { value: 9, message: 'Citizen ID must be at least 9 characters' }
+                          required: 'CCCD là bắt buộc',
+                          minLength: { value: 9, message: 'CCCD phải có ít nhất 9 ký tự' }
                         })}
                         isInvalid={!!errors.citizenId}
-                        placeholder="Enter your citizen ID"
+                        placeholder="Nhập số CCCD của bạn"
                       />
                       <Form.Control.Feedback type="invalid">
                         {errors.citizenId?.message}
@@ -143,20 +143,20 @@ const RegisterForm: React.FC = () => {
                 <Row>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label htmlFor="password">Password</Form.Label>
+                      <Form.Label htmlFor="password">Mật khẩu</Form.Label>
                       <Form.Control
                         id="password"
                         type="password"
                         {...register('password', {
-                          required: 'Password is required',
-                          minLength: { value: 6, message: 'Password must be at least 6 characters' },
+                          required: 'Mật khẩu là bắt buộc',
+                          minLength: { value: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
                           pattern: {
                             value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                            message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+                            message: 'Mật khẩu phải chứa ít nhất một chữ hoa, một chữ thường và một số'
                           }
                         })}
                         isInvalid={!!errors.password}
-                        placeholder="Create a password"
+                        placeholder="Tạo mật khẩu"
                       />
                       <Form.Control.Feedback type="invalid">
                         {errors.password?.message}
@@ -166,17 +166,17 @@ const RegisterForm: React.FC = () => {
 
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label htmlFor="confirmPassword">Confirm Password</Form.Label>
+                      <Form.Label htmlFor="confirmPassword">Xác nhận mật khẩu</Form.Label>
                       <Form.Control
                         id="confirmPassword"
                         type="password"
                         {...register('confirmPassword', {
-                          required: 'Please confirm your password',
+                          required: 'Vui lòng xác nhận mật khẩu',
                           validate: value =>
-                            value === watch('password') || 'Passwords do not match'
+                            value === watch('password') || 'Mật khẩu không khớp'
                         })}
                         isInvalid={!!errors.confirmPassword}
-                        placeholder="Confirm your password"
+                        placeholder="Xác nhận mật khẩu của bạn"
                       />
                       <Form.Control.Feedback type="invalid">
                         {errors.confirmPassword?.message}
@@ -203,17 +203,17 @@ const RegisterForm: React.FC = () => {
                         aria-hidden="true"
                         className="me-2"
                       />
-                      Creating Account...
+                      Đang tạo tài khoản...
                     </>
                   ) : (
-                    'Create Account'
+                    'Tạo tài khoản'
                   )}
                 </Button>
               </Form>
             </Card.Body>
             <Card.Footer className="text-center">
               <p className="mb-0">
-                Already have an account? <Link to="/login" className="text-decoration-none">Sign in here</Link>
+                Đã có tài khoản? <Link to="/login" className="text-decoration-none">Đăng nhập tại đây</Link>
               </p>
             </Card.Footer>
           </Card>

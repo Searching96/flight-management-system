@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Alert, Button, Spinner } from 'react-bootstrap';
-import { paymentService, ticketService } from '../../services';
+import { paymentService } from '../../services';
 import { PaymentReturnResponse } from '../../models';
 
 const PaymentResult: React.FC = () => {
@@ -11,14 +11,6 @@ const PaymentResult: React.FC = () => {
   const [paymentStatus, setPaymentStatus] = useState<'success' | 'pending' | 'failed'>('pending');
   const [processingError, setProcessingError] = useState<string | null>(null);
   const [transactionDetails, setTransactionDetails] = useState<PaymentReturnResponse>();
-
-  function hexToAscii(hex: string): string {
-    let ascii = '';
-    for (let i = 0; i < hex.length; i += 2) {
-      ascii += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-    }
-    return ascii;
-  }
 
   const handlePayment = async () => {
     try {
@@ -42,6 +34,11 @@ const PaymentResult: React.FC = () => {
       try {
         setLoading(true);
 
+        if (location.search === '') {
+          navigate('/');
+          return;
+        }
+
         // Extract query parameters
         const queryParams = new URLSearchParams(location.search);
         const responseCode = queryParams.get('vnp_ResponseCode');
@@ -56,7 +53,6 @@ const PaymentResult: React.FC = () => {
         const responseMessage = paymentResult.signatureValid ? getResponseMessage(responseCode || '') : '';
 
         // Check payment result
-        console.log(paymentResult.signatureValid, responseCode);
         if (paymentResult.signatureValid && (responseCode === "00" || responseCode === "01")) {
           setPaymentStatus('success');
 

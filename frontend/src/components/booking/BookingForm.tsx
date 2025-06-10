@@ -107,7 +107,7 @@ const BookingForm: React.FC = () => {
   // Update default values for first passenger when accountInfo is loaded
   useEffect(() => {
     if (user?.accountTypeName === "Customer" && accountInfo?.accountName) {
-      console.log('Setting default passenger values from account info:', accountInfo);
+      console.log('Thiết lập thông tin hành khách mặc định từ tài khoản:', accountInfo);
       const nameParts = accountInfo.accountName.trim().split(' ');
       const firstName = nameParts.slice(0, -1).join(' ') || '';
       const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0] || '';

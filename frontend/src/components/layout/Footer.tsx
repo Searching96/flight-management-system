@@ -60,16 +60,16 @@ const Footer: React.FC = () => {
             <h6 className="mb-3">Contact Info</h6>
             <ul className="list-unstyled">
               <li className="mb-2 text-muted">
-                <i className="bi bi-telephone me-2"></i>+1 (555) 123-4567
+                <i className="bi bi-telephone me-2"></i>+84 (028) 123-4567
               </li>
               <li className="mb-2 text-muted">
-                <i className="bi bi-envelope me-2"></i>support@flightms.com
+                <i className="bi bi-envelope me-2"></i>hotro@flightms.com
               </li>
               <li className="mb-2 text-muted">
-                <i className="bi bi-geo-alt me-2"></i>123 Aviation Street, Sky City
+                <i className="bi bi-geo-alt me-2"></i>123 Đường Hàng Không, TP.HCM
               </li>
               <li className="mb-2 text-muted">
-                <i className="bi bi-clock me-2"></i>24/7 Customer Support
+                <i className="bi bi-clock me-2"></i>Hỗ trợ khách hàng 24/7
               </li>
             </ul>
           </Col>
@@ -78,7 +78,7 @@ const Footer: React.FC = () => {
         <hr className="my-4" />
           <Row>
           <Col className="text-center">
-            <p className="text-muted mb-0">&copy; {new Date().getFullYear()} Flight Management System. All rights reserved.</p>
+            <p className="text-muted mb-0">&copy; {new Date().getFullYear()} Hệ thống quản lý chuyến bay. Bảo lưu mọi quyền.</p>
           </Col>
         </Row>
       </Container>

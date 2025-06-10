@@ -1,16 +1,12 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.*;
-import com.flightmanagement.mapper.AuthMapper;
-import com.flightmanagement.repository.AccountRepository;
-import com.flightmanagement.security.JwtService;
 import com.flightmanagement.service.AuthService;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;

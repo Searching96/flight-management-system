@@ -308,7 +308,7 @@ const ChatWidget: React.FC = () => {
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type your message..."
+                    placeholder="Nhập tin nhắn của bạn..."
                     disabled={loading || !chatbox}
                     size="sm"
                     onKeyDown={(e) => {

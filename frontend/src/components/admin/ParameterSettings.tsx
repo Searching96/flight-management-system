@@ -21,8 +21,8 @@ export const ParameterSettings: React.FC = () => {
                 <Row className="justify-content-center">
                     <Col md={8}>
                         <Alert variant="danger" className="text-center">
-                            <Alert.Heading>Access Denied</Alert.Heading>
-                            <p>You do not have permission to access system parameter settings.</p>
+                            <Alert.Heading>Từ chối truy cập</Alert.Heading>
+                            <p>Bạn không có quyền truy cập cài đặt tham số hệ thống.</p>
                         </Alert>
                     </Col>
                 </Row>
@@ -94,7 +94,7 @@ export const ParameterSettings: React.FC = () => {
                         <Spinner animation="border" role="status">
                             <span className="visually-hidden">Loading...</span>
                         </Spinner>
-                        <p className="mt-3">Loading system parameters...</p>
+                        <p className="mt-3">Đang tải tham số hệ thống...</p>
                     </Col>
                 </Row>
             </Container>
@@ -105,8 +105,8 @@ export const ParameterSettings: React.FC = () => {
         <Container className="py-4" style={{ maxWidth: '800px' }}>
             <Card className="mb-4">
                 <Card.Header className="text-center">
-                    <Card.Title as="h2" className="mb-2">System Parameters</Card.Title>
-                    <p className="text-muted mb-0">Configure flight management system constraints and rules</p>
+                    <Card.Title as="h2" className="mb-2">Tham số hệ thống</Card.Title>
+                    <p className="text-muted mb-0">Cấu hình ràng buộc và quy tắc của hệ thống quản lý chuyến bay</p>
                 </Card.Header>
             </Card>
 
@@ -129,21 +129,21 @@ export const ParameterSettings: React.FC = () => {
                         <div className="mb-5 pb-4 border-bottom">
                             <h5 className="text-primary mb-4">
                                 <span className="me-2">⚙️</span>
-                                Flight Constraints
+                                Ràng buộc chuyến bay
                             </h5>
 
                             <Row className="g-4">
                                 <Col md={6}>
                                     <Form.Group>
-                                        <Form.Label>Maximum Medium Airports</Form.Label>
+                                        <Form.Label>Số sân bay trung gian tối đa</Form.Label>
                                         <Form.Control
                                             type="number"
                                             min="0"
                                             max="10"
                                             {...register('maxMediumAirport', {
-                                                required: 'Maximum medium airports is required',
-                                                min: { value: 0, message: 'Value must be at least 0' },
-                                                max: { value: 10, message: 'Value must be at most 10' },
+                                                required: 'Số sân bay trung gian tối đa là bắt buộc',
+                                                min: { value: 0, message: 'Giá trị phải ít nhất là 0' },
+                                                max: { value: 10, message: 'Giá trị phải nhiều nhất là 10' },
                                                 valueAsNumber: true
                                             })}
                                             isInvalid={!!errors.maxMediumAirport}
@@ -152,22 +152,22 @@ export const ParameterSettings: React.FC = () => {
                                             {errors.maxMediumAirport?.message}
                                         </Form.Control.Feedback>
                                         <Form.Text className="text-muted">
-                                            Maximum number of intermediate stops allowed per flight
+                                            Số điểm dừng trung gian tối đa được phép mỗi chuyến bay
                                         </Form.Text>
                                     </Form.Group>
                                 </Col>
 
                                 <Col md={6}>
                                     <Form.Group>
-                                        <Form.Label>Minimum Flight Duration (minutes)</Form.Label>
+                                        <Form.Label>Thời gian bay tối thiểu (phút)</Form.Label>
                                         <Form.Control
                                             type="number"
                                             min="30"
                                             max="1440"
                                             {...register('minFlightDuration', {
-                                                required: 'Minimum flight duration is required',
-                                                min: { value: 30, message: 'Minimum duration is 30 minutes' },
-                                                max: { value: 1440, message: 'Maximum duration is 24 hours' },
+                                                required: 'Thời gian bay tối thiểu là bắt buộc',
+                                                min: { value: 30, message: 'Thời gian tối thiểu là 30 phút' },
+                                                max: { value: 1440, message: 'Thời gian tối đa là 24 giờ' },
                                                 valueAsNumber: true
                                             })}
                                             isInvalid={!!errors.minFlightDuration}
@@ -176,7 +176,7 @@ export const ParameterSettings: React.FC = () => {
                                             {errors.minFlightDuration?.message}
                                         </Form.Control.Feedback>
                                         <Form.Text className="text-muted">
-                                            Minimum allowed flight duration
+                                            Thời gian bay tối thiểu được phép
                                         </Form.Text>
                                     </Form.Group>
                                 </Col>
@@ -187,21 +187,21 @@ export const ParameterSettings: React.FC = () => {
                         <div className="mb-5 pb-4 border-bottom">
                             <h5 className="text-primary mb-4">
                                 <span className="me-2">🔄</span>
-                                Layover Settings
+                                Cài đặt thời gian dừng
                             </h5>
 
                             <Row className="g-4">
                                 <Col md={6}>
                                     <Form.Group>
-                                        <Form.Label>Minimum Layover Duration (minutes)</Form.Label>
+                                        <Form.Label>Thời gian dừng tối thiểu (phút)</Form.Label>
                                         <Form.Control
                                             type="number"
                                             min="30"
                                             max="720"
                                             {...register('minLayoverDuration', {
-                                                required: 'Minimum layover duration is required',
-                                                min: { value: 30, message: 'Minimum layover is 30 minutes' },
-                                                max: { value: 720, message: 'Maximum layover is 12 hours' },
+                                                required: 'Thời gian dừng tối thiểu là bắt buộc',
+                                                min: { value: 30, message: 'Thời gian dừng tối thiểu là 30 phút' },
+                                                max: { value: 720, message: 'Thời gian dừng tối đa là 12 giờ' },
                                                 valueAsNumber: true
                                             })}
                                             isInvalid={!!errors.minLayoverDuration}
@@ -210,22 +210,22 @@ export const ParameterSettings: React.FC = () => {
                                             {errors.minLayoverDuration?.message}
                                         </Form.Control.Feedback>
                                         <Form.Text className="text-muted">
-                                            Minimum time required between connecting flights
+                                            Thời gian tối thiểu cần thiết giữa các chuyến bay kết nối
                                         </Form.Text>
                                     </Form.Group>
                                 </Col>
 
                                 <Col md={6}>
                                     <Form.Group>
-                                        <Form.Label>Maximum Layover Duration (minutes)</Form.Label>
+                                        <Form.Label>Thời gian dừng tối đa (phút)</Form.Label>
                                         <Form.Control
                                             type="number"
                                             min="60"
                                             max="1440"
                                             {...register('maxLayoverDuration', {
-                                                required: 'Maximum layover duration is required',
-                                                min: { value: 60, message: 'Minimum duration is 60 minutes' },
-                                                max: { value: 1440, message: 'Maximum duration is 24 hours' },
+                                                required: 'Thời gian dừng tối đa là bắt buộc',
+                                                min: { value: 60, message: 'Thời gian tối thiểu là 60 phút' },
+                                                max: { value: 1440, message: 'Thời gian tối đa là 24 giờ' },
                                                 valueAsNumber: true
                                             })}
                                             isInvalid={!!errors.maxLayoverDuration}
@@ -234,7 +234,7 @@ export const ParameterSettings: React.FC = () => {
                                             {errors.maxLayoverDuration?.message}
                                         </Form.Control.Feedback>
                                         <Form.Text className="text-muted">
-                                            Maximum allowed layover time
+                                            Thời gian dừng tối đa được phép
                                         </Form.Text>
                                     </Form.Group>
                                 </Col>
@@ -245,21 +245,21 @@ export const ParameterSettings: React.FC = () => {
                         <div className="mb-4">
                             <h5 className="text-primary mb-4">
                                 <span className="me-2">📅</span>
-                                Booking Rules
+                                Quy tắc đặt vé
                             </h5>
 
                             <Row className="g-4">
                                 <Col md={6}>
                                     <Form.Group>
-                                        <Form.Label>Minimum Booking Advance (minutes)</Form.Label>
+                                        <Form.Label>Thời gian đặt vé tối thiểu (phút)</Form.Label>
                                         <Form.Control
                                             type="number"
                                             min="60"
                                             max="10080"
                                             {...register('minBookingInAdvanceDuration', {
-                                                required: 'Minimum booking advance is required',
-                                                min: { value: 60, message: 'Minimum advance is 1 hour' },
-                                                max: { value: 10080, message: 'Maximum advance is 1 week' },
+                                                required: 'Thời gian đặt vé tối thiểu là bắt buộc',
+                                                min: { value: 60, message: 'Thời gian tối thiểu là 1 giờ' },
+                                                max: { value: 10080, message: 'Thời gian tối đa là 1 tuần' },
                                                 valueAsNumber: true
                                             })}
                                             isInvalid={!!errors.minBookingInAdvanceDuration}
@@ -268,22 +268,22 @@ export const ParameterSettings: React.FC = () => {
                                             {errors.minBookingInAdvanceDuration?.message}
                                         </Form.Control.Feedback>
                                         <Form.Text className="text-muted">
-                                            Minimum time before departure to allow booking
+                                            Thời gian tối thiểu trước khi khởi hành để cho phép đặt vé
                                         </Form.Text>
                                     </Form.Group>
                                 </Col>
 
                                 <Col md={6}>
                                     <Form.Group>
-                                        <Form.Label>Maximum Booking Hold (minutes)</Form.Label>
+                                        <Form.Label>Thời gian giữ vé tối đa (phút)</Form.Label>
                                         <Form.Control
                                             type="number"
                                             min="15"
                                             max="1440"
                                             {...register('maxBookingHoldDuration', {
-                                                required: 'Maximum booking hold is required',
-                                                min: { value: 15, message: 'Minimum hold is 15 minutes' },
-                                                max: { value: 1440, message: 'Maximum hold is 24 hours' },
+                                                required: 'Thời gian giữ vé tối đa là bắt buộc',
+                                                min: { value: 15, message: 'Thời gian giữ tối thiểu là 15 phút' },
+                                                max: { value: 1440, message: 'Thời gian giữ tối đa là 24 giờ' },
                                                 valueAsNumber: true
                                             })}
                                             isInvalid={!!errors.maxBookingHoldDuration}
@@ -292,7 +292,7 @@ export const ParameterSettings: React.FC = () => {
                                             {errors.maxBookingHoldDuration?.message}
                                         </Form.Control.Feedback>
                                         <Form.Text className="text-muted">
-                                            Maximum time to hold a booking before payment
+                                            Thời gian tối đa để giữ đặt chỗ trước khi thanh toán
                                         </Form.Text>
                                     </Form.Group>
                                 </Col>
@@ -311,10 +311,10 @@ export const ParameterSettings: React.FC = () => {
                                             aria-hidden="true"
                                             className="me-2"
                                         />
-                                        Saving...
+                                        Đang lưu...
                                     </>
                                 ) : (
-                                    'Save Parameters'
+                                    'Lưu tham số'
                                 )}
                             </Button>
                         </div>

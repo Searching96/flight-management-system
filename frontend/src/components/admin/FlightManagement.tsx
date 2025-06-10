@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Modal, Table, InputGroup } from 'react-bootstrap';
+import {
+    Container,
+    Row,
+    Col,
+    Card,
+    Button,
+    Form,
+    Alert,
+    Spinner,
+    Badge,
+    Modal,
+    InputGroup
+} from 'react-bootstrap';
 import {
     airportService,
     planeService,
@@ -24,6 +36,7 @@ import { useFlights } from '../../hooks/useFlights';
 import { useFlightDetails } from '../../hooks/useFlightDetails';
 import FlightForm from './flights/FlightForm';
 import TypeAhead from '../common/TypeAhead';
+import FlightTable from './flights/FlightTable';
 
 const FlightManagement: React.FC<{
     showAddModal?: boolean;
@@ -154,15 +167,15 @@ const FlightManagement: React.FC<{
         } catch (err: any) {
             // Enhanced error handling
             let errorMsg = err.message || 'Không thể lưu chuyến bay';
-            
+
             // Check for specific API error about duplicate airports
             if (err.status === 400 && err.message?.includes('Departure and arrival airports cannot be the same')) {
                 errorMsg = 'Sân bay đi và sân bay đến không thể là cùng một sân bay.';
-                setFormErrors(prev => ({...prev, airports: errorMsg}));
+                setFormErrors(prev => ({ ...prev, airports: errorMsg }));
             } else if (err.message) {
                 errorMsg = err.message;
             }
-            
+
             setError(errorMsg);
         }
     };
@@ -186,7 +199,7 @@ const FlightManagement: React.FC<{
         setDetailErrors({});
         reset();
         setError('');
-        
+
         // Call the external close handler if provided
         if (onCloseAddModal) {
             onCloseAddModal();
@@ -612,72 +625,15 @@ const FlightManagement: React.FC<{
                 </Modal.Footer>
             </Modal>
 
-            {/* Flights table */}
+            {/* Flights table - REPLACED WITH NEW COMPONENT */}
             <Row>
                 <Col>
-                    <Card>
-                        <Card.Header>
-                            <Card.Title className="mb-0">Tất cả chuyến bay</Card.Title>
-                        </Card.Header>
-                        <Card.Body className="p-0">
-                            {flights.length === 0 ? (
-                                <div className="text-center py-5">
-                                    <p className="text-muted mb-0">Không tìm thấy chuyến bay nào. Thêm chuyến bay đầu tiên để bắt đầu.</p>
-                                </div>
-                            ) : (
-                                <Table responsive striped hover>
-                                    <thead>
-                                        <tr>
-                                            <th>Mã chuyến bay</th>
-                                            <th>Tuyến bay</th>
-                                            <th>Khởi hành</th>
-                                            <th>Đến</th>
-                                            <th>Máy bay</th>
-                                            <th>Thao tác</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {flights.map(flight => (
-                                            <tr key={flight.flightId}>
-                                                <td>
-                                                    <Badge bg="primary">{flight.flightCode}</Badge>
-                                                </td>
-                                                <td>{flight.departureCityName} → {flight.arrivalCityName}</td>
-                                                <td>{new Date(flight.departureTime).toLocaleString()}</td>
-                                                <td>{new Date(flight.arrivalTime).toLocaleString()}</td>
-                                                <td>{flight.planeCode}</td>
-                                                <td>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline-secondary"
-                                                        className="me-2"
-                                                        onClick={() => handleEdit(flight)}
-                                                    >
-                                                        Edit
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline-primary"
-                                                        className="me-2"
-                                                        onClick={() => handleManageTicketClasses(flight)}
-                                                    >
-                                                        Quản lý hạng vé
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline-danger"
-                                                        onClick={() => handleDelete(flight.flightId!)}
-                                                    >
-                                                        Xóa
-                                                    </Button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </Table>
-                            )}
-                        </Card.Body>
-                    </Card>
+                    <FlightTable
+                        flights={flights}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onManageTicketClasses={handleManageTicketClasses}
+                    />
                 </Col>
             </Row>
         </Container>
@@ -713,17 +669,17 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
         e.preventDefault();
 
         if (!selectedTicketClass || !formData.ticketQuantity || !formData.specifiedFare) {
-            setFormErrors('Please fill in all fields');
+            setFormErrors('Vui lòng điền đầy đủ tất cả các trường');
             return;
         }
 
         if (Number(formData.ticketQuantity) <= 0) {
-            setFormErrors('Number of seats must be greater than 0');
+            setFormErrors('Số lượng ghế phải lớn hơn 0');
             return;
         }
 
         if (Number(formData.specifiedFare) <= 0) {
-            setFormErrors('Price must be greater than 0');
+            setFormErrors('Giá vé phải lớn hơn 0');
             return;
         }
 
@@ -840,7 +796,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
     onSave,
     onCancel,
     onDelete,
-    onUndo,  // New prop
+    onUndo,
     isModified = false,
     modifiedTicketClasses
 }) => {
@@ -856,23 +812,21 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
     const occupancyRate = association.ticketQuantity ?
         ((soldSeats / association.ticketQuantity) * 100).toFixed(1) : '0';
 
+    // Calculate minimum allowed total quantity (remaining + sold)
+    const minTotalQuantity = (association.remainingTicketQuantity || 0) + soldSeats;
+
     // Validate the form when any input changes
     useEffect(() => {
         validateForm();
     }, [editData]);
 
-    // Validation logic for remaining ticket quantity
+    // Validation logic for ticket quantity
     const validateForm = () => {
-        // Reset validation error
         setValidationError(null);
 
-        // Validate remaining tickets - can't be less than sold tickets
-        if (editData.remainingTicketQuantity < 0) {
-            setValidationError('Remaining seats cannot be negative');
-        } else if (editData.remainingTicketQuantity > editData.ticketQuantity) {
-            setValidationError('Remaining seats cannot exceed total seats');
-        } else if (editData.ticketQuantity - editData.remainingTicketQuantity < soldSeats) {
-            setValidationError(`Cannot reduce remaining seats below sold seats (${soldSeats})`);
+        // Validate that total quantity is not less than minimum required (remaining + sold)
+        if (editData.ticketQuantity < minTotalQuantity) {
+            setValidationError(`Tổng số ghế không thể ít hơn ${minTotalQuantity} (${association.remainingTicketQuantity} còn lại + ${soldSeats} đã bán)`);
         }
     };
 
@@ -897,7 +851,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                         {className}
                     </Card.Title>
                     {isModified && (
-                        <Badge bg="warning" className="ms-2">Modified</Badge>
+                        <Badge bg="warning" className="ms-2">Đã thay đổi</Badge>
                     )}
                 </div>
                 <div className="d-flex gap-1">
@@ -909,24 +863,24 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                                 onClick={handleSave}
                                 disabled={!!validationError}
                             >
-                                Apply
+                                Áp dụng
                             </Button>
                             <Button size="sm" variant="secondary" onClick={onCancel}>
-                                Cancel
+                                Hủy
                             </Button>
                         </>
                     ) : (
                         <>
                             {isModified && (
-                                <Button size="sm" variant="warning" onClick={onUndo} title="Undo changes">
+                                <Button size="sm" variant="warning" onClick={onUndo} title="Hoàn tác thay đổi">
                                     <i className="bi bi-arrow-counterclockwise"></i>
                                 </Button>
                             )}
                             <Button size="sm" variant="outline-primary" onClick={onEdit}>
-                                Edit
+                                Sửa
                             </Button>
                             <Button size="sm" variant="outline-danger" onClick={onDelete}>
-                                Delete
+                                Xóa
                             </Button>
                         </>
                     )}
@@ -946,13 +900,15 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                                         ...prev,
                                         ticketQuantity: parseInt(e.target.value) || 0
                                     }))}
-                                    min={soldSeats}
+                                    min={minTotalQuantity}
+                                    isInvalid={!!validationError}
                                 />
-                                {soldSeats > 0 && (
-                                    <div className="text-muted small">
-                                        Tối thiểu: {soldSeats} (vé đã bán)
-                                    </div>
-                                )}
+                                <Form.Control.Feedback type="invalid">
+                                    {validationError}
+                                </Form.Control.Feedback>
+                                <div className="text-muted small">
+                                    Tối thiểu: {minTotalQuantity} ({association.remainingTicketQuantity} còn lại + {soldSeats} đã bán)
+                                </div>
                             </Form.Group>
                         </Col>
                         <Col sm={6}>
@@ -979,19 +935,12 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                                 <Form.Control
                                     type="number"
                                     value={editData.remainingTicketQuantity}
-                                    onChange={(e) => setEditData(prev => ({
-                                        ...prev,
-                                        remainingTicketQuantity: parseInt(e.target.value) || 0
-                                    }))}
-                                    min={editData.ticketQuantity - soldSeats}
-                                    max={editData.ticketQuantity}
-                                    isInvalid={!!validationError}
+                                    disabled
+                                    className="bg-light"
                                 />
-                                <Form.Control.Feedback type="invalid">
-                                    {validationError}
-                                </Form.Control.Feedback>
                                 <div className="text-muted small">
-                                    Vé đã bán: {soldSeats}
+                                    <i className="bi bi-lock me-1"></i>
+                                    Giá trị cố định - không thể thay đổi
                                 </div>
                             </Form.Group>
                         </Col>
@@ -1071,7 +1020,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                 )}
             </Card.Body>
 
-            {/* Add undo hint at bottom of card when modified - now in a Row */}
+            {/* Add undo hint at bottom of card when modified */}
             {isModified && !isEditing && (
                 <Card.Footer className="p-0 border-top">
                     <Row>

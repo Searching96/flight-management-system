@@ -24,7 +24,7 @@ const LoginForm: React.FC = () => {
     // Check if coming from password reset success
     const state = location.state as { resetSuccess?: boolean } | null;
     if (state?.resetSuccess) {
-      setSuccess('Your password has been successfully reset. You can now log in with your new password.');
+      setSuccess('Mật khẩu của bạn đã được đặt lại thành công. Bây giờ bạn có thể đăng nhập bằng mật khẩu mới.');
     }
   }, [location]);
 
@@ -35,7 +35,7 @@ const LoginForm: React.FC = () => {
       await login(data);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.');
     } finally {
       setLoading(false);
     }
@@ -48,8 +48,8 @@ const LoginForm: React.FC = () => {
           <Card className="shadow">
             <Card.Body className="p-4">
               <div className="text-center mb-4">
-                <h2 className="h4 mb-2">Welcome Back</h2>
-                <p className="text-muted">Sign in to your account to continue</p>
+                <h2 className="h4 mb-2">Chào mừng trở lại</h2>
+                <p className="text-muted">Đăng nhập vào tài khoản của bạn để tiếp tục</p>
               </div>
 
               <Form onSubmit={handleSubmit(onSubmit)}>
@@ -62,11 +62,11 @@ const LoginForm: React.FC = () => {
                     id="email"
                     type="email"
                     {...register('email', {
-                      required: 'Email is required',
-                      pattern: { value: /^\S+@\S+\.\S+$/, message: 'Please enter a valid email address' }
+                      required: 'Email là bắt buộc',
+                      pattern: { value: /^\S+@\S+\.\S+$/, message: 'Vui lòng nhập địa chỉ email hợp lệ' }
                     })}
                     isInvalid={!!errors.email}
-                    placeholder="Enter your email"
+                    placeholder="Nhập email của bạn"
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.email?.message}
@@ -74,22 +74,22 @@ const LoginForm: React.FC = () => {
                 </Form.Group>
 
                 <Form.Group className="mb-4">
-                  <Form.Label htmlFor="password">Password</Form.Label>
+                  <Form.Label htmlFor="password">Mật khẩu</Form.Label>
                   <Form.Control
                     id="password"
                     type="password"
                     {...register('password', {
-                      required: 'Password is required',
-                      minLength: { value: 6, message: 'Password must be at least 6 characters' }
+                      required: 'Mật khẩu là bắt buộc',
+                      minLength: { value: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' }
                     })}
                     isInvalid={!!errors.password}
-                    placeholder="Enter your password"
+                    placeholder="Nhập mật khẩu của bạn"
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.password?.message}
                   </Form.Control.Feedback>
                   <div className="text-end mt-1">
-                    <Link to="/forget-password" className="text-decoration-none small">Forgot password?</Link>
+                    <Link to="/forget-password" className="text-decoration-none small">Quên mật khẩu?</Link>
                   </div>
                 </Form.Group>
 
@@ -100,13 +100,13 @@ const LoginForm: React.FC = () => {
                   disabled={loading}
                 >
                   {loading && <Spinner as="span" animation="border" size="sm" className="me-2" />}
-                  {loading ? 'Signing in...' : 'Sign In'}
+                  {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
                 </Button>
               </Form>
 
               <div className="text-center mt-4">
                 <p className="text-muted">
-                  Don't have an account? <Link to="/register" className="text-decoration-none">Create one here</Link>
+                  Chưa có tài khoản? <Link to="/register" className="text-decoration-none">Tạo tài khoản tại đây</Link>
                 </p>
               </div>
             </Card.Body>

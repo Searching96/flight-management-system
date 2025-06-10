@@ -22,8 +22,8 @@ const PlaneManagement: React.FC<{
                 <Row className="justify-content-center">
                     <Col md={8}>
                         <Alert variant="danger" className="text-center">
-                            <Alert.Heading>Access Denied</Alert.Heading>
-                            <p>You do not have permission to access aircraft management.</p>
+                            <Alert.Heading>Từ chối truy cập</Alert.Heading>
+                            <p>Bạn không có quyền truy cập quản lý máy bay.</p>
                         </Alert>
                     </Col>
                 </Row>
@@ -155,7 +155,7 @@ const PlaneManagement: React.FC<{
                 <Spinner animation="border" role="status">
                     <span className="visually-hidden">Loading...</span>
                 </Spinner>
-                <p className="mt-3">Loading aircraft data...</p>
+                <p className="mt-3">Đang tải dữ liệu máy bay...</p>
             </Container>
         );
     }
@@ -166,12 +166,12 @@ const PlaneManagement: React.FC<{
                 <Col>
                     <Card>
                         <Card.Header className="d-flex justify-content-between align-items-center">
-                            <Card.Title className="mb-0">✈️ Aircraft Fleet Management</Card.Title>
+                            <Card.Title className="mb-0">✈️ Quản lý đội bay</Card.Title>
                             <Button
                                 variant="primary"
                                 onClick={() => setShowForm(true)}
                             >
-                                Add New Aircraft
+                                Thêm máy bay mới
                             </Button>
                         </Card.Header>
                     </Card>
@@ -193,16 +193,16 @@ const PlaneManagement: React.FC<{
                 <Col>
                     <Card>
                         <Card.Header>
-                            <Card.Title className="mb-0">Search & Filter</Card.Title>
+                            <Card.Title className="mb-0">Tìm kiếm & Lọc</Card.Title>
                         </Card.Header>
                         <Card.Body>
                             <Row className="align-items-end">
                                 <Col md={4}>
                                     <Form.Group>
-                                        <Form.Label>Search Aircraft</Form.Label>
+                                        <Form.Label>Tìm kiếm máy bay</Form.Label>
                                         <Form.Control
                                             type="text"
-                                            placeholder="Search by code or type..."
+                                            placeholder="Tìm theo mã hoặc loại..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                         />
@@ -210,12 +210,12 @@ const PlaneManagement: React.FC<{
                                 </Col>
                                 <Col md={3}>
                                     <Form.Group>
-                                        <Form.Label>Filter by Type</Form.Label>
+                                        <Form.Label>Lọc theo loại</Form.Label>
                                         <Form.Select
                                             value={filterType}
                                             onChange={(e) => setFilterType(e.target.value)}
                                         >
-                                            <option value="">All Types</option>
+                                            <option value="">Tất cả loại</option>
                                             {allPlaneTypes.map(type => (
                                                 <option key={type} value={type}>{type}</option>
                                             ))}
@@ -226,12 +226,12 @@ const PlaneManagement: React.FC<{
                                     <Row className="text-center">
                                         <Col>
                                             <Badge bg="primary" className="p-2">
-                                                Total Aircraft: <strong>{planes.length}</strong>
+                                                Tổng máy bay: <strong>{planes.length}</strong>
                                             </Badge>
                                         </Col>
                                         <Col>
                                             <Badge bg="info" className="p-2">
-                                                Total Seats: <strong>{planes.reduce((sum, plane) => sum + plane.seatQuantity, 0)}</strong>
+                                                Tổng ghế: <strong>{planes.reduce((sum, plane) => sum + plane.seatQuantity, 0)}</strong>
                                             </Badge>
                                         </Col>
                                     </Row>
@@ -244,25 +244,25 @@ const PlaneManagement: React.FC<{
 
             <Modal show={showForm} onHide={handleCancel} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>{editingPlane ? 'Edit Aircraft' : 'Add New Aircraft'}</Modal.Title>
+                    <Modal.Title>{editingPlane ? 'Chỉnh sửa máy bay' : 'Thêm máy bay mới'}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form id="plane-form" onSubmit={handleSubmit(onSubmit)}>
                         <Row className="mb-3">
                             <Col>
                                 <Form.Group>
-                                    <Form.Label>Aircraft Code</Form.Label>
+                                    <Form.Label>Mã máy bay</Form.Label>
                                     <Form.Control
                                         type="text"
                                         {...register('planeCode', {
-                                            required: 'Aircraft code is required',
+                                            required: 'Mã máy bay là bắt buộc',
                                             pattern: {
                                                 value: /^[A-Z0-9-]+$/,
-                                                message: 'Use only uppercase letters, numbers, and hyphens'
+                                                message: 'Chỉ sử dụng chữ hoa, số và dấu gạch ngang'
                                             }
                                         })}
                                         isInvalid={!!errors.planeCode}
-                                        placeholder="e.g., VN-A001, B737-001"
+                                        placeholder="ví dụ: VN-A001, B737-001"
                                     />
                                     <Form.Control.Feedback type="invalid">
                                         {errors.planeCode?.message}
@@ -274,17 +274,17 @@ const PlaneManagement: React.FC<{
                         <Row className="mb-3">
                             <Col md={8}>
                                 <Form.Group>
-                                    <Form.Label>Aircraft Type</Form.Label>
+                                    <Form.Label>Loại máy bay</Form.Label>
                                     <Form.Control
                                         type="text"
-                                        placeholder="Enter aircraft type..."
+                                        placeholder="Nhập loại máy bay..."
                                         isInvalid={!!errors.planeType}
                                         {...register('planeType', {
-                                            required: 'Aircraft type is required'
+                                            required: 'Loại máy bay là bắt buộc'
                                         })}
                                     />
                                     <Form.Text className="text-muted">
-                                        Common types: {aircraftTypeOptions.slice(0, 3).map(type => type.value).join(', ')}, etc.
+                                        Các loại phổ biến: {aircraftTypeOptions.slice(0, 3).map(type => type.value).join(', ')}, v.v.
                                     </Form.Text>
                                     <Form.Control.Feedback type="invalid">
                                         {errors.planeType?.message}
@@ -293,25 +293,25 @@ const PlaneManagement: React.FC<{
                             </Col>
                             <Col md={4}>
                                 <Form.Group>
-                                    <Form.Label>Seat Capacity</Form.Label>
+                                    <Form.Label>Sức chứa ghế</Form.Label>
                                     <Form.Control
                                         type="number"
                                         min="1"
                                         max="850"
                                         {...register('seatQuantity', {
-                                            required: 'Seat quantity is required',
+                                            required: 'Số lượng ghế là bắt buộc',
                                             min: {
                                                 value: 1,
-                                                message: 'Must have at least 1 seat'
+                                                message: 'Phải có ít nhất 1 ghế'
                                             },
                                             max: {
                                                 value: 850,
-                                                message: 'Maximum 850 seats allowed'
+                                                message: 'Tối đa 850 ghế được phép'
                                             },
                                             valueAsNumber: true
                                         })}
                                         isInvalid={!!errors.seatQuantity}
-                                        placeholder="e.g., 180"
+                                        placeholder="ví dụ: 180"
                                     />
                                     <Form.Control.Feedback type="invalid">
                                         {errors.seatQuantity?.message}
@@ -323,10 +323,10 @@ const PlaneManagement: React.FC<{
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleCancel}>
-                        Cancel
+                        Hủy
                     </Button>
                     <Button variant="primary" onClick={handleSubmit(onSubmit)}>
-                        {editingPlane ? 'Update Aircraft' : 'Add Aircraft'}
+                        {editingPlane ? 'Cập nhật máy bay' : 'Thêm máy bay'}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -339,8 +339,8 @@ const PlaneManagement: React.FC<{
                             <Card.Body className="text-center py-5">
                                 <p className="text-muted mb-0">
                                     {searchTerm || filterType ?
-                                        'No aircraft found matching your search criteria.' :
-                                        'No aircraft in the fleet. Add your first aircraft to get started.'
+                                        'Không tìm thấy máy bay phù hợp với tiêu chí tìm kiếm.' :
+                                        'Không có máy bay trong đội bay. Thêm máy bay đầu tiên để bắt đầu.'
                                     }
                                 </p>
                             </Card.Body>
@@ -359,7 +359,7 @@ const PlaneManagement: React.FC<{
                                             className="me-2"
                                             onClick={() => handleEdit(plane)}
                                         >
-                                            Edit
+                                            Sửa
                                         </Button>
                                         {/* <Button
                                             size="sm"
@@ -375,7 +375,7 @@ const PlaneManagement: React.FC<{
 
                                     <Row className="mb-3">
                                         <Col xs={6}>
-                                            <strong>Total Seats:</strong>
+                                            <strong>Tổng ghế:</strong>
                                         </Col>
                                         <Col xs={6} className="text-end">
                                             <Badge bg="info">{plane.seatQuantity}</Badge>
@@ -384,7 +384,7 @@ const PlaneManagement: React.FC<{
 
                                     <Row className="mb-3">
                                         <Col xs={6}>
-                                            <strong>Category:</strong>
+                                            <strong>Danh mục:</strong>
                                         </Col>
                                         <Col xs={6} className="text-end">
                                             <Badge bg="secondary">
@@ -397,12 +397,12 @@ const PlaneManagement: React.FC<{
 
                                     <Card className="mt-3">
                                         <Card.Header as="h6" className="bg-light">
-                                            Estimated Layout
+                                            Bố cục ước tính
                                         </Card.Header>
                                         <Card.Body className="py-2">
                                             <Row className="small">
                                                 <Col xs={6}>
-                                                    <strong>Economy:</strong>
+                                                    <strong>Phổ thông:</strong>
                                                 </Col>
                                                 <Col xs={6} className="text-end">
                                                     ~{Math.floor(plane.seatQuantity * 0.8)}
@@ -410,7 +410,7 @@ const PlaneManagement: React.FC<{
                                             </Row>
                                             <Row className="small">
                                                 <Col xs={6}>
-                                                    <strong>Business:</strong>
+                                                    <strong>Thương gia:</strong>
                                                 </Col>
                                                 <Col xs={6} className="text-end">
                                                     ~{Math.floor(plane.seatQuantity * 0.15)}
@@ -418,7 +418,7 @@ const PlaneManagement: React.FC<{
                                             </Row>
                                             <Row className="small">
                                                 <Col xs={6}>
-                                                    <strong>First:</strong>
+                                                    <strong>Hạng nhất:</strong>
                                                 </Col>
                                                 <Col xs={6} className="text-end">
                                                     ~{Math.floor(plane.seatQuantity * 0.05)}

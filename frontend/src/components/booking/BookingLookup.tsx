@@ -152,7 +152,7 @@ const BookingLookup: React.FC = () => {
                 <Row>
                   <Col md={12}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="w-100 text-center fw-bold fs-4">Confirmation Code *</Form.Label>
+                      <Form.Label className="w-100 text-center fw-bold fs-4">Mã xác nhận *</Form.Label>
                       <Form.Control
                         type="text"
                         value={searchData.confirmationCode}
@@ -164,7 +164,7 @@ const BookingLookup: React.FC = () => {
                         required
                       />
                       <Form.Text className="text-muted">
-                        Format: FMS-YYYYMMDD-XXXX (e.g., FMS-20240527-A1B2)
+                        Định dạng: FMS-YYYYMMDD-XXXX (ví dụ: FMS-20240527-A1B2)
                       </Form.Text>
                     </Form.Group>
                   </Col>
@@ -185,10 +185,10 @@ const BookingLookup: React.FC = () => {
                     {loading ? (
                       <>
                         <Spinner animation="border" size="sm" className="me-2" />
-                        Searching...
+                        Đang tìm kiếm...
                       </>
                     ) : (
-                      'Find Booking'
+                      'Tìm kiếm đặt chỗ'
                     )}
                   </Button>
                   <Button

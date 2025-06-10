@@ -6,14 +6,12 @@ import com.flightmanagement.dto.RegisterDto;
 import com.flightmanagement.entity.Account;
 import com.flightmanagement.entity.Customer;
 import com.flightmanagement.entity.Employee;
-import com.flightmanagement.mapper.AccountMapper;
 import com.flightmanagement.mapper.AuthMapper;
 import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.repository.CustomerRepository;
 import com.flightmanagement.repository.EmployeeRepository;
 import com.flightmanagement.security.CustomUserDetails;
 import com.flightmanagement.security.JwtService;
-import com.flightmanagement.service.AccountService;
 import com.flightmanagement.service.AuthService;
 
 import com.flightmanagement.service.EmailService;
@@ -48,8 +46,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-    @Autowired
-    private AccountMapper accountMapper;
 
     @Autowired
     private EmailService emailService;

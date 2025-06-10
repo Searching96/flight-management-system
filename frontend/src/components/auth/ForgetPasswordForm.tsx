@@ -41,20 +41,20 @@ const ForgetPasswordForm: React.FC = () => {
                     <Card className="shadow">
                         <Card.Body className="p-4">
                             <div className="text-center mb-4">
-                                <h2 className="h4 mb-2">Forgot Password</h2>
-                                <p className="text-muted">Enter your email to receive a password reset link</p>
+                                <h2 className="h4 mb-2">Quên mật khẩu</h2>
+                                <p className="text-muted">Nhập email của bạn để nhận liên kết đặt lại mật khẩu</p>
                             </div>
 
                             {success ? (
                                 <Alert variant="success">
-                                    <Alert.Heading>Email Sent!</Alert.Heading>
+                                    <Alert.Heading>Email đã gửi!</Alert.Heading>
                                     <p>
-                                        Password reset email sent successfully. Please check your inbox and click the link to reset your password.
+                                        Email đặt lại mật khẩu đã được gửi thành công. Vui lòng kiểm tra hộp thư và nhấp vào liên kết để đặt lại mật khẩu.
                                     </p>
                                     <hr />
                                     <div className="d-flex justify-content-end">
                                         <Link to="/login" className="btn btn-outline-success">
-                                            Back to Login
+                                            Quay lại đăng nhập
                                         </Link>
                                     </div>
                                 </Alert>
@@ -68,11 +68,11 @@ const ForgetPasswordForm: React.FC = () => {
                                             id="email"
                                             type="email"
                                             {...register('email', {
-                                                required: 'Email is required',
-                                                pattern: { value: /^\S+@\S+\.\S+$/, message: 'Please enter a valid email address' }
+                                                required: 'Email là bắt buộc',
+                                                pattern: { value: /^\S+@\S+\.\S+$/, message: 'Vui lòng nhập địa chỉ email hợp lệ' }
                                             })}
                                             isInvalid={!!errors.email}
-                                            placeholder="Enter your email"
+                                            placeholder="Nhập email của bạn"
                                         />
                                         <Form.Control.Feedback type="invalid">
                                             {errors.email?.message}
@@ -86,14 +86,14 @@ const ForgetPasswordForm: React.FC = () => {
                                         disabled={loading}
                                     >
                                         {loading && <Spinner as="span" animation="border" size="sm" className="me-2" />}
-                                        {loading ? 'Sending...' : 'Send Reset Link'}
+                                        {loading ? 'Đang gửi...' : 'Gửi liên kết đặt lại'}
                                     </Button>
                                 </Form>
                             )}
 
                             <div className="text-center mt-4">
                                 <p className="text-muted">
-                                    Remember your password? <Link to="/login" className="text-decoration-none">Sign in here</Link>
+                                    Nhớ mật khẩu? <Link to="/login" className="text-decoration-none">Đăng nhập tại đây</Link>
                                 </p>
                             </div>
                         </Card.Body>
