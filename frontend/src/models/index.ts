@@ -1,5 +1,3 @@
-import { Ticket } from './Ticket';
-
 // Account related
 export type { Account } from './Account';
 
@@ -24,6 +22,14 @@ export type { AuthResponse, LoginRequest, UserDetails, RegisterRequest } from '.
 // Ticket related
 export type { TicketClass, TicketClassRequest } from './TicketClass';
 export type { Ticket, TicketRequest } from './Ticket';
+
+// Payment related
+export type {
+  PaymentResponse,
+  PaymentReturnResponse,
+  TransactionQueryResponse,
+  RefundResponse
+} from './Payment';
 
 // User related
 export type { Customer } from './Customer';
@@ -92,28 +98,6 @@ export interface HealthStatus {
   timestamp: string;
   message: string;
   version: string;
-}
-
-// Booking workflow types
-export interface BookingDetails {
-  bookingReference: string;
-  totalAmount: number;
-  paymentDeadline: string;
-  tickets: Ticket[];
-}
-
-export interface PaymentRequest {
-  paymentMethod: string;
-  cardNumber?: string;
-  expiryDate?: string;
-  cvv?: string;
-  amount: number;
-}
-
-export interface PaymentResponse {
-  success: boolean;
-  transactionId: string;
-  message?: string;
 }
 
 export * from './Ticket';

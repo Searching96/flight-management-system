@@ -41,7 +41,7 @@ public class Ticket {
     private String seatNumber;
     
     @Column(name = "ticket_status")
-    private Byte ticketStatus = 2; // 1: paid, 2: unpaid, 3: canceled
+    private Byte ticketStatus = 0; // 1: paid, 0: unpaid
     
     @Column(name = "payment_time")
     private LocalDateTime paymentTime;

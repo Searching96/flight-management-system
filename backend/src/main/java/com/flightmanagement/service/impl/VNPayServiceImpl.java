@@ -41,15 +41,21 @@ public class VNPayServiceImpl implements PaymentService {
     private static final String CURRENCY_CODE = "VND";
 
     @Override
-    public Map<String, Object> createPayment(String confirmationCode, String bankCode, String language, HttpServletRequest request) {
+    public Map<String, Object> createPayment(String confirmationCode, String bankCode, String language,
+            HttpServletRequest request) {
         try {
             // Generate unique transaction reference (must be unique per day)
-            BigDecimal amount = ticketService.getTicketsOnConfirmationCode(confirmationCode).stream().map(TicketDto::getFare).reduce(BigDecimal.ZERO, BigDecimal::add).multiply(BigDecimal.valueOf(100));
-            ;
+            BigDecimal amount = ticketService.getTicketsOnConfirmationCode(confirmationCode)
+                    .stream()
+                    .filter(ticketDto -> ticketDto.getTicketStatus() == 0 && ticketDto.getPaymentTime() == null)
+                    .map(TicketDto::getFare)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .multiply(BigDecimal.valueOf(100));
             String txnRef = HexFormat.of().formatHex(confirmationCode.getBytes(StandardCharsets.UTF_8));
             String ipAddr = VNPayConfig.getIpAddress(request);
 
-            // Format orderInfo to match VNPAY requirements (no special characters, no accented Vietnamese)
+            // Format orderInfo to match VNPAY requirements (no special characters, no
+            // accented Vietnamese)
             String rawOrderInfo = "Thanh toan ve may bay. Ma don hang:" + confirmationCode;
             String orderInfo = removeAccent(rawOrderInfo);
 
@@ -57,10 +63,14 @@ public class VNPayServiceImpl implements PaymentService {
             Calendar calendar = createCalendar();
             String createDate = formatter.format(calendar.getTime());
 
-            // Calculate amount (must multiply by 100 to remove decimal points as per VNPAY requirements)
+            // Calculate amount (must multiply by 100 to remove decimal points as per VNPAY
+            // requirements)
             try {
-                if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                if (amount.compareTo(BigDecimal.ZERO) < 0) {
                     throw new IllegalArgumentException("Invalid payment amount");
+                }
+                if (amount.compareTo(BigDecimal.ZERO) == 0) {
+                    throw new IllegalArgumentException("Ticket already paid or no tickets found");
                 }
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("Invalid payment amount format");
@@ -68,22 +78,22 @@ public class VNPayServiceImpl implements PaymentService {
 
             // Build parameters map according to VNPAY API documentation
             Map<String, String> params = new HashMap<>();
-            params.put("vnp_Version", VERSION);             // Required: API version
-            params.put("vnp_Command", "pay");               // Required: payment command
+            params.put("vnp_Version", VERSION); // Required: API version
+            params.put("vnp_Command", "pay"); // Required: payment command
             params.put("vnp_TmnCode", VNPayConfig.vnp_TmnCode); // Required: Terminal ID
             params.put("vnp_Amount", amount.toBigInteger().toString());// Required: Amount (×100, no decimals)
-            params.put("vnp_CurrCode", CURRENCY_CODE);      // Required: Currency (VND only)
-            params.put("vnp_TxnRef", txnRef);               // Required: Unique transaction reference
-            params.put("vnp_OrderInfo", orderInfo);         // Required: Order description
-            params.put("vnp_OrderType", "190000");          // Required: Order type code (airline tickets)
+            params.put("vnp_CurrCode", CURRENCY_CODE); // Required: Currency (VND only)
+            params.put("vnp_TxnRef", txnRef); // Required: Unique transaction reference
+            params.put("vnp_OrderInfo", orderInfo); // Required: Order description
+            params.put("vnp_OrderType", "190000"); // Required: Order type code (airline tickets)
             params.put("vnp_Locale", language != null && !language.isEmpty() ? language : "vn"); // Required: Language
             params.put("vnp_ReturnUrl", VNPayConfig.vnp_ReturnUrl); // Required: Return URL
-            params.put("vnp_IpAddr", ipAddr);               // Required: Customer IP
-            params.put("vnp_CreateDate", createDate);       // Required: Create date (GMT+7)
+            params.put("vnp_IpAddr", ipAddr); // Required: Customer IP
+            params.put("vnp_CreateDate", createDate); // Required: Create date (GMT+7)
 
             // Add bank code if provided (optional parameter)
             if (bankCode != null && !bankCode.isEmpty()) {
-                params.put("vnp_BankCode", bankCode);       // Optional: Banking method
+                params.put("vnp_BankCode", bankCode); // Optional: Banking method
             }
 
             // Add expiration date (15 minutes from now)
@@ -95,7 +105,9 @@ public class VNPayServiceImpl implements PaymentService {
 
             // Format response
             return formatCreatePaymentResponse(paymentUrl, orderInfo, txnRef);
-        } catch (Exception e) {
+        } catch (
+
+        Exception e) {
             return createErrorResponse(e.getMessage());
         }
     }
@@ -106,7 +118,7 @@ public class VNPayServiceImpl implements PaymentService {
         Map<String, String> fields = new HashMap<>();
 
         // Extract parameters from request
-        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements(); ) {
+        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
             String fieldName = params.nextElement();
             String fieldValue = request.getParameter(fieldName);
             if ((fieldValue != null) && (!fieldValue.isEmpty())) {
@@ -122,19 +134,15 @@ public class VNPayServiceImpl implements PaymentService {
         boolean checkSignature = signValue.equals(vnp_SecureHash);
         String responseCode = fields.get("vnp_ResponseCode");
 
-
-        //RED ALERT - MEANT TO BE REMOVE AND SWITCHED TO IPN
+        // RED ALERT - MEANT TO BE REMOVE AND SWITCHED TO IPN
         if (checkSignature && ("00".equals(responseCode) || "01".equals(responseCode))) {
             byte[] decodedBytes = HexFormat.of().parseHex(request.getParameter("vnp_TxnRef"));
             String confirmationCode = new String(decodedBytes, StandardCharsets.UTF_8);
 
             List<TicketDto> tickets = ticketService.getTicketsOnConfirmationCode(confirmationCode);
-            tickets.forEach(ticket -> {
-                ticket.setTicketStatus((byte) 1);
-                ticket.setPaymentTime(LocalDateTime.parse(fields.get("vnp_PayDate"), DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
-                ticketService.updateTicket(ticket.getTicketId(), ticket);
-            });
-        };
+            tickets.forEach(ticket -> ticketService.payTicket(ticket.getTicketId()));
+        }
+        ;
 
         // Return all relevant info for UI display, no DB update here
         response.put("code", responseCode);
@@ -156,7 +164,7 @@ public class VNPayServiceImpl implements PaymentService {
     @Override
     public Map<String, String> processIPN(HttpServletRequest request) {
         Map<String, String> fields = new HashMap<>();
-        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements(); ) {
+        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
             String fieldName = params.nextElement();
             String fieldValue = request.getParameter(fieldName);
             if (fieldValue != null && !fieldValue.isEmpty()) {
@@ -217,7 +225,8 @@ public class VNPayServiceImpl implements PaymentService {
             if ("00".equals(responseCode)) {
                 tickets.forEach(ticket -> {
                     ticket.setTicketStatus((byte) 1);
-                    ticket.setPaymentTime(LocalDateTime.parse(fields.get("vnp_PayDate"), DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+                    ticket.setPaymentTime(LocalDateTime.parse(fields.get("vnp_PayDate"),
+                            DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
                     ticketService.updateTicket(ticket.getTicketId(), ticket);
                 });
             } else {
@@ -263,7 +272,8 @@ public class VNPayServiceImpl implements PaymentService {
             String ipAddr = params.get("vnp_IpAddr").asText();
             String orderInfo = params.get("vnp_OrderInfo").asText();
 
-            String hashData = String.join("|", requestId, version, command, tmnCode, txnRef, transDate, createDate, ipAddr, orderInfo);
+            String hashData = String.join("|", requestId, version, command, tmnCode, txnRef, transDate, createDate,
+                    ipAddr, orderInfo);
             String secureHash = VNPayConfig.generateHmacSHA512Signature(hashData);
 
             return makeVnpayApiRequest(params, secureHash);
@@ -273,7 +283,8 @@ public class VNPayServiceImpl implements PaymentService {
     }
 
     @Override
-    public Map<String, Object> refundTransaction(String orderId, String amount, String transDate, String user, String transType, HttpServletRequest request) {
+    public Map<String, Object> refundTransaction(String orderId, String amount, String transDate, String user,
+            String transType, HttpServletRequest request) {
         try {
             // Common request parameters
             Map<String, String> paramValues = new HashMap<>();
@@ -310,7 +321,8 @@ public class VNPayServiceImpl implements PaymentService {
             String ipAddr = params.get("vnp_IpAddr").asText();
             String orderInfo = params.get("vnp_OrderInfo").asText();
 
-            String hashData = String.join("|", requestId, version, command, tmnCode, transType, txnRef, vnpAmount, transactionNo, transDate, createBy, createDate, ipAddr, orderInfo);
+            String hashData = String.join("|", requestId, version, command, tmnCode, transType, txnRef, vnpAmount,
+                    transactionNo, transDate, createBy, createDate, ipAddr, orderInfo);
 
             String secureHash = VNPayConfig.generateHmacSHA512Signature(hashData);
 
@@ -443,7 +455,7 @@ public class VNPayServiceImpl implements PaymentService {
      * Processes HTTP connection response
      */
     private static Map<String, Object> getResponse(HttpURLConnection con) throws IOException {
-        //int responseCode = con.getResponseCode();
+        // int responseCode = con.getResponseCode();
         BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
         String output;
         StringBuilder responseData = new StringBuilder();

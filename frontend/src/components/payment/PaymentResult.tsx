@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Alert, Button, Spinner } from 'react-bootstrap';
 import { paymentService, ticketService } from '../../services';
+import { PaymentReturnResponse } from '../../models';
 
 const PaymentResult: React.FC = () => {
   const location = useLocation();
@@ -9,37 +10,62 @@ const PaymentResult: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState<'success' | 'pending' | 'failed'>('pending');
   const [processingError, setProcessingError] = useState<string | null>(null);
-  const [transactionDetails, setTransactionDetails] = useState<any>(null);
+  const [transactionDetails, setTransactionDetails] = useState<PaymentReturnResponse>();
+
+  function hexToAscii(hex: string): string {
+    let ascii = '';
+    for (let i = 0; i < hex.length; i += 2) {
+      ascii += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+    }
+    return ascii;
+  }
+
+  const handlePayment = async () => {
+    try {
+      const response = await paymentService.createPayment(transactionDetails!.data.vnp_TxnRef);
+      // Use window.location.href for a full page redirect to the payment URL
+      if (response && response.data) {
+        console.log('Redirecting to payment URL:', response.data);
+        window.location.href = response.data;
+      } else {
+        alert('Invalid payment URL received. Please try again.');
+      }
+    } catch (error) {
+      console.error('Payment creation failed:', error);
+      alert('Failed to create payment. Please try again later.');
+    }
+  }
+
 
   useEffect(() => {
     const processPaymentResult = async () => {
       try {
         setLoading(true);
-        
+
         // Extract query parameters
         const queryParams = new URLSearchParams(location.search);
         const responseCode = queryParams.get('vnp_ResponseCode');
-        
+
         // Process payment return
         const paymentResult = await paymentService.processPaymentReturn(location.search);
-        console.log('Payment result from service:', location.search);
-        
+
         // Store transaction details for display
         setTransactionDetails(paymentResult);
 
         // Get Vietnamese response message
-        const responseMessage = getResponseMessage(responseCode || '');
+        const responseMessage = paymentResult.signatureValid ? getResponseMessage(responseCode || '') : '';
 
         // Check payment result
+        console.log(paymentResult.signatureValid, responseCode);
         if (paymentResult.signatureValid && (responseCode === "00" || responseCode === "01")) {
           setPaymentStatus('success');
-          
-        // } else if (responseCode === "24" || responseCode === "11") {
-        //   setPaymentStatus('pending');
-        //   setProcessingError(responseMessage);
+
+          // } else if (responseCode === "24" || responseCode === "11") {
+          //   setPaymentStatus('pending');
+          //   setProcessingError(responseMessage);
         } else {
           setPaymentStatus('failed');
-          setProcessingError(responseMessage || 'Giao dịch thất bại');
+          setProcessingError(responseMessage);
         }
       } catch (error) {
         console.error('Error processing payment result:', error);
@@ -75,7 +101,7 @@ const PaymentResult: React.FC = () => {
   // Format payment date from YYYYMMDDHHMMSS to readable format
   const formatPaymentDate = (dateString: string | null) => {
     if (!dateString) return 'N/A';
-    
+
     try {
       const year = dateString.substring(0, 4);
       const month = dateString.substring(4, 6);
@@ -83,7 +109,7 @@ const PaymentResult: React.FC = () => {
       const hour = dateString.substring(8, 10);
       const minute = dateString.substring(10, 12);
       const second = dateString.substring(12, 14);
-      
+
       return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
     } catch (e) {
       return dateString;
@@ -111,53 +137,53 @@ const PaymentResult: React.FC = () => {
                 {paymentStatus === 'failed' && '❌ Thanh toán thất bại'}
               </h4>
             </Card.Header>
-            
+
             <Card.Body className="p-4">
               {processingError && (
                 <Alert variant={paymentStatus === 'pending' ? 'warning' : 'danger'} className="mb-4">
                   {processingError}
                 </Alert>
               )}
-              
-              {transactionDetails.data && (
+
+              {transactionDetails!.data && (
                 <div>
                   <h5 className="mb-3">Chi tiết giao dịch</h5>
                   <Row className="mb-4">
                     <Col xs={6} className="fw-bold">Mã đơn hàng:</Col>
-                    <Col xs={6}>{transactionDetails.data.vnp_TxnRef || 'N/A'}</Col>
-                    
+                    <Col xs={6}>{transactionDetails!.data.vnp_TxnRef || 'N/A'}</Col>
+
                     <Col xs={6} className="fw-bold">Số tiền:</Col>
-                    <Col xs={6}>{transactionDetails.data.vnp_Amount} VND</Col>
-                    
+                    <Col xs={6}>{Number(transactionDetails!.data.vnp_Amount).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</Col>
+
                     <Col xs={6} className="fw-bold">Phương thức thanh toán:</Col>
-                    <Col xs={6}>{transactionDetails.data.vnp_CardType || 'N/A'}</Col>
-                    
+                    <Col xs={6}>{transactionDetails!.data.vnp_CardType || 'N/A'}</Col>
+
                     <Col xs={6} className="fw-bold">Ngân hàng:</Col>
-                    <Col xs={6}>{transactionDetails.data.vnp_BankCode || 'N/A'}</Col>
-                    
+                    <Col xs={6}>{transactionDetails!.data.vnp_BankCode || 'N/A'}</Col>
+
                     <Col xs={6} className="fw-bold">Thời gian thanh toán:</Col>
-                    <Col xs={6}>{formatPaymentDate(transactionDetails.data.vnp_PayDate)}</Col>
-                    
+                    <Col xs={6}>{formatPaymentDate(transactionDetails!.data.vnp_PayDate)}</Col>
+
                     <Col xs={6} className="fw-bold">Thông tin đơn hàng:</Col>
-                    <Col xs={6}>{transactionDetails.data.vnp_OrderInfo || 'N/A'}</Col>
+                    <Col xs={6}>{transactionDetails!.data.vnp_OrderInfo || 'N/A'}</Col>
                   </Row>
                 </div>
               )}
-              
+
               {paymentStatus === 'success' && (
                 <Alert variant="success">
                   <Alert.Heading>Thanh toán thành công</Alert.Heading>
                   <p>Thanh toán của bạn đã được xử lý thành công và đặt vé của bạn đã được xác nhận.</p>
                 </Alert>
               )}
-              
+
               {paymentStatus === 'pending' && (
                 <Alert variant="warning">
                   <Alert.Heading>Đang xử lý thanh toán</Alert.Heading>
                   <p>Thanh toán của bạn đang được xử lý. Vui lòng không gửi lại yêu cầu thanh toán. Bạn sẽ nhận được xác nhận khi thanh toán hoàn tất.</p>
                 </Alert>
               )}
-              
+
               {paymentStatus === 'failed' && (
                 <Alert variant="danger">
                   <Alert.Heading>Thanh toán thất bại</Alert.Heading>
@@ -165,7 +191,7 @@ const PaymentResult: React.FC = () => {
                 </Alert>
               )}
             </Card.Body>
-            
+
             <Card.Footer className="d-flex justify-content-between">
               <Button variant="outline-secondary" onClick={() => navigate('/booking-lookup')}>
                 Xem đặt vé của tôi
@@ -174,7 +200,7 @@ const PaymentResult: React.FC = () => {
                 Quay lại trang chủ
               </Button>
               {paymentStatus === 'failed' && (
-                <Button variant="success" onClick={() => paymentService.createPayment(transactionDetails.data.orderId)}>
+                <Button variant="success" onClick={() => handlePayment()}>
                   Thử thanh toán lại
                 </Button>
               )}

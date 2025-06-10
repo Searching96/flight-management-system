@@ -31,7 +31,7 @@ const BookingConfirmation: React.FC = () => {
   }
 
   const booking: BookingConfirmationType = confirmationData;
-  const isPaid = booking.status === 1; // Check if booking status is paid (1)
+  const isPaid = booking.tickets.every(ticket => ticket.ticketStatus === 1); // Check if booking status is paid (1)
 
   const handlePrint = () => {
     window.print();

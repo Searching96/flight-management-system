@@ -12,6 +12,7 @@ const BookingLookup: React.FC = () => {
   const [booking, setBooking] = useState<BookingConfirmation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isPaid, setIsPaid] = useState(false); // Track if booking is paid
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,13 +37,13 @@ const BookingLookup: React.FC = () => {
 
       // Get flight information for the first ticket (all tickets should have same flight)
       const firstTicket = tickets[0];
-      const flight = await flightService.getFlightById(firstTicket.flightId);
+      const flight = await flightService.getFlightById(firstTicket.flightId!);
 
       // Get passenger names for each ticket
       const passengerNames = await Promise.all(
         tickets.map(async (ticket) => {
           try {
-            const passenger = await passengerService.getPassengerById(ticket.passengerId);
+            const passenger = await passengerService.getPassengerById(ticket.passengerId!);
             return passenger.passengerName;
           } catch (error) {
             console.error(`Error getting passenger ${ticket.passengerId}:`, error);
@@ -50,6 +51,7 @@ const BookingLookup: React.FC = () => {
           }
         })
       );
+
 
       // Create booking confirmation object similar to BookingConfirmation
       const bookingData: BookingConfirmation = {
@@ -67,6 +69,8 @@ const BookingLookup: React.FC = () => {
         }
       };
 
+      setIsPaid(tickets.every(ticket => ticket.ticketStatus === 1));
+
       setBooking(bookingData);
     } catch (err: any) {
       console.error('Error looking up booking:', err);
@@ -78,25 +82,25 @@ const BookingLookup: React.FC = () => {
 
   const handleCancelBooking = async () => {
     if (!booking) return;
-  
+
     const confirmed = window.confirm(
       'Are you sure you want to cancel this booking? This action cannot be undone.'
     );
-  
-    if (confirmed) {
+
+    if (confirmed && !isPaid) {
       try {
         // Cancel all tickets in the booking
         for (const ticket of booking.tickets) {
           if (ticket.ticketId) {
             await ticketService.deleteTicket(ticket.ticketId);
             await flightTicketClassService.updateRemainingTickets(
-              ticket.flightId, 
-              ticket.ticketClassId, 
+              ticket.flightId!,
+              ticket.ticketClassId!,
               -1
-            ); 
+            );
           }
         }
- 
+
         alert('Booking and all tickets cancelled successfully.');
         setBooking(null);
         setSearchData({ confirmationCode: '' });
@@ -265,7 +269,7 @@ const BookingLookup: React.FC = () => {
               {/* Booking Actions */}
               <Card.Footer className="bg-light">
                 <Row className="g-2">
-                  <Col md={4}>
+                  <Col>
                     <Button
                       onClick={handlePrintBooking}
                       variant="outline-secondary"
@@ -274,7 +278,7 @@ const BookingLookup: React.FC = () => {
                       Print Booking
                     </Button>
                   </Col>
-                  <Col md={4}>
+                  <Col>
                     <Button
                       onClick={() => navigate('/booking-confirmation', {
                         state: {
@@ -289,14 +293,17 @@ const BookingLookup: React.FC = () => {
                       View Full Details
                     </Button>
                   </Col>
-                  <Col md={4}>
-                    <Button
-                      onClick={handleCancelBooking}
-                      variant="danger"
-                      className="w-100"
-                    >
-                      Cancel Booking
-                    </Button>
+                  <Col>
+
+                    {!isPaid &&
+                      <Button
+                        onClick={handleCancelBooking}
+                        variant="danger"
+                        className="w-100"
+                      >
+                        Cancel Booking
+                      </Button>
+                    }
                   </Col>
                 </Row>
               </Card.Footer>

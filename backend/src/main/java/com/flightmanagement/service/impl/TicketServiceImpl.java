@@ -194,7 +194,7 @@ public class TicketServiceImpl implements TicketService {
             ticketDto.setPassengerId(existingPassenger.getPassengerId());
             ticketDto.setSeatNumber(seatNumber);
             ticketDto.setFare(flightTicketClass.getSpecifiedFare());
-            ticketDto.setTicketStatus((byte) 2); // 2: unpaid (default)
+            ticketDto.setTicketStatus((byte) 0); // 0: unpaid (default)
 
             TicketDto createdTicket = createTicket(ticketDto);
             bookedTickets.add(createdTicket);
@@ -300,7 +300,7 @@ public class TicketServiceImpl implements TicketService {
         Ticket ticket = ticketRepository.findActiveById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + ticketId));
 
-        ticket.setTicketStatus((byte) 3); // 3: canceled
+        ticket.setDeletedAt(LocalDateTime.now()); // 3: canceled
         ticketRepository.save(ticket);
     }
 
