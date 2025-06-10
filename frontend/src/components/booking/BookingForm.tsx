@@ -592,23 +592,6 @@ const BookingForm: React.FC = () => {
                   </div>
                 )}
 
-                {/* Frequent Flyer Program */}
-                {user && (
-                  <div className="mb-5 pb-4 border-bottom">
-                    <h4 className="mb-3">Frequent Flyer Program</h4>
-                    <Form.Check
-                      type="checkbox"
-                      id="useFrequentFlyer"
-                      label="Join frequent flyer program and link this booking to your account"
-                      {...register('useFrequentFlyer')}
-                      className="mb-2"
-                    />
-                    <Form.Text className="text-muted">
-                      Checking this option will link your booking to your customer profile for frequent flyer benefits.
-                    </Form.Text>
-                  </div>
-                )}
-
                 {/* Booking Summary */}
                 <Card className="bg-light mb-4">
                   <Card.Body>
