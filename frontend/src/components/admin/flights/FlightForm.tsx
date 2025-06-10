@@ -158,6 +158,11 @@ const FlightForm: React.FC<FlightFormProps> = ({
         // Reset detail errors first
         setDetailErrors(prev => ({ ...prev, flightDetails: '' }));
 
+        // Skip validation if no flight details exist
+        if (flightDetails.length === 0) {
+            return true;
+        }
+
         // Check for duplicate airports - this error affects main form
         if (checkDuplicateAirports()) {
             setFormErrors(prev => ({
@@ -172,28 +177,33 @@ const FlightForm: React.FC<FlightFormProps> = ({
             });
         }
 
-        // Check for empty airport selections
-        const hasEmptyAirports = flightDetails.some(detail =>
+        // Only validate details that have some data entered (not completely empty)
+        const detailsWithData = flightDetails.filter(detail => 
+            detail.mediumAirportId && detail.mediumAirportId !== 0
+        );
+
+        // Check for empty airport selections in details that have data
+        const hasEmptyAirports = detailsWithData.some(detail =>
             !detail.mediumAirportId || detail.mediumAirportId === 0
         );
 
-        if (hasEmptyAirports && flightDetails.length > 0) {
+        if (hasEmptyAirports) {
             setDetailErrors(prev => ({
                 ...prev,
-                flightDetails: 'Vui lòng chọn sân bay cho tất cả các điểm dừng.'
+                flightDetails: 'Vui lòng chọn sân bay cho tất cả các điểm dừng đã nhập.'
             }));
             return false;
         }
 
-        // Check for empty arrival times
-        const hasEmptyTimes = flightDetails.some(detail => detail.flightId !== 0 && (
-            !detail.arrivalTime || detail.arrivalTime === '')
+        // Check for empty arrival times in details that have airport selected
+        const hasEmptyTimes = detailsWithData.some(detail => 
+            !detail.arrivalTime || detail.arrivalTime === ''
         );
 
-        if (hasEmptyTimes && flightDetails.length > 0) {
+        if (hasEmptyTimes) {
             setDetailErrors(prev => ({
                 ...prev,
-                flightDetails: 'Vui lòng nhập thời gian đến cho tất cả các điểm dừng.'
+                flightDetails: 'Vui lòng nhập thời gian đến cho tất cả các điểm dừng đã chọn sân bay.'
             }));
             return false;
         }
@@ -244,8 +254,12 @@ const FlightForm: React.FC<FlightFormProps> = ({
 
     // Add validation for time sequence of stopovers - moved to detail errors
     useEffect(() => {
-        if (flightDetails.length < 2) {
-            // Clear errors if no details
+        // Skip validation if no flight details or only empty details
+        const detailsWithData = flightDetails.filter(detail => 
+            detail.mediumAirportId && detail.mediumAirportId !== 0 && detail.arrivalTime
+        );
+
+        if (detailsWithData.length === 0) {
             setDetailErrors(prev => {
                 const { stopoverTimes, ...rest } = prev;
                 return rest;
@@ -262,28 +276,52 @@ const FlightForm: React.FC<FlightFormProps> = ({
         const mainArrivalTime = new Date(arrivalTime);
 
         // Sort details by arrival time for checking sequence
-        const sortedDetails = [...flightDetails]
-            .filter(detail => detail.arrivalTime)
+        const sortedDetails = [...detailsWithData]
             .sort((a, b) => new Date(a.arrivalTime).getTime() - new Date(b.arrivalTime).getTime());
 
-        // Check if all details are between main departure and arrival times
-        const allTimesInSequence = sortedDetails.every(detail => {
-            const stopTime = new Date(detail.arrivalTime);
-            return stopTime > mainDepartureTime && stopTime < mainArrivalTime;
-        });
+        // Validate time sequence including layover durations
+        let sequenceValid = true;
+        let errorMessage = '';
 
-        // Check if stopover times are in sequence
-        const stopTimesInSequence = sortedDetails.every((detail, index, array) => {
-            if (index === 0) return true;
-            const prevStop = new Date(array[index - 1].arrivalTime);
-            const currentStop = new Date(detail.arrivalTime);
-            return currentStop > prevStop;
-        });
+        for (let i = 0; i < sortedDetails.length; i++) {
+            const detail = sortedDetails[i];
+            const stopArrivalTime = new Date(detail.arrivalTime);
+            const layoverMinutes = detail.layoverDuration || 0;
+            const stopDepartureTime = new Date(stopArrivalTime.getTime() + layoverMinutes * 60000);
 
-        if (!allTimesInSequence || !stopTimesInSequence) {
+            // Check if stop arrival is within flight window
+            if (stopArrivalTime <= mainDepartureTime || stopArrivalTime >= mainArrivalTime) {
+                sequenceValid = false;
+                errorMessage = 'Thời gian đến các điểm dừng phải nằm giữa thời gian khởi hành và đến của chuyến bay.';
+                break;
+            }
+
+            // Check if stop departure (arrival + layover) is within flight window
+            if (stopDepartureTime >= mainArrivalTime) {
+                sequenceValid = false;
+                errorMessage = 'Thời gian dừng + thời gian đến không được vượt quá thời gian đến của chuyến bay.';
+                break;
+            }
+
+            // Check sequence with previous stop
+            if (i > 0) {
+                const prevDetail = sortedDetails[i - 1];
+                const prevStopArrival = new Date(prevDetail.arrivalTime);
+                const prevLayover = prevDetail.layoverDuration || 0;
+                const prevStopDeparture = new Date(prevStopArrival.getTime() + prevLayover * 60000);
+
+                if (stopArrivalTime <= prevStopDeparture) {
+                    sequenceValid = false;
+                    errorMessage = 'Thời gian đến điểm dừng phải sau thời gian rời khỏi điểm dừng trước đó.';
+                    break;
+                }
+            }
+        }
+
+        if (!sequenceValid) {
             setDetailErrors(prev => ({
                 ...prev,
-                stopoverTimes: 'Thời gian các điểm dừng phải nằm giữa thời gian khởi hành và đến, và phải theo đúng trình tự.'
+                stopoverTimes: errorMessage
             }));
         } else {
             setDetailErrors(prev => {
@@ -366,11 +404,25 @@ const FlightForm: React.FC<FlightFormProps> = ({
             return;
         }
 
-        // Check all stopovers have proper times and layover durations
-        if (flightDetails.length > 0) {
+        // Flight time total validation - removed 24-hour limit
+        const durationMinutes = (new Date(data.arrivalTime).getTime() - new Date(data.departureTime).getTime()) / (1000 * 60);
 
+        if (durationMinutes < (parameters?.minFlightDuration || 30)) {
+            setFormErrors(prev => ({
+                ...prev,
+                flightDuration: `Thời gian bay tối thiểu là ${parameters?.minFlightDuration || 30} phút theo quy định.`
+            }));
+            return;
+        }
+
+        // Check all stopovers have proper times and layover durations
+        const detailsWithData = flightDetails.filter(detail => 
+            detail.mediumAirportId && detail.mediumAirportId !== 0
+        );
+
+        if (detailsWithData.length > 0) {
             // Validate stopover sequence
-            const sortedDetails = [...flightDetails]
+            const sortedDetails = [...detailsWithData]
                 .filter(detail => detail.arrivalTime)
                 .sort((a, b) => new Date(a.arrivalTime).getTime() - new Date(b.arrivalTime).getTime());
 
@@ -426,23 +478,6 @@ const FlightForm: React.FC<FlightFormProps> = ({
             }
         }
 
-        // Flight time total validation
-        const durationMinutes = (new Date(data.arrivalTime).getTime() - new Date(data.departureTime).getTime()) / (1000 * 60);
-
-        if (durationMinutes < (parameters?.minFlightDuration || 30)) {
-            setFormErrors(prev => ({
-                ...prev,
-                flightDuration: `Thời gian bay tối thiểu là ${parameters?.minFlightDuration || 30} phút theo quy định.`
-            }));
-            return;
-        } else if (durationMinutes > 24 * 60) { // 24 hours in minutes
-            setFormErrors(prev => ({
-                ...prev,
-                flightDuration: 'Thời gian bay không nên vượt quá 24 giờ.'
-            }));
-            return;
-        }
-
         // All validation passed, call the onSubmit prop
         onSubmit(data);
     };
@@ -491,7 +526,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
                         <TypeAhead
                             options={airportOptions}
                             value={selectedDepartureAirport}
-                            allowClear={false}
+                            allowClear={true}
                             onChange={(option) => {
                                 const airportId = option?.value as number || '';
                                 setSelectedDepartureAirport(airportId);
@@ -612,10 +647,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
                                             return `Thời gian bay tối thiểu là ${parameters?.minFlightDuration || 30} phút theo quy định.`;
                                         }
 
-                                        if (durationMinutes > 24 * 60) {
-                                            return 'Thời gian bay không nên vượt quá 24 giờ.';
-                                        }
-
+                                        // Removed 24-hour limit
                                         return true;
                                     }
                                 }
