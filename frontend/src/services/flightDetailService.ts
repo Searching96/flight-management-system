@@ -11,7 +11,7 @@ import { API_URL } from './config';
 export class FlightDetailService {
   private readonly baseUrl = API_URL.FLIGHT_DETAILS;
 
-  async getFlightDetails(flightId: number): Promise<FlightDetail[]> {
+  async getFlightDetailsById(flightId: number): Promise<FlightDetail[]> {
     return apiClient.get(`${this.baseUrl}/flight/${flightId}`);
   }
 
