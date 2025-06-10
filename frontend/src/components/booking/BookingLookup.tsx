@@ -36,13 +36,13 @@ const BookingLookup: React.FC = () => {
 
       // Get flight information for the first ticket (all tickets should have same flight)
       const firstTicket = tickets[0];
-      const flight = await flightService.getFlightById(firstTicket.flightId);
+      const flight = await flightService.getFlightById(firstTicket.flightId!);
 
       // Get passenger names for each ticket
       const passengerNames = await Promise.all(
         tickets.map(async (ticket) => {
           try {
-            const passenger = await passengerService.getPassengerById(ticket.passengerId);
+            const passenger = await passengerService.getPassengerById(ticket.passengerId!);
             return passenger.passengerName;
           } catch (error) {
             console.error(`Error getting passenger ${ticket.passengerId}:`, error);
@@ -90,8 +90,8 @@ const BookingLookup: React.FC = () => {
           if (ticket.ticketId) {
             await ticketService.deleteTicket(ticket.ticketId);
             await flightTicketClassService.updateRemainingTickets(
-              ticket.flightId, 
-              ticket.ticketClassId, 
+              ticket.flightId!, 
+              ticket.ticketClassId!, 
               -1
             ); 
           }
