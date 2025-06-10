@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, ListGroup } from 'react-bootstrap';
-import { bookingConfirmationService, BookingConfirmation } from '../../services/bookingConfirmationService';
+import { BookingConfirmation } from '../../services/bookingConfirmationService';
 import { ticketService, flightService, passengerService, flightTicketClassService } from '../../services';
 
 const BookingLookup: React.FC = () => {
