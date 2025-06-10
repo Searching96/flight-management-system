@@ -26,7 +26,7 @@ public class TicketCleanupServiceImpl {
    @Autowired
    private FlightTicketClassService flightTicketClassService;
 
-   // Run every 30 minutes
+   // Run every 1 minutes
    @Scheduled(fixedRate = 60000) // 1 minute in milliseconds
    public void cleanupExpiredUnpaidTickets() {
       try {

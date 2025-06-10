@@ -157,7 +157,9 @@ const FlightCard: React.FC<FlightCardProps> = ({
                   {calculateDuration()}
                 </Badge>
               </div>
-              <small className="text-muted d-block mt-2">Direct</small>
+              <small className="text-muted d-block mt-2">
+                {flightDetails.length > 0 ? "With stops" : "Direct"}
+              </small>
             </div>
           </Col>
 
