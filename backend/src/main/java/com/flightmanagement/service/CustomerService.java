@@ -17,5 +17,7 @@ public interface CustomerService {
 
     CustomerDto getCustomerByEmail(String email);
 
-    void updateCustomerScore(Integer id, Integer score);
+    CustomerDto updateCustomerScore(Integer id, Integer score);
+
+    Integer getCustomerScore(Integer id);
 }

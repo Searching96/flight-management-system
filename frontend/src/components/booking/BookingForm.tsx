@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, Table, Modal } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
-import { flightService, ticketService, passengerService, bookingConfirmationService, flightTicketClassService, accountService } from '../../services';
+import { flightService, ticketService, passengerService, bookingConfirmationService, flightTicketClassService, accountService, customerService } from '../../services';
 import { flightDetailService } from '../../services/flightDetailService';
 import { Flight } from '../../models';
 
@@ -73,12 +73,23 @@ const BookingForm: React.FC = () => {
 
   // Helper to get user info for default values
   const [accountInfo, setAccountInfo] = useState<any>(null);
+  const [customerScore, setCustomerScore] = useState<number>(0);
+  
   useEffect(() => {
     const logUserInfo = async () => {
       if (user?.accountTypeName === "Customer" && user?.id) {
         const userInfo = await accountService.getAccountById(user.id);
         console.log('User account info:', userInfo);
         setAccountInfo(userInfo);
+        
+        // Get customer's current score using customerService
+        try {
+          const customerInfo = await customerService.getCustomerById(user.id);
+          setCustomerScore(customerInfo.score || 0);
+        } catch (error) {
+          console.error('Error fetching customer score:', error);
+          setCustomerScore(0);
+        }
       }
     };
     logUserInfo();
@@ -175,6 +186,29 @@ const BookingForm: React.FC = () => {
         setFlightDetails([]);
       }
     }
+  };
+
+  // Calculate score and discount
+  const calculateScoreAndDiscount = () => {
+    if (!selectedClass) return { score: 0, discount: 0, discountedPrice: 0 };
+    
+    const standardPrice = selectedClass.specifiedFare;
+    const totalStandardPrice = standardPrice * passengerCount;
+    const score = Math.floor(totalStandardPrice / 10000);
+    
+    let discountPercent = 0;
+    if (customerScore >= 200000) {
+      discountPercent = 8;
+    } else if (customerScore >= 50000) {
+      discountPercent = 5;
+    } else if (customerScore >= 10000) {
+      discountPercent = 2;
+    }
+    
+    const discountAmount = (totalStandardPrice * discountPercent) / 100;
+    const discountedPrice = totalStandardPrice - discountAmount;
+    
+    return { score, discount: discountPercent, discountedPrice, discountAmount };
   };
 
   const onSubmit = async (data: BookingFormData) => {
@@ -287,13 +321,17 @@ const BookingForm: React.FC = () => {
         return;
       }
 
+      // Calculate final prices with discount
+      const { score, discountedPrice } = calculateScoreAndDiscount();
+      const pricePerTicket = discountedPrice / passengerCount;
+
       const tickets = data.passengers.map((passenger, index) => ({
         flightId: Number(flightId),
         ticketClassId: data.ticketClassId,
         bookCustomerId: user ? user?.accountTypeName === "Customer" && user?.id != null ? user.id : null : null,
         passengerId: passenger.passengerId,
         seatNumber: seatNumbers[index],
-        fare: selectedClass?.specifiedFare || 0,
+        fare: pricePerTicket, // Use discounted price per ticket
         confirmationCode: confirmationCode
       }));
 
@@ -309,6 +347,18 @@ const BookingForm: React.FC = () => {
         } catch (err: any) {
           console.error("Error creating ticket:", err);
           return;
+        }
+      }
+
+      // Save earned score to customer account after successful booking
+      if (user?.accountTypeName === "Customer" && user?.id && score > 0) {
+        try {
+          const updatedScore = customerScore + score;
+          await customerService.updateCustomerScore(user.id, updatedScore);
+          console.log(`Score updated: ${customerScore} + ${score} = ${updatedScore}`);
+        } catch (err: any) {
+          console.error("Error updating customer score:", err);
+          // Don't fail the booking if score update fails
         }
       }
 
@@ -358,8 +408,8 @@ const BookingForm: React.FC = () => {
   const selectedTicketClass = watch('ticketClassId');
   const selectedClass = ticketClasses.find(tc => tc.ticketClassId === selectedTicketClass);
   const calculateTotalPrice = () => {
-    if (!selectedClass) return 0;
-    return selectedClass.specifiedFare * passengerCount;
+    const { discountedPrice } = calculateScoreAndDiscount();
+    return discountedPrice || 0;
   };
 
   const formatTime = (dateTimeString: string) => {
@@ -657,6 +707,35 @@ const BookingForm: React.FC = () => {
                             ${selectedClass.specifiedFare}
                           </Col>
 
+                          {user?.accountTypeName === "Customer" && (
+                            <>
+                              <Col xs={6}>
+                                <strong>Current Score:</strong>
+                              </Col>
+                              <Col xs={6} className="text-end">
+                                {customerScore.toLocaleString()}
+                              </Col>
+
+                              {calculateScoreAndDiscount().discount > 0 && (
+                                <>
+                                  <Col xs={6}>
+                                    <strong className="text-success">Discount ({calculateScoreAndDiscount().discount}%):</strong>
+                                  </Col>
+                                  <Col xs={6} className="text-end text-success">
+                                    -${(calculateScoreAndDiscount().discountAmount ?? 0).toFixed(2)}
+                                  </Col>
+                                </>
+                              )}
+
+                              <Col xs={6}>
+                                <strong className="text-info">Score to Earn:</strong>
+                              </Col>
+                              <Col xs={6} className="text-end text-info">
+                                +{calculateScoreAndDiscount().score.toLocaleString()}
+                              </Col>
+                            </>
+                          )}
+
                           <Col xs={12}>
                             <hr className="my-2" />
                           </Col>
@@ -665,7 +744,7 @@ const BookingForm: React.FC = () => {
                             <strong className="text-primary fs-5">Total:</strong>
                           </Col>
                           <Col xs={6} className="text-end">
-                            <strong className="text-primary fs-5">${calculateTotalPrice()}</strong>
+                            <strong className="text-primary fs-5">${calculateTotalPrice().toFixed(2)}</strong>
                           </Col>
                         </>
                       )}
@@ -778,7 +857,7 @@ const BookingForm: React.FC = () => {
                         <strong className="text-primary fs-5">Total Amount:</strong>
                       </Col>
                       <Col xs={6} className="text-end">
-                        <strong className="text-primary fs-4">${calculateTotalPrice()}</strong>
+                        <strong className="text-primary fs-4">${calculateTotalPrice().toFixed(2)}</strong>
                       </Col>
                     </Row>
                   </Card.Body>
@@ -807,7 +886,7 @@ const BookingForm: React.FC = () => {
                 ) : (
                   <>
                     <i className="bi bi-check-circle me-2"></i>
-                    Confirm Booking - ${calculateTotalPrice()}
+                    Confirm Booking - ${calculateTotalPrice().toFixed(2)}
                   </>
                 )}
               </Button>

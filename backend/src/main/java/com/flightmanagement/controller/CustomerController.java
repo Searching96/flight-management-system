@@ -1,6 +1,7 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.CustomerDto;
+import com.flightmanagement.entity.Customer;
 import com.flightmanagement.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 
@@ -37,10 +38,15 @@ public class CustomerController {
         return ResponseEntity.ok(customerService.getCustomerByEmail(email));
     }
 
-    @PutMapping("/{id}/score")
-    @PreAuthorize("hasRole('EMPLOYEE_SUPPORT')")
-    public ResponseEntity<Void> updateScore(@PathVariable Integer id, @RequestParam Integer score) {
-        customerService.updateCustomerScore(id, score);
-        return ResponseEntity.noContent().build();
+    @PutMapping("/{id}/score/{score}")
+    public ResponseEntity<CustomerDto> updateScore(@PathVariable Integer id, @PathVariable Integer score) {
+        CustomerDto customer = customerService.updateCustomerScore(id, score);
+        return ResponseEntity.ok(customer);
+    }
+
+    @GetMapping("/{id}/score")
+    public ResponseEntity<Integer> getCustomerScore(@PathVariable Integer id) {
+        Integer score = customerService.getCustomerScore(id);
+        return ResponseEntity.ok(score);
     }
 }

@@ -16,6 +16,10 @@ export class CustomerService {
     }
   }
 
+  async getCustomerScore(customerId: number): Promise<number> {
+    return apiClient.get(`${this.customerUrl}/${customerId}/score`);
+  }
+
   async getCustomerById(customerId: number): Promise<Customer> {
     return apiClient.get(`${this.customerUrl}/${customerId}`);
   }
