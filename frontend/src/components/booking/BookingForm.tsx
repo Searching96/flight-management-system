@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, Table } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, Table, Modal } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
 import { flightService, ticketService, passengerService, bookingConfirmationService, flightTicketClassService, accountService } from '../../services';
 import { flightDetailService } from '../../services/flightDetailService';
@@ -65,6 +65,8 @@ const BookingForm: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [flightDetails, setFlightDetails] = useState<any[]>([]);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingBookingData, setPendingBookingData] = useState<BookingFormData | null>(null);
 
   // Get passenger count from query param or location state
   const passengerCount = parseInt(queryPassengers || '0') || location.state?.passengerCount || 1;
@@ -325,6 +327,24 @@ const BookingForm: React.FC = () => {
     }
   };
 
+  const handleFormSubmit = async (data: BookingFormData) => {
+    // Store the form data and show confirmation modal
+    setPendingBookingData(data);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!pendingBookingData) return;
+
+    setShowConfirmModal(false);
+    await onSubmit(pendingBookingData);
+  };
+
+  const handleCancelBooking = () => {
+    setShowConfirmModal(false);
+    setPendingBookingData(null);
+  };
+
   const selectedTicketClass = watch('ticketClassId');
   const selectedClass = ticketClasses.find(tc => tc.ticketClassId === selectedTicketClass);
   const calculateTotalPrice = () => {
@@ -541,7 +561,7 @@ const BookingForm: React.FC = () => {
 
           <Card className="shadow">
             <Card.Body className="p-4">
-              <Form onSubmit={handleSubmit(onSubmit)}>
+              <Form onSubmit={handleSubmit(handleFormSubmit)}>
                 {/* Error and Warning Messages */}
                 {error && (
                   <Alert variant="danger" className="mb-4">
@@ -574,13 +594,13 @@ const BookingForm: React.FC = () => {
                               <strong>{detail.mediumAirportName || 'N/A'}</strong>
                             </td>
                             <td className="text-center align-middle py-3">
-                              {detail.arrivalTime 
+                              {detail.arrivalTime
                                 ? <span className="badge bg-info">{formatTime(detail.arrivalTime)}</span>
                                 : <span className="text-muted">N/A</span>
                               }
                             </td>
                             <td className="text-center align-middle py-3">
-                              {detail.layoverDuration 
+                              {detail.layoverDuration
                                 ? <span className="badge bg-secondary">{detail.layoverDuration}</span>
                                 : <span className="text-muted">N/A</span>
                               }
@@ -673,6 +693,116 @@ const BookingForm: React.FC = () => {
               </Form>
             </Card.Body>
           </Card>
+
+          {/* Confirmation Modal */}
+          <Modal
+            show={showConfirmModal}
+            onHide={handleCancelBooking}
+            centered
+            size="lg"
+          >
+            <Modal.Header closeButton className="bg-primary text-white">
+              <Modal.Title>
+                <i className="bi bi-exclamation-triangle me-2"></i>
+                Confirm Your Booking
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="p-4">
+              <div className="text-center mb-4">
+                <h5 className="text-primary">Please review your booking details</h5>
+                <p className="text-muted">Once confirmed, this booking cannot be undone</p>
+              </div>
+
+              {flight && selectedClass && (
+                <Card className="bg-light">
+                  <Card.Body>
+                    <h6 className="fw-bold mb-3">Booking Summary</h6>
+                    <Row className="g-2">
+                      <Col xs={6}>
+                        <strong>Flight:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        {flight.flightCode}
+                      </Col>
+
+                      <Col xs={6}>
+                        <strong>Route:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        {flight.departureCityName} → {flight.arrivalCityName}
+                      </Col>
+
+                      <Col xs={6}>
+                        <strong>Departure:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        {new Date(flight.departureTime).toLocaleString()}
+                      </Col>
+
+                      <Col xs={6}>
+                        <strong>Passengers:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        {passengerCount}
+                      </Col>
+
+                      <Col xs={6}>
+                        <strong>Class:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        {selectedClass.ticketClassName}
+                      </Col>
+
+                      <Col xs={6}>
+                        <strong>Price per ticket:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        ${selectedClass.specifiedFare}
+                      </Col>
+
+                      <Col xs={12}>
+                        <hr className="my-2" />
+                      </Col>
+
+                      <Col xs={6}>
+                        <strong className="text-primary fs-5">Total Amount:</strong>
+                      </Col>
+                      <Col xs={6} className="text-end">
+                        <strong className="text-primary fs-4">${calculateTotalPrice()}</strong>
+                      </Col>
+                    </Row>
+                  </Card.Body>
+                </Card>
+              )}
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                variant="secondary"
+                onClick={handleCancelBooking}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="success"
+                onClick={handleConfirmBooking}
+                disabled={submitting}
+                size="lg"
+              >
+                {submitting ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-check-circle me-2"></i>
+                    Confirm Booking - ${calculateTotalPrice()}
+                  </>
+                )}
+              </Button>
+            </Modal.Footer>
+          </Modal>
         </Col>
       </Row>
     </Container>
