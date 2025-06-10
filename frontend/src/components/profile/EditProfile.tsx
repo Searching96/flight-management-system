@@ -54,9 +54,9 @@ const EditProfile: React.FC = () => {
             };
 
             //Split accountName into firstName and lastName
-            const nameParts = accountInfo.accountName.split(' ');
-            const firstName = nameParts[0] || '';
-            const lastName = nameParts.slice(1).join(' ') || '';
+            const nameParts = accountInfo.accountName.split(' ').filter(part => part.trim() !== '');
+            const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+            const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : nameParts[0] || '';
 
             setFormData({
                firstName,
@@ -91,6 +91,13 @@ const EditProfile: React.FC = () => {
       setLoading(true);
       setError('');
       setSuccess('');
+
+      // Validate lastName contains only one word
+      if (formData.lastName.trim().split(' ').filter(part => part.trim() !== '').length > 1) {
+         setError('Last name must contain only one word');
+         setLoading(false);
+         return;
+      }
 
       try {
          const updateData = {
