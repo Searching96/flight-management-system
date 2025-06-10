@@ -88,11 +88,7 @@ const BookingLookup: React.FC = () => {
   const confirmCancelBooking = async () => {
     if (!booking) return;
 
-    const confirmed = window.confirm(
-      'Are you sure you want to cancel this booking? This action cannot be undone.'
-    );
-
-    if (confirmed && !isPaid) {
+    if (!isPaid) {
       setShowCancelModal(false);
 
       try {
@@ -107,8 +103,6 @@ const BookingLookup: React.FC = () => {
             );
           }
         }
-
-        alert('Booking and all tickets cancelled successfully.');
         setBooking(null);
         setSearchData({ confirmationCode: '' });
       } catch (err: any) {

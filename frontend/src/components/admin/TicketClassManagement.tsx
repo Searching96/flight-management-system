@@ -90,16 +90,16 @@ const TicketClassManagement: React.FC<{
     setShowForm(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this ticket class?')) return;
+  // const handleDelete = async (id: number) => {
+  //   if (!window.confirm('Are you sure you want to delete this ticket class?')) return;
 
-    try {
-      await ticketClassService.deleteTicketClass(id);
-      loadTicketClasses();
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete ticket class');
-    }
-  };
+  //   try {
+  //     await ticketClassService.deleteTicketClass(id);
+  //     loadTicketClasses();
+  //   } catch (err: any) {
+  //     setError(err.message || 'Failed to delete ticket class');
+  //   }
+  // };
 
   const handleCancel = () => {
     setShowForm(false);

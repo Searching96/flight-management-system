@@ -37,7 +37,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
     @Query("SELECT t FROM Ticket t WHERE t.confirmationCode = ?1 AND t.deletedAt IS NULL")
     List<Ticket> findByConfirmationCode(String confirmationCode);
 
-    @Query("SELECT t FROM Ticket t WHERE t.ticketStatus = 2 " +
+    @Query("SELECT t FROM Ticket t WHERE t.ticketStatus = 0 " +
             "AND t.flight.departureTime <= :cutoffTime " +
             "AND t.deletedAt IS NULL")
     List<Ticket> findExpiredUnpaidTickets(@Param("cutoffTime") LocalDateTime cutoffTime);
