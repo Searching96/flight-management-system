@@ -133,4 +133,29 @@ public class AccountServiceImpl implements AccountService {
                 .map(accountMapper::toDto)
                 .toList();
     }
+
+    @Override
+    public boolean verifyCurrentPassword(Integer accountId, String currentPassword) {
+        Account account = accountRepository.findActiveById(accountId)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+        
+        // Use the same password verification logic as login
+        return passwordEncoder.matches(currentPassword, account.getPassword());
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(Integer accountId, String currentPassword, String newPassword) {
+        Account account = accountRepository.findActiveById(accountId)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+        
+        // Verify current password first (same logic as login)
+        if (!passwordEncoder.matches(currentPassword, account.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        
+        // Encode and set new password
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+    }
 }

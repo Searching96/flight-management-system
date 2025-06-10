@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-//import { accountService } from '../../services/accountService';
+import { accountService } from '../../services';
 
 const ResetPassword: React.FC = () => {
    const { user } = useAuth();
@@ -31,7 +31,7 @@ const ResetPassword: React.FC = () => {
       setError('');
       setSuccess('');
 
-      // Validation
+      // Validation - compare two new passwords
       if (formData.newPassword !== formData.confirmPassword) {
          setError('New passwords do not match');
          setLoading(false);
@@ -45,18 +45,30 @@ const ResetPassword: React.FC = () => {
       }
 
       try {
-         // TODO: Implement API call to reset password
+         // Check old password first
+         try {
+            const isCurrentPasswordValid = await accountService.verifyCurrentPassword(user!.id, formData.currentPassword);
+            if (!isCurrentPasswordValid) {
+               setError('Current password is incorrect');
+               setLoading(false);
+               return;
+            }
+         } catch (verifyErr: any) {
+            setError('Current password is incorrect');
+            setLoading(false);
+            return;
+         }
+
+         // Reset password
          const resetData = {
-            accountId: user?.id,
+            accountId: user!.id,
             currentPassword: formData.currentPassword,
             newPassword: formData.newPassword,
          };
 
          console.log('Resetting password for user:', user?.id);
 
-         // Simulate API call
-         await new Promise(resolve => setTimeout(resolve, 1000));
-         // await accountService.resetPassword(resetData);
+         await accountService.resetPassword(resetData);
 
          setSuccess('Password reset successfully!');
          setFormData({
