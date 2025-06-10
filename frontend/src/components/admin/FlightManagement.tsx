@@ -611,7 +611,18 @@ const FlightManagement: React.FC<{
                     </Button>
                 </Modal.Footer>
             </Modal>
-        </Container>
+            {/* Flights table - REPLACED WITH NEW COMPONENT */}
+            <Row>
+                <Col>
+                    <FlightTable
+                        flights={flights}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onManageTicketClasses={handleManageTicketClasses}
+                    />
+                </Col>
+            </Row>
+        </Container >
     );
 }
 

@@ -291,6 +291,9 @@ public class TicketServiceImpl implements TicketService {
         ticket.setTicketStatus((byte) 1); // 1: paid
         ticket.setPaymentTime(LocalDateTime.now());
 
+//        Customer customer = ticket.getBookCustomer();
+//        customer.setScore(customer.getScore() + ticket.getFare());
+
         Ticket updatedTicket = ticketRepository.save(ticket);
         return ticketMapper.toDto(updatedTicket);
     }

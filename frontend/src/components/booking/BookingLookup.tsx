@@ -338,7 +338,7 @@ const BookingLookup: React.FC = () => {
               {/* Booking Actions */}
               <Card.Footer className="bg-light">
                 <Row className="g-2">
-                  <Col xs={12} md={isPaid ? 4 : 3}>
+                  <Col xs={12} md={isPaid ? 6 : 4}>
                     <Button
                       onClick={handlePrintBooking}
                       variant="outline-secondary"
@@ -348,24 +348,8 @@ const BookingLookup: React.FC = () => {
                       Print Booking
                     </Button>
                   </Col>
-                  <Col xs={12} md={isPaid ? 4 : 3}>
-                    <Button
-                      onClick={() => navigate('/booking-confirmation', {
-                        state: {
-                          confirmationCode: booking.confirmationCode,
-                          confirmationData: booking,
-                          message: 'Booking retrieved successfully!'
-                        }
-                      })}
-                      variant="primary"
-                      className="w-100 mb-2"
-                    >
-                      <i className="bi bi-eye me-2"></i>
-                      View Full Details
-                    </Button>
-                  </Col>
                   {!isPaid && (
-                    <Col xs={12} md={3}>
+                    <Col xs={12} md={4}>
                       <Button
                         onClick={handlePayment}
                         variant="success"
@@ -376,7 +360,7 @@ const BookingLookup: React.FC = () => {
                       </Button>
                     </Col>
                   )}
-                  <Col xs={12} md={isPaid ? 4 : 3}>
+                  <Col xs={12} md={isPaid ? 6 : 4}>
                     {!isPaid ? (
                       <Button
                         onClick={handleCancelBooking}

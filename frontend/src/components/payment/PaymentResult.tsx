@@ -149,7 +149,7 @@ const PaymentResult: React.FC = () => {
                     <Col xs={6}>{transactionDetails!.data.vnp_TxnRef || 'N/A'}</Col>
 
                     <Col xs={6} className="fw-bold">Số tiền:</Col>
-                    <Col xs={6}>{Number(transactionDetails!.data.vnp_Amount).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</Col>
+                    <Col xs={6}>{Number(transactionDetails!.data.vnp_Amount/100).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</Col>
 
                     <Col xs={6} className="fw-bold">Phương thức thanh toán:</Col>
                     <Col xs={6}>{transactionDetails!.data.vnp_CardType || 'N/A'}</Col>
