@@ -7,8 +7,6 @@ import com.flightmanagement.entity.Customer;
 import com.flightmanagement.entity.Employee;
 import com.flightmanagement.mapper.AccountMapper;
 import com.flightmanagement.repository.AccountRepository;
-import com.flightmanagement.repository.EmployeeRepository;
-import com.flightmanagement.repository.CustomerRepository;
 import com.flightmanagement.service.AccountService;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -31,10 +29,6 @@ public class AccountServiceImpl implements AccountService {
     private AccountMapper accountMapper;
     @Autowired
     private PasswordEncoder passwordEncoder;
-    @Autowired
-    private CustomerRepository customerRepository;
-    @Autowired
-    private EmployeeRepository employeeRepository;
 
     @Override
     @Transactional

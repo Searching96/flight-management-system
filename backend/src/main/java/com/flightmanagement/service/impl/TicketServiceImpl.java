@@ -6,7 +6,6 @@ import com.flightmanagement.mapper.TicketMapper;
 import com.flightmanagement.repository.*;
 import com.flightmanagement.service.FlightTicketClassService;
 import com.flightmanagement.service.PassengerService;
-import com.flightmanagement.service.PaymentService;
 import com.flightmanagement.service.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

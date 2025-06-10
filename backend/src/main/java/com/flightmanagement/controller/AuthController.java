@@ -12,7 +12,6 @@ import com.flightmanagement.repository.CustomerRepository;
 import com.flightmanagement.repository.EmployeeRepository;
 import com.flightmanagement.security.CustomUserDetails;
 import com.flightmanagement.security.JwtService;
-import com.flightmanagement.service.impl.AuthServiceImpl;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +25,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
 import java.time.Instant;
-import java.util.Map;
 
 // AuthController.java
 @RestController
@@ -46,8 +44,6 @@ public class AuthController {
     EmployeeRepository employeeRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
-    @Autowired
-    private AuthServiceImpl authServiceImpl;
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequestDto request) {

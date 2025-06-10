@@ -1,6 +1,5 @@
 package com.flightmanagement.service.impl;
 
-import com.flightmanagement.dto.AccountDto;
 import com.flightmanagement.dto.LoginRequestDto;
 import com.flightmanagement.dto.AuthResponse;
 import com.flightmanagement.entity.Account;
@@ -9,16 +8,13 @@ import com.flightmanagement.security.CustomUserDetails;
 import com.flightmanagement.security.JwtService;
 import com.flightmanagement.service.AccountService;
 import com.flightmanagement.service.AuthService;
-import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.Instant;
 

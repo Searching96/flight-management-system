@@ -34,13 +34,10 @@ public class DataInitializer implements CommandLineRunner {
     private FlightService flightService;
 
     @Autowired
+    private FlightDetailService flightDetailService;
+
+    @Autowired
     private FlightTicketClassService flightTicketClassService;
-    @Autowired
-    private EmployeeService employeeService;
-
-
-    @Autowired
-    private CustomerService customerService;
 
     @Override
     public void run(String... args) {
@@ -51,6 +48,7 @@ public class DataInitializer implements CommandLineRunner {
         initializePlanes();
         initializeDemoAccounts();
         initializeDemoFlights();
+        initializeDemoFlightDetails();
         initializeDemoPassengers();
         System.out.println("✅ Demo data initialization completed!");
     }
@@ -239,6 +237,51 @@ public class DataInitializer implements CommandLineRunner {
             }
         } catch (Exception e) {
             System.err.println("⚠️ Error creating demo flights: " + e.getMessage());
+        }
+    }
+
+    private void initializeDemoFlightDetails() {
+        try {
+            if (flightDetailService.getAllFlightDetails().isEmpty()) {
+                LocalDateTime tomorrow = LocalDateTime.now().plusDays(1);
+
+                // Flight 1 (SGN -> HAN) with 2 stopovers: Da Nang and Nha Trang
+                FlightDetailDto detail1_1 = new FlightDetailDto();
+                detail1_1.setFlightId(1);
+                detail1_1.setMediumAirportId(3); // Da Nang airport
+                detail1_1.setArrivalTime(tomorrow.withHour(8).withMinute(45));
+                detail1_1.setLayoverDuration(30); // 30 minutes layover
+                flightDetailService.createFlightDetail(detail1_1);
+
+                FlightDetailDto detail1_2 = new FlightDetailDto();
+                detail1_2.setFlightId(1);
+                detail1_2.setMediumAirportId(4); // Cam Ranh airport (Nha Trang)
+                detail1_2.setArrivalTime(tomorrow.withHour(9).withMinute(30));
+                detail1_2.setLayoverDuration(25); // 25 minutes layover
+                flightDetailService.createFlightDetail(detail1_2);
+
+                // Flight 2 (HAN -> DAD) with 2 stopovers: Ho Chi Minh City and Nha Trang
+                FlightDetailDto detail2_1 = new FlightDetailDto();
+                detail2_1.setFlightId(2);
+                detail2_1.setMediumAirportId(1); // Tan Son Nhat airport (Ho Chi Minh City)
+                detail2_1.setArrivalTime(tomorrow.withHour(14).withMinute(30));
+                detail2_1.setLayoverDuration(35); // 35 minutes layover
+                flightDetailService.createFlightDetail(detail2_1);
+
+                FlightDetailDto detail2_2 = new FlightDetailDto();
+                detail2_2.setFlightId(2);
+                detail2_2.setMediumAirportId(4); // Cam Ranh airport (Nha Trang)
+                detail2_2.setArrivalTime(tomorrow.withHour(15).withMinute(15));
+                detail2_2.setLayoverDuration(20); // 20 minutes layover
+                flightDetailService.createFlightDetail(detail2_2);
+
+                System.out.println("✓ Demo flight details (stopovers) created");
+                System.out.println("  - Flight 1 (SGN -> HAN): 2 stopovers at Da Nang and Nha Trang");
+                System.out.println("  - Flight 2 (HAN -> DAD): 2 stopovers at Ho Chi Minh City and Nha Trang");
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ Error creating demo flight details: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

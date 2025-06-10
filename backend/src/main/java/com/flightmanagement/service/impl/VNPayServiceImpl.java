@@ -323,7 +323,7 @@ public class VNPayServiceImpl implements PaymentService {
      * Processes HTTP connection response
      */
     private static Map<String, Object> getResponse(HttpURLConnection con) throws IOException {
-        int responseCode = con.getResponseCode();
+        //int responseCode = con.getResponseCode();
         BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
         String output;
         StringBuilder responseData = new StringBuilder();
