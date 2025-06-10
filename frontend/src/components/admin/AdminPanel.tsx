@@ -5,11 +5,10 @@ import AirportManagement from './AirportManagement';
 import ParameterSettings from './ParameterSettings';
 import PlaneManagement from './PlaneManagement';
 import TicketClassManagement from './TicketClassManagement';
-import ChatManagement from './ChatManagement';
 import EmployeeManagement from './EmployeeManagement';
 import { usePermissions } from '../../hooks/useAuth';
 
-type AdminTab = 'overview' | 'flights' | 'airports' | 'planes' | 'ticket-classes' | 'parameters' | 'chat' | 'employees';
+type AdminTab = 'overview' | 'flights' | 'airports' | 'planes' | 'ticket-classes' | 'parameters' | 'employees';
 
 export const AdminPanel: React.FC = () => {
   const { canViewAdmin } = usePermissions();
@@ -52,8 +51,6 @@ export const AdminPanel: React.FC = () => {
         return <TicketClassManagement showAddModal={quickActionModals.showTicketClassModal} onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showTicketClassModal: false }))} />;
       case 'parameters':
         return <ParameterSettings />;
-      case 'chat':
-        return <ChatManagement />;
       case 'employees':
         return <EmployeeManagement />;
       default:
@@ -167,14 +164,6 @@ export const AdminPanel: React.FC = () => {
                 onClick={() => setActiveTab('parameters')}
               >
                 ⚙️ Settings
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeTab === 'chat'}
-                onClick={() => setActiveTab('chat')}
-              >
-                💬 Customer Support
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>
