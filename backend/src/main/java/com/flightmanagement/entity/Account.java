@@ -1,5 +1,6 @@
 package com.flightmanagement.entity;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -10,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Getter
@@ -56,6 +58,14 @@ public class Account {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @Nullable
+    @Column(name = "password_reset_token")
+    private String passwordResetToken;
+
+    @Nullable
+    @Column(name = "password_reset_expiry")
+    private Instant passwordResetExpiry;
 
     @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
     private Employee employee;

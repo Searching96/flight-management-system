@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS `account`
     email VARCHAR(200) NOT NULL UNIQUE,
     citizen_id VARCHAR(200) NOT NULL UNIQUE,
     phone_number VARCHAR(200) NOT NULL,
+    password_reset_token VARCHAR(512) NULL,
+    password_reset_expiry DATETIME NULL,
     deleted_at DATETIME DEFAULT NULL
 );
 

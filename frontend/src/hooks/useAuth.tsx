@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { LoginRequest, AuthResponse, UserDetails, RegisterRequest } from '../models';
+import { LoginRequest, UserDetails, RegisterRequest } from '../models';
 import { authService } from '../services/authService';
 
 // Define the context type
@@ -10,6 +10,8 @@ interface AuthContextType {
   register: (registerRequest: RegisterRequest) => Promise<void>;
   logout: () => void;
   refresh: () => Promise<void>;
+  forgetPassword?: (email: string) => Promise<void>;
+  resetPassword?: (token: string, newPassword: string) => Promise<void>;
 }
 
 // Create the context
@@ -52,8 +54,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = useCallback(async (loginRequest: LoginRequest) => {
     setLoading(true);
     try {
-      const response: UserDetails = await authService.login(loginRequest);
-      setUser(response);
+      await authService.login(loginRequest);
+      setUser(authService.getCurrentUser());
       setLoading(false);
     } catch (err) {
       setLoading(false);
@@ -64,8 +66,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = useCallback(async (registerRequest: RegisterRequest) => {
     setLoading(true);
     try {
-      const response: UserDetails = await authService.register(registerRequest);
-      setUser(response);
+      await authService.register(registerRequest);
+      setUser(authService.getCurrentUser());
       setLoading(false);
     } catch (err) {
       setLoading(false);
@@ -81,12 +83,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const response: AuthResponse = await authService.refreshToken();
-      setUser(response.userDetails);
+      await authService.refreshToken();
+      setUser(authService.getCurrentUser());
       setLoading(false);
     } catch (err) {
       setLoading(false);
       setUser(null);
+      throw err;
+    }
+  }, []);
+
+
+  const forgetPassword = useCallback(async (email: string) => {
+    setLoading(true);
+    try {
+      await authService.forgetPassword(email);
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      throw err;
+    }
+  }, []);
+
+  const resetPassword = useCallback(async (token: string, newPassword: string) => {
+    setLoading(true);
+    try {
+      await authService.resetPassword(token, newPassword);
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
       throw err;
     }
   }, []);
@@ -98,6 +123,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     refresh,
+    forgetPassword,
+    resetPassword
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -128,13 +155,12 @@ export const usePermissions = () => {
     canManageEmployees: user?.accountTypeName === "Employee",
     canManageCustomerSupport: user?.accountTypeName === "Employee",
     canAccessChatManagement: user?.accountTypeName === "Employee",
+    canManageCustomers: user?.accountTypeName === 'Employee',
+    canViewReports: user?.accountTypeName === 'Employee',
 
     // General permissions
     isEmployee: user?.accountTypeName === "Employee",
     isCustomer: user?.accountTypeName === "Customer",
-    canViewOwnBookings: !!user,
-    canManageCustomers: user?.accountTypeName === 'Employee',
-    canViewReports: user?.accountTypeName === 'Employee',
   };
 };
 

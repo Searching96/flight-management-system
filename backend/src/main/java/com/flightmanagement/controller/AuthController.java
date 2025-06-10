@@ -1,113 +1,67 @@
 package com.flightmanagement.controller;
 
-import com.flightmanagement.dto.LoginRequestDto;
-import com.flightmanagement.dto.AuthResponse;
-import com.flightmanagement.dto.RegisterDto;
-import com.flightmanagement.entity.Account;
-import com.flightmanagement.entity.Customer;
-import com.flightmanagement.entity.Employee;
+import com.flightmanagement.dto.*;
 import com.flightmanagement.mapper.AuthMapper;
 import com.flightmanagement.repository.AccountRepository;
-import com.flightmanagement.repository.CustomerRepository;
-import com.flightmanagement.repository.EmployeeRepository;
-import com.flightmanagement.security.CustomUserDetails;
 import com.flightmanagement.security.JwtService;
+import com.flightmanagement.service.AuthService;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
-import java.time.Instant;
 
 // AuthController.java
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
     @Autowired
-    private AuthMapper authMapper;
-    @Autowired
-    private AuthenticationManager authManager;
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private AccountRepository accountRepo;
-    @Autowired
-    CustomerRepository customerRepository;
-    @Autowired
-    EmployeeRepository employeeRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private AuthService authService;
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequestDto request) {
-        Authentication authentication = authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-
-        return ResponseEntity.ok(createAuthResponse(userDetails));
+        return ResponseEntity.ok(authService.authenticate(request));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(
-            @Valid @RequestBody RegisterDto request
-    ) {
-        Account newAccount = new Account();
-        // Map common fields
-        newAccount.setAccountName(request.getAccountName());
-        newAccount.setEmail(request.getEmail());
-        newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
-        newAccount.setCitizenId(request.getCitizenId());
-        newAccount.setPhoneNumber(request.getPhoneNumber());
-        newAccount.setAccountType(request.getAccountType());
+    public ResponseEntity<AuthResponse> registerCustomer(@Valid @RequestBody RegisterDto request) {
+        request.setEmployeeType(null);
+        request.setAccountType(1); // Default to customer account type
+        return ResponseEntity.ok(authService.register(request));
+    }
 
-        Account savedAccount = accountRepo.save(newAccount);
+    @PostMapping("/employee/register")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMIN') or hasRole('EMPLOYEE_ACCOUNTING')")
+    public ResponseEntity<AuthResponse> registerEmployee(@Valid @RequestBody RegisterDto request) {
+        request.setAccountType(2); // Set account type to employee
+        return ResponseEntity.ok(authService.register(request));
+    }
 
-        // Handle account type-specific relationships
-        if (request.getAccountType() == 1) {
-            Customer customer = new Customer();
-            customer.setAccount(savedAccount);
-            customerRepository.save(customer);
-        } else if (request.getAccountType() == 2) {
-            Employee employee = new Employee();
-            employee.setAccount(savedAccount);
-            employee.setEmployeeType(request.getEmployeeType());
-            employeeRepository.save(employee);
-        }
+    @PostMapping("/forget-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody PasswordForgetRequest request) {
+        if (!authService.validateEmail(request.getEmail()))
+            return ResponseEntity.badRequest().body("Cannot find account with this email");
+        authService.processForgotPassword(request.getEmail());
+        return ResponseEntity.ok("Password reset email sent");
+    }
 
-        return ResponseEntity.ok(createAuthResponse(
-                CustomUserDetails.create(savedAccount)
-        ));
+    @PostMapping("/reset-password")
+    public ResponseEntity<AuthResponse> resetPassword(@RequestBody PasswordResetRequest request) {
+        return ResponseEntity.ok(authService.processPasswordReset(request.getToken(), request.getNewPassword()));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refreshToken(@RequestBody String request)
-            throws AccessDeniedException {
-
-        if (!jwtService.validateToken(request)) {
-            throw new AccessDeniedException("Invalid refresh token");
-        }
-
-        String email = jwtService.getEmailFromToken(request);
-        Account account = accountRepo.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        return ResponseEntity.ok(createAuthResponse(CustomUserDetails.create(account)));
+    public ResponseEntity<AuthResponse> refreshToken(@RequestBody TokenRequest request) throws AccessDeniedException {
+        return ResponseEntity.ok(authService.refreshToken(request.getToken()));
     }
 
-    private AuthResponse createAuthResponse(CustomUserDetails userDetails) {
-        return new AuthResponse(
-                jwtService.generateAccessToken(userDetails),
-                jwtService.generateRefreshToken(userDetails.getEmail()),
-                "Bearer",
-                Instant.now().plusMillis(jwtService.getJwtExpirationMs()),
-                authMapper.toUserDetailsDto(userDetails));
+    @PostMapping("/validate-token")
+    public ResponseEntity<Boolean> validatePasswordResetToken(@RequestBody TokenRequest request) {
+        return ResponseEntity.ok(authService.validatePasswordResetToken(request.getToken()));
     }
 }

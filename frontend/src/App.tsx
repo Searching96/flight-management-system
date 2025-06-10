@@ -17,6 +17,8 @@ import TestForm from './components/test/TestForm';
 import CustomerSupport from './components/admin/CustomerSupport';
 import DebugLogin from './components/debug/DebugLogin';
 import PaymentResult from './components/payment/PaymentResult';
+import ForgetPasswordForm from './components/auth/ForgetPasswordForm';
+import ResetPasswordForm from './components/auth/ResetPasswordForm';
 
 const App: React.FC = () => {
   return (
@@ -28,6 +30,8 @@ const App: React.FC = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginForm />} />
             <Route path="/register" element={<RegisterForm />} />
+            <Route path="/forget-password" element={<ForgetPasswordForm />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordForm />} />
             <Route path="/search" element={<FlightSearch />} />
             <Route path="/flights" element={<FlightSearch />} />
             {/* Guest booking routes - public access */}

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { LoginRequest } from '../../models';
 
@@ -9,7 +9,9 @@ import { LoginRequest } from '../../models';
 const LoginForm: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const {
@@ -17,6 +19,14 @@ const LoginForm: React.FC = () => {
     handleSubmit,
     formState: { errors }
   } = useForm<LoginRequest>();
+
+  useEffect(() => {
+    // Check if coming from password reset success
+    const state = location.state as { resetSuccess?: boolean } | null;
+    if (state?.resetSuccess) {
+      setSuccess('Your password has been successfully reset. You can now log in with your new password.');
+    }
+  }, [location]);
 
   const onSubmit = async (data: LoginRequest) => {
     try {
@@ -44,6 +54,7 @@ const LoginForm: React.FC = () => {
 
               <Form onSubmit={handleSubmit(onSubmit)}>
                 {error && <Alert variant="danger">{error}</Alert>}
+                {success && <Alert variant="success">{success}</Alert>}
 
                 <Form.Group className="mb-3">
                   <Form.Label htmlFor="email">Email</Form.Label>
@@ -77,6 +88,9 @@ const LoginForm: React.FC = () => {
                   <Form.Control.Feedback type="invalid">
                     {errors.password?.message}
                   </Form.Control.Feedback>
+                  <div className="text-end mt-1">
+                    <Link to="/forget-password" className="text-decoration-none small">Forgot password?</Link>
+                  </div>
                 </Form.Group>
 
                 <Button 

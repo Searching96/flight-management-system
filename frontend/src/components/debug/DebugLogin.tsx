@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Container, Row, Col, Card, Alert, Spinner } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
 import { debugService } from '../../services/debugService';
@@ -7,7 +7,6 @@ import { Account } from '../../models/Account';
 
 const DebugLogin: React.FC = () => {
   const { accountName } = useParams<{ accountName: string }>();
-  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -58,15 +57,15 @@ const DebugLogin: React.FC = () => {
         if (response.userDetails.accountTypeName === "Customer") {
           // Customer - redirect to dashboard
           console.log('Redirecting customer to dashboard');
-          navigate('/dashboard');
+          window.location.href = '/dashboard';
         } else if (response.userDetails.accountTypeName === "Employee") {
           // Employee - redirect to admin panel
           console.log('Redirecting employee to admin panel');
-          navigate('/admin');
+          window.location.href = '/admin';
         } else {
           // Unknown account type - redirect to home
           console.log('Unknown account type, redirecting to home');
-          navigate('/');
+          window.location.href = '/';
         }
       }, 2000); // 2 second delay to show success message
 

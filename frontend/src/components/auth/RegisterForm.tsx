@@ -31,7 +31,7 @@ const RegisterForm: React.FC = () => {
 
       await registerUser(submitData);
 
-      navigate('/home', {
+      navigate('/', {
         state: { message: 'Registration successful! Please sign in.' }
       });
     } catch (err: any) {
