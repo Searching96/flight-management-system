@@ -49,6 +49,7 @@ public class SecurityConfig {
                                 , "/api/passengers/**", "/api/flight-ticket-classes/occupied-seats/**"
                                 , "/api/flight-ticket-classes/{flightId}/{ticketClassId}/update-remaining"
                                 , "/api/tickets/confirmation-code", "/api/tickets", "/api/tickets/{id}"
+                                , "/api/flight-details/flight/{flightId}"
                                 , "/api/tickets/booking-lookup/{confirmationCode}").permitAll()
                         .anyRequest().authenticated()
                 )
