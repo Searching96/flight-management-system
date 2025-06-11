@@ -698,6 +698,13 @@ const BookingForm: React.FC = () => {
                             ${selectedClass.specifiedFare}
                           </Col>
 
+                          <Col xs={6}>
+                            <strong>Subtotal:</strong>
+                          </Col>
+                          <Col xs={6} className="text-end">
+                            ${(selectedClass.specifiedFare * passengerCount).toFixed(2)}
+                          </Col>
+
                           {user?.accountTypeName === "Customer" && (
                             <>
                               <Col xs={6}>

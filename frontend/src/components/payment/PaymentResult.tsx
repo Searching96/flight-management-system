@@ -13,6 +13,7 @@ const PaymentResult: React.FC = () => {
   const [paymentStatus, setPaymentStatus] = useState<'success' | 'pending' | 'failed'>('pending');
   const [processingError, setProcessingError] = useState<string | null>(null);
   const [transactionDetails, setTransactionDetails] = useState<PaymentReturnResponse>();
+  const [scoreUpdated, setScoreUpdated] = useState(false);
 
   const handlePayment = async () => {
     try {
@@ -65,6 +66,13 @@ const PaymentResult: React.FC = () => {
       return;
     }
 
+    // Check if this transaction has already been processed for score update
+    const processedKey = `score_updated_${vnpTxnRef}_${user.id}`;
+    if (localStorage.getItem(processedKey)) {
+      console.log('Score already updated for this transaction');
+      return;
+    }
+
     try {
       // Decode hex-encoded confirmation code
       const confirmationCode = decodeHexToString(vnpTxnRef);
@@ -90,6 +98,10 @@ const PaymentResult: React.FC = () => {
         // Update customer score
         await customerService.updateCustomerScore(user.id, newScore);
         console.log(`Customer score updated: ${currentScore} + ${scoreToAdd} = ${newScore}`);
+        
+        // Mark this transaction as processed
+        localStorage.setItem(processedKey, 'true');
+        setScoreUpdated(true);
       }
     } catch (error) {
       console.error('Error updating customer score after payment:', error);
