@@ -125,6 +125,12 @@ const CustomerSupport: React.FC = () => {
         try {
           console.log('Loading unread counts for user:', user.id);
           const unreadData = await accountChatboxService.getUnreadCountsForAllChatboxes(user.id);
+          
+          // Set unread count to 0 for currently selected chatbox
+          if (selectedChatbox?.chatboxId && unreadData[selectedChatbox.chatboxId]) {
+            unreadData[selectedChatbox.chatboxId] = 0;
+          }
+          
           console.log('Unread counts received:', unreadData);
           setUnreadCounts(unreadData);
         } catch (error) {
@@ -169,6 +175,16 @@ const CustomerSupport: React.FC = () => {
           // Only update if there are actually new messages
           if (JSON.stringify(formattedMessages) !== JSON.stringify(messages)) {
             setMessages(formattedMessages);
+            
+            // Update last visit time when new messages arrive in selected chatbox
+            if (user?.id) {
+              try {
+                await accountChatboxService.updateLastVisitTime(user.id, selectedChatbox.chatboxId);
+                console.log('Last visit time updated due to new messages');
+              } catch (error) {
+                console.error('Failed to update last visit time after new messages:', error);
+              }
+            }
           }
         } catch (error) {
           console.error('Failed to poll messages:', error);
@@ -207,10 +223,33 @@ const CustomerSupport: React.FC = () => {
         if (JSON.stringify(data) !== JSON.stringify(chatboxes)) {
           setChatboxes(data);
         }
+
+        // Always poll unread counts during chatbox polling
+        if (user?.id) {
+          try {
+            const unreadData = await accountChatboxService.getUnreadCountsForAllChatboxes(user.id);
+            
+            // Set unread count to 0 for currently selected chatbox
+            if (selectedChatbox?.chatboxId && unreadData[selectedChatbox.chatboxId]) {
+              unreadData[selectedChatbox.chatboxId] = 0;
+            }
+            
+            // Always update unread counts to ensure real-time updates
+            setUnreadCounts(prev => {
+              // Only log if there are actual changes
+              if (JSON.stringify(unreadData) !== JSON.stringify(prev)) {
+                console.log('Unread counts updated during polling:', unreadData);
+              }
+              return unreadData;
+            });
+          } catch (error) {
+            console.error('Failed to poll unread counts:', error);
+          }
+        }
       } catch (error) {
         console.error('Failed to poll chatboxes:', error);
       }
-    }, 1000); // Poll every 1 second for chatbox list
+    }, 2000); // Poll every 2 seconds for more responsive updates
   };
 
   const stopChatboxPolling = () => {
@@ -224,22 +263,18 @@ const CustomerSupport: React.FC = () => {
     setSelectedChatbox(chatbox);
     setError('');
     
+    // Immediately set unread count to 0 for UI responsiveness
+    setUnreadCounts(prev => ({
+      ...prev,
+      [chatbox.chatboxId!]: 0
+    }));
+    
     // Update last visit time when selecting chatbox
     if (user?.id && chatbox.chatboxId) {
       try {
         console.log(`Updating last visit time for user ${user.id} and chatbox ${chatbox.chatboxId}`);
         await accountChatboxService.updateLastVisitTime(user.id, chatbox.chatboxId);
         console.log('Last visit time updated successfully');
-        
-        // Remove unread count for this chatbox
-        setUnreadCounts(prev => {
-          const newCounts = {
-            ...prev,
-            [chatbox.chatboxId!]: 0
-          };
-          console.log('Updated unread counts:', newCounts);
-          return newCounts;
-        });
       } catch (error) {
         console.error('Failed to update last visit time:', error);
       }
@@ -365,6 +400,38 @@ const CustomerSupport: React.FC = () => {
       const handleNewMessage = () => {
         // Reload messages when new message arrives
         loadMessages(selectedChatbox.chatboxId!);
+        
+        // Update last visit time immediately for selected chatbox
+        if (user?.id && selectedChatbox?.chatboxId) {
+          accountChatboxService.updateLastVisitTime(user.id, selectedChatbox.chatboxId)
+            .then(() => {
+              console.log('Last visit time updated for selected chatbox after new message');
+              
+              // Keep unread count at 0 for selected chatbox
+              setUnreadCounts(prev => ({
+                ...prev,
+                [selectedChatbox.chatboxId!]: 0
+              }));
+            })
+            .catch(error => console.error('Failed to update last visit time for selected chatbox:', error));
+        }
+        
+        // Also reload unread counts for all other chatboxes when new message arrives
+        if (user?.id) {
+          setTimeout(() => {
+            accountChatboxService.getUnreadCountsForAllChatboxes(user.id!)
+              .then(unreadData => {
+                // Always set unread count to 0 for currently selected chatbox
+                if (selectedChatbox?.chatboxId) {
+                  unreadData[selectedChatbox.chatboxId] = 0;
+                }
+                
+                console.log('Unread counts updated after new message:', unreadData);
+                setUnreadCounts(unreadData);
+              })
+              .catch(error => console.error('Failed to reload unread counts after new message:', error));
+          }, 200); // Reduce delay to make it more responsive
+        }
       };
 
       webSocketService.onTypingStart(handleTypingStart);
@@ -518,7 +585,16 @@ const CustomerSupport: React.FC = () => {
     }
   };
 
-  const filteredChatboxes = chatboxes;
+  // Filter chatboxes to only show those that have messages
+  const filteredChatboxes = chatboxes.filter(chatbox => 
+    chatbox.lastMessageContent && chatbox.lastMessageContent.trim() !== ''
+  );
+
+  const truncateMessage = (message: string, maxLength: number = 25) => {
+    if (!message) return '';
+    if (message.length <= maxLength) return message;
+    return message.substring(0, maxLength) + '...';
+  };
 
   if (loading) {
     return (
@@ -547,7 +623,7 @@ const CustomerSupport: React.FC = () => {
 
       <div className="flex-grow-1 d-flex" style={{ overflow: 'hidden' }}>
         {/* Sidebar - Chat List */}
-        <div className="bg-white border-end" style={{ width: '350px', display: 'flex', flexDirection: 'column' }}>
+        <div className="bg-white border-end" style={{ width: '325px', display: 'flex', flexDirection: 'column' }}>
           {/* Sort */}
           <div className="px-3 pb-2 border-bottom">
             <Form.Label className="small text-muted mb-2">Sắp xếp theo</Form.Label>
@@ -610,26 +686,27 @@ const CustomerSupport: React.FC = () => {
                     <div className="flex-grow-1 min-width-0">
                       <div className="d-flex justify-content-between align-items-center mb-1">
                         <h6 className="mb-0 text-truncate">{chatbox.customerName || 'Khách hàng'}</h6>
-                        <div className="d-flex align-items-center flex-shrink-0 ms-2">
-                          <small className="text-muted me-2">
-                            {chatbox.lastMessageTime ? formatTime(chatbox.lastMessageTime) : '14:30'}
-                          </small>
+                        <small className="text-muted">
+                          {chatbox.lastMessageTime ? formatTime(chatbox.lastMessageTime) : '14:30'}
+                        </small>
+                      </div>
+                      
+                      {(chatbox.lastMessageContent || 'Tin nhắn mẫu từ khách hàng') && (
+                        <div className="d-flex justify-content-between align-items-center">
+                          <p className={`mb-0 text-muted small text-truncate flex-grow-1 me-2 ${
+                            (unreadCounts[chatbox.chatboxId!] || 0) > 0 ? 'fw-bold' : ''
+                          }`}>
+                            {getLastMessagePrefix(chatbox)}{truncateMessage(chatbox.lastMessageContent || 'Tin nhắn mẫu từ khách hàng')}
+                          </p>
                           {(() => {
                             const unreadCount = unreadCounts[chatbox.chatboxId!] || 0;
-                            console.log(`Chatbox ${chatbox.chatboxId} unread count:`, unreadCount);
                             return unreadCount > 0 ? (
-                              <span className="badge bg-primary rounded-pill" style={{ fontSize: '0.7rem' }}>
+                              <span className="badge bg-danger rounded-pill flex-shrink-0" style={{ fontSize: '0.7rem' }}>
                                 {unreadCount}
                               </span>
                             ) : null;
                           })()}
                         </div>
-                      </div>
-                      
-                      {(chatbox.lastMessageContent || 'Tin nhắn mẫu từ khách hàng') && (
-                        <p className="mb-0 text-muted small text-truncate">
-                          {getLastMessagePrefix(chatbox)}{chatbox.lastMessageContent || 'Tin nhắn mẫu từ khách hàng'}
-                        </p>
                       )}
                       
                       {/* Removed unread count badge */}
@@ -668,10 +745,6 @@ const CustomerSupport: React.FC = () => {
                 </div>
                 <div>
                   <h6 className="mb-0">{selectedChatbox.customerName || 'Khách hàng'}</h6>
-                  <small className="text-success">
-                    <i className="bi bi-circle-fill me-1" style={{ fontSize: '8px' }}></i>
-                    Đang hoạt động
-                  </small>
                 </div>
               </div>
 
@@ -776,7 +849,7 @@ const CustomerSupport: React.FC = () => {
                         height: '32px',
                         fontSize: '12px',
                         fontWeight: 'bold',
-                        backgroundColor: '#0084ff'
+                        backgroundColor: getAvatarColor(selectedChatbox?.customerName, true)
                       }}
                     >
                       {getAvatarLetter(selectedChatbox?.customerName, true)}

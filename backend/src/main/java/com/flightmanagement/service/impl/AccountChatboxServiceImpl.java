@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -116,11 +117,12 @@ public class AccountChatboxServiceImpl implements AccountChatboxService {
             
             if (accountChatbox != null) {
                 System.out.println("Found existing AccountChatbox record, updating...");
+                System.out.println("Old lastVisitTime: " + accountChatbox.getLastVisitTime());
                 // Update existing record
                 accountChatbox.setLastVisitTime(lastVisitTime);
                 accountChatbox.setUpdatedAt(LocalDateTime.now());
-                accountChatboxRepository.save(accountChatbox);
-                System.out.println("Updated existing record successfully");
+                AccountChatbox saved = accountChatboxRepository.save(accountChatbox);
+                System.out.println("Updated record - New lastVisitTime: " + saved.getLastVisitTime());
             } else {
                 System.out.println("No existing record found, creating new one...");
                 // Create new record
@@ -142,8 +144,12 @@ public class AccountChatboxServiceImpl implements AccountChatboxService {
                 newRecord.setChatbox(chatbox);
                 
                 AccountChatbox saved = accountChatboxRepository.save(newRecord);
-                System.out.println("Created new record with accountId: " + saved.getAccountId() + ", chatboxId: " + saved.getChatboxId());
+                System.out.println("Created new record with lastVisitTime: " + saved.getLastVisitTime());
             }
+            
+            // Verify the unread count after update
+            Long unreadCount = accountChatboxRepository.countUnreadMessages(accountId, chatboxId);
+            System.out.println("After update - Unread count for chatbox " + chatboxId + ": " + unreadCount);
             
             System.out.println("=== updateLastVisitTime END SUCCESS ===");
         } catch (Exception e) {
@@ -171,11 +177,6 @@ public class AccountChatboxServiceImpl implements AccountChatboxService {
             System.out.println("=== getUnreadCountsForAllChatboxes START ===");
             System.out.println("Getting unread counts for account: " + accountId);
             
-            // Validate account exists
-            if (!accountRepository.existsById(accountId)) {
-                throw new RuntimeException("Account not found with id: " + accountId);
-            }
-            
             // Get all active chatboxes
             List<Chatbox> allChatboxes = chatboxRepository.findAllActive();
             Map<Integer, Long> unreadCounts = new HashMap<>();
@@ -185,7 +186,6 @@ public class AccountChatboxServiceImpl implements AccountChatboxService {
             for (Chatbox chatbox : allChatboxes) {
                 try {
                     Integer chatboxId = chatbox.getChatboxId();
-                    System.out.println("Processing chatbox: " + chatboxId);
                     
                     // Check if account_chatbox record exists
                     Optional<AccountChatbox> accountChatboxOpt = accountChatboxRepository
@@ -194,30 +194,32 @@ public class AccountChatboxServiceImpl implements AccountChatboxService {
                     if (accountChatboxOpt.isPresent()) {
                         // Record exists, count unread messages
                         Long unreadCount = accountChatboxRepository.countUnreadMessages(accountId, chatboxId);
-                        unreadCounts.put(chatboxId, unreadCount != null ? unreadCount : 0L);
-                        System.out.println("Chatbox " + chatboxId + " has existing record, unread count: " + unreadCount);
-                    } else {
-                        // No record exists, create one with current time (so all messages before now are not unread)
-                        System.out.println("No record exists for chatbox " + chatboxId + ", creating with current time...");
+                        Long finalCount = unreadCount != null ? unreadCount : 0L;
+                        unreadCounts.put(chatboxId, finalCount);
                         
-                        try {
-                            updateLastVisitTime(accountId, chatboxId, LocalDateTime.now());
-                            // Set unread count to 0 since we just created the record with current time
-                            unreadCounts.put(chatboxId, 0L);
-                            System.out.println("Created new record for chatbox " + chatboxId + " with unread count: 0");
-                        } catch (Exception e) {
-                            System.err.println("Failed to create record for chatbox " + chatboxId + ": " + e.getMessage());
-                            unreadCounts.put(chatboxId, 0L);
+                        if (finalCount > 0) {
+                            System.out.println("Chatbox " + chatboxId + " has " + finalCount + " unread messages");
                         }
+                    } else {
+                        // No record exists, create one with current time (so unread count is 0)
+                        updateLastVisitTime(accountId, chatboxId, LocalDateTime.now());
+                        unreadCounts.put(chatboxId, 0L);
                     }
                 } catch (Exception e) {
                     System.err.println("Error processing chatbox " + chatbox.getChatboxId() + ": " + e.getMessage());
-                    // Default to 0 if there's an error
                     unreadCounts.put(chatbox.getChatboxId(), 0L);
                 }
             }
             
-            System.out.println("Final unread counts: " + unreadCounts);
+            // Only log non-zero counts to reduce noise
+            Map<Integer, Long> nonZeroCounts = unreadCounts.entrySet().stream()
+                .filter(entry -> entry.getValue() > 0)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            
+            if (!nonZeroCounts.isEmpty()) {
+                System.out.println("Non-zero unread counts: " + nonZeroCounts);
+            }
+            
             System.out.println("=== getUnreadCountsForAllChatboxes END SUCCESS ===");
             return unreadCounts;
             
