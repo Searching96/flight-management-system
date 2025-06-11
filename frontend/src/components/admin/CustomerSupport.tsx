@@ -24,7 +24,6 @@ const CustomerSupport: React.FC = () => {
   const [chatboxListLoading, setChatboxListLoading] = useState(false); // New state for chatbox list loading
   const [error, setError] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('Thời điểm yêu cầu tư vấn');
   const [isNearBottom, setIsNearBottom] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -288,10 +287,7 @@ const CustomerSupport: React.FC = () => {
     }
   };
 
-  const filteredChatboxes = chatboxes.filter(chatbox =>
-    chatbox.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    chatbox.lastMessageContent?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredChatboxes = chatboxes;
 
   if (loading) {
     return (
