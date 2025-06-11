@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Form, Button, Spinner, Badge } from 'react-bootstrap';
+import { Card, Form, Button, Spinner, Badge, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
 import { chatService } from '../../services/chatService';
 import { webSocketService } from '../../services/websocketService';
@@ -24,6 +24,10 @@ interface TypingUser {
 const ChatWidget: React.FC = () => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [bubblePosition, setBubblePosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [hasDragged, setHasDragged] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [chatbox, setChatbox] = useState<Chatbox | null>(null);
@@ -392,63 +396,175 @@ const ChatWidget: React.FC = () => {
     return groups;
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    setHasDragged(false);
+    
+    // Get current bubble position relative to viewport
+    const rect = e.currentTarget.getBoundingClientRect();
+    const currentX = bubblePosition.x || rect.left;
+    const currentY = bubblePosition.y || rect.top;
+    
+    setDragStart({
+      x: e.clientX - currentX,
+      y: e.clientY - currentY
+    });
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+    
+    // Calculate distance moved to detect if it's a drag
+    const dragDistance = Math.sqrt(
+      Math.pow(newX - bubblePosition.x, 2) + Math.pow(newY - bubblePosition.y, 2)
+    );
+    
+    if (dragDistance > 5) { // If moved more than 5px, consider it a drag
+      setHasDragged(true);
+    }
+    
+    // Keep bubble within viewport bounds
+    const maxX = window.innerWidth - 80; // 60px bubble + 20px margin
+    const maxY = window.innerHeight - 80;
+    
+    setBubblePosition({
+      x: Math.max(20, Math.min(newX, maxX)),
+      y: Math.max(20, Math.min(newY, maxY))
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    // Reset hasDragged after a small delay to prevent immediate click
+    setTimeout(() => setHasDragged(false), 100);
+  };
+
+  const handleBubbleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Only open chat if it wasn't a drag operation
+    if (!hasDragged && !isDragging) {
+      setIsOpen(true);
+    }
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragStart]);
+
   if (!user) {
     return (
-      <div 
-        className="position-fixed bottom-0 end-0 m-3"
-        style={{ zIndex: 1050, width: isOpen ? '350px' : 'auto' }}
-      >
-        <Card className="shadow-lg border-0">
-          <Card.Header 
-            className="bg-primary text-white d-flex justify-content-between align-items-center"
-            style={{ cursor: 'pointer' }}
-            onClick={() => setIsOpen(!isOpen)}
+      <>
+        {/* Floating Chat Bubble */}
+        {!isOpen && (
+          <div 
+            className="position-fixed"
+            style={{ 
+              zIndex: 1050,
+              left: bubblePosition.x || 'auto',
+              top: bubblePosition.y || 'auto',
+              right: bubblePosition.x ? 'auto' : '16px',
+              bottom: bubblePosition.y ? 'auto' : '16px'
+            }}
           >
-            <div className="d-flex align-items-center">
-              <i className="bi bi-chat-dots me-2"></i>
-              <span className="fw-bold">Support Chat</span>
-            </div>
-            <div className="d-flex align-items-center">
-              <i className={`bi ${isOpen ? 'bi-dash' : 'bi-plus'}`}></i>
-            </div>
-          </Card.Header>
-
-          {isOpen && (
-            <div>
-              <div 
-                className="p-3 bg-light text-center"
-                style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            <OverlayTrigger
+              placement="left"
+              overlay={
+                <Tooltip id="chat-bubble-tooltip" style={{ textAlign: 'center' }}>
+                  Chat hỗ trợ khách hàng<br />
+                  Có thể kéo thả để di chuyển
+                </Tooltip>
+              }
+            >
+              <div
+                className="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center"
+                style={{ 
+                  width: '60px', 
+                  height: '60px',
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                  transition: isDragging ? 'none' : 'transform 0.2s ease-in-out',
+                  userSelect: 'none'
+                }}
+                onMouseDown={handleMouseDown}
+                onClick={handleBubbleClick}
+                onMouseEnter={(e) => !isDragging && (e.currentTarget.style.transform = 'scale(1.1)')}
+                onMouseLeave={(e) => !isDragging && (e.currentTarget.style.transform = 'scale(1)')}
               >
-                <div>
-                  <i className="bi bi-person-lock fs-1 text-muted mb-3 d-block"></i>
-                  <h6 className="text-muted">Vui lòng đăng nhập để nhận được hỗ trợ tư vấn</h6>
-                  <p className="small text-muted mt-2">
-                    Bạn cần đăng nhập vào tài khoản để có thể sử dụng dịch vụ chat hỗ trợ
-                  </p>
-                </div>
+                <i className="bi bi-chat-dots fs-4 text-white"></i>
               </div>
+            </OverlayTrigger>
+          </div>
+        )}
 
-              <Card.Footer className="p-2">
-                <div className="d-flex gap-2">
-                  <Form.Control
-                    type="text"
-                    placeholder="Vui lòng đăng nhập để chat..."
-                    disabled
-                    size="sm"
-                  />
-                  <Button 
-                    variant="primary"
-                    size="sm"
-                    disabled
-                  >
-                    <i className="bi bi-send"></i>
-                  </Button>
+        {/* Chat Window */}
+        {isOpen && (
+          <div 
+            className="position-fixed bottom-0 end-0 m-3"
+            style={{ zIndex: 1049, width: '350px' }}
+          >
+            <Card className="shadow-lg border-0">
+              <Card.Header 
+                className="bg-primary text-white d-flex justify-content-between align-items-center"
+              >
+                <div className="d-flex align-items-center">
+                  <i className="bi bi-chat-dots me-2"></i>
+                  <span className="fw-bold">Support Chat</span>
                 </div>
-              </Card.Footer>
-            </div>
-          )}
-        </Card>
-      </div>
+                <Button
+                  variant="link"
+                  className="text-white p-0"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <i className="bi bi-x-lg"></i>
+                </Button>
+              </Card.Header>
+
+              <div>
+                <div 
+                  className="p-3 bg-light text-center"
+                  style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <div>
+                    <i className="bi bi-person-lock fs-1 text-muted mb-3 d-block"></i>
+                    <h6 className="text-muted">Vui lòng đăng nhập để nhận được hỗ trợ tư vấn</h6>
+                    <p className="small text-muted mt-2">
+                      Bạn cần đăng nhập vào tài khoản để có thể sử dụng dịch vụ chat hỗ trợ
+                    </p>
+                  </div>
+                </div>
+
+                <Card.Footer className="p-2">
+                  <div className="d-flex gap-2">
+                    <Form.Control
+                      type="text"
+                      placeholder="Vui lòng đăng nhập để chat..."
+                      disabled
+                      size="sm"
+                    />
+                    <Button 
+                      variant="primary"
+                      size="sm"
+                      disabled
+                    >
+                      <i className="bi bi-send"></i>
+                    </Button>
+                  </div>
+                </Card.Footer>
+              </div>
+            </Card>
+          </div>
+        )}
+      </>
     );
   }
 
@@ -458,197 +574,253 @@ const ChatWidget: React.FC = () => {
   }
 
   return (
-    <div 
-      className={`position-fixed bottom-0 end-0 m-3 ${isOpen ? '' : ''}`}
-      style={{ zIndex: 1050, width: isOpen ? '350px' : 'auto' }}
-    >
-      <Card className="shadow-lg border-0">
-        <Card.Header 
-          className="bg-primary text-white d-flex justify-content-between align-items-center"
-          style={{ cursor: 'pointer' }}
-          onClick={() => setIsOpen(!isOpen)}
+    <>
+      {/* Floating Chat Bubble */}
+      {!isOpen && (
+        <div 
+          className="position-fixed"
+          style={{ 
+            zIndex: 1050,
+            left: bubblePosition.x || 'auto',
+            top: bubblePosition.y || 'auto',
+            right: bubblePosition.x ? 'auto' : '16px',
+            bottom: bubblePosition.y ? 'auto' : '16px'
+          }}
         >
-          <div className="d-flex align-items-center">
-            <i className="bi bi-chat-dots me-2"></i>
-            <span className="fw-bold">Support Chat</span>
-          </div>
-          <div className="d-flex align-items-center">
-            <i className={`bi ${isOpen ? 'bi-dash' : 'bi-plus'}`}></i>
-          </div>
-        </Card.Header>
-
-        {isOpen && (
-          <div>
-            <div 
-              className="p-3 bg-light"
-              style={{ height: '300px', overflowY: 'auto' }}
-              ref={messagesContainerRef}
-              onScroll={handleScroll}
+          <OverlayTrigger
+            placement="left"
+            overlay={
+              <Tooltip id="chat-bubble-tooltip-logged-in" style={{ textAlign: 'center' }}>
+                Chat hỗ trợ khách hàng<br />
+                Có thể kéo thả để di chuyển<br />
+                <small className="text-muted">Bấm để mở chat</small>
+              </Tooltip>
+            }
+          >
+            <div
+              className="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center position-relative"
+              style={{ 
+                width: '60px', 
+                height: '60px',
+                cursor: isDragging ? 'grabbing' : 'grab',
+                transition: isDragging ? 'none' : 'transform 0.2s ease-in-out',
+                userSelect: 'none'
+              }}
+              onMouseDown={handleMouseDown}
+              onClick={handleBubbleClick}
+              onMouseEnter={(e) => !isDragging && (e.currentTarget.style.transform = 'scale(1.1)')}
+              onMouseLeave={(e) => !isDragging && (e.currentTarget.style.transform = 'scale(1)')}
             >
-              {loading ? (
-                <div className="text-center py-5">
-                  <Spinner animation="border" size="sm" className="me-2" />
-                  Loading chat...
-                </div>
-              ) : error ? (
-                <div className="text-center py-5 text-danger">
-                  <i className="bi bi-exclamation-triangle me-2"></i>
-                  {error}
-                  <br />
-                  <Button 
-                    variant="outline-primary" 
-                    size="sm" 
-                    className="mt-2"
-                    onClick={initializeChat}
-                  >
-                    Retry
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  {(() => {
-                    const messageGroups = groupMessagesByDate(messages);
-                    const sortedDates = Object.keys(messageGroups).sort(
-                      (a, b) => new Date(a).getTime() - new Date(b).getTime()
-                    );
-
-                    return sortedDates.map(dateKey => (
-                      <div key={dateKey}>
-                        {/* Date Separator */}
-                        <div className="d-flex justify-content-center my-3">
-                          <div 
-                            className="px-3 py-1 bg-white rounded-pill text-muted small"
-                            style={{ border: '1px solid #e0e0e0' }}
-                          >
-                            {formatDate(messageGroups[dateKey][0].sendTime)}
-                          </div>
-                        </div>
-
-                        {/* Messages for this date */}
-                        {messageGroups[dateKey].map((message, index) => (
-                          <div
-                            key={message.messageId || `${dateKey}-${index}`}
-                            className={`mb-3 d-flex ${message.isFromCustomer ? 'justify-content-end' : 'justify-content-start'}`}
-                          >
-                            {!message.isFromCustomer && (
-                              <div 
-                                className="me-2 rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
-                                style={{ 
-                                  width: '32px', 
-                                  height: '32px', 
-                                  fontSize: '12px', 
-                                  fontWeight: 'bold',
-                                  backgroundColor: getAvatarColor(message.employeeName, message.isFromCustomer)
-                                }}
-                              >
-                                {getAvatarLetter(message.employeeName, message.isFromCustomer)}
-                              </div>
-                            )}
-                            
-                            <div 
-                              className={`p-2 rounded-3 ${
-                                message.isFromCustomer 
-                                  ? 'bg-primary text-white' 
-                                  : 'bg-white border'
-                              }`}
-                              style={{ 
-                                maxWidth: '70%',
-                                borderRadius: message.isFromCustomer ? '18px 18px 4px 18px' : '18px 18px 18px 4px'
-                              }}
-                            >
-                              {!message.isFromCustomer && message.employeeName && (
-                                <div className="small fw-bold text-muted">
-                                  {message.employeeName}
-                                </div>
-                              )}
-                              <div className="small">{message.content}</div>
-                              <div className={`text-xs mt-1 ${message.isFromCustomer ? 'text-light' : 'text-muted'}`} style={{ fontSize: '0.7rem' }}>
-                                {formatTime(message.sendTime)}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ));
-                  })()}
-
-                  {/* Typing Indicator */}
-                  {typingUsers.length > 0 && (
-                    <div className="mb-3 d-flex justify-content-start">
-                      <div 
-                        className="me-2 rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
-                        style={{ 
-                          width: '32px', 
-                          height: '32px', 
-                          fontSize: '12px', 
-                          fontWeight: 'bold',
-                          backgroundColor: getAvatarColor(typingUsers[0].userName, false)
-                        }}
-                      >
-                        {getAvatarLetter(typingUsers[0].userName, false)}
-                      </div>
-                      
-                      <div 
-                        className="p-2 rounded-3 bg-white border d-flex align-items-center"
-                        style={{ 
-                          maxWidth: '70%',
-                          borderRadius: '18px 18px 18px 4px'
-                        }}
-                      >
-                        <div className="typing-dots me-2">
-                          <span></span>
-                          <span></span>
-                          <span></span>
-                        </div>
-                        <small className="text-muted">
-                          {typingUsers[0].userName} đang soạn tin nhắn...
-                        </small>
-                      </div>
-                    </div>
-                  )}
-
-                  <div ref={messagesEndRef} />
-                </>
+              <i className="bi bi-chat-dots fs-4 text-white"></i>
+              {/* Unread indicator */}
+              {messages.length > 0 && (
+                <span 
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  style={{ fontSize: '0.6rem' }}
+                >
+                  <span className="visually-hidden">new messages</span>
+                </span>
               )}
             </div>
+          </OverlayTrigger>
+        </div>
+      )}
 
-            <Card.Footer className="p-2">
-              <Form onSubmit={sendMessage}>
-                <div className="d-flex gap-2">
-                  <Form.Control
-                    type="text"
-                    value={newMessage}
-                    onChange={handleInputChange}
-                    placeholder="Type your message..."
-                    disabled={loading || !chatbox}
-                    size="sm"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        sendMessage(e);
-                      }
-                    }}
-                  />
-                  <Button 
-                    type="submit" 
-                    variant="primary"
-                    size="sm"
-                    disabled={!newMessage.trim() || loading || !chatbox}
-                  >
-                    <i className="bi bi-send"></i>
-                  </Button>
-                </div>
-              </Form>
-              {error && (
-                <div className="text-danger small mt-1">
-                  {error}
-                </div>
-              )}
-            </Card.Footer>
-          </div>
-        )}
-      </Card>
-    </div>
+      {/* Chat Window */}
+      {isOpen && (
+        <div 
+          className="position-fixed bottom-0 end-0 m-3"
+          style={{ zIndex: 1049, width: '350px' }}
+        >
+          <Card className="shadow-lg border-0">
+            <Card.Header 
+              className="bg-primary text-white d-flex justify-content-between align-items-center"
+            >
+              <div className="d-flex align-items-center">
+                <i className="bi bi-chat-dots me-2"></i>
+                <span className="fw-bold">Support Chat</span>
+              </div>
+              <Button
+                variant="link"
+                className="text-white p-0"
+                onClick={() => setIsOpen(false)}
+              >
+                <i className="bi bi-x-lg"></i>
+              </Button>
+            </Card.Header>
+
+            <div>
+              <div 
+                className="p-3 bg-light"
+                style={{ height: '300px', overflowY: 'auto' }}
+                ref={messagesContainerRef}
+                onScroll={handleScroll}
+              >
+                {loading ? (
+                  <div className="text-center py-5">
+                    <Spinner animation="border" size="sm" className="me-2" />
+                    Loading chat...
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-5 text-danger">
+                    <i className="bi bi-exclamation-triangle me-2"></i>
+                    {error}
+                    <br />
+                    <Button 
+                      variant="outline-primary" 
+                      size="sm" 
+                      className="mt-2"
+                      onClick={initializeChat}
+                    >
+                      Retry
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    {(() => {
+                      const messageGroups = groupMessagesByDate(messages);
+                      const sortedDates = Object.keys(messageGroups).sort(
+                        (a, b) => new Date(a).getTime() - new Date(b).getTime()
+                      );
+
+                      return sortedDates.map(dateKey => (
+                        <div key={dateKey}>
+                          {/* Date Separator */}
+                          <div className="d-flex justify-content-center my-3">
+                            <div 
+                              className="px-3 py-1 bg-white rounded-pill text-muted small"
+                              style={{ border: '1px solid #e0e0e0' }}
+                            >
+                              {formatDate(messageGroups[dateKey][0].sendTime)}
+                            </div>
+                          </div>
+
+                          {/* Messages for this date */}
+                          {messageGroups[dateKey].map((message, index) => (
+                            <div
+                              key={message.messageId || `${dateKey}-${index}`}
+                              className={`mb-3 d-flex ${message.isFromCustomer ? 'justify-content-end' : 'justify-content-start'}`}
+                            >
+                              {!message.isFromCustomer && (
+                                <div 
+                                  className="me-2 rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                                  style={{ 
+                                    width: '32px', 
+                                    height: '32px', 
+                                    fontSize: '12px', 
+                                    fontWeight: 'bold',
+                                    backgroundColor: getAvatarColor(message.employeeName, message.isFromCustomer)
+                                  }}
+                                >
+                                  {getAvatarLetter(message.employeeName, message.isFromCustomer)}
+                                </div>
+                              )}
+                              
+                              <div 
+                                className={`p-2 rounded-3 ${
+                                  message.isFromCustomer 
+                                    ? 'bg-primary text-white' 
+                                    : 'bg-white border'
+                                }`}
+                                style={{ 
+                                  maxWidth: '70%',
+                                  borderRadius: message.isFromCustomer ? '18px 18px 4px 18px' : '18px 18px 18px 4px'
+                                }}
+                              >
+                                {!message.isFromCustomer && message.employeeName && (
+                                  <div className="small fw-bold text-muted">
+                                    {message.employeeName}
+                                  </div>
+                                )}
+                                <div className="small">{message.content}</div>
+                                <div className={`text-xs mt-1 ${message.isFromCustomer ? 'text-light' : 'text-muted'}`} style={{ fontSize: '0.7rem' }}>
+                                  {formatTime(message.sendTime)}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ));
+                    })()}
+
+                    {/* Typing Indicator */}
+                    {typingUsers.length > 0 && (
+                      <div className="mb-3 d-flex justify-content-start">
+                        <div 
+                          className="me-2 rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                          style={{ 
+                            width: '32px', 
+                            height: '32px', 
+                            fontSize: '12px', 
+                            fontWeight: 'bold',
+                            backgroundColor: getAvatarColor(typingUsers[0].userName, false)
+                          }}
+                        >
+                          {getAvatarLetter(typingUsers[0].userName, false)}
+                        </div>
+                        
+                        <div 
+                          className="p-2 rounded-3 bg-white border d-flex align-items-center"
+                          style={{ 
+                            maxWidth: '70%',
+                            borderRadius: '18px 18px 18px 4px'
+                          }}
+                        >
+                          <div className="typing-dots me-2">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                          </div>
+                          <small className="text-muted">
+                            {typingUsers[0].userName} đang soạn tin nhắn...
+                          </small>
+                        </div>
+                      </div>
+                    )}
+
+                    <div ref={messagesEndRef} />
+                  </>
+                )}
+              </div>
+
+              <Card.Footer className="p-2">
+                <Form onSubmit={sendMessage}>
+                  <div className="d-flex gap-2">
+                    <Form.Control
+                      type="text"
+                      value={newMessage}
+                      onChange={handleInputChange}
+                      placeholder="Type your message..."
+                      disabled={loading || !chatbox}
+                      size="sm"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          sendMessage(e);
+                        }
+                      }}
+                    />
+                    <Button 
+                      type="submit" 
+                      variant="primary"
+                      size="sm"
+                      disabled={!newMessage.trim() || loading || !chatbox}
+                    >
+                      <i className="bi bi-send"></i>
+                    </Button>
+                  </div>
+                </Form>
+                {error && (
+                  <div className="text-danger small mt-1">
+                    {error}
+                  </div>
+                )}
+              </Card.Footer>
+            </div>
+          </Card>
+        </div>
+      )}
+    </>
   );
 };
 
