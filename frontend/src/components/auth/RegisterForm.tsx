@@ -32,10 +32,10 @@ const RegisterForm: React.FC = () => {
       await registerUser(submitData);
 
       navigate('/', {
-        state: { message: 'Registration successful! Please sign in.' }
+        state: { message: 'Đăng ký thành công! Vui lòng đăng nhập.' }
       });
     } catch (err: any) {
-      setError(err.message || 'Registration failed. Please try again.');
+      setError(err.message || 'Đăng ký thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }

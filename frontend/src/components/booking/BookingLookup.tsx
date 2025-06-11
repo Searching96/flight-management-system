@@ -14,6 +14,10 @@ const BookingLookup: React.FC = () => {
   const [error, setError] = useState('');
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalTitle, setModalTitle] = useState('');
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,12 +101,16 @@ const BookingLookup: React.FC = () => {
         }
       }
 
-      alert('Đặt chỗ và tất cả vé đã được hủy thành công.');
+      setModalTitle('Thành công');
+      setModalMessage('Đặt chỗ và tất cả vé đã được hủy thành công.');
+      setShowSuccessModal(true);
       setBooking(null);
       setSearchData({ confirmationCode: '' });
     } catch (err: any) {
       console.error('Error canceling booking:', err);
-      alert('Không thể hủy đặt chỗ: ' + (err.message || 'Lỗi không xác định'));
+      setModalTitle('Lỗi');
+      setModalMessage('Không thể hủy đặt chỗ: ' + (err.message || 'Lỗi không xác định'));
+      setShowErrorModal(true);
     }
   };
 
@@ -550,6 +558,56 @@ const BookingLookup: React.FC = () => {
           >
             <i className="bi bi-trash me-2"></i>
             Có, hủy đặt chỗ
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Success Modal */}
+      <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
+        <Modal.Header closeButton className="bg-success text-white">
+          <Modal.Title>
+            <i className="bi bi-check-circle me-2"></i>
+            {modalTitle}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4 text-center">
+          <div className="mb-3">
+            <i className="bi bi-check-circle text-success" style={{ fontSize: '3rem' }}></i>
+          </div>
+          <p className="mb-0">{modalMessage}</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="success"
+            onClick={() => setShowSuccessModal(false)}
+          >
+            <i className="bi bi-check me-2"></i>
+            Đóng
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Error Modal */}
+      <Modal show={showErrorModal} onHide={() => setShowErrorModal(false)} centered>
+        <Modal.Header closeButton className="bg-danger text-white">
+          <Modal.Title>
+            <i className="bi bi-exclamation-triangle me-2"></i>
+            {modalTitle}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4 text-center">
+          <div className="mb-3">
+            <i className="bi bi-x-circle text-danger" style={{ fontSize: '3rem' }}></i>
+          </div>
+          <p className="mb-0">{modalMessage}</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="danger"
+            onClick={() => setShowErrorModal(false)}
+          >
+            <i className="bi bi-x me-2"></i>
+            Đóng
           </Button>
         </Modal.Footer>
       </Modal>

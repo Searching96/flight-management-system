@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Alert, Button, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Alert, Button, Spinner, Badge, Modal } from 'react-bootstrap';
 import { paymentService, customerService, ticketService } from '../../services';
 import { useAuth } from '../../hooks/useAuth';
 import { PaymentReturnResponse } from '../../models';
@@ -14,6 +14,10 @@ const PaymentResult: React.FC = () => {
   const [processingError, setProcessingError] = useState<string | null>(null);
   const [transactionDetails, setTransactionDetails] = useState<PaymentReturnResponse>();
   const [scoreUpdated, setScoreUpdated] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalTitle, setModalTitle] = useState('');
 
   // Extract confirmation code from txnRef (handles HHMMSS prefix format)
   const extractConfirmationCode = (txnRef: string): string => {
@@ -39,7 +43,9 @@ const PaymentResult: React.FC = () => {
   const handlePayment = async () => {
     try {
       if (!transactionDetails?.data?.vnp_TxnRef) {
-        alert('Không tìm thấy thông tin giao dịch. Vui lòng thử lại.');
+        setModalTitle('Lỗi');
+        setModalMessage('Không tìm thấy thông tin giao dịch. Vui lòng thử lại.');
+        setShowErrorModal(true);
         return;
       }
 
@@ -53,11 +59,15 @@ const PaymentResult: React.FC = () => {
         console.log('Chuyển hướng đến URL thanh toán:', response.data);
         window.location.href = response.data;
       } else {
-        alert('URL thanh toán không hợp lệ. Vui lòng thử lại.');
+        setModalTitle('Lỗi thanh toán');
+        setModalMessage('URL thanh toán không hợp lệ. Vui lòng thử lại.');
+        setShowErrorModal(true);
       }
     } catch (error) {
       console.error('Tạo thanh toán thất bại:', error);
-      alert('Không thể tạo thanh toán. Vui lòng thử lại sau.');
+      setModalTitle('Lỗi thanh toán');
+      setModalMessage('Không thể tạo thanh toán. Vui lòng thử lại sau.');
+      setShowErrorModal(true);
     }
   };
 
@@ -419,6 +429,56 @@ const PaymentResult: React.FC = () => {
           )}
         </Col>
       </Row>
+
+      {/* Error Modal */}
+      <Modal show={showErrorModal} onHide={() => setShowErrorModal(false)} centered>
+        <Modal.Header closeButton className="bg-danger text-white">
+          <Modal.Title>
+            <i className="bi bi-exclamation-triangle me-2"></i>
+            {modalTitle}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4 text-center">
+          <div className="mb-3">
+            <i className="bi bi-x-circle text-danger" style={{ fontSize: '3rem' }}></i>
+          </div>
+          <p className="mb-0">{modalMessage}</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="danger"
+            onClick={() => setShowErrorModal(false)}
+          >
+            <i className="bi bi-x me-2"></i>
+            Đóng
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Info Modal */}
+      <Modal show={showInfoModal} onHide={() => setShowInfoModal(false)} centered>
+        <Modal.Header closeButton className="bg-info text-white">
+          <Modal.Title>
+            <i className="bi bi-info-circle me-2"></i>
+            {modalTitle}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4 text-center">
+          <div className="mb-3">
+            <i className="bi bi-info-circle text-info" style={{ fontSize: '3rem' }}></i>
+          </div>
+          <p className="mb-0">{modalMessage}</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="info"
+            onClick={() => setShowInfoModal(false)}
+          >
+            <i className="bi bi-check me-2"></i>
+            Đóng
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

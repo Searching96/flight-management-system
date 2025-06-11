@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Alert, Spinner, Badge, ListGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert, Spinner, Badge, ListGroup, Modal } from 'react-bootstrap';
 import { BookingConfirmation } from '../../services/bookingConfirmationService';
 import { ticketService, flightService, passengerService, paymentService } from '../../services';
 
@@ -12,6 +12,9 @@ const PaymentHandler: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalTitle, setModalTitle] = useState('');
 
   useEffect(() => {
     if (confirmationCode) {
@@ -108,11 +111,15 @@ const PaymentHandler: React.FC = () => {
         console.log('Chuyển hướng đến URL thanh toán:', response.data);
         window.location.href = response.data;
       } else {
-        alert('URL thanh toán không hợp lệ. Vui lòng thử lại.');
+        setModalTitle('Lỗi thanh toán');
+        setModalMessage('URL thanh toán không hợp lệ. Vui lòng thử lại.');
+        setShowErrorModal(true);
       }
     } catch (error) {
       console.error('Tạo thanh toán thất bại:', error);
-      alert('Không thể tạo thanh toán. Vui lòng thử lại sau.');
+      setModalTitle('Lỗi thanh toán');
+      setModalMessage('Không thể tạo thanh toán. Vui lòng thử lại sau.');
+      setShowErrorModal(true);
     } finally {
       setProcessingPayment(false);
     }
@@ -433,6 +440,31 @@ const PaymentHandler: React.FC = () => {
           </Alert>
         </Col>
       </Row>
+
+      {/* Error Modal */}
+      <Modal show={showErrorModal} onHide={() => setShowErrorModal(false)} centered>
+        <Modal.Header closeButton className="bg-danger text-white">
+          <Modal.Title>
+            <i className="bi bi-exclamation-triangle me-2"></i>
+            {modalTitle}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4 text-center">
+          <div className="mb-3">
+            <i className="bi bi-x-circle text-danger" style={{ fontSize: '3rem' }}></i>
+          </div>
+          <p className="mb-0">{modalMessage}</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="danger"
+            onClick={() => setShowErrorModal(false)}
+          >
+            <i className="bi bi-x me-2"></i>
+            Đóng
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

@@ -16,7 +16,7 @@ const DebugLogin: React.FC = () => {
     if (accountName) {
       performDebugLogin();
     } else {
-      setError('No account name provided');
+      setError('Không có tên tài khoản được cung cấp');
       setLoading(false);
     }
   }, [accountName]);
@@ -71,7 +71,7 @@ const DebugLogin: React.FC = () => {
 
     } catch (err: any) {
       console.error('Debug login failed:', err);
-      setError(err.message || 'Debug login failed');
+      setError(err.message || 'Đăng nhập debug thất bại');
     } finally {
       setLoading(false);
       console.log('=== DebugLogin Component END ===');
@@ -86,9 +86,9 @@ const DebugLogin: React.FC = () => {
             <Card className="text-center">
               <Card.Body className="py-5">
                 <Spinner animation="border" variant="primary" className="mb-3" />
-                <h5>Debug Login in Progress...</h5>
+                <h5>Đang thực hiện đăng nhập debug...</h5>
                 <p className="text-muted">
-                  Attempting to login as: <strong>{accountName}</strong>
+                  Đang cố gắng đăng nhập với tài khoản: <strong>{accountName}</strong>
                 </p>
               </Card.Body>
             </Card>
@@ -104,12 +104,12 @@ const DebugLogin: React.FC = () => {
         <Row className="justify-content-center">
           <Col md={6}>
             <Alert variant="danger" className="text-center">
-              <Alert.Heading>Debug Login Failed</Alert.Heading>
-              <p>Account name: <strong>{accountName}</strong></p>
+              <Alert.Heading>Đăng nhập debug thất bại</Alert.Heading>
+              <p>Tên tài khoản: <strong>{accountName}</strong></p>
               <p>{error}</p>
               <hr />
               <p className="mb-0">
-                Make sure an account with name "{accountName}" exists in the database.
+                Đảm bảo tài khoản với tên "{accountName}" tồn tại trong cơ sở dữ liệu.
               </p>
             </Alert>
           </Col>
@@ -125,16 +125,16 @@ const DebugLogin: React.FC = () => {
           <Alert variant="success" className="text-center">
             <Alert.Heading>
               <i className="bi bi-check-circle me-2"></i>
-              Debug Login Successful!
+              Đăng nhập debug thành công!
             </Alert.Heading>
             {loginData && (
               <>
-                <p><strong>Account:</strong> {loginData.accountName}</p>
+                <p><strong>Tài khoản:</strong> {loginData.accountName}</p>
                 <p><strong>Email:</strong> {loginData.email}</p>
-                <p><strong>Type:</strong> {loginData.accountType === 1 ? 'Customer' : 'Employee'}</p>
+                <p><strong>Loại:</strong> {loginData.accountType === 1 ? 'Khách hàng' : 'Nhân viên'}</p>
                 <hr />
                 <p className="mb-0">
-                  Redirecting to {loginData.accountType === 1 ? 'Dashboard' : 'Admin Panel'}...
+                  Đang chuyển hướng đến {loginData.accountType === 1 ? 'Bảng điều khiển' : 'Trang quản trị'}...
                 </p>
               </>
             )}

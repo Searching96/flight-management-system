@@ -11,6 +11,9 @@ interface TicketCardProps {
 const TicketCard: React.FC<TicketCardProps> = ({ ticket, onCancel }) => {
   const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const getStatusVariant = (status?: number) => {
     switch (status) {
@@ -23,10 +26,10 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onCancel }) => {
 
   const getStatusText = (status?: number) => {
     switch (status) {
-      case 1: return 'Confirmed';
-      case 2: return 'Pending Payment';
-      case 3: return 'Cancelled';
-      default: return 'Unknown';
+      case 1: return 'Đã xác nhận';
+      case 2: return 'Chờ thanh toán';
+      case 3: return 'Đã hủy';
+      default: return 'Không xác định';
     }
   };
 
@@ -43,11 +46,13 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onCancel }) => {
     try {
       setCancelling(true);
       await ticketService.deleteTicket(ticket.ticketId!);
-      alert('Ticket cancelled successfully');
-      if (onCancel) onCancel();
       setShowCancelModal(false);
+      setShowSuccessModal(true);
+      if (onCancel) onCancel();
     } catch (error: any) {
-      alert(error.message || 'Failed to cancel ticket');
+      setErrorMessage(error.message || 'Không thể hủy vé');
+      setShowCancelModal(false);
+      setShowErrorModal(true);
     } finally {
       setCancelling(false);
     }
@@ -60,10 +65,10 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onCancel }) => {
           <Row className="align-items-center">
             <Col>
               <div className="d-flex align-items-center gap-3">
-                <span className="fw-bold">Ticket #{ticket.ticketId}</span>
+                <span className="fw-bold">Vé #{ticket.ticketId}</span>
                 {ticket.flightId && (
                   <Badge bg="light" text="dark" className="fs-6">
-                    {ticket.flightId}
+                    Chuyến bay {ticket.flightId}
                   </Badge>
                 )}
               </div>
@@ -102,8 +107,8 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onCancel }) => {
             {ticket.fare && (
               <Col xs={12}>
                 <div className="text-center border-top pt-3">
-                  <small className="text-muted d-block">Fare</small>
-                  <h5 className="text-primary mb-0">${ticket.fare}</h5>
+                  <small className="text-muted d-block">Giá vé</small>
+                  <h5 className="text-primary mb-0">{ticket.fare.toLocaleString('vi-VN')} VND</h5>
                 </div>
               </Col>
             )}
@@ -112,7 +117,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onCancel }) => {
               <Col xs={12}>
                 <div className="text-center">
                   <small className="text-muted">
-                    Payment confirmed on {new Date(ticket.paymentTime).toLocaleDateString()}
+                    Thanh toán xác nhận vào {new Date(ticket.paymentTime).toLocaleDateString('vi-VN')}
                   </small>
                 </div>
               </Col>
@@ -130,10 +135,10 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onCancel }) => {
                 {cancelling ? (
                   <>
                     <Spinner animation="border" size="sm" className="me-2" />
-                    Cancelling...
+                    Đang hủy...
                   </>
                 ) : (
-                  'Cancel Ticket'
+                  'Hủy vé'
                 )}
               </Button>
             </div>
@@ -191,6 +196,62 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onCancel }) => {
                 Có, hủy vé
               </>
             )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Success Modal */}
+      <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
+        <Modal.Header closeButton className="bg-success text-white">
+          <Modal.Title>
+            <i className="bi bi-check-circle me-2"></i>
+            Thành công
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4 text-center">
+          <div className="mb-3">
+            <i className="bi bi-check-circle text-success" style={{ fontSize: '3rem' }}></i>
+          </div>
+          <h5 className="mb-3">Hủy vé thành công!</h5>
+          <p className="text-muted mb-0">
+            Vé #{ticket.ticketId} đã được hủy thành công.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="success"
+            onClick={() => setShowSuccessModal(false)}
+          >
+            <i className="bi bi-check me-2"></i>
+            Đóng
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Error Modal */}
+      <Modal show={showErrorModal} onHide={() => setShowErrorModal(false)} centered>
+        <Modal.Header closeButton className="bg-danger text-white">
+          <Modal.Title>
+            <i className="bi bi-exclamation-triangle me-2"></i>
+            Lỗi
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4 text-center">
+          <div className="mb-3">
+            <i className="bi bi-x-circle text-danger" style={{ fontSize: '3rem' }}></i>
+          </div>
+          <h5 className="mb-3">Không thể hủy vé</h5>
+          <p className="text-muted mb-0">
+            {errorMessage}
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="danger"
+            onClick={() => setShowErrorModal(false)}
+          >
+            <i className="bi bi-x me-2"></i>
+            Đóng
           </Button>
         </Modal.Footer>
       </Modal>

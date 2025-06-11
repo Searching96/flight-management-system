@@ -42,7 +42,7 @@ const FlightCard: React.FC<FlightCardProps> = ({
   }, [flight.flightId]);
 
   const formatTime = (dateTimeString: string) => {
-    return new Date(dateTimeString).toLocaleTimeString('en-US', {
+    return new Date(dateTimeString).toLocaleTimeString('vi-VN', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
@@ -50,7 +50,7 @@ const FlightCard: React.FC<FlightCardProps> = ({
   };
 
   const formatDate = (dateTimeString: string) => {
-    return new Date(dateTimeString).toLocaleDateString('en-US', {
+    return new Date(dateTimeString).toLocaleDateString('vi-VN', {
       month: 'short',
       day: 'numeric'
     });
@@ -158,7 +158,7 @@ const FlightCard: React.FC<FlightCardProps> = ({
                 </Badge>
               </div>
               <small className="text-muted d-block mt-2">
-                {flightDetails.length > 0 ? "With stops" : "Direct"}
+                {flightDetails.length > 0 ? "Có điểm dừng" : "Bay thẳng"}
               </small>
             </div>
           </Col>
@@ -186,7 +186,7 @@ const FlightCard: React.FC<FlightCardProps> = ({
                 {searchContext.passengerCount > 1 && (
                   <span className="text-muted">
                     <i className="bi bi-people me-1"></i>
-                    {searchContext.passengerCount} passengers
+                    {searchContext.passengerCount} hành khách
                   </span>
                 )}
               </div>
@@ -200,14 +200,14 @@ const FlightCard: React.FC<FlightCardProps> = ({
             <Col>
               <h6 className="fw-bold mb-2">
                 <i className="bi bi-route me-1"></i>
-                Flight Details:
+                Chi tiết chuyến bay:
               </h6>
               <Table striped bordered hover size="sm" className="mb-0">
                 <thead className="table-secondary">
                   <tr>
-                    <th className="text-center py-2 fs-5 fw-bold" style={{ width: '40%' }}>Medium Airport</th>
-                    <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Arrival Time</th>
-                    <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Layover Duration</th>
+                    <th className="text-center py-2 fs-5 fw-bold" style={{ width: '40%' }}>Sân bay trung gian</th>
+                    <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Thời gian đến</th>
+                    <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Thời gian dừng</th>
                   </tr>
                 </thead>
                 <tbody className="table-light">
@@ -242,7 +242,7 @@ const FlightCard: React.FC<FlightCardProps> = ({
             <Col>
               <h6 className="fw-bold mb-2">
                 <i className="bi bi-star me-1"></i>
-                Available Classes:
+                Hạng vé có sẵn:
               </h6>
               <ListGroup variant="flush">
                 {availableClasses.map(classInfo => (
@@ -268,12 +268,12 @@ const FlightCard: React.FC<FlightCardProps> = ({
                       </div>
                       <small className="text-muted">
                         <i className="bi bi-check-circle me-1"></i>
-                        {classInfo.remainingTicketQuantity} seats available
+                        {classInfo.remainingTicketQuantity} ghế có sẵn
                       </small>
                     </div>
                     <div className="text-end">
                       <div className="fw-bold fs-5 text-primary">
-                        {classInfo.price.toLocaleString()} VND
+                        {classInfo.price.toLocaleString('vi-VN')} VND
                       </div>
                     </div>
                   </ListGroup.Item>
@@ -289,15 +289,15 @@ const FlightCard: React.FC<FlightCardProps> = ({
             {isAvailable ? (
               <div className="text-success">
                 <i className="bi bi-check-circle me-1"></i>
-                {flight.flightTicketClasses?.reduce(
+                Tổng cộng {flight.flightTicketClasses?.reduce(
                   (total, ftc) => total + (ftc.remainingTicketQuantity || 0),
                   0
-                )} total seats available
+                )} ghế có sẵn
               </div>
             ) : (
               <div className="text-danger">
                 <i className="bi bi-x-circle me-1"></i>
-                Not enough seats available
+                Không đủ ghế trống
               </div>
             )}
           </Col>
@@ -311,20 +311,20 @@ const FlightCard: React.FC<FlightCardProps> = ({
             {!showAllClasses && lowestPrice && (
               <div>
                 <div className="fs-4 fw-bold text-primary">
-                  {lowestPrice.toLocaleString()} VND
+                  {lowestPrice.toLocaleString('vi-VN')} VND
                 </div>
                 {searchContext?.passengerCount && searchContext.passengerCount > 1 && (
-                  <small className="text-muted">per person</small>
+                  <small className="text-muted">mỗi người</small>
                 )}
               </div>
             )}
             {showAllClasses && (
               <div>
                 <div className="fs-5 fw-bold text-primary">
-                  From {lowestPrice?.toLocaleString()} VND
+                  Từ {lowestPrice?.toLocaleString('vi-VN')} VND
                 </div>
                 {searchContext?.passengerCount && searchContext.passengerCount > 1 && (
-                  <small className="text-muted">per person</small>
+                  <small className="text-muted">mỗi người</small>
                 )}
               </div>
             )}
@@ -343,19 +343,19 @@ const FlightCard: React.FC<FlightCardProps> = ({
                 {showAllClasses && !selectedClassForBooking ? (
                   <>
                     <i className="bi bi-arrow-up me-1"></i>
-                    Select Class
+                    Chọn hạng vé
                   </>
                 ) : (
                   <>
                     <i className="bi bi-ticket me-1"></i>
-                    Book Flight
+                    Đặt vé
                   </>
                 )}
               </Button>
             ) : (
               <Button variant="secondary" size="lg" disabled className="px-4">
                 <i className="bi bi-x-circle me-1"></i>
-                Unavailable
+                Hết chỗ
               </Button>
             )}
           </Col>

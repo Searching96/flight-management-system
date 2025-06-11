@@ -7,7 +7,6 @@ import HomePage from './components/home/HomePage';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import FlightSearch from './components/flights/FlightSearch';
-import Dashboard from './components/dashboard/Dashboard';
 import BookingForm from './components/booking/BookingForm';
 import BookingConfirmation from './components/booking/BookingConfirmation';
 import BookingLookup from './components/booking/BookingLookup';
@@ -74,16 +73,6 @@ const App: React.FC = () => {
 
             {/* Debug Route */}
             <Route path="/debug/log-me-in/:accountName" element={<DebugLogin />} />
-
-            {/* Customer Protected Routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute requiredAccountType='Customer'>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
 
             {/* Employee Management Routes - CORRECTED Permissions 2025-06-11 08:51:48 UTC by thinh0704hcm */}
 

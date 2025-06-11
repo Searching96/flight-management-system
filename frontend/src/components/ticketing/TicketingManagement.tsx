@@ -33,6 +33,10 @@ const TicketingManagement: React.FC = () => {
    const [cancelLoading, setCancelLoading] = useState(false);
    const [showCashPaymentModal, setShowCashPaymentModal] = useState(false);
    const [cashPaymentLoading, setCashPaymentLoading] = useState(false);
+   const [showSuccessModal, setShowSuccessModal] = useState(false);
+   const [showErrorModal, setShowErrorModal] = useState(false);
+   const [successMessage, setSuccessMessage] = useState('');
+   const [errorMessage, setErrorMessage] = useState('');
 
    useEffect(() => {
       fetchAllTickets();
@@ -155,7 +159,7 @@ const TicketingManagement: React.FC = () => {
    };
 
    const formatDateTime = (dateString: string) => {
-      return new Date(dateString).toLocaleString('en-US', {
+      return new Date(dateString).toLocaleString('vi-VN', {
          year: 'numeric',
          month: 'short',
          day: 'numeric',
@@ -179,7 +183,7 @@ const TicketingManagement: React.FC = () => {
    const getStatusBadge = (status: 'PAID' | 'UNPAID') => {
       return (
          <Badge bg={status === 'PAID' ? 'success' : 'warning'}>
-            {status}
+            {status === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán'}
          </Badge>
       );
    };
@@ -204,7 +208,12 @@ const TicketingManagement: React.FC = () => {
    };
 
    const confirmCancelTicket = async () => {
+      if (!selectedTicket) return;
+
+      setCancelLoading(true);
       try {
+         // Delete the ticket
+         const ticketData = await ticketService.getTicketById(selectedTicket.ticketId);
          if (ticketData && ticketData.ticketClassId && ticketData.flightId) {
             await flightTicketClassService.updateRemainingTickets(
                ticketData.flightId,
@@ -215,16 +224,18 @@ const TicketingManagement: React.FC = () => {
          await ticketService.deleteTicket(selectedTicket.ticketId);
          await fetchAllTickets();
 
-         // Đóng modal
+         // Close modals
          setShowCancelModal(false);
          setShowDetailsModal(false);
          setSelectedTicket(null);
 
-         // Hiển thị thông báo thành công
-         //alert('Hủy vé thành công');
+         // Show success message
+         setSuccessMessage('Hủy vé thành công');
+         setShowSuccessModal(true);
       } catch (err: any) {
-         console.error('Lỗi khi hủy vé:', err);
-         alert('Không thể hủy vé: ' + (err.message || 'Lỗi không xác định'));
+         console.error('Error canceling ticket:', err);
+         setErrorMessage('Không thể hủy vé: ' + (err.message || 'Lỗi không xác định'));
+         setShowErrorModal(true);
       } finally {
          setCancelLoading(false);
       }
@@ -240,19 +251,32 @@ const TicketingManagement: React.FC = () => {
 
       setCashPaymentLoading(true);
       try {
-         // Cập nhật trạng thái thanh toán vé
+         // Update ticket payment status
          const ticketData = await ticketService.payTicket(selectedTicket.ticketId);
          if (ticketData) {
-            // Cập nhật thông tin thanh toán
+            // Update ticket with payment information
             const updatedTicket = {
                ...ticketData,
                paymentTime: new Date().toISOString(),
-               ticketStatus: 1 // 1 = Đã thanh toán
+               ticketStatus: 1 // 1 for PAID
             };
+
+            await ticketService.updateTicket(selectedTicket.ticketId, updatedTicket);
+            await fetchAllTickets();
          }
+
+         // Close modals
+         setShowCashPaymentModal(false);
+         setShowDetailsModal(false);
+         setSelectedTicket(null);
+
+         // Show success message
+         setSuccessMessage('Thanh toán bằng tiền mặt đã được ghi nhận thành công!');
+         setShowSuccessModal(true);
       } catch (err: any) {
-         console.error('Lỗi xử lý thanh toán tiền mặt:', err);
-         alert('Không thể xử lý thanh toán: ' + (err.message || 'Lỗi không xác định'));
+         console.error('Error processing cash payment:', err);
+         setErrorMessage('Không thể xử lý thanh toán: ' + (err.message || 'Lỗi không xác định'));
+         setShowErrorModal(true);
       } finally {
          setCashPaymentLoading(false);
       }
@@ -266,7 +290,7 @@ const TicketingManagement: React.FC = () => {
                   <Card>
                      <Card.Body className="text-center py-5">
                         <Spinner animation="border" variant="primary" className="mb-3" />
-                        <p className="mb-0">Loading tickets...</p>
+                        <p className="mb-0">Đang tải vé...</p>
                      </Card.Body>
                   </Card>
                </Col>
@@ -284,10 +308,10 @@ const TicketingManagement: React.FC = () => {
                      <div className="d-flex justify-content-between align-items-center">
                         <h4 className="mb-0">
                            <i className="bi bi-ticket-perforated me-2"></i>
-                           Ticketing Management
+                           Quản lý vé máy bay
                         </h4>
                         <Badge bg="light" text="dark" className="fs-6">
-                           {filteredTickets.length} tickets
+                           {filteredTickets.length} vé
                         </Badge>
                      </div>
                   </Card.Header>
@@ -309,7 +333,7 @@ const TicketingManagement: React.FC = () => {
                                  </InputGroup.Text>
                                  <Form.Control
                                     type="text"
-                                    placeholder="Search by flight code, passenger name, citizen ID, or confirmation code..."
+                                    placeholder="Tìm kiếm theo mã chuyến bay, tên hành khách, CCCD, hoặc mã xác nhận..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                  />
@@ -320,15 +344,15 @@ const TicketingManagement: React.FC = () => {
                                  value={statusFilter}
                                  onChange={(e) => setStatusFilter(e.target.value as 'ALL' | 'PAID' | 'UNPAID')}
                               >
-                                 <option value="ALL">All Status</option>
-                                 <option value="PAID">Paid</option>
-                                 <option value="UNPAID">Unpaid</option>
+                                 <option value="ALL">Tất cả trạng thái</option>
+                                 <option value="PAID">Đã thanh toán</option>
+                                 <option value="UNPAID">Chưa thanh toán</option>
                               </Form.Select>
                            </Col>
                            <Col md={3}>
                               <Button variant="outline-primary" onClick={fetchAllTickets} className="w-100">
                                  <i className="bi bi-arrow-clockwise me-1"></i>
-                                 Refresh
+                                 Làm mới
                               </Button>
                            </Col>
                         </Row>
@@ -339,15 +363,15 @@ const TicketingManagement: React.FC = () => {
                         <Table hover className="mb-0">
                            <thead className="table-dark">
                               <tr>
-                                 <th>Flight Code</th>
-                                 <th>Route</th>
-                                 <th>Departure</th>
-                                 <th>Passenger</th>
-                                 <th>Contact</th>
-                                 <th>Status</th>
-                                 <th>Fare</th>
-                                 <th>Seat</th>
-                                 <th>Actions</th>
+                                 <th>Mã chuyến bay</th>
+                                 <th>Tuyến đường</th>
+                                 <th>Khởi hành</th>
+                                 <th>Hành khách</th>
+                                 <th>Liên hệ</th>
+                                 <th>Trạng thái</th>
+                                 <th>Giá vé</th>
+                                 <th>Ghế</th>
+                                 <th>Thao tác</th>
                               </tr>
                            </thead>
                            <tbody>
@@ -355,7 +379,7 @@ const TicketingManagement: React.FC = () => {
                                  <tr>
                                     <td colSpan={9} className="text-center py-4 text-muted">
                                        <i className="bi bi-inbox display-6 d-block mb-2"></i>
-                                       No tickets found
+                                       Không tìm thấy vé nào
                                     </td>
                                  </tr>
                               ) : (
@@ -396,7 +420,7 @@ const TicketingManagement: React.FC = () => {
                                           {getStatusBadge(ticket.ticketStatus)}
                                           {ticket.paymentTime && (
                                              <div className="small text-muted mt-1">
-                                                Paid: {formatDateTime(ticket.paymentTime)}
+                                                Đã thanh toán: {formatDateTime(ticket.paymentTime)}
                                              </div>
                                           )}
                                        </td>
@@ -435,7 +459,7 @@ const TicketingManagement: React.FC = () => {
             <Modal.Header closeButton>
                <Modal.Title>
                   <i className="bi bi-ticket-detailed me-2"></i>
-                  Ticket Details
+                  Chi tiết vé
                </Modal.Title>
             </Modal.Header>
             <Modal.Body>
@@ -444,26 +468,26 @@ const TicketingManagement: React.FC = () => {
                      <Col md={6}>
                         <Card className="h-100">
                            <Card.Header>
-                              <h6 className="mb-0">Flight Information</h6>
+                              <h6 className="mb-0">Thông tin chuyến bay</h6>
                            </Card.Header>
                            <Card.Body>
                               <dl className="row mb-0">
-                                 <dt className="col-sm-4">Flight Code:</dt>
+                                 <dt className="col-sm-4">Mã chuyến bay:</dt>
                                  <dd className="col-sm-8">{selectedTicket.flightCode}</dd>
 
-                                 <dt className="col-sm-4">Class:</dt>
+                                 <dt className="col-sm-4">Hạng vé:</dt>
                                  <dd className="col-sm-8">{selectedTicket.ticketClassName}</dd>
 
-                                 <dt className="col-sm-4">Route:</dt>
+                                 <dt className="col-sm-4">Tuyến đường:</dt>
                                  <dd className="col-sm-8">{selectedTicket.departureAirport} → {selectedTicket.arrivalAirport}</dd>
 
-                                 <dt className="col-sm-4">Departure:</dt>
+                                 <dt className="col-sm-4">Khởi hành:</dt>
                                  <dd className="col-sm-8">{formatDateTime(selectedTicket.departureTime)}</dd>
 
-                                 <dt className="col-sm-4">Arrival:</dt>
+                                 <dt className="col-sm-4">Đến nơi:</dt>
                                  <dd className="col-sm-8">{formatDateTime(selectedTicket.arrivalTime)}</dd>
 
-                                 <dt className="col-sm-4">Seat:</dt>
+                                 <dt className="col-sm-4">Ghế:</dt>
                                  <dd className="col-sm-8">
                                     <Badge
                                        style={{ backgroundColor: getSeatBadgeColor(selectedTicket.seatNumber), border: 'none' }}
@@ -478,31 +502,31 @@ const TicketingManagement: React.FC = () => {
                      <Col md={6}>
                         <Card className="h-100">
                            <Card.Header>
-                              <h6 className="mb-0">Passenger & Payment</h6>
+                              <h6 className="mb-0">Hành khách & Thanh toán</h6>
                            </Card.Header>
                            <Card.Body>
                               <dl className="row mb-0">
-                                 <dt className="col-sm-5">Name:</dt>
+                                 <dt className="col-sm-5">Tên:</dt>
                                  <dd className="col-sm-7">{selectedTicket.passengerName}</dd>
 
-                                 <dt className="col-sm-5">Citizen ID:</dt>
+                                 <dt className="col-sm-5">CCCD:</dt>
                                  <dd className="col-sm-7">{selectedTicket.passengerCitizenId}</dd>
 
-                                 <dt className="col-sm-5">Phone:</dt>
-                                 <dd className="col-sm-7">{selectedTicket.phoneNumber || 'N/A'}</dd>
+                                 <dt className="col-sm-5">Điện thoại:</dt>
+                                 <dd className="col-sm-7">{selectedTicket.phoneNumber || 'Chưa có'}</dd>
 
-                                 <dt className="col-sm-5">Confirmation:</dt>
+                                 <dt className="col-sm-5">Mã xác nhận:</dt>
                                  <dd className="col-sm-7"><code>{selectedTicket.confirmationCode}</code></dd>
 
-                                 <dt className="col-sm-5">Status:</dt>
+                                 <dt className="col-sm-5">Trạng thái:</dt>
                                  <dd className="col-sm-7">{getStatusBadge(selectedTicket.ticketStatus)}</dd>
 
-                                 <dt className="col-sm-5">Fare:</dt>
+                                 <dt className="col-sm-5">Giá vé:</dt>
                                  <dd className="col-sm-7"><strong>{formatCurrency(selectedTicket.fare)}</strong></dd>
 
-                                 <dt className="col-sm-5">Payment Time:</dt>
+                                 <dt className="col-sm-5">Thời gian thanh toán:</dt>
                                  <dd className="col-sm-7">
-                                    {selectedTicket.paymentTime ? formatDateTime(selectedTicket.paymentTime) : 'Not paid'}
+                                    {selectedTicket.paymentTime ? formatDateTime(selectedTicket.paymentTime) : 'Chưa thanh toán'}
                                  </dd>
                               </dl>
                            </Card.Body>
@@ -660,6 +684,57 @@ const TicketingManagement: React.FC = () => {
                         Có, hủy vé
                      </>
                   )}
+               </Button>
+            </Modal.Footer>
+         </Modal>
+
+         {/* Success Modal */}
+         <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
+            <Modal.Header closeButton className="bg-success text-white">
+               <Modal.Title>
+                  <i className="bi bi-check-circle me-2"></i>
+                  Thành công
+               </Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="p-4 text-center">
+               <div className="mb-3">
+                  <i className="bi bi-check-circle text-success" style={{ fontSize: '3rem' }}></i>
+               </div>
+               <h5 className="mb-3">{successMessage}</h5>
+            </Modal.Body>
+            <Modal.Footer>
+               <Button
+                  variant="success"
+                  onClick={() => setShowSuccessModal(false)}
+               >
+                  <i className="bi bi-check me-2"></i>
+                  Đóng
+               </Button>
+            </Modal.Footer>
+         </Modal>
+
+         {/* Error Modal */}
+         <Modal show={showErrorModal} onHide={() => setShowErrorModal(false)} centered>
+            <Modal.Header closeButton className="bg-danger text-white">
+               <Modal.Title>
+                  <i className="bi bi-exclamation-triangle me-2"></i>
+                  Lỗi
+               </Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="p-4 text-center">
+               <div className="mb-3">
+                  <i className="bi bi-x-circle text-danger" style={{ fontSize: '3rem' }}></i>
+               </div>
+               <h5 className="mb-3">Có lỗi xảy ra</h5>
+               <p className="text-muted mb-0">{errorMessage}</p>
+            </Modal.Body>
+            <Modal.Footer>
+               <Button
+                  variant="danger"
+                  onClick={() => setShowErrorModal(false)}
+               >
+                  <i className="bi bi-x me-2"></i>
+                  Đóng
                </Button>
             </Modal.Footer>
          </Modal>

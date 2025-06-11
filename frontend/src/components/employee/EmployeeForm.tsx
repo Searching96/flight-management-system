@@ -66,9 +66,9 @@ export const EmployeeForm = ({ initialData, onSubmit, isAdding }: EmployeeFormPr
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="form-control">
-        <label className="label">Account Name</label>
+        <label className="label">Tên tài khoản</label>
         <input
-          {...register('accountName', { required: 'Account name is required' })}
+          {...register('accountName', { required: 'Tên tài khoản là bắt buộc' })}
           className="input input-bordered"
         />
         {errors.accountName && (
@@ -109,14 +109,14 @@ export const EmployeeForm = ({ initialData, onSubmit, isAdding }: EmployeeFormPr
       <div className="form-control">
         <label className="label">Loại nhân viên</label>
         <select
-          {...register('employeeType', { required: 'Employee type is required', valueAsNumber: true })}
+          {...register('employeeType', { required: 'Loại nhân viên là bắt buộc', valueAsNumber: true })}
           className="select select-bordered"
         >
-          <option value={1}>Flight Schedule Reception</option>
-          <option value={2}>Ticket Sales</option>
-          <option value={3}>Customer Service</option>
-          <option value={4}>Accounting</option>
-          <option value={5}>System Administrator</option>
+          <option value={1}>Tiếp nhận lịch bay</option>
+          <option value={2}>Bán vé</option>
+          <option value={3}>Dịch vụ khách hàng</option>
+          <option value={4}>Kế toán</option>
+          <option value={5}>Quản trị hệ thống</option>
         </select>
         {errors.employeeType && (
           <span className="text-red-500 text-sm">{errors.employeeType.message}</span>
@@ -126,11 +126,11 @@ export const EmployeeForm = ({ initialData, onSubmit, isAdding }: EmployeeFormPr
       {isAdding && (
         <>
           <div className="form-control">
-            <label className="label">Citizen ID</label>
+            <label className="label">Căn cước công dân</label>
             <input
               {...register('citizenId', {
-                required: 'Citizen ID is required',
-                pattern: { value: /^[0-9]+$/, message: 'Invalid Citizen ID format' }
+                required: 'Căn cước công dân là bắt buộc',
+                pattern: { value: /^[0-9]+$/, message: 'Định dạng căn cước công dân không hợp lệ' }
               })}
               className="input input-bordered"
             />
@@ -139,12 +139,12 @@ export const EmployeeForm = ({ initialData, onSubmit, isAdding }: EmployeeFormPr
             )}
           </div>
           <div className="form-control">
-            <label className="label">Password</label>
+            <label className="label">Mật khẩu</label>
             <input
               type="password"
               {...register('password', {
-                required: 'Password is required',
-                minLength: { value: 6, message: 'Password must be at least 6 characters' }
+                required: 'Mật khẩu là bắt buộc',
+                minLength: { value: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' }
               })}
               className="input input-bordered"
             />
@@ -156,7 +156,7 @@ export const EmployeeForm = ({ initialData, onSubmit, isAdding }: EmployeeFormPr
       )}
 
       <button type="submit" className="btn btn-primary w-full">
-        {isAdding ? 'Add Employee' : 'Update Employee'}
+        {isAdding ? 'Thêm nhân viên' : 'Cập nhật nhân viên'}
       </button>
     </form>
   );

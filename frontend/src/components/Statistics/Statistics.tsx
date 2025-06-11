@@ -75,35 +75,35 @@ const Statistics: React.FC = () => {
                onClick={() => setActiveView('yearly')}
                className={`nav-button ${activeView === 'yearly' ? 'active' : 'inactive'}`}
             >
-               Yearly Statistics
+               Thống kê theo năm
             </button>
             <button
                onClick={() => setActiveView('monthly')}
                className={`nav-button ${activeView === 'monthly' ? 'active' : 'inactive'}`}
             >
-               Monthly Statistics
+               Thống kê theo tháng
             </button>
          </div>
 
          {/* Yearly Statistics Section */}
          {activeView === 'yearly' && (
             <div className="yearly-stats-section">
-               <h3 className="section-title">Yearly Statistics</h3>
+               <h3 className="section-title">Thống kê theo năm</h3>
 
                {loading ? (
-                  <div className="loading-message">Loading yearly statistics...</div>
+                  <div className="loading-message">Đang tải thống kê theo năm...</div>
                ) : yearlyStats ? (
                   <div className="charts-grid">
                      {/* Total Flights Line Chart */}
                      <div className="chart-container">
-                        <h4>Total Flights by Year</h4>
+                        <h4>Tổng số chuyến bay theo năm</h4>
                         <ResponsiveContainer width="100%" height={300}>
                            <LineChart data={yearlyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="year" />
                               <YAxis />
-                              <Tooltip formatter={(value, name) => [value, name === 'totalFlights' ? 'Total Flights' : name]} />
-                              <Legend formatter={(value) => value === 'totalFlights' ? 'Total Flights' : value} />
+                              <Tooltip formatter={(value, name) => [value, name === 'totalFlights' ? 'Tổng chuyến bay' : name]} />
+                              <Legend formatter={(value) => value === 'totalFlights' ? 'Tổng chuyến bay' : value} />
                               <Line type="monotone" dataKey="totalFlights" stroke="#8884d8" strokeWidth={2} />
                            </LineChart>
                         </ResponsiveContainer>
@@ -111,14 +111,14 @@ const Statistics: React.FC = () => {
 
                      {/* Total Passengers Line Chart */}
                      <div className="chart-container">
-                        <h4>Total Passengers by Year</h4>
+                        <h4>Tổng số hành khách theo năm</h4>
                         <ResponsiveContainer width="100%" height={300}>
                            <LineChart data={yearlyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="year" />
                               <YAxis />
-                              <Tooltip formatter={(value, name) => [value, name === 'totalPassengers' ? 'Total Passengers' : name]} />
-                              <Legend formatter={(value) => value === 'totalPassengers' ? 'Total Passengers' : value} />
+                              <Tooltip formatter={(value, name) => [value, name === 'totalPassengers' ? 'Tổng hành khách' : name]} />
+                              <Legend formatter={(value) => value === 'totalPassengers' ? 'Tổng hành khách' : value} />
                               <Line type="monotone" dataKey="totalPassengers" stroke="#82ca9d" strokeWidth={2} />
                            </LineChart>
                         </ResponsiveContainer>
@@ -126,14 +126,14 @@ const Statistics: React.FC = () => {
 
                      {/* Total Revenue Line Chart */}
                      <div className="chart-container">
-                        <h4>Total Revenue by Year</h4>
+                        <h4>Tổng doanh thu theo năm</h4>
                         <ResponsiveContainer width="100%" height={300}>
                            <LineChart data={yearlyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="year" />
                               <YAxis />
-                              <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']} />
-                              <Legend formatter={(value) => value === 'totalRevenue' ? 'Total Revenue' : value} />
+                              <Tooltip formatter={(value) => [`${value.toLocaleString('vi-VN')} VND`, 'Doanh thu']} />
+                              <Legend formatter={(value) => value === 'totalRevenue' ? 'Tổng doanh thu' : value} />
                               <Line type="monotone" dataKey="totalRevenue" stroke="#ffc658" strokeWidth={2} />
                            </LineChart>
                         </ResponsiveContainer>
@@ -142,7 +142,7 @@ const Statistics: React.FC = () => {
                      {/* Revenue Distribution Pie Chart */}
                      <div className="pie-chart-container">
                         <div className="pie-chart-wrapper">
-                           <h4>Revenue Distribution by Year</h4>
+                           <h4>Phân bổ doanh thu theo năm</h4>
                            <ResponsiveContainer width={350} height={350}>
                               <PieChart margin={{ top: 5, right: 10, left: 20, bottom: 10 }}>
                                  <Pie
@@ -158,12 +158,12 @@ const Statistics: React.FC = () => {
                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                  </Pie>
-                                 <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']} />
+                                 <Tooltip formatter={(value) => [`${value.toLocaleString('vi-VN')} VND`, 'Doanh thu']} />
                               </PieChart>
                            </ResponsiveContainer>
                         </div>
                         <div className="pie-legend-container">
-                           <div className="legend-title">Years</div>
+                           <div className="legend-title">Các năm</div>
                            <div className="legend-items">
                               {yearlyStats.map((entry: any, index: number) => (
                                  <div key={entry.year} className="legend-item">
@@ -176,28 +176,28 @@ const Statistics: React.FC = () => {
                               ))}
                            </div>
                            <div className="legend-note">
-                              <em>Note: Each color represents a different year</em>
+                              <em>Lưu ý: Mỗi màu đại diện cho một năm khác nhau</em>
                            </div>
                         </div>
                      </div>
                   </div>
                ) : (
-                  <div className="no-data-message">No yearly statistics available</div>
+                  <div className="no-data-message">Không có dữ liệu thống kê theo năm</div>
                )}
 
                {/* Yearly Statistics Table */}
                {yearlyStats && (
                   <div className="table-container">
-                     <h4 className="table-title">Yearly Statistics Summary</h4>
+                     <h4 className="table-title">Tóm tắt thống kê theo năm</h4>
                      <div className="table-wrapper">
                         <table className="statistics-table">
                            <thead className="table-header">
                               <tr>
-                                 <th className="table-header-cell">Year</th>
-                                 <th className="table-header-cell">Total Flights</th>
-                                 <th className="table-header-cell">Total Passengers</th>
-                                 <th className="table-header-cell">Total Revenue</th>
-                                 <th className="table-header-cell">Revenue Rate (%)</th>
+                                 <th className="table-header-cell">Năm</th>
+                                 <th className="table-header-cell">Tổng chuyến bay</th>
+                                 <th className="table-header-cell">Tổng hành khách</th>
+                                 <th className="table-header-cell">Tổng doanh thu</th>
+                                 <th className="table-header-cell">Tỷ lệ doanh thu (%)</th>
                               </tr>
                            </thead>
                            <tbody>
@@ -208,9 +208,9 @@ const Statistics: React.FC = () => {
                                  return (
                                     <tr key={entry.year} className={`table-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
                                        <td className="table-cell year-month">{entry.year}</td>
-                                       <td className="table-cell">{entry.totalFlights.toLocaleString()}</td>
-                                       <td className="table-cell">{entry.totalPassengers.toLocaleString()}</td>
-                                       <td className="table-cell revenue">${entry.totalRevenue.toLocaleString()}</td>
+                                       <td className="table-cell">{entry.totalFlights.toLocaleString('vi-VN')}</td>
+                                       <td className="table-cell">{entry.totalPassengers.toLocaleString('vi-VN')}</td>
+                                       <td className="table-cell revenue">{entry.totalRevenue.toLocaleString('vi-VN')} VND</td>
                                        <td className="table-cell rate">{revenueRate}%</td>
                                     </tr>
                                  );
@@ -226,11 +226,11 @@ const Statistics: React.FC = () => {
          {/* Monthly Statistics Section */}
          {activeView === 'monthly' && (
             <div className="monthly-stats-section">
-               <h3 className="section-title">Monthly Statistics</h3>
+               <h3 className="section-title">Thống kê theo tháng</h3>
 
                <div className="year-selector-container">
                   <label htmlFor="year-picker" className="year-selector-label">
-                     Select Year:
+                     Chọn năm:
                   </label>
                   <select
                      id="year-picker"
@@ -245,19 +245,19 @@ const Statistics: React.FC = () => {
                </div>
 
                {monthlyLoading ? (
-                  <div className="loading-message">Loading monthly statistics for {selectedYear}...</div>
+                  <div className="loading-message">Đang tải thống kê theo tháng cho năm {selectedYear}...</div>
                ) : monthlyStats ? (
                   <div className="charts-grid">
                      {/* Monthly Total Flights Line Chart */}
                      <div className="chart-container">
-                        <h4>Total Flights by Month ({selectedYear})</h4>
+                        <h4>Tổng số chuyến bay theo tháng ({selectedYear})</h4>
                         <ResponsiveContainer width="100%" height={300}>
                            <LineChart data={monthlyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="month" />
                               <YAxis />
-                              <Tooltip formatter={(value, name) => [value, name === 'totalFlights' ? 'Total Flights' : name]} />
-                              <Legend formatter={(value) => value === 'totalFlights' ? 'Total Flights' : value} />
+                              <Tooltip formatter={(value, name) => [value, name === 'totalFlights' ? 'Tổng chuyến bay' : name]} />
+                              <Legend formatter={(value) => value === 'totalFlights' ? 'Tổng chuyến bay' : value} />
                               <Line type="monotone" dataKey="totalFlights" stroke="#8884d8" strokeWidth={2} />
                            </LineChart>
                         </ResponsiveContainer>
@@ -265,14 +265,14 @@ const Statistics: React.FC = () => {
 
                      {/* Monthly Total Passengers Line Chart */}
                      <div className="chart-container">
-                        <h4>Total Passengers by Month ({selectedYear})</h4>
+                        <h4>Tổng số hành khách theo tháng ({selectedYear})</h4>
                         <ResponsiveContainer width="100%" height={300}>
                            <LineChart data={monthlyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="month" />
                               <YAxis />
-                              <Tooltip formatter={(value, name) => [value, name === 'totalPassengers' ? 'Total Passengers' : name]} />
-                              <Legend formatter={(value) => value === 'totalPassengers' ? 'Total Passengers' : value} />
+                              <Tooltip formatter={(value, name) => [value, name === 'totalPassengers' ? 'Tổng hành khách' : name]} />
+                              <Legend formatter={(value) => value === 'totalPassengers' ? 'Tổng hành khách' : value} />
                               <Line type="monotone" dataKey="totalPassengers" stroke="#82ca9d" strokeWidth={2} />
                            </LineChart>
                         </ResponsiveContainer>
@@ -280,14 +280,14 @@ const Statistics: React.FC = () => {
 
                      {/* Monthly Total Revenue Line Chart */}
                      <div className="chart-container">
-                        <h4>Total Revenue by Month ({selectedYear})</h4>
+                        <h4>Tổng doanh thu theo tháng ({selectedYear})</h4>
                         <ResponsiveContainer width="100%" height={300}>
                            <LineChart data={monthlyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="month" />
                               <YAxis />
-                              <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']} />
-                              <Legend formatter={(value) => value === 'totalRevenue' ? 'Total Revenue' : value} />
+                              <Tooltip formatter={(value) => [`${value.toLocaleString('vi-VN')} VND`, 'Doanh thu']} />
+                              <Legend formatter={(value) => value === 'totalRevenue' ? 'Tổng doanh thu' : value} />
                               <Line type="monotone" dataKey="totalRevenue" stroke="#ffc658" strokeWidth={2} />
                            </LineChart>
                         </ResponsiveContainer>
@@ -296,7 +296,7 @@ const Statistics: React.FC = () => {
                      {/* Monthly Revenue Distribution Pie Chart */}
                      <div className="pie-chart-container">
                         <div className="pie-chart-wrapper">
-                           <h4>Revenue Distribution by Month ({selectedYear})</h4>
+                           <h4>Phân bổ doanh thu theo tháng ({selectedYear})</h4>
                            <ResponsiveContainer width={350} height={350}>
                               <PieChart margin={{ top: 5, right: 10, left: 20, bottom: 10 }}>
                                  <Pie
@@ -312,12 +312,12 @@ const Statistics: React.FC = () => {
                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                  </Pie>
-                                 <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']} />
+                                 <Tooltip formatter={(value) => [`${value.toLocaleString('vi-VN')} VND`, 'Doanh thu']} />
                               </PieChart>
                            </ResponsiveContainer>
                         </div>
                         <div className="pie-legend-container">
-                           <div className="legend-title">Months</div>
+                           <div className="legend-title">Các tháng</div>
                            <div className="monthly-legend-items">
                               {Array.from({ length: 12 }, (_, i) => i + 1).map((month, index) => (
                                  <div key={month} className="monthly-legend-item">
@@ -325,33 +325,33 @@ const Statistics: React.FC = () => {
                                        className="monthly-legend-color-box"
                                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
                                     ></div>
-                                    <span className="monthly-legend-text">{month}</span>
+                                    <span className="monthly-legend-text">Tháng {month}</span>
                                  </div>
                               ))}
                            </div>
                            <div className="legend-note">
-                              <em>Note: Each color represents a different month</em>
+                              <em>Lưu ý: Mỗi màu đại diện cho một tháng khác nhau</em>
                            </div>
                         </div>
                      </div>
                   </div>
                ) : (
-                  <div className="no-data-message">No monthly statistics available for {selectedYear}</div>
+                  <div className="no-data-message">Không có dữ liệu thống kê theo tháng cho năm {selectedYear}</div>
                )}
 
                {/* Monthly Statistics Table */}
                {monthlyStats && (
                   <div className="table-container">
-                     <h4 className="table-title">Monthly Statistics Summary ({selectedYear})</h4>
+                     <h4 className="table-title">Tóm tắt thống kê theo tháng ({selectedYear})</h4>
                      <div className="table-wrapper">
                         <table className="statistics-table">
                            <thead className="table-header">
                               <tr>
-                                 <th className="table-header-cell">Month</th>
-                                 <th className="table-header-cell">Total Flights</th>
-                                 <th className="table-header-cell">Total Passengers</th>
-                                 <th className="table-header-cell">Total Revenue</th>
-                                 <th className="table-header-cell">Revenue Rate (%)</th>
+                                 <th className="table-header-cell">Tháng</th>
+                                 <th className="table-header-cell">Tổng chuyến bay</th>
+                                 <th className="table-header-cell">Tổng hành khách</th>
+                                 <th className="table-header-cell">Tổng doanh thu</th>
+                                 <th className="table-header-cell">Tỷ lệ doanh thu (%)</th>
                               </tr>
                            </thead>
                            <tbody>
@@ -361,10 +361,10 @@ const Statistics: React.FC = () => {
                                  
                                  return (
                                     <tr key={entry.month} className={`table-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
-                                       <td className="table-cell year-month">{entry.month}</td>
-                                       <td className="table-cell">{entry.totalFlights.toLocaleString()}</td>
-                                       <td className="table-cell">{entry.totalPassengers.toLocaleString()}</td>
-                                       <td className="table-cell revenue">${entry.totalRevenue.toLocaleString()}</td>
+                                       <td className="table-cell year-month">Tháng {entry.month}</td>
+                                       <td className="table-cell">{entry.totalFlights.toLocaleString('vi-VN')}</td>
+                                       <td className="table-cell">{entry.totalPassengers.toLocaleString('vi-VN')}</td>
+                                       <td className="table-cell revenue">{entry.totalRevenue.toLocaleString('vi-VN')} VND</td>
                                        <td className="table-cell rate">{revenueRate}%</td>
                                     </tr>
                                  );

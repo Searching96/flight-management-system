@@ -437,10 +437,6 @@ const FlightManagement: React.FC<{
         }
     };
 
-    const handleDeleteAssociation = async (flightId: number, ticketClassId: number) => {
-        handleDeleteAssociationClick(flightId, ticketClassId);
-    };
-
     const getTicketClassName = (ticketClassId: number) => {
         return ticketClasses.find(tc => tc.ticketClassId === ticketClassId)?.ticketClassName || 'Unknown';
     };

@@ -33,13 +33,13 @@ const ResetPassword: React.FC = () => {
 
       // Validation - compare two new passwords
       if (formData.newPassword !== formData.confirmPassword) {
-         setError('New passwords do not match');
+         setError('Mật khẩu mới không khớp');
          setLoading(false);
          return;
       }
 
       if (formData.newPassword.length < 6) {
-         setError('New password must be at least 6 characters long');
+         setError('Mật khẩu mới phải có ít nhất 6 ký tự');
          setLoading(false);
          return;
       }
@@ -49,12 +49,12 @@ const ResetPassword: React.FC = () => {
          try {
             const isCurrentPasswordValid = await accountService.verifyCurrentPassword(user!.id, formData.currentPassword);
             if (!isCurrentPasswordValid) {
-               setError('Current password is incorrect');
+               setError('Mật khẩu hiện tại không đúng');
                setLoading(false);
                return;
             }
          } catch (verifyErr: any) {
-            setError('Current password is incorrect');
+            setError('Mật khẩu hiện tại không đúng');
             setLoading(false);
             return;
          }
@@ -70,14 +70,14 @@ const ResetPassword: React.FC = () => {
 
          await accountService.resetPassword(resetData);
 
-         setSuccess('Password reset successfully!');
+         setSuccess('Đổi mật khẩu thành công!');
          setFormData({
             currentPassword: '',
             newPassword: '',
             confirmPassword: '',
          });
       } catch (err: any) {
-         setError(err.message || 'Failed to reset password');
+         setError(err.message || 'Không thể đổi mật khẩu');
       } finally {
          setLoading(false);
       }
@@ -95,7 +95,7 @@ const ResetPassword: React.FC = () => {
                   <Card.Header className="bg-warning text-dark">
                      <h4 className="mb-0">
                         <i className="bi bi-shield-lock me-2"></i>
-                        Reset Password
+                        Đổi mật khẩu
                      </h4>
                   </Card.Header>
                   <Card.Body className="p-4">
@@ -112,44 +112,44 @@ const ResetPassword: React.FC = () => {
 
                      <Form onSubmit={handleSubmit}>
                         <Form.Group className="mb-3">
-                           <Form.Label>Current Password</Form.Label>
+                           <Form.Label>Mật khẩu hiện tại</Form.Label>
                            <Form.Control
                               type="password"
                               name="currentPassword"
                               value={formData.currentPassword}
                               onChange={handleInputChange}
                               required
-                              placeholder="Enter your current password"
+                              placeholder="Nhập mật khẩu hiện tại"
                               autoComplete="off"
                            />
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                           <Form.Label>New Password</Form.Label>
+                           <Form.Label>Mật khẩu mới</Form.Label>
                            <Form.Control
                               type="password"
                               name="newPassword"
                               value={formData.newPassword}
                               onChange={handleInputChange}
                               required
-                              placeholder="Enter your new password"
+                              placeholder="Nhập mật khẩu mới"
                               minLength={6}
                               autoComplete="new-password"
                            />
                            <Form.Text className="text-muted">
-                              Password must be at least 6 characters long
+                              Mật khẩu phải có ít nhất 6 ký tự
                            </Form.Text>
                         </Form.Group>
 
                         <Form.Group className="mb-4">
-                           <Form.Label>Confirm New Password</Form.Label>
+                           <Form.Label>Xác nhận mật khẩu mới</Form.Label>
                            <Form.Control
                               type="password"
                               name="confirmPassword"
                               value={formData.confirmPassword}
                               onChange={handleInputChange}
                               required
-                              placeholder="Confirm your new password"
+                              placeholder="Xác nhận mật khẩu mới"
                               minLength={6}
                               autoComplete="new-password"
                            />
@@ -161,7 +161,7 @@ const ResetPassword: React.FC = () => {
                               onClick={handleCancel}
                               disabled={loading}
                            >
-                              Cancel
+                              Hủy
                            </Button>
                            <Button
                               type="submit"
@@ -171,12 +171,12 @@ const ResetPassword: React.FC = () => {
                               {loading ? (
                                  <>
                                     <span className="spinner-border spinner-border-sm me-2" />
-                                    Resetting...
+                                    Đang đổi...
                                  </>
                               ) : (
                                  <>
                                     <i className="bi bi-shield-check me-2"></i>
-                                    Reset Password
+                                    Đổi mật khẩu
                                  </>
                               )}
                            </Button>

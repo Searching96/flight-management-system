@@ -2,7 +2,6 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Alert, Badge, ListGroup } from 'react-bootstrap';
 import { BookingConfirmation as BookingConfirmationType } from '../../services/bookingConfirmationService';
-import { paymentService } from '../../services';
 
 const BookingConfirmation: React.FC = () => {
   const location = useLocation();
@@ -19,10 +18,10 @@ const BookingConfirmation: React.FC = () => {
             <Card>
               <Card.Body className="text-center py-5">
                 <Alert variant="danger" className="mb-4">
-                  No booking confirmation data found. Please check your booking details.
+                  Không tìm thấy dữ liệu xác nhận đặt chỗ. Vui lòng kiểm tra thông tin đặt chỗ của bạn.
                 </Alert>
                 <Button onClick={() => navigate('/')} variant="primary">
-                  Return to Home
+                  Về trang chủ
                 </Button>
               </Card.Body>
             </Card>

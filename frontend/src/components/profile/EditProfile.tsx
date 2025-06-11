@@ -94,7 +94,7 @@ const EditProfile: React.FC = () => {
 
       // Validate lastName contains only one word
       if (formData.lastName.trim().split(' ').filter(part => part.trim() !== '').length > 1) {
-         setError('Last name must contain only one word');
+         setError('Họ chỉ được chứa một từ');
          setLoading(false);
          return;
       }
@@ -140,9 +140,9 @@ const EditProfile: React.FC = () => {
             console.warn('Error handling passenger data:', passengerErr);
          }
 
-         setSuccess('Profile updated successfully!');
+         setSuccess('Cập nhật hồ sơ thành công!');
       } catch (err: any) {
-         setError(err.message || 'Failed to update profile');
+         setError(err.message || 'Không thể cập nhật hồ sơ');
       } finally {
          setLoading(false);
       }
@@ -160,7 +160,7 @@ const EditProfile: React.FC = () => {
                   <Card className="shadow">
                      <Card.Body className="text-center p-5">
                         <div className="spinner-border text-primary mb-3" />
-                        <p>Loading account information...</p>
+                        <p>Đang tải thông tin tài khoản...</p>
                      </Card.Body>
                   </Card>
                </Col>
@@ -177,7 +177,7 @@ const EditProfile: React.FC = () => {
                   <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
                      <h4 className="mb-0">
                         <i className="bi bi-person-gear me-2"></i>
-                        Edit Profile
+                        Chỉnh sửa hồ sơ
                      </h4>
                      <Button
                         onClick={() => navigate('/profile/reset-password')}
@@ -185,7 +185,7 @@ const EditProfile: React.FC = () => {
                         size="sm"
                      >
                         <i className="bi bi-shield-lock me-1"></i>
-                        Reset Password
+                        Đổi mật khẩu
                      </Button>
                   </Card.Header>
                   <Card.Body className="p-4">
@@ -204,7 +204,7 @@ const EditProfile: React.FC = () => {
                         <Row>
                            <Col md={6}>
                               <Form.Group className="mb-3">
-                                 <Form.Label>First Name</Form.Label>
+                                 <Form.Label>Tên</Form.Label>
                                  <Form.Control
                                     type="text"
                                     name="firstName"
@@ -216,7 +216,7 @@ const EditProfile: React.FC = () => {
                            </Col>
                            <Col md={6}>
                               <Form.Group className="mb-3">
-                                 <Form.Label>Last Name</Form.Label>
+                                 <Form.Label>Họ</Form.Label>
                                  <Form.Control
                                     type="text"
                                     name="lastName"
@@ -241,7 +241,7 @@ const EditProfile: React.FC = () => {
 
                         {user?.accountTypeName === 'Customer' && (
                            <Form.Group className="mb-3">
-                              <Form.Label>Customer Score</Form.Label>
+                              <Form.Label>Điểm khách hàng</Form.Label>
                               <Form.Control
                                  type="number"
                                  name="score"
@@ -250,13 +250,13 @@ const EditProfile: React.FC = () => {
                                  className="bg-light"
                               />
                               <Form.Text className="text-muted">
-                                 Your customer service score (read-only)
+                                 Điểm dịch vụ khách hàng của bạn (chỉ đọc)
                               </Form.Text>
                            </Form.Group>
                         )}
 
                         <Form.Group className="mb-3">
-                           <Form.Label>Citizen ID</Form.Label>
+                           <Form.Label>Căn cước công dân</Form.Label>
                            <Form.Control
                               type="text"
                               name="citizenId"
@@ -265,12 +265,12 @@ const EditProfile: React.FC = () => {
                               className="bg-light"
                            />
                            <Form.Text className="text-muted">
-                              Citizen ID cannot be modified
+                              Căn cước công dân không thể thay đổi
                            </Form.Text>
                         </Form.Group>
 
                         <Form.Group className="mb-4">
-                           <Form.Label>Phone Number</Form.Label>
+                           <Form.Label>Số điện thoại</Form.Label>
                            <Form.Control
                               type="tel"
                               name="phoneNumber"
@@ -286,7 +286,7 @@ const EditProfile: React.FC = () => {
                               onClick={handleCancel}
                               disabled={loading}
                            >
-                              Cancel
+                              Hủy
                            </Button>
                            <Button
                               type="submit"
@@ -296,12 +296,12 @@ const EditProfile: React.FC = () => {
                               {loading ? (
                                  <>
                                     <span className="spinner-border spinner-border-sm me-2" />
-                                    Updating...
+                                    Đang cập nhật...
                                  </>
                               ) : (
                                  <>
                                     <i className="bi bi-check-lg me-2"></i>
-                                    Update Profile
+                                    Cập nhật hồ sơ
                                  </>
                               )}
                            </Button>

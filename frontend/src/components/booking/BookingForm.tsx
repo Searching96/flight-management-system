@@ -224,7 +224,7 @@ const BookingForm: React.FC = () => {
       const duplicateCitizenIds = citizenIds.filter((id, index) => citizenIds.indexOf(id) !== index);
       
       if (duplicateCitizenIds.length > 0) {
-        setError('Duplicate citizen IDs found. Each passenger must have a unique citizen ID.');
+        setError('Tìm thấy CCCD trùng lặp. Mỗi hành khách phải có CCCD duy nhất.');
         return;
       }
 
@@ -237,7 +237,7 @@ const BookingForm: React.FC = () => {
       }
 
       if (validationErrors.length > 0) {
-        setError('Please correct the following errors: ' + validationErrors.join(', '));
+        setError('Vui lòng sửa các lỗi sau: ' + validationErrors.join(', '));
         return;
       }
 
@@ -252,7 +252,7 @@ const BookingForm: React.FC = () => {
                 const created = await passengerService.transformPassengerData(passenger);
                 await passengerService.updatePassenger(existing.passengerId!, created);
               } catch (updateErr: any) {
-                setError('Error updating passenger: ' + (updateErr.message || 'Unknown error'));
+                setError('Lỗi cập nhật thông tin hành khách: ' + (updateErr.message || 'Lỗi không xác định'));
                 return;
               }
               // Set passengerId if found
@@ -283,11 +283,11 @@ const BookingForm: React.FC = () => {
                   passengerId: createdPassenger.passengerId ?? 0
                 };
               } catch (createErr: any) {
-                setError('Error creating passenger: ' + (createErr.message || 'Unknown error'));
+                setError('Lỗi tạo hành khách: ' + (createErr.message || 'Lỗi không xác định'));
                 return;
               }
             } else {
-              setError('Error checking existing passenger: ' + (err.message || 'Unknown error'));
+              setError('Lỗi kiểm tra hành khách hiện có: ' + (err.message || 'Lỗi không xác định'));
               return;
             }
           }
@@ -381,7 +381,7 @@ const BookingForm: React.FC = () => {
       });
 
     } catch (err: any) {
-      setError(err.message || 'Booking failed. Please try again.');
+      setError(err.message || 'Đặt vé thất bại. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
     }
@@ -413,7 +413,7 @@ const BookingForm: React.FC = () => {
   };
 
   const formatTime = (dateTimeString: string) => {
-    return new Date(dateTimeString).toLocaleTimeString('en-US', {
+    return new Date(dateTimeString).toLocaleTimeString('vi-VN', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
@@ -429,10 +429,10 @@ const BookingForm: React.FC = () => {
             <Card>
               <Card.Body className="text-center py-5">
                 <Alert variant="danger" className="mb-0">
-                  <Alert.Heading>Missing Flight Information</Alert.Heading>
-                  <p>No flight ID provided. Please select a flight from the search results.</p>
+                  <Alert.Heading>Thiếu thông tin chuyến bay</Alert.Heading>
+                  <p>Không có ID chuyến bay được cung cấp. Vui lòng chọn chuyến bay từ kết quả tìm kiếm.</p>
                   <Button variant="primary" onClick={() => navigate('/flights')}>
-                    Back to Flight Search
+                    Quay lại tìm kiếm chuyến bay
                   </Button>
                 </Alert>
               </Card.Body>
@@ -451,7 +451,7 @@ const BookingForm: React.FC = () => {
             <Card>
               <Card.Body className="text-center py-5">
                 <Spinner animation="border" variant="primary" className="mb-3" />
-                <p className="mb-0">Loading booking form...</p>
+                <p className="mb-0">Đang tải biểu mẫu đặt vé...</p>
               </Card.Body>
             </Card>
           </Col>
@@ -467,7 +467,7 @@ const BookingForm: React.FC = () => {
           <Col md={8}>
             <Card>
               <Card.Body className="text-center py-5">
-                <Alert variant="danger" className="mb-0">Flight not found</Alert>
+                <Alert variant="danger" className="mb-0">Không tìm thấy chuyến bay</Alert>
               </Card.Body>
             </Card>
           </Col>
@@ -484,19 +484,19 @@ const BookingForm: React.FC = () => {
     return (
       <Card key={index} className="mb-4">
         <Card.Header>
-          <h5 className="mb-0">Passenger {index + 1}</h5>
+          <h5 className="mb-0">Hành khách {index + 1}</h5>
         </Card.Header>
         <Card.Body>
           <Row className="mb-3">
             <Col md={6}>
               <Form.Group>
-                <Form.Label>First Name *</Form.Label>
+                <Form.Label>Tên *</Form.Label>
                 <Form.Control
                   type="text"
                   {...register(`passengers.${index}.firstName`, {
-                    required: 'First name is required'
+                    required: 'Tên là bắt buộc'
                   })}
-                  placeholder="Enter first name"
+                  placeholder="Nhập tên"
                   isInvalid={!!errors.passengers?.[index]?.firstName}
                   disabled={isAccountPassenger}
                 />
@@ -508,13 +508,13 @@ const BookingForm: React.FC = () => {
 
             <Col md={6}>
               <Form.Group>
-                <Form.Label>Last Name *</Form.Label>
+                <Form.Label>Họ *</Form.Label>
                 <Form.Control
                   type="text"
                   {...register(`passengers.${index}.lastName`, {
-                    required: 'Last name is required'
+                    required: 'Họ là bắt buộc'
                   })}
-                  placeholder="Enter last name"
+                  placeholder="Nhập họ"
                   isInvalid={!!errors.passengers?.[index]?.lastName}
                   disabled={isAccountPassenger}
                 />
@@ -532,13 +532,13 @@ const BookingForm: React.FC = () => {
                 <Form.Control
                   type="email"
                   {...register(`passengers.${index}.email`, {
-                    required: 'Email is required',
+                    required: 'Email là bắt buộc',
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Invalid email address'
+                      message: 'Địa chỉ email không hợp lệ'
                     }
                   })}
-                  placeholder="Enter email address"
+                  placeholder="Nhập địa chỉ email"
                   isInvalid={!!errors.passengers?.[index]?.email}
                   disabled={isAccountPassenger}
                 />
@@ -550,11 +550,11 @@ const BookingForm: React.FC = () => {
 
             <Col md={6}>
               <Form.Group>
-                <Form.Label>Phone Number</Form.Label>
+                <Form.Label>Số điện thoại</Form.Label>
                 <div className="d-flex gap-2">
                   <Form.Control
                     type="tel"
-                    placeholder="Phone number"
+                    placeholder="Số điện thoại"
                     value={currentPhone.replace(/^\+\d+\s*/, '')}
                     onChange={(e) => {
                       const phoneNumber = `${e.target.value}`;
@@ -574,13 +574,13 @@ const BookingForm: React.FC = () => {
           <Row className="mb-3">
             <Col md={6}>
               <Form.Group>
-                <Form.Label>Citizen ID *</Form.Label>
+                <Form.Label>Căn cước công dân *</Form.Label>
                 <Form.Control
                   type="text"
                   {...register(`passengers.${index}.citizenId`, {
-                    required: 'Citizen ID is required'
+                    required: 'Căn cước công dân là bắt buộc'
                   })}
-                  placeholder="Enter citizen ID number"
+                  placeholder="Nhập số căn cước công dân"
                   isInvalid={!!errors.passengers?.[index]?.citizenId}
                   disabled={isAccountPassenger}
                 />
@@ -601,7 +601,7 @@ const BookingForm: React.FC = () => {
         <Col md={10} lg={8}>
           {/* Header Section */}
           <div className="text-center mb-4">
-            <h1 className="mb-4">Complete Your Booking</h1>
+            <h1 className="mb-4">Hoàn tất đặt vé của bạn</h1>
             <Card className="bg-primary text-white">
               <Card.Body>
                 <div className="d-flex justify-content-center align-items-center flex-wrap gap-3">
@@ -631,20 +631,20 @@ const BookingForm: React.FC = () => {
 
                 {/* Passenger Information */}
                 <div className="mb-5 pb-4 border-bottom">
-                  <h4 className="mb-3">Passenger Information</h4>
+                  <h4 className="mb-3">Thông tin hành khách</h4>
                   {fields.map((_, index) => renderPassengerForm(index))}
                 </div>
 
                 {/* Flight Details Table */}
                 {flightDetails.length > 0 && (
                   <div className="mb-5 pb-4 border-bottom">
-                    <h4 className="mb-3">Flight Details</h4>
+                    <h4 className="mb-3">Chi tiết chuyến bay</h4>
                     <Table striped bordered hover size="sm" className="mb-0">
                       <thead className="table-secondary">
                         <tr>
-                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '40%' }}>Medium Airport</th>
-                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Arrival Time</th>
-                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Layover Duration</th>
+                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '40%' }}>Sân bay trung gian</th>
+                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Thời gian đến</th>
+                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Thời gian dừng</th>
                         </tr>
                       </thead>
                       <tbody className="table-light">
@@ -675,17 +675,17 @@ const BookingForm: React.FC = () => {
                 {/* Booking Summary */}
                 <Card className="bg-light mb-4">
                   <Card.Body>
-                    <h4 className="mb-3">Booking Summary</h4>
+                    <h4 className="mb-3">Tóm tắt đặt vé</h4>
                     <Row className="g-2">
                       <Col xs={6}>
-                        <strong>Flight:</strong>
+                        <strong>Chuyến bay:</strong>
                       </Col>
                       <Col xs={6} className="text-end">
                         {flight.flightCode}
                       </Col>
 
                       <Col xs={6}>
-                        <strong>Passengers:</strong>
+                        <strong>Hành khách:</strong>
                       </Col>
                       <Col xs={6} className="text-end">
                         {passengerCount}
@@ -694,23 +694,23 @@ const BookingForm: React.FC = () => {
                       {selectedClass && (
                         <>
                           <Col xs={6}>
-                            <strong>Class:</strong>
+                            <strong>Hạng vé:</strong>
                           </Col>
                           <Col xs={6} className="text-end">
                             {selectedClass.ticketClassName}
                           </Col>
 
                           <Col xs={6}>
-                            <strong>Price per ticket:</strong>
+                            <strong>Giá mỗi vé:</strong>
                           </Col>
                           <Col xs={6} className="text-end">
-                            ${selectedClass.specifiedFare}
+                            {selectedClass.specifiedFare.toLocaleString('vi-VN')} VND
                           </Col>
 
                           {user?.accountTypeName === "Customer" && (
                             <>
                               <Col xs={6}>
-                                <strong>Current Score:</strong>
+                                <strong>Điểm hiện tại:</strong>
                               </Col>
                               <Col xs={6} className="text-end">
                                 {customerScore.toLocaleString()}
@@ -719,16 +719,16 @@ const BookingForm: React.FC = () => {
                               {calculateScoreAndDiscount().discount > 0 && (
                                 <>
                                   <Col xs={6}>
-                                    <strong className="text-success">Discount ({calculateScoreAndDiscount().discount}%):</strong>
+                                    <strong className="text-success">Giảm giá ({calculateScoreAndDiscount().discount}%):</strong>
                                   </Col>
                                   <Col xs={6} className="text-end text-success">
-                                    -${(calculateScoreAndDiscount().discountAmount ?? 0).toFixed(2)}
+                                    -{(calculateScoreAndDiscount().discountAmount ?? 0).toLocaleString('vi-VN')} VND
                                   </Col>
                                 </>
                               )}
 
                               <Col xs={6}>
-                                <strong className="text-info">Score to Earn:</strong>
+                                <strong className="text-info">Điểm sẽ nhận:</strong>
                               </Col>
                               <Col xs={6} className="text-end text-info">
                                 +{calculateScoreAndDiscount().score.toLocaleString()}
@@ -741,10 +741,10 @@ const BookingForm: React.FC = () => {
                           </Col>
 
                           <Col xs={6}>
-                            <strong className="text-primary fs-5">Total:</strong>
+                            <strong className="text-primary fs-5">Tổng cộng:</strong>
                           </Col>
                           <Col xs={6} className="text-end">
-                            <strong className="text-primary fs-5">${calculateTotalPrice().toFixed(2)}</strong>
+                            <strong className="text-primary fs-5">{calculateTotalPrice().toLocaleString('vi-VN')} VND</strong>
                           </Col>
                         </>
                       )}
@@ -759,7 +759,7 @@ const BookingForm: React.FC = () => {
                     onClick={() => navigate(-1)}
                     size="lg"
                   >
-                    Back
+                    Quay lại
                   </Button>
                   <Button
                     type="submit"
@@ -772,10 +772,10 @@ const BookingForm: React.FC = () => {
                     {submitting ? (
                       <>
                         <Spinner animation="border" size="sm" className="me-2" />
-                        Processing...
+                        Đang xử lý...
                       </>
                     ) : (
-                      `Book Flight - $${calculateTotalPrice()}`
+                      `Đặt vé - ${calculateTotalPrice().toLocaleString('vi-VN')} VND`
                     )}
                   </Button>
                 </div>
@@ -793,71 +793,67 @@ const BookingForm: React.FC = () => {
             <Modal.Header closeButton className="bg-primary text-white">
               <Modal.Title>
                 <i className="bi bi-exclamation-triangle me-2"></i>
-                Confirm Your Booking
+                Xác nhận đặt vé
               </Modal.Title>
             </Modal.Header>
             <Modal.Body className="p-4">
               <div className="text-center mb-4">
-                <h5 className="text-primary">Please review your booking details</h5>
-                <p className="text-muted">Once confirmed, this booking cannot be undone</p>
+                <h5 className="text-primary">Vui lòng xem lại thông tin đặt vé</h5>
+                <p className="text-muted">Sau khi xác nhận, việc đặt vé này không thể hoàn tác</p>
               </div>
 
               {flight && selectedClass && (
                 <Card className="bg-light">
                   <Card.Body>
-                    <h6 className="fw-bold mb-3">Booking Summary</h6>
+                    <h6 className="fw-bold mb-3">Tóm tắt đặt vé</h6>
                     <Row className="g-2">
                       <Col xs={6}>
-                        <strong>Flight:</strong>
+                        <strong>Chuyến bay:</strong>
                       </Col>
                       <Col xs={6} className="text-end">
                         {flight.flightCode}
                       </Col>
 
                       <Col xs={6}>
-                        <strong>Route:</strong>
+                        <strong>Tuyến bay:</strong>
                       </Col>
                       <Col xs={6} className="text-end">
                         {flight.departureCityName} → {flight.arrivalCityName}
                       </Col>
 
                       <Col xs={6}>
-                        <strong>Departure:</strong>
+                        <strong>Khởi hành:</strong>
                       </Col>
                       <Col xs={6} className="text-end">
-                        {new Date(flight.departureTime).toLocaleString()}
+                        {new Date(flight.departureTime).toLocaleString('vi-VN')}
                       </Col>
 
                       <Col xs={6}>
-                        <strong>Passengers:</strong>
+                        <strong>Hành khách:</strong>
                       </Col>
                       <Col xs={6} className="text-end">
                         {passengerCount}
                       </Col>
 
                       <Col xs={6}>
-                        <strong>Class:</strong>
+                        <strong>Hạng vé:</strong>
                       </Col>
                       <Col xs={6} className="text-end">
                         {selectedClass.ticketClassName}
                       </Col>
 
                       <Col xs={6}>
-                        <strong>Price per ticket:</strong>
+                        <strong>Giá mỗi vé:</strong>
                       </Col>
                       <Col xs={6} className="text-end">
-                        ${selectedClass.specifiedFare}
-                      </Col>
-
-                      <Col xs={12}>
-                        <hr className="my-2" />
+                        {selectedClass.specifiedFare.toLocaleString('vi-VN')} VND
                       </Col>
 
                       <Col xs={6}>
-                        <strong className="text-primary fs-5">Total Amount:</strong>
+                        <strong className="text-primary fs-5">Tổng tiền:</strong>
                       </Col>
                       <Col xs={6} className="text-end">
-                        <strong className="text-primary fs-4">${calculateTotalPrice().toFixed(2)}</strong>
+                        <strong className="text-primary fs-4">{calculateTotalPrice().toLocaleString('vi-VN')} VND</strong>
                       </Col>
                     </Row>
                   </Card.Body>
@@ -871,7 +867,7 @@ const BookingForm: React.FC = () => {
                 disabled={submitting}
                 size="lg"
               >
-                Cancel
+                Hủy
               </Button>
               <Button
                 variant="success"
@@ -882,12 +878,12 @@ const BookingForm: React.FC = () => {
                 {submitting ? (
                   <>
                     <Spinner animation="border" size="sm" className="me-2" />
-                    Processing...
+                    Đang xử lý...
                   </>
                 ) : (
                   <>
                     <i className="bi bi-check-circle me-2"></i>
-                    Confirm Booking - ${calculateTotalPrice().toFixed(2)}
+                    Xác nhận đặt vé - {calculateTotalPrice().toLocaleString('vi-VN')} VND
                   </>
                 )}
               </Button>

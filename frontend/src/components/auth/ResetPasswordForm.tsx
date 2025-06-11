@@ -30,7 +30,7 @@ const ResetPasswordForm: React.FC = () => {
         const validateToken = async () => {
             if (!token) {
                 setTokenExpired(true);
-                setError('Invalid reset token. Please request a new password reset.');
+                setError('Token đặt lại không hợp lệ. Vui lòng yêu cầu đặt lại mật khẩu mới.');
                 setValidatingToken(false);
                 return;
             }
@@ -40,12 +40,12 @@ const ResetPasswordForm: React.FC = () => {
                 
                 if (!await authService.validateResetToken(token)) {
                     setTokenExpired(true);
-                    setError('Invalid or expired reset token. Please request a new password reset.');
+                    setError('Token đặt lại không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu đặt lại mật khẩu mới.');
                 }
             } catch (error) {
                 console.error('Token validation error:', error);
                 setTokenExpired(true);
-                setError('Unable to validate reset token. Please request a new password reset.');
+                setError('Không thể xác thực token đặt lại. Vui lòng yêu cầu đặt lại mật khẩu mới.');
             } finally {
                 setValidatingToken(false);
             }
@@ -56,7 +56,7 @@ const ResetPasswordForm: React.FC = () => {
 
     const onSubmit = async (data: ResetPasswordFormData) => {
         if (!token) {
-            setError('Invalid reset token. Please request a new reset link.');
+            setError('Token đặt lại không hợp lệ. Vui lòng yêu cầu liên kết đặt lại mới.');
             return;
         }
 
@@ -66,7 +66,7 @@ const ResetPasswordForm: React.FC = () => {
             await authService.resetPassword(token, data.password);
             navigate('/login', { state: { resetSuccess: true } });
         } catch (err: any) {
-            const errorMessage = err.message || 'Failed to reset password. The link may have expired.';
+            const errorMessage = err.message || 'Không thể đặt lại mật khẩu. Liên kết có thể đã hết hạn.';
             setError(errorMessage);
 
             // Check if error indicates token expiration or invalidity
@@ -86,14 +86,14 @@ const ResetPasswordForm: React.FC = () => {
                         <Card className="shadow">
                             <Card.Body className="p-4 text-center">
                                 <Alert variant="danger">
-                                    Invalid reset link. Please request a new password reset.
+                                    Liên kết đặt lại không hợp lệ. Vui lòng yêu cầu đặt lại mật khẩu mới.
                                 </Alert>
                                 <Link to="/forget-password" className="btn btn-primary mt-3">
-                                    Request Password Reset
+                                    Yêu cầu đặt lại mật khẩu
                                 </Link>
                                 <div className="text-center mt-4">
                                     <p className="text-muted">
-                                        Remember your password? <Link to="/login" className="text-decoration-none">Sign in here</Link>
+                                        Nhớ mật khẩu của bạn? <Link to="/login" className="text-decoration-none">Đăng nhập tại đây</Link>
                                     </p>
                                 </div>
                             </Card.Body>
@@ -113,9 +113,9 @@ const ResetPasswordForm: React.FC = () => {
                         <Card className="shadow">
                             <Card.Body className="p-4 text-center">
                                 <Spinner animation="border" role="status">
-                                    <span className="visually-hidden">Validating reset link...</span>
+                                    <span className="visually-hidden">Đang xác thực liên kết đặt lại...</span>
                                 </Spinner>
-                                <p className="mt-3 text-muted">Validating reset link...</p>
+                                <p className="mt-3 text-muted">Đang xác thực liên kết đặt lại...</p>
                             </Card.Body>
                         </Card>
                     </Col>
@@ -198,18 +198,18 @@ const ResetPasswordForm: React.FC = () => {
                             {tokenExpired && (
                                 <div className="mt-4 d-flex justify-content-center">
                                     <Link to="/forget-password" className="btn btn-outline-primary btn-sm">
-                                        Request New Reset Link
+                                        Yêu cầu liên kết đặt lại mới
                                     </Link>
                                 </div>
                             )}
 
                             <div className="text-center mt-4">
                                 <p className="text-muted">
-                                    Remember your password? <Link to="/login" className="text-decoration-none">Sign in here</Link>
+                                    Nhớ mật khẩu của bạn? <Link to="/login" className="text-decoration-none">Đăng nhập tại đây</Link>
                                 </p>
                                 {!tokenExpired && (
                                     <p className="text-muted">
-                                        Need a new reset link? <Link to="/forget-password" className="text-decoration-none">Request here</Link>
+                                        Cần liên kết đặt lại mới? <Link to="/forget-password" className="text-decoration-none">Yêu cầu tại đây</Link>
                                     </p>
                                 )}
                             </div>

@@ -181,7 +181,7 @@ const ChatWidget: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to initialize chat:', error);
-      setError('Failed to load chat. Please try again.');
+      setError('Không thể tải chat. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -346,7 +346,7 @@ const ChatWidget: React.FC = () => {
       setMessages(formattedMessages);
     } catch (error) {
       console.error('Failed to send message:', error);
-      setError('Failed to send message. Please try again.');
+      setError('Không thể gửi tin nhắn. Vui lòng thử lại.');
     }
   };
 
@@ -434,7 +434,7 @@ const ChatWidget: React.FC = () => {
       
     } catch (error) {
       console.error('Failed to send message:', error);
-      setError('Failed to send message. Please try again.');
+      setError('Không thể gửi tin nhắn. Vui lòng thử lại.');
     }
   };
 
@@ -810,7 +810,7 @@ const ChatWidget: React.FC = () => {
                 {loading ? (
                   <div className="text-center py-5">
                     <Spinner animation="border" size="sm" className="me-2" />
-                    Loading chat...
+                    Đang tải chat...
                   </div>
                 ) : error ? (
                   <div className="text-center py-5 text-danger">
@@ -823,7 +823,7 @@ const ChatWidget: React.FC = () => {
                       className="mt-2"
                       onClick={initializeChat}
                     >
-                      Retry
+                      Thử lại
                     </Button>
                   </div>
                 ) : (
@@ -925,6 +925,7 @@ const ChatWidget: React.FC = () => {
                           <small className="text-muted">
                             {typingUsers[0].userName} đang soạn tin nhắn...
                           </small>
+
                         </div>
                       </div>
                     )}
@@ -941,7 +942,7 @@ const ChatWidget: React.FC = () => {
                       type="text"
                       value={newMessage}
                       onChange={handleInputChange}
-                      placeholder="Type your message..."
+                      placeholder="Nhập tin nhắn của bạn..."
                       disabled={loading || !chatbox}
                       size="sm"
                       onKeyDown={(e) => {

@@ -23,8 +23,8 @@ const AirportManagement: React.FC<{
                 <Row className="justify-content-center">
                     <Col md={8}>
                         <Alert variant="danger" className="text-center">
-                            <Alert.Heading>Access Denied</Alert.Heading>
-                            <p>You do not have permission to access airport management.</p>
+                            <Alert.Heading>Truy cập bị từ chối</Alert.Heading>
+                            <p>Bạn không có quyền truy cập quản lý sân bay.</p>
                         </Alert>
                     </Col>
                 </Row>
@@ -84,7 +84,7 @@ const AirportManagement: React.FC<{
       const data = await airportService.getAllAirports();
       setAirports(data);
     } catch (err: any) {
-      setError('Failed to load airports');
+      setError('Không thể tải danh sách sân bay');
     } finally {
       setLoading(false);
     }
@@ -101,7 +101,7 @@ const AirportManagement: React.FC<{
       loadAirports();
       handleCancel();
     } catch (err: any) {
-      setError(err.message || 'Failed to save airport');
+      setError(err.message || 'Không thể lưu sân bay');
     }
   };
 
@@ -131,7 +131,7 @@ const AirportManagement: React.FC<{
       setShowDeleteModal(false);
       setAirportToDelete(null);
     } catch (err: any) {
-      setError(err.message || 'Failed to delete airport');
+      setError(err.message || 'Không thể xóa sân bay');
     } finally {
       setDeleting(false);
     }
@@ -159,9 +159,9 @@ const AirportManagement: React.FC<{
         return (
             <Container className="py-5 text-center">
                 <Spinner animation="border" role="status">
-                    <span className="visually-hidden">Loading...</span>
+                    <span className="visually-hidden">Đang tải...</span>
                 </Spinner>
-                <p className="mt-3">Loading airport data...</p>
+                <p className="mt-3">Đang tải dữ liệu sân bay...</p>
             </Container>
         );
     }
@@ -172,12 +172,12 @@ const AirportManagement: React.FC<{
                 <Col>
                     <Card>
                         <Card.Header className="d-flex justify-content-between align-items-center">
-                            <Card.Title className="mb-0">🏢 Airport Management</Card.Title>
+                            <Card.Title className="mb-0">🏢 Quản lý sân bay</Card.Title>
                             <Button
                                 variant="primary"
                                 onClick={() => setShowForm(true)}
                             >
-                                Add New Airport
+                                Thêm sân bay mới
                             </Button>
                         </Card.Header>
                     </Card>
@@ -197,21 +197,21 @@ const AirportManagement: React.FC<{
             {/* Add/Edit Airport Modal */}
             <Modal show={showForm} onHide={handleCancel} size="lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>{editingAirport ? 'Edit Airport' : 'Add New Airport'}</Modal.Title>
+                    <Modal.Title>{editingAirport ? 'Chỉnh sửa sân bay' : 'Thêm sân bay mới'}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form id="airport-form" onSubmit={handleSubmit(onSubmit)}>
                         <Row className="mb-3">
                             <Col>
                                 <Form.Group>
-                                    <Form.Label>Airport Name</Form.Label>
+                                    <Form.Label>Tên sân bay</Form.Label>
                                     <Form.Control
                                         type="text"
                                         {...register('airportName', {
-                                            required: 'Airport name is required'
+                                            required: 'Tên sân bay là bắt buộc'
                                         })}
                                         isInvalid={!!errors.airportName}
-                                        placeholder="e.g., John F. Kennedy International Airport"
+                                        placeholder="ví dụ: Sân bay quốc tế Tân Sơn Nhất"
                                     />
                                     <Form.Control.Feedback type="invalid">
                                         {errors.airportName?.message}
@@ -223,14 +223,14 @@ const AirportManagement: React.FC<{
                         <Row className="mb-3">
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label>City Name</Form.Label>
+                                    <Form.Label>Tên thành phố</Form.Label>
                                     <Form.Control
                                         type="text"
                                         {...register('cityName', {
-                                            required: 'City name is required'
+                                            required: 'Tên thành phố là bắt buộc'
                                         })}
                                         isInvalid={!!errors.cityName}
-                                        placeholder="e.g., New York"
+                                        placeholder="ví dụ: Hồ Chí Minh"
                                     />
                                     <Form.Control.Feedback type="invalid">
                                         {errors.cityName?.message}
@@ -239,7 +239,7 @@ const AirportManagement: React.FC<{
                             </Col>
                             <Col md={6}>
                                 <Form.Group>
-                                    <Form.Label>Country</Form.Label>
+                                    <Form.Label>Quốc gia</Form.Label>
                                     <TypeAhead
                                         options={countryOptions}
                                         value={selectedCountry}
@@ -247,13 +247,13 @@ const AirportManagement: React.FC<{
                                             const country = option?.value || '';
                                             setSelectedCountry(String(country));
                                         }}
-                                        placeholder="Search country..."
+                                        placeholder="Tìm kiếm quốc gia..."
                                         error={!!errors.countryName}
                                     />
                                     <input
                                         type="hidden"
                                         {...register('countryName', {
-                                            required: 'Country is required'
+                                            required: 'Quốc gia là bắt buộc'
                                         })}
                                         value={selectedCountry}
                                     />
@@ -267,10 +267,10 @@ const AirportManagement: React.FC<{
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleCancel}>
-                        Cancel
+                        Hủy
                     </Button>
                     <Button variant="primary" onClick={handleSubmit(onSubmit)}>
-                        {editingAirport ? 'Update Airport' : 'Create Airport'}
+                        {editingAirport ? 'Cập nhật sân bay' : 'Tạo sân bay'}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -335,21 +335,21 @@ const AirportManagement: React.FC<{
                 <Col>
                     <Card>
                         <Card.Header>
-                            <Card.Title className="mb-0">All Airports</Card.Title>
+                            <Card.Title className="mb-0">Tất cả sân bay</Card.Title>
                         </Card.Header>
                         <Card.Body className="p-0">
                             {airports.length === 0 ? (
                                 <div className="text-center py-5">
-                                    <p className="text-muted mb-0">No airports found. Add your first airport to get started.</p>
+                                    <p className="text-muted mb-0">Không tìm thấy sân bay nào. Thêm sân bay đầu tiên để bắt đầu.</p>
                                 </div>
                             ) : (
                                 <Table responsive striped hover>
                                     <thead>
                                         <tr>
-                                            <th>Airport Name</th>
-                                            <th>City</th>
-                                            <th>Country</th>
-                                            <th>Actions</th>
+                                            <th>Tên sân bay</th>
+                                            <th>Thành phố</th>
+                                            <th>Quốc gia</th>
+                                            <th>Thao tác</th>
                                         </tr>
                                     </thead>
                                     <tbody>

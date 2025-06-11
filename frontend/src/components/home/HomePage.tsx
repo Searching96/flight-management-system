@@ -8,33 +8,33 @@ const HomePage: React.FC = () => {
   const features = [
     {
       icon: 'bi-search',
-      title: 'Smart Search',
-      description: 'Find flights with our intelligent search that compares prices and schedules across multiple airlines.'
+      title: 'Tìm kiếm thông minh',
+      description: 'Tìm chuyến bay với công cụ tìm kiếm thông minh so sánh giá cả và lịch trình từ nhiều hãng hàng không.'
     },
     {
       icon: 'bi-shield-check',
-      title: 'Secure Booking',
-      description: 'Book with confidence using our secure payment system and instant confirmation.'
+      title: 'Đặt vé an toàn',
+      description: 'Đặt vé với sự tin tưởng bằng hệ thống thanh toán bảo mật và xác nhận tức thì.'
     },
     {
       icon: 'bi-phone',
-      title: 'Mobile Ready',
-      description: 'Access your bookings anywhere with our responsive design that works on all devices.'
+      title: 'Tối ưu di động',
+      description: 'Truy cập đặt chỗ của bạn mọi lúc mọi nơi với thiết kế tương thích mọi thiết bị.'
     },
     {
       icon: 'bi-currency-dollar',
-      title: 'Best Prices',
-      description: 'We guarantee competitive prices and offer price matching for the best deals.'
+      title: 'Giá tốt nhất',
+      description: 'Chúng tôi đảm bảo giá cạnh tranh và có chính sách đối chiếu giá cho ưu đãi tốt nhất.'
     }
   ];
 
   const popularDestinations = [
-    { city: 'New York', country: 'USA', icon: 'bi-building' },
-    { city: 'London', country: 'UK', icon: 'bi-clock-history' },
-    { city: 'Tokyo', country: 'Japan', icon: 'bi-geo-alt' },
-    { city: 'Paris', country: 'France', icon: 'bi-heart' },
-    { city: 'Dubai', country: 'UAE', icon: 'bi-sun' },
-    { city: 'Sydney', country: 'Australia', icon: 'bi-water' }
+    { city: 'Hà Nội', country: 'Việt Nam', icon: 'bi-building' },
+    { city: 'TP. Hồ Chí Minh', country: 'Việt Nam', icon: 'bi-geo-alt' },
+    { city: 'Đà Nẵng', country: 'Việt Nam', icon: 'bi-water' },
+    { city: 'Bangkok', country: 'Thái Lan', icon: 'bi-sun' },
+    { city: 'Singapore', country: 'Singapore', icon: 'bi-heart' },
+    { city: 'Seoul', country: 'Hàn Quốc', icon: 'bi-clock-history' }
   ];
   return (
     <div>
@@ -43,18 +43,18 @@ const HomePage: React.FC = () => {
         <Container>
           <Row className="align-items-center min-vh-50">
             <Col lg={6}>
-              <h1 className="display-4 fw-bold mb-4">Find Your Perfect Flight</h1>
+              <h1 className="display-4 fw-bold mb-4">Tìm chuyến bay hoàn hảo</h1>
               <p className="lead mb-4">
-                Discover amazing destinations with unbeatable prices and seamless booking experience
+                Khám phá những điểm đến tuyệt vời với giá cả không thể chối từ và trải nghiệm đặt vé liền mạch
               </p>              <div className="d-flex gap-3 flex-wrap">
                 <Link to="/search" className="btn btn-light btn-lg text-decoration-none">
                   <i className="bi bi-search me-2"></i>
-                  Search Flights
+                  Tìm chuyến bay
                 </Link>
                 {!user && (
                   <Link to="/register" className="btn btn-outline-light btn-lg text-decoration-none">
                     <i className="bi bi-person-plus me-2"></i>
-                    Sign Up Free
+                    Đăng ký miễn phí
                   </Link>
                 )}
               </div>
@@ -75,7 +75,7 @@ const HomePage: React.FC = () => {
       <Container className="py-5">
         <Row>
           <Col>
-            <h2 className="text-center mb-5 display-5 fw-bold">Why Choose FlightMS?</h2>
+            <h2 className="text-center mb-5 display-5 fw-bold">Tại sao chọn FlightMS?</h2>
           </Col>
         </Row>
         <Row className="g-4">
@@ -105,7 +105,7 @@ const HomePage: React.FC = () => {
         <Container>
           <Row>
             <Col>
-              <h2 className="text-center mb-5 display-5 fw-bold">Popular Destinations</h2>
+              <h2 className="text-center mb-5 display-5 fw-bold">Điểm đến phổ biến</h2>
             </Col>
           </Row>
           <Row className="g-4">
@@ -138,23 +138,23 @@ const HomePage: React.FC = () => {
         <Container>
           <Row>
             <Col lg={8} className="mx-auto text-center">
-              <h2 className="display-5 fw-bold mb-3">Ready to Start Your Journey?</h2>
+              <h2 className="display-5 fw-bold mb-3">Sẵn sàng bắt đầu hành trình?</h2>
               <p className="lead mb-4">
-                Join thousands of satisfied travelers who trust FlightMS for their travel needs
+                Tham gia cùng hàng ngàn du khách hài lòng tin tưởng FlightMS cho nhu cầu du lịch của họ
               </p>              <div className="d-flex gap-3 justify-content-center flex-wrap">
                 <Link to="/search" className="btn btn-primary btn-lg text-decoration-none">
                   <i className="bi bi-ticket me-2"></i>
-                  Book Your Flight
+                  Đặt chuyến bay
                 </Link>
                 {user ? (
                   <Link to="/dashboard" className="btn btn-outline-light btn-lg text-decoration-none">
                     <i className="bi bi-calendar-check me-2"></i>
-                    View My Bookings
+                    Xem đặt chỗ của tôi
                   </Link>
                 ) : (
                   <Link to="/register" className="btn btn-outline-light btn-lg text-decoration-none">
                     <i className="bi bi-person-plus me-2"></i>
-                    Create Account
+                    Tạo tài khoản
                   </Link>
                 )}
               </div>

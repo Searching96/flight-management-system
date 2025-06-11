@@ -27,7 +27,7 @@ const FlightSearch: React.FC = () => {
     formState: { errors }
   } = useForm<FlightSearchCriteria>({
     defaultValues: {
-      passengers: 1
+      passengerCount: 1
     }
   });
 
@@ -76,13 +76,13 @@ const FlightSearch: React.FC = () => {
 
       // Validate airport selection
       if (!selectedDepartureAirport || !selectedArrivalAirport) {
-        setError('Please select both departure and arrival airports');
+        setError('Vui lòng chọn cả sân bay khởi hành và sân bay đến');
         setLoading(false);
         return;
       }
 
       if (selectedDepartureAirport === selectedArrivalAirport) {
-        setError('Departure and arrival airports must be different');
+        setError('Sân bay khởi hành và sân bay đến phải khác nhau');
         setLoading(false);
         return;
       }
@@ -91,7 +91,7 @@ const FlightSearch: React.FC = () => {
         departureAirportId: selectedDepartureAirport as number,
         arrivalAirportId: selectedArrivalAirport as number,
         departureDate: data.departureDate + 'T00:00:00',
-        passengerCount: data.passengers,
+        passengerCount: data.passengerCount,
         // Send 0 for "all classes" or the specific class ID
         ticketClassId: selectedTicketClass === 'all' ? 0 : (selectedTicketClass as number)
       };
@@ -117,13 +117,13 @@ const FlightSearch: React.FC = () => {
       console.error('Flight search error:', err);
       // Provide more specific error messages
       if (err.response?.status === 400) {
-        setError('Invalid search criteria. Please check your input and try again.');
+        setError('Tiêu chí tìm kiếm không hợp lệ. Vui lòng kiểm tra thông tin và thử lại.');
       } else if (err.response?.status === 500) {
-        setError('Server error occurred. Please try again in a moment.');
+        setError('Lỗi máy chủ. Vui lòng thử lại sau một lúc.');
       } else if (!navigator.onLine) {
-        setError('No internet connection. Please check your connection and try again.');
+        setError('Không có kết nối internet. Vui lòng kiểm tra kết nối và thử lại.');
       } else {
-        setError('Failed to search flights. Please check your connection and try again.');
+        setError('Không thể tìm kiếm chuyến bay. Vui lòng kiểm tra kết nối và thử lại.');
       }
     } finally {
       setLoading(false);
@@ -142,7 +142,7 @@ const FlightSearch: React.FC = () => {
       departureAirportId: selectedDepartureAirport,
       arrivalAirportId: selectedArrivalAirport,
       departureDate: watch('departureDate'),
-      passengerCount: watch('passengers'),
+      passengerCount: watch('passengerCount'),
       ticketClassId: ticketClassId
     };
 
@@ -152,7 +152,7 @@ const FlightSearch: React.FC = () => {
     // Store booking data in sessionStorage instead of URL parameters
     sessionStorage.setItem('bookingData', JSON.stringify({
       flightId,
-      passengers: watch('passengers'),
+      passengerCount: watch('passengerCount'),
       class: ticketClassId
     }));
 
@@ -168,7 +168,7 @@ const FlightSearch: React.FC = () => {
             <Card.Header className="bg-primary text-white">
               <h2 className="mb-0">
                 <i className="bi bi-search me-2"></i>
-                Search Flights
+                Tìm kiếm chuyến bay
               </h2>
             </Card.Header>
             <Card.Body className="p-4">
@@ -179,7 +179,7 @@ const FlightSearch: React.FC = () => {
                     <Form.Group>
                       <Form.Label className="fw-bold">
                         <i className="bi bi-geo-alt me-1"></i>
-                        From
+                        Từ
                       </Form.Label>
                       <TypeAhead
                         options={airportOptions}
@@ -189,14 +189,14 @@ const FlightSearch: React.FC = () => {
                           setSelectedDepartureAirport(airportId);
                           setValue('departureAirportId', Number(airportId) || 0);
                         }}
-                        placeholder="Departure city or airport..."
+                        placeholder="Thành phố hoặc sân bay khởi hành..."
                         error={!!errors.departureAirportId}
                       />
                       <Form.Control
                         type="hidden"
                         {...register('departureAirportId', {
-                          required: 'Departure airport is required',
-                          validate: (value) => value > 0 || 'Please select a departure airport'
+                          required: 'Sân bay khởi hành là bắt buộc',
+                          validate: (value) => value > 0 || 'Vui lòng chọn sân bay khởi hành'
                         })}
                         value={selectedDepartureAirport || ''}
                       />
@@ -212,7 +212,7 @@ const FlightSearch: React.FC = () => {
                     <Button
                       variant="outline-secondary"
                       onClick={swapAirports}
-                      title="Swap airports"
+                      title="Đổi sân bay"
                       style={{ height: '38px' }}
                     >
                       <i className="bi bi-arrow-left-right"></i>
@@ -223,7 +223,7 @@ const FlightSearch: React.FC = () => {
                     <Form.Group>
                       <Form.Label className="fw-bold">
                         <i className="bi bi-geo me-1"></i>
-                        To
+                        Đến
                       </Form.Label>
                       <TypeAhead
                         options={airportOptions}
@@ -233,14 +233,14 @@ const FlightSearch: React.FC = () => {
                           setSelectedArrivalAirport(airportId);
                           setValue('arrivalAirportId', Number(airportId) || 0);
                         }}
-                        placeholder="Arrival city or airport..."
+                        placeholder="Thành phố hoặc sân bay đến..."
                         error={!!errors.arrivalAirportId}
                       />
                       <Form.Control
                         type="hidden"
                         {...register('arrivalAirportId', {
-                          required: 'Arrival airport is required',
-                          validate: (value) => value > 0 || 'Please select an arrival airport'
+                          required: 'Sân bay đến là bắt buộc',
+                          validate: (value) => value > 0 || 'Vui lòng chọn sân bay đến'
                         })}
                         value={selectedArrivalAirport || ''}
                       />
@@ -265,7 +265,7 @@ const FlightSearch: React.FC = () => {
                         id="departureDate"
                         type="date"
                         min={minBookingDate || new Date().toISOString().split('T')[0]}
-                        {...register('departureDate', { required: 'Departure date is required' })}
+                        {...register('departureDate', { required: 'Ngày khởi hành là bắt buộc' })}
                         isInvalid={!!errors.departureDate}
                       />
                     </Form.Group>
@@ -279,17 +279,17 @@ const FlightSearch: React.FC = () => {
                       </Form.Label>
                       <Form.Select
                         id="passengerCount"
-                        {...register('passengers', { required: 'Số lượng hành khách là bắt buộc', valueAsNumber: true })}
-                        isInvalid={!!errors.passengers}
+                        {...register('passengerCount', { required: 'Số lượng hành khách là bắt buộc', valueAsNumber: true })}
+                        isInvalid={!!errors.passengerCount}
                       >
                         {[...Array(9)].map((_, i) => (
                           <option key={i + 1} value={i + 1}>
-                            {i + 1} {i === 0 ? 'Hành khách' : 'Hành khách'}
+                            {i + 1} Hành khách
                           </option>
                         ))}
                       </Form.Select>
                       <Form.Control.Feedback type="invalid">
-                        {errors.passengers?.message}
+                        {errors.passengerCount?.message}
                       </Form.Control.Feedback>
                     </Form.Group>
                   </Col>
@@ -321,12 +321,12 @@ const FlightSearch: React.FC = () => {
                           aria-hidden="true"
                           className="me-2"
                         />
-                        Searching...
+                        Đang tìm kiếm...
                       </>
                     ) : (
                       <>
                         <i className="bi bi-search me-2"></i>
-                        Search Flights
+                        Tìm chuyến bay
                       </>
                     )}
                   </Button>
@@ -344,8 +344,8 @@ const FlightSearch: React.FC = () => {
             <Card className="text-center">
               <Card.Body className="py-5">
                 <Spinner animation="border" variant="primary" className="mb-3" />
-                <h5>Searching for flights...</h5>
-                <p className="text-muted">Please wait while we find the best options for you.</p>
+                <h5>Đang tìm kiếm chuyến bay...</h5>
+                <p className="text-muted">Vui lòng đợi trong khi chúng tôi tìm những lựa chọn tốt nhất cho bạn.</p>
               </Card.Body>
             </Card>
           </Col>
@@ -360,7 +360,7 @@ const FlightSearch: React.FC = () => {
               <Card.Header className="bg-success text-white">
                 <h3 className="mb-0">
                   <i className="bi bi-check-circle me-2"></i>
-                  Search Results ({flights.length} flights found)
+                  Kết quả tìm kiếm ({flights.length} chuyến bay được tìm thấy)
                 </h3>
               </Card.Header>
               <Card.Body className="p-0">
@@ -369,7 +369,7 @@ const FlightSearch: React.FC = () => {
                     key={flight.flightId}
                     flight={flight}
                     onBookFlight={handleBookFlight} searchContext={{
-                      passengerCount: watch('passengers'),
+                      passengerCount: watch('passengerCount'),
                       allTicketClasses: ticketClasses,
                       selectedTicketClass: selectedTicketClass === 'all' ? null : (selectedTicketClass as number),
                       searchedForAllClasses: selectedTicketClass === 'all'
@@ -389,8 +389,8 @@ const FlightSearch: React.FC = () => {
             <Card className="text-center">
               <Card.Body className="py-5">
                 <i className="bi bi-search text-muted mb-3" style={{ fontSize: '3rem' }}></i>
-                <h5>No flights found</h5>
-                <p className="text-muted">Try adjusting your search criteria and search again.</p>
+                <h5>Không tìm thấy chuyến bay</h5>
+                <p className="text-muted">Hãy thử điều chỉnh tiêu chí tìm kiếm và tìm kiếm lại.</p>
               </Card.Body>
             </Card>
           </Col>
