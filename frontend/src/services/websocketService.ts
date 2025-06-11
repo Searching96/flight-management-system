@@ -23,46 +23,65 @@ class WebSocketService {
 
   connect(chatboxId: string, userId: string, userType: 'employee' | 'customer', userName: string) {
     try {
-      // Use native WebSocket instead of SockJS to avoid global variable issues
-      this.socket = new WebSocket('ws://localhost:8080/ws/chat');
-
-      this.socket.onopen = () => {
-        console.log('WebSocket connected');
-        this.isConnected = true;
-        this.reconnectAttempts = 0;
-
-        // Join the chat room
-        this.send({
-          type: 'join_chat',
-          chatboxId,
-          userId,
-          userType,
-          userName
-        });
-      };
-
-      this.socket.onmessage = (event) => {
-        try {
-          const message: WebSocketMessage = JSON.parse(event.data);
-          this.handleMessage(message);
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      };
-
-      this.socket.onclose = () => {
-        console.log('WebSocket disconnected');
-        this.isConnected = false;
-        this.attemptReconnect(chatboxId, userId, userType, userName);
-      };
-
-      this.socket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-
+      // Try different WebSocket endpoints
+      const endpoints = [
+        'ws://localhost:8080/ws/chat/websocket',
+        'ws://localhost:8080/ws/chat',
+        'ws://localhost:8080/websocket',
+        'ws://localhost:8080/chat'
+      ];
+      
+      this.tryConnect(endpoints, 0, chatboxId, userId, userType, userName);
     } catch (error) {
       console.error('Error connecting to WebSocket:', error);
     }
+  }
+
+  private tryConnect(endpoints: string[], index: number, chatboxId: string, userId: string, userType: 'employee' | 'customer', userName: string) {
+    if (index >= endpoints.length) {
+      console.error('All WebSocket endpoints failed');
+      return;
+    }
+
+    const endpoint = endpoints[index];
+    console.log(`Trying WebSocket endpoint: ${endpoint}`);
+    
+    this.socket = new WebSocket(endpoint);
+
+    this.socket.onopen = () => {
+      console.log(`WebSocket connected to: ${endpoint}`);
+      this.isConnected = true;
+      this.reconnectAttempts = 0;
+
+      // Join the chat room
+      this.send({
+        type: 'join_chat',
+        chatboxId,
+        userId,
+        userType,
+        userName
+      });
+    };
+
+    this.socket.onerror = (error) => {
+      console.log(`WebSocket failed for ${endpoint}, trying next...`);
+      this.tryConnect(endpoints, index + 1, chatboxId, userId, userType, userName);
+    };
+
+    this.socket.onmessage = (event) => {
+      try {
+        const message: WebSocketMessage = JSON.parse(event.data);
+        this.handleMessage(message);
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    };
+
+    this.socket.onclose = () => {
+      console.log('WebSocket disconnected');
+      this.isConnected = false;
+      this.attemptReconnect(chatboxId, userId, userType, userName);
+    };
   }
 
   private attemptReconnect(chatboxId: string, userId: string, userType: 'employee' | 'customer', userName: string) {
