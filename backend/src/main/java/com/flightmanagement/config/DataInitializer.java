@@ -78,11 +78,15 @@ public class DataInitializer implements CommandLineRunner {
     private void initializeAirports() {
         try {
             if (airportService.getAllAirports().isEmpty()) {
-                airportService.createAirport(new AirportDto(null, "Tan Son Nhat International Airport", "Ho Chi Minh City", "Vietnam"));
+                airportService.createAirport(
+                        new AirportDto(null, "Tan Son Nhat International Airport", "Ho Chi Minh City", "Vietnam"));
                 airportService.createAirport(new AirportDto(null, "Noi Bai International Airport", "Hanoi", "Vietnam"));
-                airportService.createAirport(new AirportDto(null, "Da Nang International Airport", "Da Nang", "Vietnam"));
-                airportService.createAirport(new AirportDto(null, "Cam Ranh International Airport", "Nha Trang", "Vietnam"));
-                airportService.createAirport(new AirportDto(null, "Phu Quoc International Airport", "Phu Quoc", "Vietnam"));
+                airportService
+                        .createAirport(new AirportDto(null, "Da Nang International Airport", "Da Nang", "Vietnam"));
+                airportService
+                        .createAirport(new AirportDto(null, "Cam Ranh International Airport", "Nha Trang", "Vietnam"));
+                airportService
+                        .createAirport(new AirportDto(null, "Phu Quoc International Airport", "Phu Quoc", "Vietnam"));
                 System.out.println("✓ Default airports initialized");
             }
         } catch (Exception e) {
@@ -119,7 +123,7 @@ public class DataInitializer implements CommandLineRunner {
                 admin.setEmployeeType(5); // Quán lý dịch vụ (làm hết)
                 accountService.createAccount(admin);
 
-                //Nhân viên bán vé
+                // Nhân viên bán vé
                 RegisterDto ticketingEmployee = new RegisterDto();
                 ticketingEmployee.setAccountName("Ticketing Employee");
                 ticketingEmployee.setEmail("ticketing@flightms.com");
@@ -130,12 +134,15 @@ public class DataInitializer implements CommandLineRunner {
                 ticketingEmployee.setEmployeeType(2); // Nhân viên bán vé
                 accountService.createAccount(ticketingEmployee);
 
-                //Nhân viên kế toán
+                // Nhân viên kế toán
                 RegisterDto accountingEmployee = new RegisterDto();
                 accountingEmployee.setAccountName("Accounting Employee");
                 accountingEmployee.setEmail("accounting@flightms.com");
                 accountingEmployee.setPassword("123Abc");
                 accountingEmployee.setCitizenId("555555555");
+                accountingEmployee.setPhoneNumber("0123456785");
+                accountingEmployee.setAccountType(2); // Employee
+                accountingEmployee.setEmployeeType(4); // Nhân viên kế toán
                 accountService.createAccount(accountingEmployee);
 
                 // Nhân viên quản lý nhân sự
@@ -160,7 +167,6 @@ public class DataInitializer implements CommandLineRunner {
                 employee.setEmployeeType(1); // Nhân viên khai thác bay
                 accountService.createAccount(employee);
 
-
                 // Customer account
                 RegisterDto supportEmployee = new RegisterDto();
                 supportEmployee.setAccountName("Support Employee");
@@ -171,7 +177,6 @@ public class DataInitializer implements CommandLineRunner {
                 supportEmployee.setAccountType(2); // Employee
                 supportEmployee.setEmployeeType(3); // Nhân viên hỗ trợ khách hàng
                 accountService.createAccount(supportEmployee);
-
 
                 // Create demo customer
                 RegisterDto customer = new RegisterDto();
@@ -318,26 +323,40 @@ public class DataInitializer implements CommandLineRunner {
     private void initializeAllFlightTicketClasses() {
         try {
             // Flight 1 (SGN -> HAN)
-            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(1, 1, 100, new BigDecimal("1500000"))); // Economy
-            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(1, 2, 20, new BigDecimal("3000000")));  // Business
-            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(1, 3, 10, new BigDecimal("5000000")));  // First Class
+            flightTicketClassService
+                    .createFlightTicketClass(createFlightTicketClass(1, 1, 100, new BigDecimal("1500000"))); // Economy
+            flightTicketClassService
+                    .createFlightTicketClass(createFlightTicketClass(1, 2, 20, new BigDecimal("3000000"))); // Business
+            flightTicketClassService
+                    .createFlightTicketClass(createFlightTicketClass(1, 3, 10, new BigDecimal("5000000"))); // First
+                                                                                                            // Class
 
             // Flight 2 (HAN -> DAD)
-            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(2, 1, 150, new BigDecimal("1200000"))); // Economy
-            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(2, 2, 30, new BigDecimal("2500000")));  // Business
+            flightTicketClassService
+                    .createFlightTicketClass(createFlightTicketClass(2, 1, 150, new BigDecimal("1200000"))); // Economy
+            flightTicketClassService
+                    .createFlightTicketClass(createFlightTicketClass(2, 2, 30, new BigDecimal("2500000"))); // Business
 
             // Flight 3 (DAD -> CXR)
-            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(3, 1, 80, new BigDecimal("800000")));   // Economy
-            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(3, 2, 15, new BigDecimal("1800000")));  // Business
+            flightTicketClassService
+                    .createFlightTicketClass(createFlightTicketClass(3, 1, 80, new BigDecimal("800000"))); // Economy
+            flightTicketClassService
+                    .createFlightTicketClass(createFlightTicketClass(3, 2, 15, new BigDecimal("1800000"))); // Business
 
             // Flight 4 (SGN -> PQC)
-            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(4, 1, 120, new BigDecimal("1000000"))); // Economy
-            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(4, 2, 25, new BigDecimal("2200000")));  // Business
-            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(4, 3, 8, new BigDecimal("3500000")));   // First Class
+            flightTicketClassService
+                    .createFlightTicketClass(createFlightTicketClass(4, 1, 120, new BigDecimal("1000000"))); // Economy
+            flightTicketClassService
+                    .createFlightTicketClass(createFlightTicketClass(4, 2, 25, new BigDecimal("2200000"))); // Business
+            flightTicketClassService
+                    .createFlightTicketClass(createFlightTicketClass(4, 3, 8, new BigDecimal("3500000"))); // First
+                                                                                                           // Class
 
             // Flight 5 (PQC -> SGN)
-            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(5, 1, 60, new BigDecimal("950000")));   // Economy
-            flightTicketClassService.createFlightTicketClass(createFlightTicketClass(5, 2, 10, new BigDecimal("2100000")));  // Business
+            flightTicketClassService
+                    .createFlightTicketClass(createFlightTicketClass(5, 1, 60, new BigDecimal("950000"))); // Economy
+            flightTicketClassService
+                    .createFlightTicketClass(createFlightTicketClass(5, 2, 10, new BigDecimal("2100000"))); // Business
 
             System.out.println("✓ Flight ticket classes created for all flights");
         } catch (Exception e) {
@@ -348,11 +367,16 @@ public class DataInitializer implements CommandLineRunner {
     private void initializeDemoPassengers() {
         try {
             if (passengerService.getAllPassengers().isEmpty()) {
-                passengerService.createPassenger(new PassengerDto(null, "Nguyen Van A", "nguyenvana@email.com", "123456789", "0987654321"));
-                passengerService.createPassenger(new PassengerDto(null, "Tran Thi B", "tranthib@email.com", "987654321", "0123456789"));
-                passengerService.createPassenger(new PassengerDto(null, "Le Van C", "levanc@email.com", "456789123", "0369852147"));
-                passengerService.createPassenger(new PassengerDto(null, "Pham Thi D", "phamthid@email.com", "789123456", "0147258369"));
-                passengerService.createPassenger(new PassengerDto(null, "Hoang Van E", "hoangvane@email.com", "321654987", "0258147963"));
+                passengerService.createPassenger(
+                        new PassengerDto(null, "Nguyen Van A", "nguyenvana@email.com", "123456789", "0987654321"));
+                passengerService.createPassenger(
+                        new PassengerDto(null, "Tran Thi B", "tranthib@email.com", "987654321", "0123456789"));
+                passengerService.createPassenger(
+                        new PassengerDto(null, "Le Van C", "levanc@email.com", "456789123", "0369852147"));
+                passengerService.createPassenger(
+                        new PassengerDto(null, "Pham Thi D", "phamthid@email.com", "789123456", "0147258369"));
+                passengerService.createPassenger(
+                        new PassengerDto(null, "Hoang Van E", "hoangvane@email.com", "321654987", "0258147963"));
                 System.out.println("✓ Demo passengers created");
             }
         } catch (Exception e) {
@@ -360,7 +384,8 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private FlightTicketClassDto createFlightTicketClass(int flightId, int ticketClassId, int quantity, BigDecimal fare) {
+    private FlightTicketClassDto createFlightTicketClass(int flightId, int ticketClassId, int quantity,
+            BigDecimal fare) {
         FlightTicketClassDto ftc = new FlightTicketClassDto();
         ftc.setFlightId(flightId);
         ftc.setTicketClassId(ticketClassId);
