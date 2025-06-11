@@ -75,9 +75,6 @@ const ChatWidget: React.FC = () => {
       updateLastVisitTime();
       setUnreadCount(0); // Immediately reset unread count
       
-      // Start continuous last visit time updates when chat is open
-      startContinuousLastVisitTimeUpdates();
-      
       startPolling();
       startLastVisitPolling(); // Start continuous last visit time updates
 
@@ -130,31 +127,18 @@ const ChatWidget: React.FC = () => {
         webSocketService.removeEventListener('typing_start', handleTypingStart);
         webSocketService.removeEventListener('typing_stop', handleTypingStop);
         webSocketService.removeEventListener('new_message', handleNewMessage);
-<<<<<<< HEAD
-        
-        // Stop continuous updates when chat is closed
-        stopContinuousLastVisitTimeUpdates();
-=======
         stopLastVisitPolling(); // Stop last visit time polling when chat closes
->>>>>>> origin/fix-chat
       };
     } else {
       stopPolling();
       stopLastVisitPolling(); // Stop last visit time polling when chat is not open
       webSocketService.disconnect();
       setTypingUsers([]);
-      
-      // Stop continuous updates when chat is closed
-      stopContinuousLastVisitTimeUpdates();
     }
 
     return () => {
       stopPolling();
-<<<<<<< HEAD
-      stopContinuousLastVisitTimeUpdates();
-=======
       stopLastVisitPolling();
->>>>>>> origin/fix-chat
     };
   }, [isOpen, chatbox, user]);
 
@@ -237,34 +221,6 @@ const ChatWidget: React.FC = () => {
     }
   };
 
-<<<<<<< HEAD
-  const startContinuousLastVisitTimeUpdates = () => {
-    if (continuousUpdateIntervalRef.current) return;
-    
-    console.log('Starting continuous last visit time updates');
-    continuousUpdateIntervalRef.current = setInterval(async () => {
-      if (isOpen && chatbox?.chatboxId && user?.id) {
-        try {
-          console.log('Continuous update - updating last visit time for user:', user.id, 'chatbox:', chatbox.chatboxId);
-          await accountChatboxService.updateLastVisitTime(user.id, chatbox.chatboxId);
-          console.log('Continuous last visit time update successful');
-          
-          // Keep unread count at 0 while chat is open
-          setUnreadCount(0);
-        } catch (error) {
-          console.error('Failed to update last visit time during continuous update:', error);
-          // Don't show error to user for background updates, just log it
-        }
-      }
-    }, 30000); // Update every 30 seconds while chat is open
-  };
-
-  const stopContinuousLastVisitTimeUpdates = () => {
-    if (continuousUpdateIntervalRef.current) {
-      console.log('Stopping continuous last visit time updates');
-      clearInterval(continuousUpdateIntervalRef.current);
-      continuousUpdateIntervalRef.current = null;
-=======
   const startLastVisitPolling = () => {
     if (lastVisitPollingIntervalRef.current) return;
     
@@ -286,7 +242,6 @@ const ChatWidget: React.FC = () => {
       console.log('Stopping last visit time polling for chat widget');
       clearInterval(lastVisitPollingIntervalRef.current);
       lastVisitPollingIntervalRef.current = null;
->>>>>>> origin/fix-chat
     }
   };
 
