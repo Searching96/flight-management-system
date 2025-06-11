@@ -251,15 +251,45 @@ const CustomerSupport: React.FC = () => {
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
     
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-    } else {
-      const diffInDays = Math.floor(diffInHours / 24);
-      return `${diffInDays} ngày`;
+    // Check if it's today
+    if (date.toDateString() === today.toDateString()) {
+      return 'Hôm nay';
     }
+    
+    // Check if it's yesterday
+    if (date.toDateString() === yesterday.toDateString()) {
+      return 'Hôm qua';
+    }
+    
+    // Format as dd/mm/yyyy for other dates
+    return date.toLocaleDateString('vi-VN', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric' 
+    });
+  };
+
+  const groupMessagesByDate = (messages: FormattedMessage[]) => {
+    const groups: { [key: string]: FormattedMessage[] } = {};
+    
+    messages.forEach(message => {
+      const date = new Date(message.sendTime).toDateString();
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(message);
+    });
+    
+    return groups;
   };
 
   const getLastMessagePrefix = (chatbox: Chatbox) => {
@@ -440,82 +470,104 @@ const CustomerSupport: React.FC = () => {
                 style={{ overflowY: 'auto', backgroundColor: '#f5f5f5' }}
                 onScroll={handleScroll}
               >
-                {messages.map((message, index) => {
-                  const isCurrentUser = !message.isFromCustomer && message.employeeId === user?.id;
-                  const shouldShowOnRight = isCurrentUser;
-                  
-                  return (
-                    <div
-                      key={message.messageId || index}
-                      className={`mb-3 d-flex ${shouldShowOnRight ? 'justify-content-end' : 'justify-content-start'}`}
-                    >
-                      {!shouldShowOnRight && (
+                {(() => {
+                  const messageGroups = groupMessagesByDate(messages);
+                  const sortedDates = Object.keys(messageGroups).sort(
+                    (a, b) => new Date(a).getTime() - new Date(b).getTime()
+                  );
+
+                  return sortedDates.map(dateKey => (
+                    <div key={dateKey}>
+                      {/* Date Separator */}
+                      <div className="d-flex justify-content-center my-3">
                         <div 
-                          className="rounded-circle text-white d-flex align-items-center justify-content-center me-2 flex-shrink-0"
-                          style={{
-                            width: '32px',
-                            height: '32px',
-                            fontSize: '12px',
-                            fontWeight: 'bold',
-                            backgroundColor: message.isFromCustomer 
-                              ? getAvatarColor(selectedChatbox.customerName, true)
-                              : getAvatarColor(message.employeeName, false)
-                          }}
+                          className="px-3 py-1 bg-white rounded-pill text-muted small"
+                          style={{ border: '1px solid #e0e0e0' }}
                         >
-                          {message.isFromCustomer 
-                            ? getAvatarLetter(selectedChatbox.customerName, true)
-                            : getAvatarLetter(message.employeeName, false)
-                          }
-                        </div>
-                      )}
-                      
-                      <div style={{ maxWidth: '70%' }}>
-                        <div 
-                          className={`p-2 rounded-3 ${
-                            isCurrentUser 
-                              ? 'text-white'
-                              : message.isFromCustomer
-                                ? 'bg-white text-dark'
-                                : 'text-dark'
-                          }`}
-                          style={{ 
-                            backgroundColor: isCurrentUser 
-                              ? '#0084ff'
-                              : message.isFromCustomer 
-                                ? '#ffffff'
-                                : '#e9ecef',
-                            borderRadius: shouldShowOnRight ? '18px 18px 4px 18px' : '18px 18px 18px 4px'
-                          }}
-                        >
-                          {!isCurrentUser && (
-                            <div className="small fw-bold text-muted">
-                              {message.isFromCustomer ? selectedChatbox.customerName : message.employeeName}
-                            </div>
-                          )}
-                          <div>{message.content}</div>
-                          <div className={`text-xs mt-1 ${isCurrentUser ? 'text-light' : 'text-muted'}`} style={{ fontSize: '0.7rem' }}>
-                            {formatTime(message.sendTime)}
-                          </div>
+                          {formatDate(messageGroups[dateKey][0].sendTime)}
                         </div>
                       </div>
 
-                      {shouldShowOnRight && (
-                        <div 
-                          className="rounded-circle text-white d-flex align-items-center justify-content-center ms-2 flex-shrink-0"
-                          style={{
-                            width: '32px',
-                            height: '32px',
-                            fontSize: '12px',
-                            fontWeight: 'bold',
-                            backgroundColor: getAvatarColor(user?.accountName, false)
-                          }}
-                        >
-                          {getAvatarLetter(user?.accountName, false)}
-                        </div>
-                      )}
+                      {/* Messages for this date */}
+                      {messageGroups[dateKey].map((message, index) => {
+                        const isCurrentUser = !message.isFromCustomer && message.employeeId === user?.id;
+                        const shouldShowOnRight = isCurrentUser;
+                        
+                        return (
+                          <div
+                            key={message.messageId || `${dateKey}-${index}`}
+                            className={`mb-3 d-flex ${shouldShowOnRight ? 'justify-content-end' : 'justify-content-start'}`}
+                          >
+                            {!shouldShowOnRight && (
+                              <div 
+                                className="rounded-circle text-white d-flex align-items-center justify-content-center me-2 flex-shrink-0"
+                                style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  fontSize: '12px',
+                                  fontWeight: 'bold',
+                                  backgroundColor: message.isFromCustomer 
+                                    ? getAvatarColor(selectedChatbox.customerName, true)
+                                    : getAvatarColor(message.employeeName, false)
+                                }}
+                              >
+                                {message.isFromCustomer 
+                                  ? getAvatarLetter(selectedChatbox.customerName, true)
+                                  : getAvatarLetter(message.employeeName, false)
+                                }
+                              </div>
+                            )}
+                            
+                            <div style={{ maxWidth: '70%' }}>
+                              <div 
+                                className={`p-2 rounded-3 ${
+                                  isCurrentUser 
+                                    ? 'text-white'
+                                    : message.isFromCustomer
+                                      ? 'bg-white text-dark'
+                                      : 'text-dark'
+                                }`}
+                                style={{ 
+                                  backgroundColor: isCurrentUser 
+                                    ? '#0084ff'
+                                    : message.isFromCustomer 
+                                      ? '#ffffff'
+                                      : '#e9ecef',
+                                  borderRadius: shouldShowOnRight ? '18px 18px 4px 18px' : '18px 18px 18px 4px'
+                                }}
+                              >
+                                {!isCurrentUser && (
+                                  <div className="small fw-bold text-muted">
+                                    {message.isFromCustomer ? selectedChatbox.customerName : message.employeeName}
+                                  </div>
+                                )}
+                                <div>{message.content}</div>
+                                <div className={`text-xs mt-1 ${isCurrentUser ? 'text-light' : 'text-muted'}`} style={{ fontSize: '0.7rem' }}>
+                                  {formatTime(message.sendTime)}
+                                </div>
+                              </div>
+                            </div>
+
+                            {shouldShowOnRight && (
+                              <div 
+                                className="rounded-circle text-white d-flex align-items-center justify-content-center ms-2 flex-shrink-0"
+                                style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  fontSize: '12px',
+                                  fontWeight: 'bold',
+                                  backgroundColor: getAvatarColor(user?.accountName, false)
+                                }}
+                              >
+                                {getAvatarLetter(user?.accountName, false)}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  ));
+                })()}
                 <div ref={messagesEndRef} />
               </div>
 
