@@ -8,6 +8,9 @@ class TicketService {
     return apiClient.get(this.baseURL);
   }
 
+  async getTicketById(ticketId: number): Promise<Ticket> {
+    return apiClient.get(`${this.baseURL}/${ticketId}`);
+  }
 
   async getTicketsByFlightId(flightId: number): Promise<Ticket[]> {
     try {
