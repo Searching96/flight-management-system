@@ -30,6 +30,7 @@ import TicketClassManagement from './components/admin/TicketClassManagement';
 import ParameterSettings from './components/admin/ParameterSettings';
 import AirportManagement from './components/admin/AirportManagement';
 import EmployeeManagement from './components/admin/EmployeeManagement';
+import Statistics from './components/Statistics/Statistics';
 // import TicketingPanel from './components/employee/TicketingPanel';
 // import AccountingPanel from './components/employee/AccountingPanel';
 
@@ -170,16 +171,15 @@ const App: React.FC = () => {
               }
             /> */}
 
-            {/* Accounting Panel - EMPLOYEE_ACCOUNTING (Type 4) and EMPLOYEE_ADMINISTRATOR (Type 7) */}
-            {/* Uncommented for future implementation */}
-            {/* <Route
+            {/* Accounting Panel - EMPLOYEE_ACCOUNTING and EMPLOYEE_ADMIN */}
+            <Route
               path="/accounting"
               element={
-                <ProtectedRoute requiredAccountType='Employee' requiredRoles={['EMPLOYEE_ACCOUNTING', 'EMPLOYEE_ADMINISTRATOR']}>
-                  <AccountingPanel />
+                <ProtectedRoute requiredAccountType='Employee' requiredRoles={['EMPLOYEE_ACCOUNTING', 'EMPLOYEE_ADMIN']}>
+                  <Statistics />
                 </ProtectedRoute>
               }
-            /> */}
+            />
 
             {/* Admin Panel - EMPLOYEE_ADMINISTRATOR (Type 7) only */}
             <Route

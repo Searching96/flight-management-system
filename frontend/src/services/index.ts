@@ -21,6 +21,7 @@ export { ticketService } from './ticketService';
 export { parameterService } from './ParameterService';
 export { paymentService } from './paymentService';
 export { debugService } from './debugService';
+export { statisticsService } from './statisticsService';
 
 // Configuration
 export * from './config';
