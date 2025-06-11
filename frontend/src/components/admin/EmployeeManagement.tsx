@@ -590,16 +590,6 @@ const EmployeeManagement: React.FC<{
                       <Badge bg={typeInfo.color} className="me-2">
                         {typeInfo.label}
                       </Badge>
-                      <Badge 
-                        bg={isActive ? "success" : "secondary"} 
-                        className="small"
-                      >
-                        <i 
-                          className={`bi ${isActive ? 'bi-circle-fill' : 'bi-pause-circle-fill'} me-1`} 
-                          style={{ fontSize: '0.5rem' }}
-                        ></i>
-                        {isActive ? 'Hoạt động' : 'Tạm dừng'}
-                      </Badge>
                     </div>
                     <div>
                       <Button
@@ -701,10 +691,14 @@ const EmployeeManagement: React.FC<{
                     <div className="d-flex align-items-center">
                       <small className="text-muted me-2">Trạng thái tài khoản:</small>
                       <Badge 
-                        bg={isActive ? "success" : "secondary"}
-                        className="px-2 py-1"
+                        bg={isActive ? "success" : "secondary"} 
+                        className="small"
                       >
-                        {isActive ? 'Đang hoạt động' : 'Đã tạm dừng'}
+                        <i 
+                          className={`bi ${isActive ? 'bi-circle-fill' : 'bi-pause-circle-fill'} me-1`} 
+                          style={{ fontSize: '0.5rem' }}
+                        ></i>
+                        {isActive ? 'Hoạt động' : 'Tạm dừng'}
                       </Badge>
                     </div>
                     

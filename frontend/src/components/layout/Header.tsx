@@ -140,7 +140,7 @@ const Header: React.FC = () => {
                 {/* ============================================= */}
                 {permissions.hasRole('EMPLOYEE_HUMAN_RESOURCES') && (
                   <>
-                    <Nav.Link as={Link} to="/employee-management" className="text-decoration-none">👥 Quản lý nhân viên</Nav.Link>
+                    <Nav.Link as={Link} to="/employees" className="text-decoration-none">👥 Quản lý nhân viên</Nav.Link>
                   </>
                 )}
                 

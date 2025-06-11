@@ -28,6 +28,7 @@ import PlaneManagement from './components/admin/PlaneManagement';
 import TicketClassManagement from './components/admin/TicketClassManagement';
 import ParameterSettings from './components/admin/ParameterSettings';
 import AirportManagement from './components/admin/AirportManagement';
+import EmployeeManagement from './components/admin/EmployeeManagement';
 // import TicketingPanel from './components/employee/TicketingPanel';
 // import AccountingPanel from './components/employee/AccountingPanel';
 
@@ -184,7 +185,7 @@ const App: React.FC = () => {
               path="/employees"
               element={
                 <ProtectedRoute requiredAccountType='Employee' requiredRoles={['EMPLOYEE_HUMAN_RESOURCES', 'EMPLOYEE_ADMINISTRATOR']}>
-                  <AdminPanel />
+                  <EmployeeManagement />
                 </ProtectedRoute>
               }
             />

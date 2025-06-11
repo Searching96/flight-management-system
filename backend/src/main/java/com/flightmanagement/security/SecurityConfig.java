@@ -37,7 +37,6 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        System.out.println("Configuring authentication provider at 2025-06-11 08:14:55 UTC by thinh0704hcm");
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
@@ -46,43 +45,38 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        System.out.println("Configuring security filter chain with CORS at 2025-06-11 08:14:55 UTC by thinh0704hcm");
+        http.csrf(AbstractHttpConfigurer::disable)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh",
+                            "/api/auth/validate-token", "/api/auth/forget-password", "/api/auth/reset-password",
+                            "/api/auth/employee/register",
+                            "/api/demo/**",
+                            "/api/flights/search", "/api/flights/{id}",
+                            "/api/airports", "/api/ticket-classes",
+                            "/api/flight-ticket-classes/flight/**",
+                            "/api/flight-ticket-classes/occupied-seats/**",
+                            "/api/flight-ticket-classes/{flightId}/{ticketClassId}/update-remaining",
+                            "/api/passengers/**",
+                            "/api/tickets/confirmation-code", "/api/tickets", "/api/tickets/{id}",
+                            "/api/flight-details/flight/{flightId}", "/api/parameters",
+                            "/api/tickets/booking-lookup/{confirmationCode}", "/api/tickets/booking-lookup/{id}",
+                            "/api/debug/login-by-name/{name}", "/ws/**", "/sockjs-node/**",
+                            "/api/payment/create", "/api/payment/return", "/api/payment/IPN",
+                            // Add OPTIONS method for all API endpoints
+                            "/api/**")
+                    .permitAll()
 
-        http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh",
-                                "/api/auth/validate-token", "/api/auth/forget-password", "/api/auth/reset-password",
-                                "/api/auth/employee/register",
-                                "/api/demo/**",
-                                "/api/flights/search", "/api/flights/{id}",
-                                "/api/airports", "/api/ticket-classes",
-                                "/api/flight-ticket-classes/flight/**",
-                                "/api/flight-ticket-classes/occupied-seats/**",
-                                "/api/flight-ticket-classes/{flightId}/{ticketClassId}/update-remaining",
-                                "/api/passengers/**",
-                                "/api/tickets/confirmation-code", "/api/tickets", "/api/tickets/{id}",
-                                "/api/flight-details/flight/{flightId}", "/api/parameters",
-                                "/api/tickets/booking-lookup/{confirmationCode}", "/api/tickets/booking-lookup/{id}",
-                                "/api/debug/login-by-name/{name}", "/ws/**", "/sockjs-node/**",
-                                "/api/payment/create", "/api/payment/return", "/api/payment/IPN",
-                                // Add OPTIONS method for all API endpoints
-                                "/api/**")
-                        .permitAll()
-
-                        .anyRequest().authenticated())
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                    .anyRequest().authenticated())
+            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authenticationProvider(authenticationProvider())
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        System.out.println("Configuring CORS configuration source at 2025-06-11 08:14:55 UTC by thinh0704hcm");
-
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Allow specific origins
@@ -118,19 +112,16 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
-        System.out.println("CORS configuration registered for all paths at 2025-06-11 08:14:55 UTC by thinh0704hcm");
         return source;
     }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        System.out.println("Configuring authentication manager at 2025-06-11 08:14:55 UTC by thinh0704hcm");
         return config.getAuthenticationManager();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        System.out.println("Configuring password encoder at 2025-06-11 08:14:55 UTC by thinh0704hcm");
         return new BCryptPasswordEncoder();
     }
 }

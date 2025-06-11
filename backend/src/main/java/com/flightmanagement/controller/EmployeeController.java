@@ -37,7 +37,7 @@ public class EmployeeController {
      * Get all employees (Admin only)
      */
     @GetMapping
-    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR')")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<List<EmployeeDto>> getAllEmployees() {
         System.out.println("Getting all employees at 2025-06-11 07:43:20 UTC by thinh0704hcm");
         return ResponseEntity.ok(employeeService.getAllEmployees());
@@ -47,7 +47,7 @@ public class EmployeeController {
      * Get employee by ID (Admin only)
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR')")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<EmployeeDto> getEmployeeById(@PathVariable Integer id) {
         System.out.println("Getting employee by ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
         return ResponseEntity.ok(employeeService.getEmployeeById(id));
@@ -57,7 +57,7 @@ public class EmployeeController {
      * Update employee (Admin only)
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR')")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<EmployeeDto> updateEmployee(@PathVariable Integer id, @RequestBody EmployeeDto updateRequest) {
         System.out.println("Updating employee ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
         return ResponseEntity.ok(employeeService.updateEmployee(id, updateRequest));
@@ -67,7 +67,7 @@ public class EmployeeController {
      * Delete employee (Admin only)
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR')")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<Void> deleteEmployee(@PathVariable Integer id) {
         System.out.println("Deleting employee ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
         employeeService.deleteEmployee(id);
@@ -78,7 +78,7 @@ public class EmployeeController {
      * Activate employee (Admin only)
      */
     @PatchMapping("/{id}/activate")
-    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR')")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<EmployeeDto> activateEmployee(@PathVariable Integer id) {
         System.out.println("Activating employee ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
         return ResponseEntity.ok(employeeService.activateEmployee(id));
@@ -88,7 +88,7 @@ public class EmployeeController {
      * Deactivate employee (Admin only)
      */
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR')")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<EmployeeDto> deactivateEmployee(@PathVariable Integer id) {
         System.out.println("Deactivating employee ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
         return ResponseEntity.ok(employeeService.deactivateEmployee(id));
@@ -98,7 +98,7 @@ public class EmployeeController {
      * Update employee role (Admin only)
      */
     @PutMapping("/{id}/role")
-    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR')")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<EmployeeDto> updateRole(@PathVariable Integer id, @RequestParam Integer newRole) {
         System.out.println("Updating role for employee ID: " + id + " to role: " + newRole + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
         return ResponseEntity.ok(employeeService.updateRole(id, newRole));
