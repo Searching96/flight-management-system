@@ -116,8 +116,41 @@ public class DataInitializer implements CommandLineRunner {
                 admin.setCitizenId("999999999");
                 admin.setPhoneNumber("0123456789");
                 admin.setAccountType(2); // Admin
-                admin.setEmployeeType(5);
+                admin.setEmployeeType(5); // Quán lý dịch vụ (làm hết)
                 accountService.createAccount(admin);
+
+                //Nhân viên bán vé
+                RegisterDto ticketingEmployee = new RegisterDto();
+                ticketingEmployee.setAccountName("Ticketing Employee");
+                ticketingEmployee.setEmail("ticketing@flightms.com");
+                ticketingEmployee.setPassword("123Abc");
+                ticketingEmployee.setCitizenId("666666666");
+                ticketingEmployee.setPhoneNumber("0123456786");
+                ticketingEmployee.setAccountType(2); // Employee
+                ticketingEmployee.setEmployeeType(2); // Nhân viên bán vé
+                accountService.createAccount(ticketingEmployee);
+
+                //Nhân viên kế toán
+                RegisterDto accountingEmployee = new RegisterDto();
+                accountingEmployee.setAccountName("Accounting Employee");
+                accountingEmployee.setEmail("accounting@flightms.com");
+                accountingEmployee.setPassword("123Abc");
+                accountingEmployee.setCitizenId("555555555");
+                accountingEmployee.setPhoneNumber("0123456785");
+                accountingEmployee.setAccountType(2); // Employee
+                accountingEmployee.setEmployeeType(4); // Nhân viên kế toán
+                accountService.createAccount(accountingEmployee);
+
+                // Nhân viên quản lý nhân sự
+                RegisterDto hrEmployee = new RegisterDto();
+                hrEmployee.setAccountName("HR Employee");
+                hrEmployee.setEmail("hr@flightms.com");
+                hrEmployee.setPassword("123Abc");
+                hrEmployee.setCitizenId("444444444");
+                hrEmployee.setPhoneNumber("0123456784");
+                hrEmployee.setAccountType(2); // Employee
+                hrEmployee.setEmployeeType(6); // Nhân viên quản lý nhân sự
+                accountService.createAccount(hrEmployee);
 
                 // Create employee account
                 RegisterDto employee = new RegisterDto();
@@ -127,19 +160,19 @@ public class DataInitializer implements CommandLineRunner {
                 employee.setCitizenId("888888888");
                 employee.setPhoneNumber("0123456788");
                 employee.setAccountType(2); // Employee
-                employee.setEmployeeType(1);
+                employee.setEmployeeType(1); // Nhân viên khai thác bay
                 accountService.createAccount(employee);
 
 
                 // Customer account
                 RegisterDto supportEmployee = new RegisterDto();
-                supportEmployee.setAccountName("de bo may giup");
+                supportEmployee.setAccountName("Support Employee");
                 supportEmployee.setEmail("support@flightms.com");
                 supportEmployee.setPassword("123Abc");
                 supportEmployee.setCitizenId("777777777");
                 supportEmployee.setPhoneNumber("0123456787");
                 supportEmployee.setAccountType(2); // Employee
-                supportEmployee.setEmployeeType(2);
+                supportEmployee.setEmployeeType(3); // Nhân viên hỗ trợ khách hàng
                 accountService.createAccount(supportEmployee);
 
 
