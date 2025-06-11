@@ -20,6 +20,7 @@ import ResetPassword from './components/profile/ResetPassword';
 import PaymentResult from './components/payment/PaymentResult';
 import ForgetPasswordForm from './components/auth/ForgetPasswordForm';
 import ResetPasswordForm from './components/auth/ResetPasswordForm';
+import { TicketingManagement } from './components/ticketing';
 
 // Management Components
 import FlightManagement from './components/admin/FlightManagement';
@@ -91,6 +92,16 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute requiredAccountType='Employee' requiredRoles={['EMPLOYEE_TICKETING', 'EMPLOYEE_ADMIN', 'EMPLOYEE_FLIGHT_OPERATIONS']}>
                   <TicketClassManagement />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Ticketing Management - EMPLOYEE_TICKETING and EMPLOYEE_ADMIN */}
+            <Route
+              path="/ticketing"
+              element={
+                <ProtectedRoute requiredAccountType='Employee' requiredRoles={['EMPLOYEE_TICKETING', 'EMPLOYEE_ADMIN']}>
+                  <TicketingManagement />
                 </ProtectedRoute>
               }
             />
