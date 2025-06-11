@@ -27,6 +27,7 @@ import FlightManagement from './components/admin/FlightManagement';
 import PlaneManagement from './components/admin/PlaneManagement';
 import TicketClassManagement from './components/admin/TicketClassManagement';
 import ParameterSettings from './components/admin/ParameterSettings';
+import Statistics from './components/Statistics/Statistics';
 // import TicketingPanel from './components/employee/TicketingPanel';
 // import AccountingPanel from './components/employee/AccountingPanel';
 
@@ -138,14 +139,14 @@ const App: React.FC = () => {
             /> */}
 
             {/* Accounting Panel - EMPLOYEE_ACCOUNTING and EMPLOYEE_ADMIN */}
-            {/* <Route
+            <Route
               path="/accounting"
               element={
                 <ProtectedRoute requiredAccountType='Employee' requiredRoles={['EMPLOYEE_ACCOUNTING', 'EMPLOYEE_ADMIN']}>
-                  <AccountingPanel />
+                  <Statistics />
                 </ProtectedRoute>
               }
-            /> */}
+            />
 
             {/* Admin Panel - EMPLOYEE_ADMIN only */}
             <Route
