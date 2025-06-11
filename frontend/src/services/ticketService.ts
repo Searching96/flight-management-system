@@ -5,15 +5,12 @@ class TicketService {
   private readonly baseURL = '/tickets';
 
   async getAllTickets(): Promise<Ticket[]> {
-    try {
-      const response = await apiClient.get(`${this.baseURL}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching tickets:', error);
-      throw error;
-    }
+    return apiClient.get(this.baseURL);
   }
 
+  async getTicketById(ticketId: number): Promise<Ticket> {
+    return apiClient.get(`${this.baseURL}/${ticketId}`);
+  }
 
   async getTicketsByFlightId(flightId: number): Promise<Ticket[]> {
     try {
