@@ -32,7 +32,7 @@ public class AuthController {
     }
 
     @PostMapping("/create-employee")
-    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_ACCOUNTING')")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<AuthResponse> registerEmployee(@Valid @RequestBody RegisterDto request) {
         request.setAccountType(2); // Set account type to employee
         return ResponseEntity.ok(authService.register(request));

@@ -68,6 +68,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse register(RegisterDto request) {
+        if (accountRepo.existsByEmailAndNotDeleted(request.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
         Account newAccount = new Account();
         // Map common fields
         newAccount.setAccountName(request.getAccountName());

@@ -22,7 +22,7 @@ export interface UserDetails {
 
 export interface RegisterRequest {
   accountName: string;
-  password: string;
+  password?: string; // Make optional since backend generates it for employees
   email: string;
   citizenId: string;
   phoneNumber: string;

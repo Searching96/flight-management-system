@@ -17,6 +17,7 @@ public class EmployeeMapper {
         dto.setAccountName(entity.getAccount() != null ? entity.getAccount().getAccountName() : null);
         dto.setEmail(entity.getAccount() != null ? entity.getAccount().getEmail() : null);
         dto.setPhoneNumber(entity.getAccount() != null ? entity.getAccount().getPhoneNumber() : null);
+        dto.setCitizenId(entity.getAccount() != null ? entity.getAccount().getCitizenId() : null);
         dto.setEmployeeType(entity.getEmployeeType());
         dto.setEmployeeTypeName(getEmployeeTypeName(entity.getEmployeeType()));
         dto.setDeletedAt(entity.getDeletedAt());
