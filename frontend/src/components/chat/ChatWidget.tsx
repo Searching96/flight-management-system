@@ -43,6 +43,7 @@ const ChatWidget: React.FC = () => {
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const unreadPollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const continuousUpdateIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (isOpen && user && !chatbox) {
@@ -71,6 +72,10 @@ const ChatWidget: React.FC = () => {
     if (isOpen && chatbox?.chatboxId && user) {
       // Update last visit time and reset unread count when opening chat
       updateLastVisitTime();
+      setUnreadCount(0); // Immediately reset unread count
+      
+      // Start continuous last visit time updates when chat is open
+      startContinuousLastVisitTimeUpdates();
       
       startPolling();
 
@@ -123,14 +128,23 @@ const ChatWidget: React.FC = () => {
         webSocketService.removeEventListener('typing_start', handleTypingStart);
         webSocketService.removeEventListener('typing_stop', handleTypingStop);
         webSocketService.removeEventListener('new_message', handleNewMessage);
+        
+        // Stop continuous updates when chat is closed
+        stopContinuousLastVisitTimeUpdates();
       };
     } else {
       stopPolling();
       webSocketService.disconnect();
       setTypingUsers([]);
+      
+      // Stop continuous updates when chat is closed
+      stopContinuousLastVisitTimeUpdates();
     }
 
-    return () => stopPolling();
+    return () => {
+      stopPolling();
+      stopContinuousLastVisitTimeUpdates();
+    };
   }, [isOpen, chatbox, user]);
 
   const scrollToBottom = () => {
@@ -209,6 +223,35 @@ const ChatWidget: React.FC = () => {
       console.log('Stopping unread count polling');
       clearInterval(unreadPollingIntervalRef.current);
       unreadPollingIntervalRef.current = null;
+    }
+  };
+
+  const startContinuousLastVisitTimeUpdates = () => {
+    if (continuousUpdateIntervalRef.current) return;
+    
+    console.log('Starting continuous last visit time updates');
+    continuousUpdateIntervalRef.current = setInterval(async () => {
+      if (isOpen && chatbox?.chatboxId && user?.id) {
+        try {
+          console.log('Continuous update - updating last visit time for user:', user.id, 'chatbox:', chatbox.chatboxId);
+          await accountChatboxService.updateLastVisitTime(user.id, chatbox.chatboxId);
+          console.log('Continuous last visit time update successful');
+          
+          // Keep unread count at 0 while chat is open
+          setUnreadCount(0);
+        } catch (error) {
+          console.error('Failed to update last visit time during continuous update:', error);
+          // Don't show error to user for background updates, just log it
+        }
+      }
+    }, 30000); // Update every 30 seconds while chat is open
+  };
+
+  const stopContinuousLastVisitTimeUpdates = () => {
+    if (continuousUpdateIntervalRef.current) {
+      console.log('Stopping continuous last visit time updates');
+      clearInterval(continuousUpdateIntervalRef.current);
+      continuousUpdateIntervalRef.current = null;
     }
   };
 
@@ -521,6 +564,10 @@ const ChatWidget: React.FC = () => {
     // Only open chat if it wasn't a drag operation
     if (!hasDragged && !isDragging) {
       setIsOpen(true);
+      // Immediately reset unread count when opening chat
+      if (unreadCount > 0) {
+        setUnreadCount(0);
+      }
     }
   };
 

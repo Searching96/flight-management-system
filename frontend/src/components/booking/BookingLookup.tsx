@@ -83,32 +83,26 @@ const BookingLookup: React.FC = () => {
   const confirmCancelBooking = async () => {
     if (!booking) return;
 
-    const confirmed = window.confirm(
-      'Bạn có chắc chắn muốn hủy đặt chỗ này không? Hành động này không thể hoàn tác.'
-    );
+    setShowCancelModal(false);
 
-    if (confirmed) {
-      setShowCancelModal(false);
-
-      try {
-        for (const ticket of booking.tickets) {
-          if (ticket.ticketId) {
-            await ticketService.deleteTicket(ticket.ticketId);
-            await flightTicketClassService.updateRemainingTickets(
-              ticket.flightId!,
-              ticket.ticketClassId!,
-              -1
-            );
-          }
+    try {
+      for (const ticket of booking.tickets) {
+        if (ticket.ticketId) {
+          await ticketService.deleteTicket(ticket.ticketId);
+          await flightTicketClassService.updateRemainingTickets(
+            ticket.flightId!,
+            ticket.ticketClassId!,
+            -1
+          );
         }
-
-        alert('Đặt chỗ và tất cả vé đã được hủy thành công.');
-        setBooking(null);
-        setSearchData({ confirmationCode: '' });
-      } catch (err: any) {
-        console.error('Error canceling booking:', err);
-        alert('Không thể hủy đặt chỗ: ' + (err.message || 'Lỗi không xác định'));
       }
+
+      alert('Đặt chỗ và tất cả vé đã được hủy thành công.');
+      setBooking(null);
+      setSearchData({ confirmationCode: '' });
+    } catch (err: any) {
+      console.error('Error canceling booking:', err);
+      alert('Không thể hủy đặt chỗ: ' + (err.message || 'Lỗi không xác định'));
     }
   };
 

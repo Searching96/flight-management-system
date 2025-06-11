@@ -133,6 +133,7 @@ CREATE TABLE IF NOT EXISTS ticket
     payment_time DATETIME, -- nullable
     fare DECIMAL(10,2) NOT NULL,
     confirmation_code varchar(20) not null,
+    order_id varchar(100) DEFAULT NULL,
     deleted_at DATETIME DEFAULT NULL,
     FOREIGN KEY (flight_id) REFERENCES flight(flight_id),
     FOREIGN KEY (ticket_class_id) REFERENCES ticket_class(ticket_class_id),

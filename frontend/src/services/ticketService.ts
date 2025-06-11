@@ -95,6 +95,10 @@ class TicketService {
     return apiClient.get(`${this.baseURL}/booking-lookup/${code}`);
   }
 
+  async payTicket(ticketId: number): Promise<Ticket> {
+    return apiClient.post(`${this.baseURL}/pay/${ticketId}`);
+  }      
+
   transformTicketData(ticket: {
     flightId: number;
     ticketClassId: number;

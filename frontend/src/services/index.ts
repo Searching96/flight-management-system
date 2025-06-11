@@ -11,7 +11,7 @@ export { customerService } from './customerService';
 export { demoService } from './demoService';
 export { employeeService } from './employeeService';
 export { flightDetailService } from './flightDetailService';
-export { flightService } from './FlightService';
+export { flightService } from './flightService';
 export { flightTicketClassService } from './flightTicketClassService';
 export { messageService } from './messageService';
 export { passengerService } from './passengerService';

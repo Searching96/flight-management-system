@@ -180,9 +180,43 @@ const FlightManagement: React.FC<{
         setShowForm(true);
     };
 
+    const [showDeleteFlightModal, setShowDeleteFlightModal] = useState(false);
+    const [flightToDelete, setFlightToDelete] = useState<Flight | null>(null);
+    const [showDeleteAssociationModal, setShowDeleteAssociationModal] = useState(false);
+    const [associationToDelete, setAssociationToDelete] = useState<{
+        flightId: number;
+        ticketClassId: number;
+        className: string;
+    } | null>(null);
+    const [deletingFlight, setDeletingFlight] = useState(false);
+    const [deletingAssociation, setDeletingAssociation] = useState(false);
+
+    const handleDeleteClick = (flight: Flight) => {
+        setFlightToDelete(flight);
+        setShowDeleteFlightModal(true);
+    };
+
+    const handleConfirmDeleteFlight = async () => {
+        if (!flightToDelete) return;
+
+        try {
+            setDeletingFlight(true);
+            await deleteFlight(flightToDelete.flightId!);
+            setShowDeleteFlightModal(false);
+            setFlightToDelete(null);
+        } catch (err: any) {
+            setError(err.message || 'Không thể xóa chuyến bay');
+        } finally {
+            setDeletingFlight(false);
+        }
+    };
+
     const handleDelete = async (flightId: number) => {
-        if (!window.confirm('Xác nhận xóa chuyến bay?')) return;
-        await deleteFlight(flightId);
+        // Find the flight to delete for modal display
+        const flight = flights.find(f => f.flightId === flightId);
+        if (flight) {
+            handleDeleteClick(flight);
+        }
     };
 
     const handleCancel = () => {
@@ -378,15 +412,33 @@ const FlightManagement: React.FC<{
         }
     };
 
-    const handleDeleteAssociation = async (flightId: number, ticketClassId: number) => {
-        if (!window.confirm('Are you sure you want to delete this ticket class association?')) return;
+    const handleDeleteAssociationClick = (flightId: number, ticketClassId: number) => {
+        const className = getTicketClassName(ticketClassId);
+        setAssociationToDelete({ flightId, ticketClassId, className });
+        setShowDeleteAssociationModal(true);
+    };
+
+    const handleConfirmDeleteAssociation = async () => {
+        if (!associationToDelete) return;
 
         try {
-            await flightTicketClassService.deleteFlightTicketClass(flightId, ticketClassId);
-            await loadFlightTicketClasses(flightId);
+            setDeletingAssociation(true);
+            await flightTicketClassService.deleteFlightTicketClass(
+                associationToDelete.flightId,
+                associationToDelete.ticketClassId
+            );
+            await loadFlightTicketClasses(associationToDelete.flightId);
+            setShowDeleteAssociationModal(false);
+            setAssociationToDelete(null);
         } catch (err: any) {
             setError('Failed to delete association');
+        } finally {
+            setDeletingAssociation(false);
         }
+    };
+
+    const handleDeleteAssociation = async (flightId: number, ticketClassId: number) => {
+        handleDeleteAssociationClick(flightId, ticketClassId);
     };
 
     const getTicketClassName = (ticketClassId: number) => {
@@ -574,7 +626,7 @@ const FlightManagement: React.FC<{
                                         data
                                     )}
                                     onCancel={() => setEditingAssociation(null)}
-                                    onDelete={() => handleDeleteAssociation(
+                                    onDelete={() => handleDeleteAssociationClick(
                                         association.flightId!,
                                         association.ticketClassId!
                                     )}
@@ -622,6 +674,119 @@ const FlightManagement: React.FC<{
                     />
                 </Col>
             </Row>
+
+            {/* Flight Delete Confirmation Modal */}
+            <Modal show={showDeleteFlightModal} onHide={() => !deletingFlight && setShowDeleteFlightModal(false)} centered>
+                <Modal.Header closeButton className="bg-danger text-white">
+                    <Modal.Title>
+                        <i className="bi bi-exclamation-triangle me-2"></i>
+                        Xác nhận xóa chuyến bay
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="p-4">
+                    <div className="text-center mb-3">
+                        <i className="bi bi-airplane text-danger" style={{ fontSize: '3rem' }}></i>
+                    </div>
+                    <h5 className="text-center mb-3">Bạn có chắc chắn muốn xóa chuyến bay này không?</h5>
+                    {flightToDelete && (
+                        <div className="p-3 bg-light rounded mb-3">
+                            <div className="text-center">
+                                <strong>{flightToDelete.flightCode}</strong><br />
+                                <span className="text-muted">
+                                    {flightToDelete.departureCityName} → {flightToDelete.arrivalCityName}
+                                </span><br />
+                                <small className="text-muted">
+                                    {new Date(flightToDelete.departureTime).toLocaleString('vi-VN')}
+                                </small>
+                            </div>
+                        </div>
+                    )}
+                    <p className="text-center text-muted mb-0">
+                        Hành động này không thể hoàn tác. Chuyến bay và tất cả dữ liệu liên quan (vé đã đặt, thông tin hành khách) sẽ bị xóa vĩnh viễn.
+                    </p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setShowDeleteFlightModal(false)}
+                        disabled={deletingFlight}
+                    >
+                        Hủy
+                    </Button>
+                    <Button
+                        variant="danger"
+                        onClick={handleConfirmDeleteFlight}
+                        disabled={deletingFlight}
+                    >
+                        {deletingFlight ? (
+                            <>
+                                <Spinner animation="border" size="sm" className="me-2" />
+                                Đang xóa...
+                            </>
+                        ) : (
+                            <>
+                                <i className="bi bi-trash me-2"></i>
+                                Có, xóa chuyến bay
+                            </>
+                        )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Association Delete Confirmation Modal */}
+            <Modal show={showDeleteAssociationModal} onHide={() => !deletingAssociation && setShowDeleteAssociationModal(false)} centered>
+                <Modal.Header closeButton className="bg-danger text-white">
+                    <Modal.Title>
+                        <i className="bi bi-exclamation-triangle me-2"></i>
+                        Xác nhận xóa hạng vé
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="p-4">
+                    <div className="text-center mb-3">
+                        <i className="bi bi-ticket text-danger" style={{ fontSize: '3rem' }}></i>
+                    </div>
+                    <h5 className="text-center mb-3">Bạn có chắc chắn muốn xóa hạng vé này không?</h5>
+                    {associationToDelete && (
+                        <div className="p-3 bg-light rounded mb-3">
+                            <div className="text-center">
+                                <strong>{associationToDelete.className}</strong><br />
+                                <span className="text-muted">
+                                    cho chuyến bay {selectedFlightForClasses?.flightCode}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                    <p className="text-center text-muted mb-0">
+                        Hành động này không thể hoàn tác. Hạng vé sẽ bị xóa khỏi chuyến bay này và tất cả vé đã đặt cho hạng này sẽ bị ảnh hưởng.
+                    </p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setShowDeleteAssociationModal(false)}
+                        disabled={deletingAssociation}
+                    >
+                        Hủy
+                    </Button>
+                    <Button
+                        variant="danger"
+                        onClick={handleConfirmDeleteAssociation}
+                        disabled={deletingAssociation}
+                    >
+                        {deletingAssociation ? (
+                            <>
+                                <Spinner animation="border" size="sm" className="me-2" />
+                                Đang xóa...
+                            </>
+                        ) : (
+                            <>
+                                <i className="bi bi-trash me-2"></i>
+                                Có, xóa hạng vé
+                            </>
+                        )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </Container >
     );
 }
@@ -887,11 +1052,9 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
                                     <Form.Control
                                         type="number"
                                         min="1"
-                                        step="1000"
                                         value={formData.specifiedFare}
                                         onChange={(e) => setFormData(prev => ({ ...prev, specifiedFare: e.target.value }))}
                                         required
-                                        placeholder="vd: 1500000"
                                         disabled={availableSeats === 0}
                                     />
                                     <InputGroup.Text>VND</InputGroup.Text>

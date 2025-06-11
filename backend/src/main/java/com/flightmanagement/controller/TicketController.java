@@ -69,6 +69,10 @@ public class TicketController {
         TicketDto ticket = ticketService.getTicketById(id);
         ticketService.deleteTicket(id);
 
+        if (ticket.getOrderId().equals("PAID_WITH_CASH")) {
+            System.out.println("Ticket was paid with cash, no need to refund.");
+            return ResponseEntity.noContent().build();
+        }
         if (ticket.getTicketStatus() == 1 && ticket.getPaymentTime() != null) {
             System.out.println("Start refunding.");
             paymentService.refundTransaction(ticket.getOrderId(), String.valueOf(ticket.getFare().intValueExact())
@@ -83,6 +87,11 @@ public class TicketController {
     public ResponseEntity<List<TicketDto>> getTicketsByFlightId(@PathVariable Integer flightId) {
         List<TicketDto> tickets = ticketService.getTicketsByFlightId(flightId);
         return ResponseEntity.ok(tickets);
+    }
+
+    @PostMapping("/pay/{id}")
+    public ResponseEntity<TicketDto> payTicket(@PathVariable Integer id) {
+        return ResponseEntity.ok(ticketService.payTicket(id, "PAID_WITH_CASH"));
     }
 
     @GetMapping("/customer/{customerId}")

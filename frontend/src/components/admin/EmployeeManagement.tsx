@@ -47,6 +47,10 @@ const EmployeeManagement: React.FC<{
   const [filterType, setFilterType] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [toggleLoading, setToggleLoading] = useState<Set<number>>(new Set());
+  const [showToggleModal, setShowToggleModal] = useState(false);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [employeeToToggle, setEmployeeToToggle] = useState<Employee | null>(null);
+  const [employeeToResetPassword, setEmployeeToResetPassword] = useState<Employee | null>(null);
 
   const {
     register,
@@ -145,17 +149,16 @@ const EmployeeManagement: React.FC<{
     setShowForm(true);
   };
 
-  const handleToggleEmployeeStatus = async (employee: Employee) => {
-    const employeeId = getEmployeeId(employee);
-    const isActive = employee.deletedAt === null;
+  const handleToggleEmployeeClick = (employee: Employee) => {
+    setEmployeeToToggle(employee);
+    setShowToggleModal(true);
+  };
+
+  const handleConfirmToggle = async () => {
+    if (!employeeToToggle) return;
     
-    if (!isActive) {
-      // Activating employee
-      if (!window.confirm(`Bạn có chắc chắn muốn kích hoạt nhân viên ${employee.accountName}?`)) return;
-    } else {
-      // Deactivating employee
-      if (!window.confirm(`Bạn có chắc chắn muốn vô hiệu hóa nhân viên ${employee.accountName}? Nhân viên sẽ không thể đăng nhập vào hệ thống.`)) return;
-    }
+    const employeeId = getEmployeeId(employeeToToggle);
+    const isActive = employeeToToggle.deletedAt === null;
 
     try {
       setError('');
@@ -170,6 +173,8 @@ const EmployeeManagement: React.FC<{
       }
       
       await loadEmployees();
+      setShowToggleModal(false);
+      setEmployeeToToggle(null);
     } catch (err: any) {
       console.error('Toggle employee status error:', err);
       setError(err.message || (isActive ? 'Không thể vô hiệu hóa nhân viên' : 'Không thể kích hoạt nhân viên'));
@@ -182,14 +187,22 @@ const EmployeeManagement: React.FC<{
     }
   };
 
-  const handleResetPassword = async (employeeId: number, employeeName: string) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn đặt lại mật khẩu cho nhân viên ${employeeName}?`)) return;
+  const handleResetPasswordClick = (employee: Employee) => {
+    setEmployeeToResetPassword(employee);
+    setShowResetPasswordModal(true);
+  };
+
+  const handleConfirmResetPassword = async () => {
+    if (!employeeToResetPassword) return;
 
     try {
       setError('');
+      const employeeId = getEmployeeId(employeeToResetPassword);
       console.log('Resetting password for employee:', employeeId, 'at 2025-06-11 06:58:25 UTC by thinh0704hcm');
       await authService.forgetPassword((await employeeService.getEmployeeById(employeeId)).email!);
       alert(`Mật khẩu tạm thời mới đã được gửi đến email của nhân viên\nVui lòng lưu lại và thông báo cho nhân viên.`);
+      setShowResetPasswordModal(false);
+      setEmployeeToResetPassword(null);
     } catch (err: any) {
       console.error('Reset password error:', err);
       setError(err.message || 'Không thể đặt lại mật khẩu');
@@ -559,6 +572,104 @@ const EmployeeManagement: React.FC<{
         </Modal.Footer>
       </Modal>
 
+      {/* Employee Status Toggle Modal */}
+      <Modal show={showToggleModal} onHide={() => setShowToggleModal(false)} centered>
+        <Modal.Header closeButton className="bg-warning text-dark">
+          <Modal.Title>
+            <i className="bi bi-toggle-on me-2"></i>
+            Thay đổi trạng thái nhân viên
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          <div className="text-center mb-3">
+            <i className="bi bi-person-gear text-warning" style={{ fontSize: '3rem' }}></i>
+          </div>
+          {employeeToToggle && (
+            <>
+              <h5 className="text-center mb-3">
+                {employeeToToggle.deletedAt === null 
+                  ? `Vô hiệu hóa nhân viên ${employeeToToggle.accountName}?`
+                  : `Kích hoạt nhân viên ${employeeToToggle.accountName}?`
+                }
+              </h5>
+              <div className="p-3 bg-light rounded mb-3">
+                <div className="text-center">
+                  <strong>{employeeToToggle.accountName}</strong><br />
+                  <span className="text-muted">{employeeToToggle.email}</span>
+                </div>
+              </div>
+              <p className="text-center text-muted mb-0">
+                {employeeToToggle.deletedAt === null 
+                  ? 'Nhân viên sẽ không thể đăng nhập vào hệ thống sau khi bị vô hiệu hóa.'
+                  : 'Nhân viên sẽ có thể đăng nhập trở lại sau khi được kích hoạt.'
+                }
+              </p>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowToggleModal(false)}
+          >
+            Hủy
+          </Button>
+          <Button
+            variant={employeeToToggle?.deletedAt === null ? "danger" : "success"}
+            onClick={handleConfirmToggle}
+          >
+            <i className={`bi ${employeeToToggle?.deletedAt === null ? 'bi-pause-circle' : 'bi-play-circle'} me-2`}></i>
+            {employeeToToggle?.deletedAt === null ? 'Vô hiệu hóa' : 'Kích hoạt'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Reset Password Modal */}
+      <Modal show={showResetPasswordModal} onHide={() => setShowResetPasswordModal(false)} centered>
+        <Modal.Header closeButton className="bg-info text-white">
+          <Modal.Title>
+            <i className="bi bi-key me-2"></i>
+            Đặt lại mật khẩu
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          <div className="text-center mb-3">
+            <i className="bi bi-shield-lock text-info" style={{ fontSize: '3rem' }}></i>
+          </div>
+          {employeeToResetPassword && (
+            <>
+              <h5 className="text-center mb-3">
+                Đặt lại mật khẩu cho {employeeToResetPassword.accountName}?
+              </h5>
+              <div className="p-3 bg-light rounded mb-3">
+                <div className="text-center">
+                  <strong>{employeeToResetPassword.accountName}</strong><br />
+                  <span className="text-muted">{employeeToResetPassword.email}</span>
+                </div>
+              </div>
+              <p className="text-center text-muted mb-0">
+                Mật khẩu tạm thời mới sẽ được gửi đến email của nhân viên.
+              </p>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowResetPasswordModal(false)}
+          >
+            Hủy
+          </Button>
+          <Button
+            variant="info"
+            onClick={handleConfirmResetPassword}
+          >
+            <i className="bi bi-envelope me-2"></i>
+            Gửi mật khẩu mới
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       {/* Employee Grid */}
       <Row>
         {filteredEmployees.length === 0 ? (
@@ -606,7 +717,7 @@ const EmployeeManagement: React.FC<{
                         size="sm"
                         variant="outline-warning"
                         className="me-1"
-                        onClick={() => handleResetPassword(employeeId, employee.accountName || '')}
+                        onClick={() => handleResetPasswordClick(employee)}
                         disabled={submitting || isToggling}
                         title="Đặt lại mật khẩu"
                       >
@@ -705,7 +816,7 @@ const EmployeeManagement: React.FC<{
                     <Button
                       size="sm"
                       variant={isActive ? "outline-danger" : "outline-success"}
-                      onClick={() => handleToggleEmployeeStatus(employee)}
+                      onClick={() => handleToggleEmployeeClick(employee)}
                       disabled={submitting || isToggling}
                       className="px-3"
                     >

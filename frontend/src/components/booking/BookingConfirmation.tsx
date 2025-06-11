@@ -133,7 +133,7 @@ const BookingConfirmation: React.FC = () => {
           {/* Print Area - This will be the only thing printed */}
           <div className="print-area">
             {/* Success Header */}
-            <Card className="mb-4 border-success">
+            <Card className="mb-4 border-success border-2">
               <Card.Body className="text-center py-4">
                 <div className="display-1 text-success mb-3">✅</div>
                 <h1 className="text-success mb-3">Đặt chỗ thành công!</h1>
@@ -145,11 +145,6 @@ const BookingConfirmation: React.FC = () => {
                     }
                   </Badge>
                 </div>
-                {message && (
-                  <Alert variant="success" className="mb-0 no-print">
-                    {message}
-                  </Alert>
-                )}
               </Card.Body>
             </Card>
 
@@ -176,82 +171,146 @@ const BookingConfirmation: React.FC = () => {
               <Card.Header>
                 <h4 className="mb-0">Chi tiết đặt chỗ</h4>
               </Card.Header>
-              <Card.Body>
+              <Card.Body className="p-4">
                 {/* Flight Information */}
-                <div className="mb-4 print-section">
-                  <h5 className="text-primary mb-3">Thông tin chuyến bay</h5>
-                  <div className="print-row">
-                    <strong>Chuyến bay:</strong>
-                    <span>{booking.flightInfo.flightCode}</span>
-                  </div>
-                  <div className="print-row">
-                    <strong>Tuyến đường:</strong>
-                    <span>{booking.flightInfo.departureCity} → {booking.flightInfo.arrivalCity}</span>
-                  </div>
-                  <div className="print-row">
-                    <strong>Khởi hành:</strong>
-                    <span>
-                      {new Date(booking.flightInfo.departureTime).toLocaleDateString()} lúc{' '}
-                      {new Date(booking.flightInfo.departureTime).toLocaleTimeString()}
-                    </span>
-                  </div>
-                  {booking.flightInfo.arrivalTime && (
-                    <div className="print-row">
-                      <strong>Đến:</strong>
-                      <span>
-                        {new Date(booking.flightInfo.arrivalTime).toLocaleDateString()} lúc{' '}
-                        {new Date(booking.flightInfo.arrivalTime).toLocaleTimeString()}
-                      </span>
-                    </div>
-                  )}
+                <div className="mb-5 print-section">
+                  <h5 className="text-primary mb-4 pb-2 border-bottom">
+                    <i className="bi bi-airplane me-2"></i>
+                    Thông tin chuyến bay
+                  </h5>
+                  <Row className="g-4">
+                    <Col md={6}>
+                      <div className="p-3 bg-light rounded">
+                        <strong className="text-muted d-block mb-2">Chuyến bay:</strong>
+                        <span className="fs-5 fw-bold text-primary">{booking.flightInfo.flightCode}</span>
+                      </div>
+                    </Col>
+                    <Col md={6}>
+                      <div className="p-3 bg-light rounded">
+                        <strong className="text-muted d-block mb-2">Tuyến đường:</strong>
+                        <span className="fs-5 fw-bold">{booking.flightInfo.departureCity} → {booking.flightInfo.arrivalCity}</span>
+                      </div>
+                    </Col>
+                    <Col md={6}>
+                      <div className="p-3 bg-light rounded">
+                        <strong className="text-muted d-block mb-2">Khởi hành:</strong>
+                        <div className="fs-6 fw-bold">
+                          {new Date(booking.flightInfo.departureTime).toLocaleDateString('vi-VN')}
+                        </div>
+                        <div className="text-primary">
+                          {new Date(booking.flightInfo.departureTime).toLocaleTimeString('vi-VN', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </div>
+                      </div>
+                    </Col>
+                    {booking.flightInfo.arrivalTime && (
+                      <Col md={6}>
+                        <div className="p-3 bg-light rounded">
+                          <strong className="text-muted d-block mb-2">Đến:</strong>
+                          <div className="fs-6 fw-bold">
+                            {new Date(booking.flightInfo.arrivalTime).toLocaleDateString('vi-VN')}
+                          </div>
+                          <div className="text-success">
+                            {new Date(booking.flightInfo.arrivalTime).toLocaleTimeString('vi-VN', { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </div>
+                        </div>
+                      </Col>
+                    )}
+                  </Row>
                 </div>
 
                 {/* Passenger Information */}
-                <div className="mb-4 print-section">
-                  <h5 className="text-primary mb-3">Thông tin hành khách</h5>
-                  <ListGroup>
+                <div className="mb-5 print-section">
+                  <h5 className="text-primary mb-4 pb-2 border-bottom">
+                    <i className="bi bi-people me-2"></i>
+                    Thông tin hành khách
+                  </h5>
+                  <div className="row g-3">
                     {booking.tickets.map((ticket, index) => (
-                      <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
-                        <div>
-                          <strong>
-                            Hành khách {index + 1}: {booking.passengers && booking.passengers[index]}
-                          </strong>
-                          <div className="text-muted">
-                            Ghế: {ticket.seatNumber}{' '}
-                            {ticket.ticketStatus !== undefined && (
-                              <Badge bg={ticket.ticketStatus === 1 ? "success" : "warning"} className="ms-2">
-                                {ticket.ticketStatus === 1 ? "Đã thanh toán" : "Chờ thanh toán"}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        <Badge bg="primary" className="fs-6">${ticket.fare}</Badge>
-                      </ListGroup.Item>
+                      <div key={index} className="col-12">
+                        <Card className="border-0 bg-light">
+                          <Card.Body className="p-3">
+                            <Row className="align-items-center">
+                              <Col md={8}>
+                                <div className="d-flex align-items-center mb-2">
+                                  <div 
+                                    className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
+                                    style={{ width: '40px', height: '40px', fontSize: '18px', fontWeight: 'bold' }}
+                                  >
+                                    {index + 1}
+                                  </div>
+                                  <div>
+                                    <h6 className="mb-1 fw-bold">
+                                      {booking.passengers && booking.passengers[index]}
+                                    </h6>
+                                    <div className="text-muted">
+                                      <i className="bi bi-geo-alt me-1"></i>
+                                      Ghế: <strong>{ticket.seatNumber}</strong>
+                                    </div>
+                                  </div>
+                                </div>
+                              </Col>
+                              <Col md={4} className="text-md-end">
+                                <div className="mb-2">
+                                  <Badge bg={ticket.ticketStatus === 1 ? "success" : "warning"} className="mb-2">
+                                    {ticket.ticketStatus === 1 ? "Đã thanh toán" : "Chờ thanh toán"}
+                                  </Badge>
+                                </div>
+                                <div className="fs-4 fw-bold text-primary">
+                                  {ticket.fare?.toLocaleString('vi-VN')} VND
+                                </div>
+                              </Col>
+                            </Row>
+                          </Card.Body>
+                        </Card>
+                      </div>
                     ))}
-                  </ListGroup>
+                  </div>
                 </div>
 
                 {/* Booking Summary */}
                 <div className="mb-0 print-section">
-                  <h5 className="text-primary mb-3">Tóm tắt đặt chỗ</h5>
-                  <div className="print-row">
-                    <strong>Ngày đặt:</strong>
-                    <span>{new Date(booking.bookingDate).toLocaleDateString()}</span>
-                  </div>
-                  <div className="print-row">
-                    <strong>Tổng hành khách:</strong>
-                    <span>{booking.tickets.length}</span>
-                  </div>
-                  <div className="print-row">
-                    <strong>Trạng thái thanh toán:</strong>
-                    <span>
-                      {isPaid ? "Đã thanh toán" : "Chờ thanh toán"}
-                    </span>
-                  </div>
-                  <div className="print-total print-row">
-                    <strong>Tổng tiền:</strong>
-                    <strong>${booking.totalAmount}</strong>
-                  </div>
+                  <h5 className="text-primary mb-4 pb-2 border-bottom">
+                    <i className="bi bi-clipboard-check me-2"></i>
+                    Tóm tắt đặt chỗ
+                  </h5>
+                  <Row className="g-4 mb-4">
+                    <Col md={6}>
+                      <div className="p-3 bg-light rounded">
+                        <strong className="text-muted d-block mb-2">Ngày đặt:</strong>
+                        <span className="fs-6 fw-bold">
+                          {new Date(booking.bookingDate).toLocaleDateString('vi-VN')}
+                        </span>
+                      </div>
+                    </Col>
+                    <Col md={6}>
+                      <div className="p-3 bg-light rounded">
+                        <strong className="text-muted d-block mb-2">Tổng hành khách:</strong>
+                        <span className="fs-6 fw-bold">{booking.tickets.length} người</span>
+                      </div>
+                    </Col>
+                    <Col md={6}>
+                      <div className="p-3 bg-light rounded">
+                        <strong className="text-muted d-block mb-2">Trạng thái thanh toán:</strong>
+                        <Badge bg={isPaid ? "success" : "warning"} className="fs-6 px-3 py-2">
+                          {isPaid ? "Đã thanh toán" : "Chờ thanh toán"}
+                        </Badge>
+                      </div>
+                    </Col>
+                    <Col md={6}>
+                      <div className="p-3 bg-primary text-white rounded">
+                        <strong className="d-block mb-2 opacity-75">Tổng tiền:</strong>
+                        <div className="fs-5 fw-bold">
+                          {booking.totalAmount.toLocaleString('vi-VN')} VND
+                        </div>
+                      </div>
+                    </Col>
+                  </Row>
                 </div>
               </Card.Body>
             </Card>

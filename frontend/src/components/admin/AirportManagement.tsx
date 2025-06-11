@@ -38,6 +38,9 @@ const AirportManagement: React.FC<{
   const [showForm, setShowForm] = useState(false);
   const [editingAirport, setEditingAirport] = useState<Airport | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string>('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [airportToDelete, setAirportToDelete] = useState<Airport | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const {
     register,
@@ -113,15 +116,30 @@ const AirportManagement: React.FC<{
     setShowForm(true);
   };
 
-  const handleDelete = async (airportId: number) => {
-    if (!window.confirm('Are you sure you want to delete this airport?')) return;
+  const handleDeleteClick = (airport: Airport) => {
+    setAirportToDelete(airport);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!airportToDelete) return;
     
     try {
-      await airportService.deleteAirport(airportId);
-      loadAirports();
+      setDeleting(true);
+      await airportService.deleteAirport(airportToDelete.airportId!);
+      await loadAirports();
+      setShowDeleteModal(false);
+      setAirportToDelete(null);
     } catch (err: any) {
       setError(err.message || 'Failed to delete airport');
+    } finally {
+      setDeleting(false);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setAirportToDelete(null);
   };
 
   const handleCancel = () => {
@@ -176,6 +194,7 @@ const AirportManagement: React.FC<{
                 </Row>
             )}
 
+            {/* Add/Edit Airport Modal */}
             <Modal show={showForm} onHide={handleCancel} size="lg">
                 <Modal.Header closeButton>
                     <Modal.Title>{editingAirport ? 'Edit Airport' : 'Add New Airport'}</Modal.Title>
@@ -256,6 +275,62 @@ const AirportManagement: React.FC<{
                 </Modal.Footer>
             </Modal>
 
+            {/* Delete Confirmation Modal */}
+            <Modal show={showDeleteModal} onHide={handleCancelDelete} centered>
+                <Modal.Header closeButton className="bg-danger text-white">
+                    <Modal.Title>
+                        <i className="bi bi-exclamation-triangle me-2"></i>
+                        Xác nhận xóa sân bay
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="p-4">
+                    <div className="text-center mb-3">
+                        <i className="bi bi-exclamation-circle text-danger" style={{ fontSize: '3rem' }}></i>
+                    </div>
+                    <h5 className="text-center mb-3">Bạn có chắc chắn muốn xóa sân bay này không?</h5>
+                    {airportToDelete && (
+                        <div className="p-3 bg-light rounded mb-3">
+                            <div className="text-center">
+                                <strong>{airportToDelete.airportName}</strong><br />
+                                <span className="text-muted">
+                                    {airportToDelete.cityName}, {airportToDelete.countryName}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                    <p className="text-center text-muted mb-0">
+                        Hành động này không thể hoàn tác. Sân bay và tất cả dữ liệu liên quan sẽ bị xóa vĩnh viễn.
+                    </p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        variant="secondary"
+                        onClick={handleCancelDelete}
+                        disabled={deleting}
+                    >
+                        Hủy
+                    </Button>
+                    <Button
+                        variant="danger"
+                        onClick={handleConfirmDelete}
+                        disabled={deleting}
+                    >
+                        {deleting ? (
+                            <>
+                                <Spinner animation="border" size="sm" className="me-2" />
+                                Đang xóa...
+                            </>
+                        ) : (
+                            <>
+                                <i className="bi bi-trash me-2"></i>
+                                Có, xóa sân bay
+                            </>
+                        )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Airport Table */}
             <Row>
                 <Col>
                     <Card>
@@ -291,15 +366,17 @@ const AirportManagement: React.FC<{
                                                         variant="outline-secondary"
                                                         className="me-2"
                                                         onClick={() => handleEdit(airport)}
+                                                        disabled={deleting}
                                                     >
-                                                        Edit
+                                                        Sửa
                                                     </Button>
                                                     <Button
                                                         size="sm"
                                                         variant="outline-danger"
-                                                        onClick={() => handleDelete(airport.airportId!)}
+                                                        onClick={() => handleDeleteClick(airport)}
+                                                        disabled={deleting}
                                                     >
-                                                        Delete
+                                                        Xóa
                                                     </Button>
                                                 </td>
                                             </tr>

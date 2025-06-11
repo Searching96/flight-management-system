@@ -114,8 +114,7 @@ const Header: React.FC = () => {
                 {permissions.hasRole('EMPLOYEE_ACCOUNTING') && (
                   <>
                     {/* Future: Accounting Panel */}
-                    {/* <Nav.Link as={Link} to="/accounting" className="text-decoration-none">💰 Kế toán</Nav.Link> */}
-                    <Nav.Link as={Link} to="/admin" className="text-decoration-none">💰 Kế toán</Nav.Link>
+                    <Nav.Link as={Link} to="/accounting" className="text-decoration-none">💰 Kế toán</Nav.Link>
                   </>
                 )}
                 

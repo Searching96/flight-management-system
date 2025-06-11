@@ -31,6 +31,8 @@ const TicketingManagement: React.FC = () => {
    const [showDetailsModal, setShowDetailsModal] = useState(false);
    const [showCancelModal, setShowCancelModal] = useState(false);
    const [cancelLoading, setCancelLoading] = useState(false);
+   const [showCashPaymentModal, setShowCashPaymentModal] = useState(false);
+   const [cashPaymentLoading, setCashPaymentLoading] = useState(false);
 
    useEffect(() => {
       fetchAllTickets();
@@ -163,9 +165,9 @@ const TicketingManagement: React.FC = () => {
    };
 
    const formatCurrency = (amount: number) => {
-      return new Intl.NumberFormat('en-US', {
+      return new Intl.NumberFormat('vi-VN', {
          style: 'currency',
-         currency: 'USD'
+         currency: 'VND'
       }).format(amount);
    };
 
@@ -202,12 +204,7 @@ const TicketingManagement: React.FC = () => {
    };
 
    const confirmCancelTicket = async () => {
-      if (!selectedTicket) return;
-
-      setCancelLoading(true);
       try {
-         // Delete the ticket
-         const ticketData = await ticketService.getTicketById(selectedTicket.ticketId);
          if (ticketData && ticketData.ticketClassId && ticketData.flightId) {
             await flightTicketClassService.updateRemainingTickets(
                ticketData.flightId,
@@ -218,18 +215,46 @@ const TicketingManagement: React.FC = () => {
          await ticketService.deleteTicket(selectedTicket.ticketId);
          await fetchAllTickets();
 
-         // Close modals
+         // Đóng modal
          setShowCancelModal(false);
          setShowDetailsModal(false);
          setSelectedTicket(null);
 
-         // Show success message (you could use a toast notification here)
-         //alert('Ticket cancelled successfully');
+         // Hiển thị thông báo thành công
+         //alert('Hủy vé thành công');
       } catch (err: any) {
-         console.error('Error canceling ticket:', err);
-         alert('Failed to cancel ticket: ' + (err.message || 'Unknown error'));
+         console.error('Lỗi khi hủy vé:', err);
+         alert('Không thể hủy vé: ' + (err.message || 'Lỗi không xác định'));
       } finally {
          setCancelLoading(false);
+      }
+   };
+
+   const handleCashPayment = () => {
+      setShowCashPaymentModal(true);
+      setShowDetailsModal(false);
+   };
+
+   const confirmCashPayment = async () => {
+      if (!selectedTicket) return;
+
+      setCashPaymentLoading(true);
+      try {
+         // Cập nhật trạng thái thanh toán vé
+         const ticketData = await ticketService.payTicket(selectedTicket.ticketId);
+         if (ticketData) {
+            // Cập nhật thông tin thanh toán
+            const updatedTicket = {
+               ...ticketData,
+               paymentTime: new Date().toISOString(),
+               ticketStatus: 1 // 1 = Đã thanh toán
+            };
+         }
+      } catch (err: any) {
+         console.error('Lỗi xử lý thanh toán tiền mặt:', err);
+         alert('Không thể xử lý thanh toán: ' + (err.message || 'Lỗi không xác định'));
+      } finally {
+         setCashPaymentLoading(false);
       }
    };
 
@@ -488,14 +513,94 @@ const TicketingManagement: React.FC = () => {
             </Modal.Body>
             <Modal.Footer>
                <Button variant="secondary" onClick={() => setShowDetailsModal(false)}>
-                  Close
+                  Đóng
                </Button>
+               {selectedTicket && selectedTicket.ticketStatus === 'UNPAID' && (
+                  <Button variant="success" onClick={handleCashPayment}>
+                     <i className="bi bi-cash-coin me-2"></i>
+                     Thanh toán tiền mặt tại quầy
+                  </Button>
+               )}
                {selectedTicket && (
                   <Button variant="danger" onClick={handleCancelTicket}>
                      <i className="bi bi-x-circle me-2"></i>
-                     Cancel Ticket
+                     Hủy vé
                   </Button>
                )}
+            </Modal.Footer>
+         </Modal>
+
+         {/* Cash Payment Confirmation Modal */}
+         <Modal
+            show={showCashPaymentModal}
+            onHide={() => !cashPaymentLoading && setShowCashPaymentModal(false)}
+            centered
+         >
+            <Modal.Header closeButton className="bg-success text-white">
+               <Modal.Title>
+                  <i className="bi bi-cash-coin me-2"></i>
+                  Xác nhận thanh toán tiền mặt
+               </Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="p-4">
+               <div className="text-center mb-3">
+                  <i className="bi bi-cash-stack text-success" style={{ fontSize: '3rem' }}></i>
+               </div>
+               <h5 className="text-center mb-3">Xác nhận đã nhận thanh toán tiền mặt?</h5>
+               <p className="text-center text-muted mb-3">
+                  Hành động này sẽ đánh dấu vé đã được thanh toán bằng tiền mặt tại quầy.
+               </p>
+               {selectedTicket && (
+                  <div className="p-3 bg-light rounded mb-3">
+                     <div className="text-center">
+                        <strong>Mã vé: {selectedTicket.ticketId}</strong><br />
+                        <span className="text-muted">{selectedTicket.flightCode} - Ghế: {selectedTicket.seatNumber}</span><br />
+                        <span className="text-muted">{selectedTicket.passengerName}</span><br />
+                        <div className="mt-2">
+                           <span className="h5 text-success fw-bold">{formatCurrency(selectedTicket.fare)}</span>
+                        </div>
+                     </div>
+                  </div>
+               )}
+               <Alert variant="info" className="mb-0">
+                  <div className="d-flex align-items-start">
+                     <i className="bi bi-info-circle-fill me-2 mt-1"></i>
+                     <div>
+                        <strong>Lưu ý:</strong>
+                        <ul className="mb-0 mt-1">
+                           <li>Đảm bảo đã nhận đủ số tiền từ khách hàng</li>
+                           <li>Đã kiểm tra và trả lại tiền thối (nếu có)</li>
+                           <li>Đã cung cấp hóa đơn cho khách hàng</li>
+                        </ul>
+                     </div>
+                  </div>
+               </Alert>
+            </Modal.Body>
+            <Modal.Footer>
+               <Button
+                  variant="secondary"
+                  onClick={() => setShowCashPaymentModal(false)}
+                  disabled={cashPaymentLoading}
+               >
+                  Hủy
+               </Button>
+               <Button
+                  variant="success"
+                  onClick={confirmCashPayment}
+                  disabled={cashPaymentLoading}
+               >
+                  {cashPaymentLoading ? (
+                     <>
+                        <Spinner animation="border" size="sm" className="me-2" />
+                        Đang xử lý...
+                     </>
+                  ) : (
+                     <>
+                        <i className="bi bi-check-circle me-2"></i>
+                        Xác nhận đã thanh toán
+                     </>
+                  )}
+               </Button>
             </Modal.Footer>
          </Modal>
 
@@ -509,23 +614,23 @@ const TicketingManagement: React.FC = () => {
             <Modal.Header closeButton className="bg-danger text-white">
                <Modal.Title>
                   <i className="bi bi-exclamation-triangle me-2"></i>
-                  Cancel Ticket
+                  Hủy vé
                </Modal.Title>
             </Modal.Header>
             <Modal.Body className="p-4">
                <div className="text-center mb-3">
                   <i className="bi bi-exclamation-circle text-danger" style={{ fontSize: '3rem' }}></i>
                </div>
-               <h5 className="text-center mb-3">Are you sure you want to cancel this ticket?</h5>
+               <h5 className="text-center mb-3">Bạn có chắc chắn muốn hủy vé này không?</h5>
                <p className="text-center text-muted mb-0">
-                  This action cannot be undone. The ticket will be permanently cancelled.
+                  Hành động này không thể hoàn tác. Vé sẽ bị hủy vĩnh viễn.
                </p>
                {selectedTicket && (
                   <div className="mt-3 p-3 bg-light rounded">
                      <div className="text-center">
-                        <strong>Ticket ID: {selectedTicket.ticketId}</strong><br />
+                        <strong>Mã vé: {selectedTicket.ticketId}</strong><br />
                         <span className="text-muted">{selectedTicket.flightCode} - {selectedTicket.passengerName}</span><br />
-                        <span className="text-muted">Seat: {selectedTicket.seatNumber}</span><br />
+                        <span className="text-muted">Ghế: {selectedTicket.seatNumber}</span><br />
                         <span className="text-primary fw-bold">{formatCurrency(selectedTicket.fare)}</span>
                      </div>
                   </div>
@@ -537,7 +642,7 @@ const TicketingManagement: React.FC = () => {
                   onClick={() => setShowCancelModal(false)}
                   disabled={cancelLoading}
                >
-                  Keep Ticket
+                  Giữ vé
                </Button>
                <Button
                   variant="danger"
@@ -547,12 +652,12 @@ const TicketingManagement: React.FC = () => {
                   {cancelLoading ? (
                      <>
                         <Spinner animation="border" size="sm" className="me-2" />
-                        Cancelling...
+                        Đang hủy...
                      </>
                   ) : (
                      <>
                         <i className="bi bi-trash me-2"></i>
-                        Yes, Cancel Ticket
+                        Có, hủy vé
                      </>
                   )}
                </Button>
