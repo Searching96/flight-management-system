@@ -138,13 +138,13 @@ const Statistics: React.FC = () => {
                      </div>
 
                      {/* Total Revenue Line Chart */}
-                     <div style={{ paddingLeft: '20px' }}>
+                     <div>
                         <h4>Total Revenue by Year</h4>
                         <ResponsiveContainer width="100%" height={300}>
-                           <LineChart data={yearlyStats} margin={{ top: 5, right: 30, left: 60, bottom: 5 }}>
+                           <LineChart data={yearlyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="year" />
-                              <YAxis width={80} />
+                              <YAxis />
                               <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']} />
                               <Legend formatter={(value) => value === 'totalRevenue' ? 'Total Revenue' : value} />
                               <Line type="monotone" dataKey="totalRevenue" stroke="#ffc658" strokeWidth={2} />
@@ -153,7 +153,7 @@ const Statistics: React.FC = () => {
                      </div>
 
                      {/* Revenue Distribution Pie Chart */}
-                     <div style={{ paddingLeft: '20px', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
                         <div style={{ flex: '0 0 auto' }}>
                            <h4>Revenue Distribution by Year</h4>
                            <ResponsiveContainer width={350} height={350}>
@@ -389,13 +389,13 @@ const Statistics: React.FC = () => {
                      </div>
 
                      {/* Monthly Total Revenue Line Chart */}
-                     <div style={{ paddingLeft: '20px' }}>
+                     <div>
                         <h4>Total Revenue by Month ({selectedYear})</h4>
                         <ResponsiveContainer width="100%" height={300}>
-                           <LineChart data={monthlyStats} margin={{ top: 5, right: 30, left: 60, bottom: 5 }}>
+                           <LineChart data={monthlyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="month" />
-                              <YAxis width={80} />
+                              <YAxis />
                               <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']} />
                               <Legend formatter={(value) => value === 'totalRevenue' ? 'Total Revenue' : value} />
                               <Line type="monotone" dataKey="totalRevenue" stroke="#ffc658" strokeWidth={2} />
@@ -404,7 +404,7 @@ const Statistics: React.FC = () => {
                      </div>
 
                      {/* Monthly Revenue Distribution Pie Chart */}
-                     <div style={{ paddingLeft: '20px', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
                         <div style={{ flex: '0 0 auto' }}>
                            <h4>Revenue Distribution by Month ({selectedYear})</h4>
                            <ResponsiveContainer width={350} height={350}>
