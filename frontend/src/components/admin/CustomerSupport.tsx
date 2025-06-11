@@ -359,18 +359,56 @@ const CustomerSupport: React.FC = () => {
   };
 
   const getAvatarColor = (name?: string, isFromCustomer?: boolean) => {
-    if (isFromCustomer) {
-      return '#0084ff';
-    }
+    // Define a palette of 255 basic colors
+    const colorPalette = [
+      '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#800000', '#008000',
+      '#000080', '#808000', '#800080', '#008080', '#C0C0C0', '#808080', '#9999FF', '#993366',
+      '#FFFFCC', '#CCFFFF', '#660066', '#FF8080', '#0066CC', '#CCCCFF', '#000080', '#FF00FF',
+      '#FFFF00', '#00FFFF', '#800080', '#800000', '#008080', '#0000FF', '#00CCFF', '#CCFFFF',
+      '#CCFFCC', '#FFFF99', '#99CCFF', '#FF99CC', '#CC99FF', '#FFCC99', '#3366FF', '#33CCCC',
+      '#99CC00', '#FFCC00', '#FF9900', '#FF6600', '#666699', '#969696', '#003366', '#339966',
+      '#003300', '#333300', '#993300', '#993366', '#333399', '#333333', '#FFF', '#000', 
+      '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F',
+      '#BB8FCE', '#85C1E9', '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#F4D03F', '#AED6F1',
+      '#A9DFBF', '#F9E79F', '#D7BDE2', '#A3E4D7', '#FAD7A0', '#D5A6BD', '#AED6F1', '#A9CCE3',
+      '#F7DC6F', '#A9DFBF', '#F1948A', '#85C1E9', '#F4D03F', '#AED6F1', '#A9DFBF', '#F9E79F',
+      '#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6', '#1ABC9C', '#E67E22', '#34495E',
+      '#16A085', '#27AE60', '#2980B9', '#8E44AD', '#2C3E50', '#F1C40F', '#E67E22', '#95A5A6',
+      '#D35400', '#C0392B', '#BDC3C7', '#7F8C8D', '#FF5733', '#FF8D1A', '#FFC300', '#DAF7A6',
+      '#581845', '#900C3F', '#C70039', '#FF5733', '#FFC300', '#DAF7A6', '#28B463', '#2874A6',
+      '#D4AC0D', '#CA6F1E', '#BA4A00', '#A93226', '#922B21', '#7D3C98', '#6C3483', '#5B2C6F',
+      '#2E86AB', '#A23B72', '#F18F01', '#C73E1D', '#7209B7', '#2D1B69', '#F0544F', '#7FB069',
+      '#C8C8A9', '#83AF9B', '#FC4445', '#3FEEE6', '#55A3FF', '#F19066', '#F5D547', '#C06C84',
+      '#6C5B7B', '#C8A2C8', '#355C7D', '#F67280', '#C06C84', '#F8B195', '#C02942', '#542437',
+      '#53777A', '#ECD078', '#D95B43', '#C02942', '#542437', '#53777A', '#A8E6CF', '#88D8A3',
+      '#FFD3A5', '#FD9853', '#FF8A80', '#C8E6C9', '#B39DDB', '#90CAF9', '#A5D6A7', '#FFAB91',
+      '#CE93D8', '#80CBC4', '#81C784', '#AED581', '#DCE775', '#FFF176', '#FFD54F', '#FFCC02',
+      '#FF8F65', '#FF6E40', '#FF5722', '#795548', '#9E9E9E', '#607D8B', '#263238', '#37474F',
+      '#455A64', '#546E7A', '#78909C', '#90A4AE', '#B0BEC5', '#CFD8DC', '#ECEFF1', '#FAFAFA',
+      '#F5F5F5', '#EEEEEE', '#E0E0E0', '#BDBDBD', '#9E9E9E', '#757575', '#616161', '#424242',
+      '#212121', '#FF8A65', '#FF7043', '#FF5722', '#F4511E', '#E64A19', '#D84315', '#BF360C',
+      '#FF6F00', '#FF8F00', '#FFA000', '#FFB300', '#FFC107', '#FFCA28', '#FFD54F', '#FFECB3',
+      '#827717', '#9E9D24', '#AFB42B', '#C0CA33', '#CDDC39', '#D4E157', '#DCE775', '#F0F4C3',
+      '#33691E', '#558B2F', '#689F38', '#7CB342', '#8BC34A', '#9CCC65', '#AED581', '#DCEDC8',
+      '#00695C', '#00796B', '#00897B', '#009688', '#26A69A', '#4DB6AC', '#80CBC4', '#B2DFDB',
+      '#006064', '#0097A7', '#00ACC1', '#00BCD4', '#26C6DA', '#4DD0E1', '#80DEEA', '#B2EBF2',
+      '#01579B', '#0277BD', '#0288D1', '#039BE5', '#03A9F4', '#29B6F6', '#4FC3F7', '#B3E5FC',
+      '#1A237E', '#303F9F', '#3F51B5', '#5C6BC0', '#7986CB', '#9FA8DA', '#C5CAE9', '#E8EAF6',
+      '#4A148C', '#6A1B9A', '#7B1FA2', '#8E24AA', '#9C27B0', '#AB47BC', '#BA68C8', '#E1BEE7',
+      '#880E4F', '#AD1457', '#C2185B', '#D81B60', '#E91E63', '#EC407A', '#F06292', '#F8BBD9',
+      '#BF360C', '#D84315', '#E64A19', '#F4511E', '#FF5722', '#FF7043', '#FF8A65', '#FFCCBC'
+    ];
     
+    // Generate hash from name for consistent color assignment
     let hash = 0;
-    const str = name || 'Employee';
+    const str = name || (isFromCustomer ? 'Customer' : 'Employee');
     for (let i = 0; i < str.length; i++) {
       hash = str.charCodeAt(i) + ((hash << 5) - hash);
     }
     
-    const hue = Math.abs(hash) % 360;
-    return `hsl(${hue}, 60%, 50%)`;
+    // Use hash to pick a color from palette
+    const colorIndex = Math.abs(hash) % colorPalette.length;
+    return colorPalette[colorIndex];
   };
 
   const formatTime = (dateString: string) => {
@@ -671,21 +709,6 @@ const CustomerSupport: React.FC = () => {
                                 </div>
                               </div>
                             </div>
-
-                            {shouldShowOnRight && (
-                              <div 
-                                className="rounded-circle text-white d-flex align-items-center justify-content-center ms-2 flex-shrink-0"
-                                style={{
-                                  width: '32px',
-                                  height: '32px',
-                                  fontSize: '12px',
-                                  fontWeight: 'bold',
-                                  backgroundColor: getAvatarColor(user?.accountName, false)
-                                }}
-                              >
-                                {getAvatarLetter(user?.accountName, false)}
-                              </div>
-                            )}
                           </div>
                         );
                       })}

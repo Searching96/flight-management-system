@@ -566,21 +566,6 @@ const ChatWidget: React.FC = () => {
                                 {formatTime(message.sendTime)}
                               </div>
                             </div>
-
-                            {message.isFromCustomer && (
-                              <div 
-                                className="ms-2 rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
-                                style={{ 
-                                  width: '32px', 
-                                  height: '32px', 
-                                  fontSize: '12px', 
-                                  fontWeight: 'bold',
-                                  backgroundColor: getAvatarColor(undefined, true)
-                                }}
-                              >
-                                {getAvatarLetter(undefined, true)}
-                              </div>
-                            )}
                           </div>
                         ))}
                       </div>
