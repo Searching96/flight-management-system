@@ -22,7 +22,9 @@ const ChatWidget: React.FC = () => {
   const [chatbox, setChatbox] = useState<Chatbox | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -32,8 +34,10 @@ const ChatWidget: React.FC = () => {
   }, [isOpen, user]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (shouldAutoScroll) {
+      scrollToBottom();
+    }
+  }, [messages, shouldAutoScroll]);
 
   // Real-time polling for messages
   useEffect(() => {
@@ -48,6 +52,12 @@ const ChatWidget: React.FC = () => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50; // 50px threshold
+    setShouldAutoScroll(isAtBottom);
   };
 
   const initializeChat = async () => {
@@ -100,6 +110,7 @@ const ChatWidget: React.FC = () => {
       setMessages(prev => [...prev, userMessage]);
       const messageContent = newMessage.trim();
       setNewMessage('');
+      setShouldAutoScroll(true); // Always scroll when user sends message
       
       // Send message to API using createCustomerMessage
       await chatService.createCustomerMessage(chatbox.chatboxId, messageContent);
@@ -143,6 +154,7 @@ const ChatWidget: React.FC = () => {
     if (!messageContent.trim() || !chatbox?.chatboxId) return;
 
     try {
+      setShouldAutoScroll(true); // Always scroll when user sends message
       await chatService.createCustomerMessage(chatbox.chatboxId, messageContent.trim());
       setNewMessage('');
       
@@ -154,7 +166,7 @@ const ChatWidget: React.FC = () => {
         content: msg.content,
         sendTime: msg.sendTime || new Date().toISOString(),
         employeeName: msg.employeeName,
-        isFromCustomer: !msg.employeeId // If employeeId is null, it's from customer
+        isFromCustomer: !msg.employeeId
       }));
       setMessages(formattedMessages);
     } catch (error) {
@@ -194,6 +206,49 @@ const ChatWidget: React.FC = () => {
     return `hsl(${hue}, 60%, 50%)`;
   };
 
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    // Check if it's today
+    if (date.toDateString() === today.toDateString()) {
+      return 'Hôm nay';
+    }
+    
+    // Check if it's yesterday
+    if (date.toDateString() === yesterday.toDateString()) {
+      return 'Hôm qua';
+    }
+    
+    // Format as dd/mm/yyyy for other dates
+    return date.toLocaleDateString('vi-VN', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric' 
+    });
+  };
+
+  const groupMessagesByDate = (messages: Message[]) => {
+    const groups: { [key: string]: Message[] } = {};
+    
+    messages.forEach(message => {
+      const date = new Date(message.sendTime).toDateString();
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(message);
+    });
+    
+    return groups;
+  };
+
   if (!user) {
     return null;
   }
@@ -219,7 +274,6 @@ const ChatWidget: React.FC = () => {
             <span className="fw-bold">Support Chat</span>
           </div>
           <div className="d-flex align-items-center">
-            <Badge bg="success" className="me-2">Online</Badge>
             <i className={`bi ${isOpen ? 'bi-dash' : 'bi-plus'}`}></i>
           </div>
         </Card.Header>
@@ -229,6 +283,8 @@ const ChatWidget: React.FC = () => {
             <div 
               className="p-3 bg-light"
               style={{ height: '300px', overflowY: 'auto' }}
+              ref={messagesContainerRef}
+              onScroll={handleScroll}
             >
               {loading ? (
                 <div className="text-center py-5">
@@ -251,51 +307,86 @@ const ChatWidget: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  {messages.map(message => (
-                    <div
-                      key={message.messageId}
-                      className={`mb-3 d-flex ${message.isFromCustomer ? 'justify-content-end' : 'justify-content-start'}`}
-                    >
-                      {!message.isFromCustomer && (
-                        <div 
-                          className="me-2 rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
-                          style={{ 
-                            width: '32px', 
-                            height: '32px', 
-                            fontSize: '12px', 
-                            fontWeight: 'bold',
-                            backgroundColor: getAvatarColor(message.employeeName, message.isFromCustomer)
-                          }}
-                        >
-                          {getAvatarLetter(message.employeeName, message.isFromCustomer)}
-                        </div>
-                      )}
-                      
-                      <div 
-                        className={`p-2 rounded ${
-                          message.isFromCustomer 
-                            ? 'bg-primary text-white' 
-                            : 'bg-white border'
-                        }`}
-                        style={{ maxWidth: '70%' }}
-                      >
-                        {!message.isFromCustomer && message.employeeName && (
-                          <div className="small fw-bold text-muted">
-                            {message.employeeName}
+                  {(() => {
+                    const messageGroups = groupMessagesByDate(messages);
+                    const sortedDates = Object.keys(messageGroups).sort(
+                      (a, b) => new Date(a).getTime() - new Date(b).getTime()
+                    );
+
+                    return sortedDates.map(dateKey => (
+                      <div key={dateKey}>
+                        {/* Date Separator */}
+                        <div className="d-flex justify-content-center my-3">
+                          <div 
+                            className="px-3 py-1 bg-white rounded-pill text-muted small"
+                            style={{ border: '1px solid #e0e0e0' }}
+                          >
+                            {formatDate(messageGroups[dateKey][0].sendTime)}
                           </div>
-                        )}
-                        <div className="small">{message.content}</div>
-                        <div className={`text-xs mt-1 ${message.isFromCustomer ? 'text-light' : 'text-muted'}`} style={{ fontSize: '0.7rem' }}>
-                          {new Date(message.sendTime).toLocaleTimeString('en-US', { 
-                            hour: '2-digit', 
-                            minute: '2-digit',
-                            second: '2-digit',
-                            hour12: true 
-                          })}
                         </div>
+
+                        {/* Messages for this date */}
+                        {messageGroups[dateKey].map((message, index) => (
+                          <div
+                            key={message.messageId || `${dateKey}-${index}`}
+                            className={`mb-3 d-flex ${message.isFromCustomer ? 'justify-content-end' : 'justify-content-start'}`}
+                          >
+                            {!message.isFromCustomer && (
+                              <div 
+                                className="me-2 rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                                style={{ 
+                                  width: '32px', 
+                                  height: '32px', 
+                                  fontSize: '12px', 
+                                  fontWeight: 'bold',
+                                  backgroundColor: getAvatarColor(message.employeeName, message.isFromCustomer)
+                                }}
+                              >
+                                {getAvatarLetter(message.employeeName, message.isFromCustomer)}
+                              </div>
+                            )}
+                            
+                            <div 
+                              className={`p-2 rounded-3 ${
+                                message.isFromCustomer 
+                                  ? 'bg-primary text-white' 
+                                  : 'bg-white border'
+                              }`}
+                              style={{ 
+                                maxWidth: '70%',
+                                borderRadius: message.isFromCustomer ? '18px 18px 4px 18px' : '18px 18px 18px 4px'
+                              }}
+                            >
+                              {!message.isFromCustomer && message.employeeName && (
+                                <div className="small fw-bold text-muted">
+                                  {message.employeeName}
+                                </div>
+                              )}
+                              <div className="small">{message.content}</div>
+                              <div className={`text-xs mt-1 ${message.isFromCustomer ? 'text-light' : 'text-muted'}`} style={{ fontSize: '0.7rem' }}>
+                                {formatTime(message.sendTime)}
+                              </div>
+                            </div>
+
+                            {message.isFromCustomer && (
+                              <div 
+                                className="ms-2 rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                                style={{ 
+                                  width: '32px', 
+                                  height: '32px', 
+                                  fontSize: '12px', 
+                                  fontWeight: 'bold',
+                                  backgroundColor: getAvatarColor(undefined, true)
+                                }}
+                              >
+                                {getAvatarLetter(undefined, true)}
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    </div>
-                  ))}
+                    ));
+                  })()}
                   <div ref={messagesEndRef} />
                 </>
               )}
