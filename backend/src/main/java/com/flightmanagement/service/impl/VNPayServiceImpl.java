@@ -1,11 +1,12 @@
 package com.flightmanagement.service.impl;
 
 import com.flightmanagement.config.VNPayConfig;
+import com.flightmanagement.dto.FlightDto;
+import com.flightmanagement.dto.PassengerDto;
 import com.flightmanagement.dto.TicketDto;
-import com.flightmanagement.service.PaymentService;
+import com.flightmanagement.service.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.flightmanagement.service.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +34,16 @@ public class VNPayServiceImpl implements PaymentService {
 
     @Autowired
     private TicketService ticketService;
+    ;
+
+    @Autowired
+    private PassengerService passengerService;
+
+    @Autowired
+    private FlightService flightService;
+
+    @Autowired
+    private EmailService emailService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final String VERSION = "2.1.0";
@@ -191,6 +202,8 @@ public class VNPayServiceImpl implements PaymentService {
         }
     }
 
+    // Update your processPaymentReturn method
+
     @Override
     public Map<String, Object> processPaymentReturn(HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
@@ -219,7 +232,22 @@ public class VNPayServiceImpl implements PaymentService {
             String confirmationCode = extractConfirmationCode(request.getParameter("vnp_TxnRef"));
 
             List<TicketDto> tickets = ticketService.getTicketsOnConfirmationCode(confirmationCode);
-            tickets.forEach(ticket -> ticketService.payTicket(ticket.getTicketId()));
+
+            // Process payment for each ticket
+            tickets.forEach(ticket -> {
+                ticketService.payTicket(ticket.getTicketId());
+
+                // Send notification email to each passenger
+                try {
+                    sendPassengerNotification(ticket, confirmationCode);
+                    System.out.println("Payment notification sent to passenger for ticket: " + ticket.getTicketId() +
+                            " at 2025-06-11 07:27:09 UTC by thinh0704hcm");
+                } catch (Exception e) {
+                    System.err.println("Failed to send payment notification to passenger for ticket: " +
+                            ticket.getTicketId() + " - " + e.getMessage());
+                    // Don't fail the payment process if email fails
+                }
+            });
         }
 
         // Return all relevant info for UI display
@@ -237,6 +265,50 @@ public class VNPayServiceImpl implements PaymentService {
         response.put("data", fields);
 
         return response;
+    }
+
+    /**
+     * Send payment notification to passenger
+     */
+    private void sendPassengerNotification(TicketDto ticket, String confirmationCode) {
+        try {
+            // Get passenger information
+            PassengerDto passenger = passengerService.getPassengerById(ticket.getPassengerId());
+
+            // Get flight information
+            FlightDto flight = flightService.getFlightById(ticket.getFlightId());
+
+            // Format departure time
+            String formattedDepartureTime = formatDateTime(flight.getDepartureTime());
+
+            // Send notification email
+            emailService.sendPassengerPaymentNotification(
+                    passenger.getEmail(),
+                    passenger.getPassengerName(),
+                    confirmationCode,
+                    flight.getFlightCode(),
+                    flight.getDepartureCityName(),
+                    flight.getArrivalCityName(),
+                    formattedDepartureTime,
+                    ticket.getSeatNumber(),
+                    ticket.getFare()
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send passenger notification for ticket: " + ticket.getTicketId(), e);
+        }
+    }
+
+    /**
+     * Format date time for display
+     */
+    private String formatDateTime(LocalDateTime dateTime) {
+        if (dateTime == null) return "N/A";
+        try {
+            return dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy lúc HH:mm"));
+        } catch (Exception e) {
+            return dateTime.toString();
+        }
     }
 
     @Override

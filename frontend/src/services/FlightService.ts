@@ -1,31 +1,6 @@
 import { apiClient } from './api';
 import { API_URL } from './config';
-import { Flight } from '../models';
-
-export interface FlightRequest {
-  flightCode: string;
-  departureDate: string;
-  departureTime: string;
-  duration: string;
-  planeId: number;
-  departureAirportId: number;
-  arrivalAirportId: number;
-}
-
-export interface TicketClassAssignment {
-  ticketClassId: number;
-  ticketQuantity: number;
-  specifiedFare: number;
-}
-
-export interface FlightSearchCriteria {
-  departureAirportId: number;
-  arrivalAirportId: number;
-  departureDate: string;
-  returnDate?: string;
-  passengerCount: number;
-  ticketClassId: number; // Keep this required to match backend
-}
+import { Flight, FlightSearchCriteria, FlightRequest } from '../models';
 
 export class FlightService {
   private readonly baseUrl = API_URL.FLIGHTS;

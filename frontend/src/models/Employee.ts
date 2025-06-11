@@ -2,19 +2,16 @@ export interface Employee {
   employeeId?: number;
   accountName?: string;
   email?: string;
+  citizenId?: string;
   phoneNumber?: string;
   employeeType: number;
-  employeeTypeName?: string;
+  deletedAt?: string;
 }
 
 export interface UpdateEmployeeRequest {
   accountName?: string;
   email?: string;
   phoneNumber?: string;
+  citizenId?: string;
   employeeType?: number;
-}
-
-export interface EmployeeSearchFilters {
-  employeeType?: number;
-  keyword?: string;
 }

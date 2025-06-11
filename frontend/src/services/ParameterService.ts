@@ -1,12 +1,5 @@
 import { apiClient } from './api';
-import { Parameter } from '../models';
-
-export interface ParameterRequest {
-  parameterName: string;
-  parameterValue: string;
-  description?: string;
-  category?: string;
-}
+import { Parameter, ParameterUpdateRequest } from '../models';
 
 export class ParameterService {
   private readonly baseUrl = '/parameters';
@@ -15,7 +8,7 @@ export class ParameterService {
     return apiClient.get(this.baseUrl);
   }
 
-  async updateParameters(parameterData: ParameterRequest): Promise<Parameter> {
+  async updateParameters(parameterData: ParameterUpdateRequest): Promise<Parameter> {
     return apiClient.put(this.baseUrl, parameterData);
   }
 

@@ -3,6 +3,19 @@ import { Navbar, Nav, Container, Dropdown, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth, usePermissions } from '../../hooks/useAuth';
 
+/**
+ * Header Component with Role-Based Navigation (Vietnamese)
+ * Last updated: 2025-06-11 09:00:54 UTC by thinh0704hcm
+ * 
+ * CORRECTED Navigation Structure by Employee Type (Vietnamese):
+ * 1. EMPLOYEE_FLIGHT_SCHEDULING - "Quản lý lịch bay": Flight Management only
+ * 2. EMPLOYEE_TICKETING - "Danh sách vé, Tìm kiếm chuyến bay, Quản lý đặt chỗ": Search + Booking management (NO ticket classes)
+ * 3. EMPLOYEE_SUPPORT - "Chăm sóc khách hàng", "Tra cứu thông tin", "Quản lý khách hàng": Customer Support + Booking lookup
+ * 4. EMPLOYEE_ACCOUNTING - "Kế toán": Temporary admin access
+ * 5. EMPLOYEE_FLIGHT_OPERATIONS - "Quản lý máy bay", "Quản lý hạng vé", "Quản sân bay", "Quản lý tham số": Aircraft, Ticket Classes, Regulations
+ * 6. EMPLOYEE_HUMAN_RESOURCES - "Quản lý nhân viên": Employee Management
+ * 7. EMPLOYEE_ADMINISTRATOR - Admin Panel only (full access)
+ */
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const permissions = usePermissions();
@@ -11,6 +24,23 @@ const Header: React.FC = () => {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  // Helper function to get employee type for display in Vietnamese
+  const getEmployeeTypeDisplay = (role: string | undefined) => {
+    if (!role) return '';
+    
+    const typeMap: Record<string, string> = {
+      'EMPLOYEE_FLIGHT_SCHEDULING': 'Quản lý lịch bay',
+      'EMPLOYEE_TICKETING': 'Nhân viên bán vé',
+      'EMPLOYEE_SUPPORT': 'Chăm sóc khách hàng',
+      'EMPLOYEE_ACCOUNTING': 'Kế toán',
+      'EMPLOYEE_FLIGHT_OPERATIONS': 'Quản lý dịch vụ',
+      'EMPLOYEE_HUMAN_RESOURCES': 'Quản lý nhân sự',
+      'EMPLOYEE_ADMINISTRATOR': 'Quản trị viên'
+    };
+    
+    return typeMap[role] || role.replace('EMPLOYEE_', '').replace('_', ' ');
   };
 
   return (
@@ -24,114 +54,134 @@ const Header: React.FC = () => {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="/" className="text-decoration-none">Home</Nav.Link>
+            <Nav.Link as={Link} to="/" className="text-decoration-none">Trang chủ</Nav.Link>
             
-            {/* Public links (when not logged in) */}
+            {/* Public links (when not logged in) - Vietnamese */}
             {!user && (
               <>
-                <Nav.Link as={Link} to="/search" className="text-decoration-none">Search Flights</Nav.Link>
-                <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Manage Booking</Nav.Link>
+                <Nav.Link as={Link} to="/search" className="text-decoration-none">Tìm chuyến bay</Nav.Link>
+                <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Quản lý đặt chỗ</Nav.Link>
               </>
             )}
             
-            {/* Customer links */}
+            {/* Customer links - Vietnamese */}
             {user && permissions.isCustomer() && (
               <>
-                <Nav.Link as={Link} to="/search" className="text-decoration-none">Search Flights</Nav.Link>
-                <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Manage Booking</Nav.Link>
-                <Nav.Link as={Link} to="/dashboard" className="text-decoration-none">Dashboard</Nav.Link>
+                <Nav.Link as={Link} to="/search" className="text-decoration-none">Tìm chuyến bay</Nav.Link>
+                <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Quản lý đặt chỗ</Nav.Link>
+                <Nav.Link as={Link} to="/dashboard" className="text-decoration-none">Bảng điều khiển</Nav.Link>
               </>
             )}
             
-            {/* Employee links */}
+            {/* Employee links - Role-based navigation - Vietnamese 2025-06-11 09:00:54 UTC by thinh0704hcm */}
             {user && permissions.isEmployee() && (
               <>
-                {/* Basic employee functions */}
-                {permissions.canSearchFlights() && (
-                  <Nav.Link as={Link} to="/search" className="text-decoration-none">Search Flights</Nav.Link>
-                )}
-                {permissions.canManageBookings() && (
-                  <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Manage Booking</Nav.Link>
-                )}
-                
-                {/* Flight Management - For EMPLOYEE_TICKETING, EMPLOYEE_FLIGHT_OPERATIONS , EMPLOYEE_ADMIN and EMPLOYEE_FLIGHT_SCHEDULING */}
-                {permissions.canViewFlightManagement() && (
-                  <Nav.Link as={Link} to="/flights" className="text-decoration-none">✈️ Flight Management</Nav.Link>
+                {/* ============================================= */}
+                {/* EMPLOYEE TYPE 1: FLIGHT SCHEDULING EMPLOYEE */}
+                {/* "Quản lý lịch bay" */}
+                {/* ============================================= */}
+                {permissions.hasRole('EMPLOYEE_FLIGHT_SCHEDULING') && (
+                  <Nav.Link as={Link} to="/flights" className="text-decoration-none">✈️ Quản lý lịch bay</Nav.Link>
                 )}
                 
-                {/* Plane Management - For EMPLOYEE_ADMIN, EMPLOYEE_FLIGHT_OPERATIONS  */}
-                {permissions.canViewPlaneManagement() && (
-                  <Nav.Link as={Link} to="/planes" className="text-decoration-none">🛩️ Aircraft Fleet</Nav.Link>
+                {/* ============================================= */}
+                {/* EMPLOYEE TYPE 2: TICKETING EMPLOYEE */}
+                {/* "Danh sách vé, Tìm kiếm chuyến bay, Quản lý đặt chỗ" */}
+                {/* CORRECTED: REMOVED Ticket Classes (belongs to Type 5) */}
+                {/* ============================================= */}
+                {permissions.hasRole('EMPLOYEE_TICKETING') && (
+                  <>
+                    <Nav.Link as={Link} to="/search" className="text-decoration-none">🔍 Tìm chuyến bay</Nav.Link>
+                    <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">📋 Quản lý đặt chỗ</Nav.Link>
+                    {/* Future: Ticketing Panel for Tickets List */}
+                    {/* <Nav.Link as={Link} to="/ticketing" className="text-decoration-none">🎫 Danh sách vé</Nav.Link> */}
+                  </>
                 )}
                 
-                {/* Ticket Class Management - For EMPLOYEE_TICKETING, EMPLOYEE_FLIGHT_OPERATIONS  and EMPLOYEE_ADMIN */}
-                {permissions.canViewTicketClassManagement() && (
-                  <Nav.Link as={Link} to="/ticket-classes" className="text-decoration-none">🎟️ Ticket Classes</Nav.Link>
+                {/* ============================================= */}
+                {/* EMPLOYEE TYPE 3: CUSTOMER SUPPORT EMPLOYEE */}
+                {/* "Chăm sóc khách hàng", "Tra cứu thông tin", "Quản lý khách hàng" */}
+                {/* ============================================= */}
+                {permissions.hasRole('EMPLOYEE_SUPPORT') && (
+                  <>
+                    <Nav.Link as={Link} to="/customer-support" className="text-decoration-none">🎧 Chăm sóc khách hàng</Nav.Link>
+                    <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">🔍 Tra cứu thông tin</Nav.Link>
+                  </>
                 )}
                 
-                {/* Department-specific panels */}
-                {/* Admin Panel - Only for EMPLOYEE_ADMIN */}
-                {permissions.canViewAdmin() && (
-                  <Nav.Link as={Link} to="/admin" className="text-decoration-none">⚙️ Admin Panel</Nav.Link>
+                {/* ============================================= */}
+                {/* EMPLOYEE TYPE 4: ACCOUNTING EMPLOYEE */}
+                {/* "Kế toán" */}
+                {/* ============================================= */}
+                {permissions.hasRole('EMPLOYEE_ACCOUNTING') && (
+                  <>
+                    {/* Future: Accounting Panel */}
+                    {/* <Nav.Link as={Link} to="/accounting" className="text-decoration-none">💰 Kế toán</Nav.Link> */}
+                    <Nav.Link as={Link} to="/admin" className="text-decoration-none">💰 Kế toán</Nav.Link>
+                  </>
                 )}
                 
-                {/* Customer Support - For EMPLOYEE_SUPPORT */}
-                {permissions.canViewCustomerSupport() && (
-                  <Nav.Link as={Link} to="/customer-support" className="text-decoration-none">🎧 Customer Support</Nav.Link>
+                {/* ============================================= */}
+                {/* EMPLOYEE TYPE 5: SERVICE MANAGEMENT (FLIGHT OPERATIONS) */}
+                {/* "Quản lý máy bay", "Quản lý hạng vé", "Quản sân bay", "Quản lý tham số" */}
+                {/* ============================================= */}
+                {permissions.hasRole('EMPLOYEE_FLIGHT_OPERATIONS') && (
+                  <>
+                    <Nav.Link as={Link} to="/airports" className="text-decoration-none">🏢 Quản lý sân bay</Nav.Link>
+                    <Nav.Link as={Link} to="/planes" className="text-decoration-none">🛩️ Quản lý máy bay</Nav.Link>
+                    <Nav.Link as={Link} to="/ticket-classes" className="text-decoration-none">🎟️ Quản lý hạng vé</Nav.Link>
+                    <Nav.Link as={Link} to="/regulations" className="text-decoration-none">📜 Quản lý tham số</Nav.Link>
+                  </>
                 )}
                 
-                {/* Ticketing - For EMPLOYEE_TICKETING and EMPLOYEE_ADMIN */}
-                {permissions.canViewTicketing() && (
-                  <Nav.Link as={Link} to="/ticketing" className="text-decoration-none">🎫 Ticketing</Nav.Link>
+                {/* ============================================= */}
+                {/* EMPLOYEE TYPE 6: HUMAN RESOURCES EMPLOYEE */}
+                {/* "Quản lý nhân viên" */}
+                {/* ============================================= */}
+                {permissions.hasRole('EMPLOYEE_HUMAN_RESOURCES') && (
+                  <>
+                    <Nav.Link as={Link} to="/employee-management" className="text-decoration-none">👥 Quản lý nhân viên</Nav.Link>
+                  </>
                 )}
                 
-                {/* Accounting - For EMPLOYEE_ACCOUNTING and EMPLOYEE_ADMIN */}
-                {permissions.canViewAccounting() && (
-                  <Nav.Link as={Link} to="/accounting" className="text-decoration-none">💰 Accounting</Nav.Link>
+                {/* ============================================= */}
+                {/* EMPLOYEE TYPE 7: ADMINISTRATOR - ADMIN PANEL ONLY */}
+                {/* Full access through Admin Panel */}
+                {/* ============================================= */}
+                {permissions.hasRole('EMPLOYEE_ADMINISTRATOR') && (
+                  <Nav.Link as={Link} to="/admin" className="text-decoration-none">⚙️ Quản trị hệ thống</Nav.Link>
                 )}
-                
-                {/* Regulations Management - For EMPLOYEE_FLIGHT_OPERATIONS and EMPLOYEE_ADMIN */}
-                {permissions.canViewParameterSettings() && (
-                  <Nav.Link as={Link} to="/regulations" className="text-decoration-none">📜 Regulations</Nav.Link>
-                )}
-                
-                {/* Reports - For EMPLOYEE_ADMIN and EMPLOYEE_ACCOUNTING */}
               </>
             )}
           </Nav>
           
           <Nav className="ms-auto">
             {user ? (
-              <Dropdown align="end">
+              <Dropdown align="end" className='d-flex align-items-center'>
                 <Dropdown.Toggle variant="outline-primary" id="dropdown-basic">
                   <i className="bi bi-person-circle me-1"></i>
                   {user.accountName}
-                  <small className="ms-1 text-muted">({user.role?.replace('EMPLOYEE_', '')})</small>
+                  <small className="ms-1 text-muted">({getEmployeeTypeDisplay(user.role)})</small>
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
-                  <Dropdown.ItemText>
-                    <strong>{user.accountName}</strong><br />
-                    <small className="text-muted">{user.role?.replace('EMPLOYEE_', '').replace('_', ' ')}</small>
-                  </Dropdown.ItemText>
-                  <Dropdown.Divider />
-                <Dropdown.Item as={Link} to="/profile/edit" className="text-decoration-none">
+                  <Dropdown.Item as={Link} to="/profile/edit" className="text-decoration-none">
                     <i className="bi bi-person-gear me-2"></i>
-                    Edit profile
+                    Chỉnh sửa hồ sơ
                   </Dropdown.Item>
-                  
+                  <Dropdown.Divider />
                   <Dropdown.Item onClick={handleLogout}>
                     <i className="bi bi-box-arrow-right me-2"></i>
-                    Logout
+                    Đăng xuất
                   </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
             ) : (
               <div className="d-flex gap-2">
                 <Button as={Link as any} to="/login" className="me-2" variant='outline-primary'>
-                  Login
+                  Đăng nhập
                 </Button>
                 <Button as={Link as any} to="/register">
-                  Sign Up
+                  Đăng ký
                 </Button>
               </div>
             )}

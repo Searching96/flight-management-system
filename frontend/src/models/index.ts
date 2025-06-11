@@ -36,7 +36,6 @@ export type { Customer } from './Customer';
 export type {
   Employee,
   UpdateEmployeeRequest,
-  EmployeeSearchFilters
 } from './Employee';
 
 // Chat related
@@ -49,7 +48,7 @@ export type { Plane } from './Plane';
 export type { Passenger, CreatePassengerRequest, UpdatePassengerRequest } from './Passenger';
 
 // System related
-export type { Parameter } from './Parameter';
+export type { Parameter, ParameterUpdateRequest } from './Parameter';
 
 // Common types
 export interface ApiResponse<T> {

@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Random;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -83,13 +84,41 @@ public class AuthServiceImpl implements AuthService {
             Customer customer = new Customer();
             customer.setAccount(savedAccount);
             customerRepository.save(customer);
+            savedAccount.setCustomer(customer);
+            emailService.sendCustomerWelcomeEmail(savedAccount.getEmail(), savedAccount.getAccountName());
         } else if (request.getAccountType() == 2) {
+            // Generate random password for employee
+            String randomPassword = generateRandomPassword();
+
             Employee employee = new Employee();
             employee.setAccount(savedAccount);
             employee.setEmployeeType(request.getEmployeeType());
-            employeeRepository.save(employee);
-        }
+            Employee savedEmployee = employeeRepository.save(employee);
 
+            // Associate employee with account + set random password
+            savedAccount.setEmployee(savedEmployee);
+            savedAccount.setPassword(passwordEncoder.encode(randomPassword));
+            accountRepo.save(savedAccount);
+
+            // Get employee type name for email
+            String employeeTypeName = getEmployeeTypeName(request.getEmployeeType());
+
+            // Send credentials email to employee
+            try {
+                emailService.sendEmployeeCredentialsEmail(
+                        savedAccount.getEmail(),
+                        savedAccount.getAccountName(),
+                        savedAccount.getAccountName(),
+                        employeeTypeName,
+                        randomPassword  // Pass the generated password
+                );
+                System.out.println("Employee credentials email sent to: " + savedAccount.getEmail() + " at 2025-06-11 07:20:15 UTC by thinh0704hcm");
+                System.out.println("Generated password: " + randomPassword);
+            } catch (Exception e) {
+                System.err.println("Failed to send employee credentials email: " + e.getMessage());
+                // Log but don't fail the registration
+            }
+        }
         return createAuthResponse(CustomUserDetails.create(savedAccount));
     }
 
@@ -121,6 +150,10 @@ public class AuthServiceImpl implements AuthService {
         // Get full account details (including password)
         Account account = accountRepo.findByAccountName(accountName)
                 .orElseThrow(() -> new RuntimeException("Account not found with name: " + accountName));
+
+        if (account.getDeletedAt() != null) {
+            throw new RuntimeException("Account is deleted: " + accountName);
+        }
 
         // Create user details without password validation
         CustomUserDetails userDetails = CustomUserDetails.create(account);
@@ -167,6 +200,51 @@ public class AuthServiceImpl implements AuthService {
         accountRepo.save(account);
 
         return createAuthResponse(CustomUserDetails.create(account));
+    }
+
+    // Add this helper method to generate 8-character random password
+    private String generateRandomPassword() {
+        String upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String lowerCase = "abcdefghijklmnopqrstuvwxyz";
+        String digits = "0123456789";
+        String specialChars = "@#$%";
+        String allChars = upperCase + lowerCase + digits + specialChars;
+
+        Random random = new Random();
+        StringBuilder password = new StringBuilder(8);
+
+        // Ensure at least one character from each category
+        password.append(upperCase.charAt(random.nextInt(upperCase.length())));
+        password.append(lowerCase.charAt(random.nextInt(lowerCase.length())));
+        password.append(digits.charAt(random.nextInt(digits.length())));
+        password.append(specialChars.charAt(random.nextInt(specialChars.length())));
+
+        // Fill remaining 4 positions with random characters
+        for (int i = 4; i < 8; i++) {
+            password.append(allChars.charAt(random.nextInt(allChars.length())));
+        }
+
+        // Shuffle the password to avoid predictable pattern
+        char[] passwordArray = password.toString().toCharArray();
+        for (int i = passwordArray.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            char temp = passwordArray[i];
+            passwordArray[i] = passwordArray[j];
+            passwordArray[j] = temp;
+        }
+
+        return new String(passwordArray);
+    }
+
+    private String getEmployeeTypeName(Integer employeeType) {
+        return switch (employeeType) {
+            case 1 -> "Vận hành chuyến bay";
+            case 2 -> "Bán vé";
+            case 3 -> "Hỗ trợ khách hàng";
+            case 4 -> "Lập lịch chuyến bay";
+            case 5 -> "Quản trị viên";
+            default -> "Nhân viên";
+        };
     }
 
     @Override

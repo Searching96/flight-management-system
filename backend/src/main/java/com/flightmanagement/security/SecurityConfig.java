@@ -20,8 +20,13 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Security Configuration with Enhanced CORS Support
+ * Last updated: 2025-06-11 08:14:55 UTC by thinh0704hcm
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -32,6 +37,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
+        System.out.println("Configuring authentication provider at 2025-06-11 08:14:55 UTC by thinh0704hcm");
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
@@ -40,14 +46,15 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        System.out.println("Configuring security filter chain with CORS at 2025-06-11 08:14:55 UTC by thinh0704hcm");
+
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Add CORS configuration
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh",
                                 "/api/auth/validate-token", "/api/auth/forget-password", "/api/auth/reset-password",
-                                "/api/auth/employee/register", // Move this here but it will be handled by role check
-                                                               // below
+                                "/api/auth/employee/register",
                                 "/api/demo/**",
                                 "/api/flights/search", "/api/flights/{id}",
                                 "/api/airports", "/api/ticket-classes",
@@ -59,11 +66,10 @@ public class SecurityConfig {
                                 "/api/flight-details/flight/{flightId}", "/api/parameters",
                                 "/api/tickets/booking-lookup/{confirmationCode}", "/api/tickets/booking-lookup/{id}",
                                 "/api/debug/login-by-name/{name}",
-                                "/api/payment/create", "/api/payment/return", "/api/payment/IPN")
+                                "/api/payment/create", "/api/payment/return", "/api/payment/IPN",
+                                // Add OPTIONS method for all API endpoints
+                                "/api/**")
                         .permitAll()
-
-                        .requestMatchers("/api/auth/employee/register")
-                        .hasAnyRole("EMPLOYEE_ADMIN", "EMPLOYEE_ACCOUNTING")
 
                         .anyRequest().authenticated())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -75,24 +81,56 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        System.out.println("Configuring CORS configuration source at 2025-06-11 08:14:55 UTC by thinh0704hcm");
+
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Frontend origin
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        // Allow specific origins
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:3000"
+        ));
+
+        // Allow all HTTP methods including PATCH
+        configuration.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"
+        ));
+
+        // Allow all headers
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true); // Allow credentials
+
+        // Allow credentials (important for JWT tokens)
+        configuration.setAllowCredentials(true);
+
+        // Set max age for preflight requests
+        configuration.setMaxAge(3600L);
+
+        // Expose headers that frontend might need
+        configuration.setExposedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
+        ));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+
+        System.out.println("CORS configuration registered for all paths at 2025-06-11 08:14:55 UTC by thinh0704hcm");
         return source;
     }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        System.out.println("Configuring authentication manager at 2025-06-11 08:14:55 UTC by thinh0704hcm");
         return config.getAuthenticationManager();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+        System.out.println("Configuring password encoder at 2025-06-11 08:14:55 UTC by thinh0704hcm");
         return new BCryptPasswordEncoder();
     }
 }

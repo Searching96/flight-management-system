@@ -11,8 +11,8 @@ interface TicketClassFormData {
 }
 
 const TicketClassManagement: React.FC<{
-    showAddModal?: boolean;
-    onCloseAddModal?: () => void;
+  showAddModal?: boolean;
+  onCloseAddModal?: () => void;
 }> = ({ showAddModal = false, onCloseAddModal }) => {
   const { canViewAdmin } = usePermissions();
   if (!canViewAdmin) {
@@ -21,9 +21,9 @@ const TicketClassManagement: React.FC<{
         <Row className="justify-content-center">
           <Col md={8}>
             <Alert variant="danger" className="text-center">
-                            <Alert.Heading>Từ chối truy cập</Alert.Heading>
-                            <p>Bạn không có quyền truy cập quản lý hạng vé.</p>
-                        </Alert>
+              <Alert.Heading>Từ chối truy cập</Alert.Heading>
+              <p>Bạn không có quyền truy cập quản lý hạng vé.</p>
+            </Alert>
           </Col>
         </Row>
       </Container>
@@ -50,7 +50,7 @@ const TicketClassManagement: React.FC<{
   // Effect to handle external modal trigger
   useEffect(() => {
     if (showAddModal) {
-        setShowForm(true);
+      setShowForm(true);
     }
   }, [showAddModal]);
 
@@ -106,10 +106,10 @@ const TicketClassManagement: React.FC<{
     setEditingClass(null);
     reset();
     setError('');
-    
+
     // Call the external close handler if provided
     if (onCloseAddModal) {
-        onCloseAddModal();
+      onCloseAddModal();
     }
   };
 
@@ -128,21 +128,15 @@ const TicketClassManagement: React.FC<{
       <Row className="mb-4">
         <Col>
           <Card>
-            <Card.Body>
-              <Row className="align-items-center">
-                <Col>
-                  <h2 className="mb-0">Quản lý hạng vé</h2>
-                </Col>
-                <Col xs="auto">
-                  <Button
-                    variant="primary"
-                    onClick={() => setShowForm(true)}
-                  >
-                    Thêm hạng vé mới
-                  </Button>
-                </Col>
-              </Row>
-            </Card.Body>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <Card.Title className="mb-0">🎫 Quản lý hạng vé</Card.Title>
+              <Button
+                variant="primary"
+                onClick={() => setShowForm(true)}
+              >
+                Thêm hạng vé mới
+              </Button>
+            </Card.Header>
           </Card>
         </Col>
       </Row>
@@ -219,7 +213,7 @@ const TicketClassManagement: React.FC<{
             <Col lg={4} md={6} key={ticketClass.ticketClassId} className="mb-4">
               <Card className="h-100">
                 <Card.Header className="d-flex justify-content-between align-items-center">
-                  <Badge 
+                  <Badge
                     style={{ backgroundColor: ticketClass.color, color: '#fff' }}
                     className="px-3 py-2 fs-6"
                   >
@@ -232,8 +226,8 @@ const TicketClassManagement: React.FC<{
                       className="me-2"
                       onClick={() => handleEdit(ticketClass)}
                     >
-                                Sửa
-                            </Button>
+                      Sửa
+                    </Button>
                     {/* <Button
                       variant="outline-danger"
                       size="sm"
@@ -278,9 +272,9 @@ const TicketClassManagement: React.FC<{
             <Card>
               <Card.Body className="text-center py-5">
                 <div className="text-muted">
-                        <h4>Không tìm thấy hạng vé</h4>
-                        <p>Thêm hạng vé đầu tiên để bắt đầu.</p>
-                    </div>
+                  <h4>Không tìm thấy hạng vé</h4>
+                  <p>Thêm hạng vé đầu tiên để bắt đầu.</p>
+                </div>
               </Card.Body>
             </Card>
           </Col>

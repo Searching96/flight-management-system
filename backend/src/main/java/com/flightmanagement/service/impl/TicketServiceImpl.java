@@ -4,6 +4,7 @@ import com.flightmanagement.dto.*;
 import com.flightmanagement.entity.*;
 import com.flightmanagement.mapper.TicketMapper;
 import com.flightmanagement.repository.*;
+import com.flightmanagement.service.EmailService;
 import com.flightmanagement.service.FlightTicketClassService;
 import com.flightmanagement.service.PassengerService;
 import com.flightmanagement.service.TicketService;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,11 +41,12 @@ public class TicketServiceImpl implements TicketService {
 
     @Autowired
     private CustomerRepository customerRepository;
+
     @Autowired
     private PassengerRepository passengerRepository;
 
-    // @Autowired
-    // private AccountService accountService;
+    @Autowired
+    private EmailService emailService;
 
     @Autowired
     private AccountRepository accountRepository;
@@ -71,7 +74,6 @@ public class TicketServiceImpl implements TicketService {
         ticket.setConfirmationCode(ticketDto.getConfirmationCode());
         ticket.setDeletedAt(null);
 
-
         // Set entity relationships
         if (ticketDto.getFlightId() != null) {
             Flight flight = flightRepository.findById(ticketDto.getFlightId())
@@ -85,23 +87,84 @@ public class TicketServiceImpl implements TicketService {
                             "TicketClass not found with id: " + ticketDto.getTicketClassId()));
             ticket.setTicketClass(ticketClass);
         }
+
+        Customer bookingCustomer = null;
         if (ticketDto.getBookCustomerId() != null) {
-            Customer customer = customerRepository.findById(ticketDto.getBookCustomerId())
+            bookingCustomer = customerRepository.findById(ticketDto.getBookCustomerId())
                     .orElseGet(() -> createCustomerFromAccount(ticketDto.getBookCustomerId()));
-            ticket.setBookCustomer(customer);
+            ticket.setBookCustomer(bookingCustomer);
         }
 
+        Passenger passenger = null;
         if (ticketDto.getPassengerId() != null) {
-            Passenger passenger = passengerRepository.findById(ticketDto.getPassengerId())
+            passenger = passengerRepository.findById(ticketDto.getPassengerId())
                     .orElseThrow(
                             () -> new RuntimeException("Passenger not found with id: " + ticketDto.getPassengerId()));
             ticket.setPassenger(passenger);
         }
 
-        System.out.println("Creating ticket with details: " + ticketDto);
+        System.out.println("Creating ticket with details at 2025-06-11 07:34:18 UTC by thinh0704hcm: " + ticketDto);
 
         Ticket savedTicket = ticketRepository.save(ticket);
-        return ticketMapper.toDto(savedTicket);
+        TicketDto savedTicketDto = ticketMapper.toDto(savedTicket);
+
+        // Send single ticket confirmation email after successful ticket creation
+        try {
+            sendSingleTicketConfirmation(savedTicketDto, bookingCustomer, passenger);
+            System.out.println("Single ticket confirmation email sent for ticket: " + savedTicketDto.getTicketId() +
+                    " at 2025-06-11 07:34:18 UTC by thinh0704hcm");
+        } catch (Exception e) {
+            System.err.println("Failed to send ticket confirmation email for ticket: " +
+                    savedTicketDto.getTicketId() + " - " + e.getMessage());
+            // Don't fail ticket creation if email fails
+        }
+
+        return savedTicketDto;
+    }
+
+    /**
+     * Send single ticket confirmation email to customer
+     */
+    private void sendSingleTicketConfirmation(TicketDto ticket, Customer customer, Passenger passenger) {
+        try {
+            if (customer == null || customer.getAccount() == null) {
+                System.err.println("Cannot send ticket confirmation: customer or account is null at 2025-06-11 07:34:18 UTC");
+                return;
+            }
+
+            // Get flight information
+            Flight flight = flightRepository.findById(ticket.getFlightId())
+                    .orElseThrow(() -> new RuntimeException("Flight not found"));
+
+            String customerEmail = customer.getAccount().getEmail();
+            String customerName = customer.getAccount().getAccountName();
+            String passengerName = passenger != null ? passenger.getPassengerName() : "Hành khách";
+
+            // Format departure time
+            String formattedDepartureTime = flight.getDepartureTime()
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy lúc HH:mm"));
+
+            // Check if payment is needed
+            boolean needsPayment = ticket.getTicketStatus() == null || ticket.getTicketStatus() == 0;
+
+            // Send single ticket confirmation email
+            emailService.sendSingleTicketConfirmation(
+                    customerEmail,
+                    customerName,
+                    passengerName,
+                    ticket.getConfirmationCode(),
+                    flight.getFlightCode(),
+                    flight.getDepartureAirport().getCityName(),
+                    flight.getDepartureAirport().getCityName(),
+                    formattedDepartureTime,
+                    ticket.getSeatNumber(),
+                    ticket.getFare(),
+                    needsPayment
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send single ticket confirmation: " + e.getMessage(), e);
+        }
     }
 
     @Override

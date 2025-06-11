@@ -30,7 +30,7 @@ export interface FlightSearchCriteria {
   arrivalAirportId: number;
   departureDate: string;
   returnDate?: string;
-  passengers: number;
+  passengerCount: number;
   ticketClassId: number;
   isRoundTrip?: boolean;
 }

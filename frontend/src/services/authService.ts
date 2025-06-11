@@ -29,6 +29,18 @@ class AuthService {
     }
   }
 
+  async createEmployee(userData: RegisterRequest): Promise<void> {
+    try {
+      const response = await apiClient.post<AuthResponse>('/auth/create-employee', userData);
+      if (!response.userDetails) {
+        throw new Error('Phản hồi không hợp lệ từ máy chủ');
+      }
+    } catch (error) {
+      // console.error('Employee creation failed:', error);
+      throw new Error('Tạo nhân viên thất bại. Email có thể đã được sử dụng.');
+    }
+  }
+
 
   // Refresh access token
   async refreshToken(): Promise<void> {

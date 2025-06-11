@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredAccountType?: string;  // e.g. "Customer", "Employee"
-  requiredRoles?: string[]; // e.g. ["EMPLOYEE_TICKETING", "EMPLOYEE_ADMIN"]
+  requiredRoles?: string[]; // e.g. ["EMPLOYEE_TICKETING", "EMPLOYEE_ADMINISTRATOR"]
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({

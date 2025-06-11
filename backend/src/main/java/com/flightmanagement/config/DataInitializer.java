@@ -108,45 +108,135 @@ public class DataInitializer implements CommandLineRunner {
     private void initializeDemoAccounts() {
         try {
             if (accountService.getAllAccounts().isEmpty()) {
-                // Create admin account
-                RegisterDto admin = new RegisterDto();
-                admin.setAccountName("System Administrator");
-                admin.setEmail("admin@flightms.com");
-                admin.setPassword("123Abc");
-                admin.setCitizenId("999999999");
-                admin.setPhoneNumber("0123456789");
-                admin.setAccountType(2); // Admin
-                admin.setEmployeeType(5);
-                accountService.createAccount(admin);
+                System.out.println("Creating demo accounts at 2025-06-11 08:30:03 UTC by thinh0704hcm");
 
-                // Create employee account
-                RegisterDto employee = new RegisterDto();
-                employee.setAccountName("Flight Operations Employee");
-                employee.setEmail("employee@flightms.com");
-                employee.setPassword("123Abc");
-                employee.setCitizenId("888888888");
-                employee.setPhoneNumber("0123456788");
-                employee.setAccountType(2); // Employee
-                employee.setEmployeeType(1);
-                accountService.createAccount(employee);
+                // 1. Flight Scheduling Employee (Type 1)
+                RegisterDto schedulingEmployee = new RegisterDto();
+                schedulingEmployee.setAccountName("Hoang Van A");
+                schedulingEmployee.setEmail("scheduling@flightms.com");
+                schedulingEmployee.setPassword("123Abc");
+                schedulingEmployee.setCitizenId("555555555");
+                schedulingEmployee.setPhoneNumber("0123456785");
+                schedulingEmployee.setAccountType(2); // Employee
+                schedulingEmployee.setEmployeeType(1); // Flight Scheduling
+                accountService.createAccount(schedulingEmployee);
+                System.out.println("Created Flight Scheduling employee at 2025-06-11 08:30:03 UTC by thinh0704hcm");
 
+                // 2. Ticketing Employee (Type 2)
+                RegisterDto ticketingEmployee = new RegisterDto();
+                ticketingEmployee.setAccountName("Tran Thi B");
+                ticketingEmployee.setEmail("ticketing@flightms.com");
+                ticketingEmployee.setPassword("123Abc");
+                ticketingEmployee.setCitizenId("222222222");
+                ticketingEmployee.setPhoneNumber("0123456782");
+                ticketingEmployee.setAccountType(2); // Employee
+                ticketingEmployee.setEmployeeType(2); // Ticketing
+                accountService.createAccount(ticketingEmployee);
+                System.out.println("Created Ticketing employee at 2025-06-11 08:30:03 UTC by thinh0704hcm");
 
-                // Customer account
+                // 3. Support Employee (Type 3)
                 RegisterDto supportEmployee = new RegisterDto();
-                supportEmployee.setAccountName("de bo may giup");
+                supportEmployee.setAccountName("Le Van C");
                 supportEmployee.setEmail("support@flightms.com");
                 supportEmployee.setPassword("123Abc");
-                supportEmployee.setCitizenId("777777777");
-                supportEmployee.setPhoneNumber("0123456787");
+                supportEmployee.setCitizenId("333333333");
+                supportEmployee.setPhoneNumber("0123456783");
                 supportEmployee.setAccountType(2); // Employee
-                supportEmployee.setEmployeeType(2);
+                supportEmployee.setEmployeeType(3); // Support
                 accountService.createAccount(supportEmployee);
+                System.out.println("Created Customer Support employee at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+
+                // 4. Accounting Employee (Type 4)
+                RegisterDto accountingEmployee = new RegisterDto();
+                accountingEmployee.setAccountName("Pham Thi D");
+                accountingEmployee.setEmail("accounting@flightms.com");
+                accountingEmployee.setPassword("123Abc");
+                accountingEmployee.setCitizenId("444444444");
+                accountingEmployee.setPhoneNumber("0123456784");
+                accountingEmployee.setAccountType(2); // Employee
+                accountingEmployee.setEmployeeType(4); // Accounting
+                accountService.createAccount(accountingEmployee);
+                System.out.println("Created Accounting employee at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+
+                // 5. Flight Operations Employee (Type 5)
+                RegisterDto flightOpsEmployee = new RegisterDto();
+                flightOpsEmployee.setAccountName("Nguyen Van E");
+                flightOpsEmployee.setEmail("flightops@flightms.com");
+                flightOpsEmployee.setPassword("123Abc");
+                flightOpsEmployee.setCitizenId("111111111");
+                flightOpsEmployee.setPhoneNumber("0123456781");
+                flightOpsEmployee.setAccountType(2); // Employee
+                flightOpsEmployee.setEmployeeType(5); // Flight Operations
+                accountService.createAccount(flightOpsEmployee);
+                System.out.println("Created Flight Operations employee at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+
+                // 6. Human Resources Employee (Type 6)
+                RegisterDto hrEmployee = new RegisterDto();
+                hrEmployee.setAccountName("Vu Thi F");
+                hrEmployee.setEmail("hr@flightms.com");
+                hrEmployee.setPassword("123Abc");
+                hrEmployee.setCitizenId("666666666");
+                hrEmployee.setPhoneNumber("0123456786");
+                hrEmployee.setAccountType(2); // Employee
+                hrEmployee.setEmployeeType(6); // Human Resources
+                accountService.createAccount(hrEmployee);
+                System.out.println("Created Human Resources employee at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+
+                // 7. Administrator Employee (Type 7)
+                RegisterDto adminEmployee = new RegisterDto();
+                adminEmployee.setAccountName("Dao Van G");
+                adminEmployee.setEmail("admin@flightms.com");
+                adminEmployee.setPassword("123Abc");
+                adminEmployee.setCitizenId("777777777");
+                adminEmployee.setPhoneNumber("0123456787");
+                adminEmployee.setAccountType(2); // Employee
+                adminEmployee.setEmployeeType(7); // Administrator
+                accountService.createAccount(adminEmployee);
+                System.out.println("Created System Administrator employee at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+
+                // Additional demo accounts for variety
+
+                // Senior Flight Operations Manager
+                RegisterDto seniorFlightOps = new RegisterDto();
+                seniorFlightOps.setAccountName("Bui Thi H");
+                seniorFlightOps.setEmail("seniorflightops@flightms.com");
+                seniorFlightOps.setPassword("123Abc");
+                seniorFlightOps.setCitizenId("888888888");
+                seniorFlightOps.setPhoneNumber("0123456788");
+                seniorFlightOps.setAccountType(2); // Employee
+                seniorFlightOps.setEmployeeType(5); // Flight Operations
+                accountService.createAccount(seniorFlightOps);
+                System.out.println("Created Senior Flight Operations Manager at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+
+                // Customer Service Supervisor
+                RegisterDto customerServiceSup = new RegisterDto();
+                customerServiceSup.setAccountName("Ngo Van I");
+                customerServiceSup.setEmail("cssupervisor@flightms.com");
+                customerServiceSup.setPassword("123Abc");
+                customerServiceSup.setCitizenId("999999999");
+                customerServiceSup.setPhoneNumber("0123456789");
+                customerServiceSup.setAccountType(2); // Employee
+                customerServiceSup.setEmployeeType(3); // Support
+                accountService.createAccount(customerServiceSup);
+                System.out.println("Created Customer Service Supervisor at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+
+                // Demo Customer Account
+                RegisterDto customer = new RegisterDto();
+                customer.setAccountName("Khach Hang Demo");
+                customer.setEmail("customer@flightms.com");
+                customer.setPassword("123Abc");
+                customer.setCitizenId("000000000");
+                customer.setPhoneNumber("0123456780");
+                customer.setAccountType(1); // Customer
+                customer.setEmployeeType(null); // Not applicable for customers
+                accountService.createAccount(customer);
+                System.out.println("Created demo customer account at 2025-06-11 08:30:03 UTC by thinh0704hcm");
 
 
                 // Create demo customer
-                RegisterDto customer = new RegisterDto();
+                customer = new RegisterDto();
                 customer.setAccountName("John Doe");
-                customer.setEmail("customer@flightms.com");
+                customer.setEmail("john.doe@flightms.com");
                 customer.setPassword("123Abc");
                 customer.setCitizenId("123456789");
                 customer.setPhoneNumber("0987654321");
@@ -156,19 +246,29 @@ public class DataInitializer implements CommandLineRunner {
                 // Create additional test customer
                 RegisterDto testCustomer = new RegisterDto();
                 testCustomer.setAccountName("Jane Smith");
-                testCustomer.setEmail("john.doe@email.com");
+                testCustomer.setEmail("jane.smith@email.com");
                 testCustomer.setPassword("123Abc");
                 testCustomer.setCitizenId("987654321");
                 testCustomer.setPhoneNumber("0987654322");
                 testCustomer.setAccountType(1); // Customer
                 accountService.createAccount(testCustomer);
 
-                System.out.println("✓ Demo accounts created with correct email addresses");
-                System.out.println("  - Admin: admin@flightms.com / 123Abc");
-                System.out.println("  - Employee: employee@flightms.com / 123Abc");
-                System.out.println("  - Support: support@flightms.com / 123Abc");
-                System.out.println("  - Customer: customer@flightms.com / 123Abc");
-                System.out.println("  - Test Customer: john.doe@email.com / 123Abc");
+                System.out.println("DEMO ACCOUNTS SUMMARY:");
+                System.out.println("=".repeat(80));
+                System.out.println("1. Flight Scheduling   : scheduling@flightms.com / 123Abc");
+                System.out.println("2. Ticketing           : ticketing@flightms.com / 123Abc");
+                System.out.println("3. Customer Support    : support@flightms.com / 123Abc");
+                System.out.println("4. Accounting          : accounting@flightms.com / 123Abc");
+                System.out.println("5. Flight Operations   : flightops@flightms.com / 123Abc");
+                System.out.println("6. Human Resources     : hr@flightms.com / 123Abc");
+                System.out.println("7. Administrator       : admin@flightms.com / 123Abc");
+                System.out.println("8. Senior Flight Ops   : seniorflightops@flightms.com / 123Abc");
+                System.out.println("9. CS Supervisor       : cssupervisor@flightms.com / 123Abc");
+                System.out.println("10. Demo Customer      : customer@flightms.com / 123Abc");
+                System.out.println("11. John Doe           : john.doe@email.com / 123Abc");
+                System.out.println("12. Jane Smith         : jane.smith@email.com / 123Abc");
+                System.out.println("=".repeat(80));
+                System.out.println("Demo accounts initialization completed at 2025-06-11 08:30:03 UTC by thinh0704hcm");
             }
         } catch (Exception e) {
             System.err.println("⚠️ Error creating demo accounts: " + e.getMessage());

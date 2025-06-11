@@ -20,13 +20,13 @@ public class AccountController {
     private AccountService accountService;
 
     @GetMapping
-    @PreAuthorize("hasRole('EMPLOYEE_ADMIN')")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR')")
     public ResponseEntity<List<AccountDto>> getAllAccounts() {
         return ResponseEntity.ok(accountService.getAllAccounts());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('EMPLOYEE_ADMIN') or (hasRole('CUSTOMER') and #id == principal.id)")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or #id == principal.id")
 
     public ResponseEntity<AccountDto> getAccountById(@PathVariable Integer id) {
         return ResponseEntity.ok(accountService.getAccountById(id));
@@ -39,7 +39,7 @@ public class AccountController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('EMPLOYEE_ADMIN') or (hasRole('CUSTOMER') and #id == principal.id)")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or #id == principal.id")
     public ResponseEntity<AccountDto> updateAccount(
             @PathVariable Integer id, @RequestBody AccountDto accountDto) {
         try {
@@ -53,7 +53,7 @@ public class AccountController {
     }
 
     @PostMapping("/{id}/verify-password")
-    @PreAuthorize("hasRole('EMPLOYEE_ADMIN') or (hasRole('CUSTOMER') and #id == principal.id)")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or #id == principal.id")
     public ResponseEntity<Boolean> verifyCurrentPassword(
             @PathVariable Integer id, 
             @RequestBody Map<String, String> request) {
@@ -68,7 +68,7 @@ public class AccountController {
     }
 
     @PostMapping("/{id}/reset-password")
-    @PreAuthorize("hasRole('EMPLOYEE_ADMIN') or (hasRole('CUSTOMER') and #id == principal.id)")
+    @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or #id == principal.id")
     public ResponseEntity<Void> resetPassword(
             @PathVariable Integer id,
             @RequestBody Map<String, String> request) {

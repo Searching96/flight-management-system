@@ -22,6 +22,10 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+/**
+ * AuthProvider Component with Updated Permissions
+ * Last updated: 2025-06-11 08:48:38 UTC by thinh0704hcm
+ */
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserDetails | null>(() => {
     const storedUser = authService.getCurrentUser();
@@ -34,6 +38,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         await authService.refreshToken();
       } catch (error) {
+        console.log('Token refresh failed at 2025-06-11 08:48:38 UTC by thinh0704hcm');
         setUser(null);
       }
     }, 300000); // Refresh every 5 minutes
@@ -57,6 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await authService.login(loginRequest);
       setUser(authService.getCurrentUser());
       setLoading(false);
+      console.log('User login successful at 2025-06-11 08:48:38 UTC by thinh0704hcm');
     } catch (err) {
       setLoading(false);
       throw err;
@@ -69,6 +75,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await authService.register(registerRequest);
       setUser(authService.getCurrentUser());
       setLoading(false);
+      console.log('User registration successful at 2025-06-11 08:48:38 UTC by thinh0704hcm');
     } catch (err) {
       setLoading(false);
       throw err;
@@ -78,6 +85,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = useCallback(() => {
     authService.logout();
     setUser(null);
+    console.log('User logout at 2025-06-11 08:48:38 UTC by thinh0704hcm');
   }, []);
 
   const refresh = useCallback(async () => {
@@ -92,7 +100,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw err;
     }
   }, []);
-
 
   const forgetPassword = useCallback(async (email: string) => {
     setLoading(true);
@@ -139,7 +146,10 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
-// In useAuth.tsx
+/**
+ * Updated Permissions Hook - Role-Based Access Control
+ * Last updated: 2025-06-11 08:48:38 UTC by thinh0704hcm
+ */
 export const usePermissions = () => {
   const { user } = useAuth();
 
@@ -154,33 +164,32 @@ export const usePermissions = () => {
 
   return {
     // Customer permissions
-    canSearchFlights: () => !user || hasRole('CUSTOMER') || user?.accountTypeName === "Employee", // All employees can search
-    canManageBookings: () => !user || hasRole('CUSTOMER') || hasAnyRole(['EMPLOYEE_SUPPORT', 'EMPLOYEE_TICKETING', 'EMPLOYEE_ADMIN']),
+    canSearchFlights: () => !user || hasRole('CUSTOMER') || user?.accountTypeName === "Employee",
+    canManageBookings: () => !user || hasRole('CUSTOMER') || hasAnyRole(['EMPLOYEE_SUPPORT', 'EMPLOYEE_TICKETING', 'EMPLOYEE_ADMINISTRATOR']),
     canViewDashboard: () => hasRole('CUSTOMER'),
 
-    // Employee permissions - Admin Panel sections
-    canViewAdmin: () => hasRole('EMPLOYEE_ADMIN'),
-    canViewFlightManagement: () => hasAnyRole(['EMPLOYEE_ADMIN', 'EMPLOYEE_TICKETING', 'EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_FLIGHT_SCHEDULING']),
-    canViewAirportManagement: () => hasAnyRole(['EMPLOYEE_ADMIN', 'EMPLOYEE_FLIGHT_OPERATIONS']),
-    canViewPlaneManagement: () => hasAnyRole(['EMPLOYEE_ADMIN', 'EMPLOYEE_FLIGHT_OPERATIONS']),
-    canViewTicketClassManagement: () => hasAnyRole(['EMPLOYEE_ADMIN', 'EMPLOYEE_TICKETING', 'EMPLOYEE_FLIGHT_OPERATIONS']),
-    canViewEmployeeManagement: () => hasRole('EMPLOYEE_ADMIN'),
-    canViewParameterSettings: () => hasAnyRole(['EMPLOYEE_ADMIN', 'EMPLOYEE_FLIGHT_OPERATIONS']),
-    canViewReports: () => hasAnyRole(['EMPLOYEE_ADMIN', 'EMPLOYEE_ACCOUNTING']),
+    // Updated Employee permissions based on corrected role structure
+    canViewAdmin: () => hasRole('EMPLOYEE_ADMINISTRATOR'),
+    canViewFlightManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_SCHEDULING', 'EMPLOYEE_ADMINISTRATOR']),
+    canViewAirportManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR']),
+    canViewPlaneManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR']),
+    canViewTicketClassManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR']),
+    canViewEmployeeManagement: () => hasAnyRole(['EMPLOYEE_HUMAN_RESOURCES', 'EMPLOYEE_ADMINISTRATOR']),
+    canViewParameterSettings: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR']),
+    canViewReports: () => hasAnyRole(['EMPLOYEE_ACCOUNTING', 'EMPLOYEE_ADMINISTRATOR']),
 
-    // Support permissions
-    canViewCustomerSupport: () => hasAnyRole(['EMPLOYEE_SUPPORT']),
-    canViewTicketing: () => hasAnyRole(['EMPLOYEE_TICKETING', 'EMPLOYEE_ADMIN']),
-    canViewAccounting: () => hasAnyRole(['EMPLOYEE_ACCOUNTING', 'EMPLOYEE_ADMIN']),
+    // Department-specific permissions
+    canViewCustomerSupport: () => hasAnyRole(['EMPLOYEE_SUPPORT', 'EMPLOYEE_ADMINISTRATOR']),
+    canViewTicketing: () => hasAnyRole(['EMPLOYEE_TICKETING', 'EMPLOYEE_ADMINISTRATOR']),
+    canViewAccounting: () => hasAnyRole(['EMPLOYEE_ACCOUNTING', 'EMPLOYEE_ADMINISTRATOR']),
 
     // General checks
     isCustomer: () => hasRole('CUSTOMER'),
     isEmployee: () => user?.accountTypeName === "Employee",
-    isAdmin: () => hasRole('EMPLOYEE_ADMIN'),
+    isAdmin: () => hasRole('EMPLOYEE_ADMINISTRATOR'),
 
     // Specific role checks
     hasRole,
     hasAnyRole
   };
 };
-

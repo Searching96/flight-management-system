@@ -328,7 +328,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
                         <TypeAhead
                             options={airportOptions}
                             value={selectedArrivalAirport}
-                            allowClear={false}
+                            allowClear={true}
                             onChange={(option) => {
                                 const airportId = option?.value as number || '';
                                 setSelectedArrivalAirport(airportId);
@@ -428,6 +428,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
                         <TypeAhead
                             options={planeOptions}
                             value={selectedPlane}
+                            allowClear={true}
                             onChange={(option) => {
                                 const planeId = option?.value as number || '';
                                 setSelectedPlane(planeId);

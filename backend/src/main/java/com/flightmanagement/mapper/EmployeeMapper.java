@@ -19,8 +19,10 @@ public class EmployeeMapper {
         dto.setPhoneNumber(entity.getAccount() != null ? entity.getAccount().getPhoneNumber() : null);
         dto.setEmployeeType(entity.getEmployeeType());
         dto.setEmployeeTypeName(getEmployeeTypeName(entity.getEmployeeType()));
+        dto.setDeletedAt(entity.getDeletedAt());
         return dto;
     }
+
 
     public Employee toEntity(EmployeeDto dto) {
         if (dto == null) return null;

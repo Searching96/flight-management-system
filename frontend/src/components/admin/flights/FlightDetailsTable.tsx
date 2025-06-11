@@ -72,6 +72,7 @@ const FlightDetailsTable: React.FC<FlightDetailsTableProps> = ({
                         Number(airport.value) !== Number(selectedArrivalAirport) &&
                         !flightDetails.some((d, i) => i !== index && d.mediumAirportId === Number(airport.value))
                       )}
+                      allowClear={true}
                       value={detail.mediumAirportId}
                       onChange={(option) => {
                         const airportId = option?.value as number || '';
