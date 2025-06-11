@@ -21,6 +21,7 @@ const CustomerSupport: React.FC = () => {
   const [messages, setMessages] = useState<FormattedMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [chatboxListLoading, setChatboxListLoading] = useState(false); // New state for chatbox list loading
   const [error, setError] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,6 +37,14 @@ const CustomerSupport: React.FC = () => {
     startChatboxPolling();
     return () => stopChatboxPolling();
   }, []);
+
+  // Add this useEffect to reload when sort option changes
+  useEffect(() => {
+    loadChatboxes();
+    // Restart chatbox polling with new sort option
+    stopChatboxPolling();
+    startChatboxPolling();
+  }, [sortOption]);
 
   useEffect(() => {
     if (selectedChatbox) {
@@ -76,12 +85,22 @@ const CustomerSupport: React.FC = () => {
 
   const loadChatboxes = async () => {
     try {
-      setLoading(true);
+      // Only show full page loading on initial load
+      if (chatboxes.length === 0) {
+        setLoading(true);
+      } else {
+        setChatboxListLoading(true);
+      }
+      
       let data: Chatbox[];
       
       // Load chatboxes based on sort option
       if (sortOption === 'Thời điểm yêu cầu tư vấn') {
         data = await chatService.getAllChatboxesSortedByCustomerTime();
+      } else if (sortOption === 'Số lượng nhân viên đã hỗ trợ') {
+        data = await chatService.getAllChatboxesSortedByEmployeeSupportCount();
+      } else if (sortOption === 'Hoạt động gần đây') {
+        data = await chatService.getAllChatboxesSortedByRecentActivity();
       } else {
         // For other options, use the default API for now
         data = await chatService.getAllChatboxes();
@@ -92,6 +111,7 @@ const CustomerSupport: React.FC = () => {
       setError('Failed to load chatboxes');
     } finally {
       setLoading(false);
+      setChatboxListLoading(false);
     }
   };
 
@@ -144,10 +164,15 @@ const CustomerSupport: React.FC = () => {
       try {
         let data: Chatbox[];
         
-        // Use the same sorting logic for polling
+        // Use the same sorting logic for polling - make sure all options are covered
         if (sortOption === 'Thời điểm yêu cầu tư vấn') {
           data = await chatService.getAllChatboxesSortedByCustomerTime();
+        } else if (sortOption === 'Số lượng nhân viên đã hỗ trợ') {
+          data = await chatService.getAllChatboxesSortedByEmployeeSupportCount();
+        } else if (sortOption === 'Hoạt động gần đây') {
+          data = await chatService.getAllChatboxesSortedByRecentActivity();
         } else {
+          // Default fallback
           data = await chatService.getAllChatboxes();
         }
         
@@ -306,70 +331,81 @@ const CustomerSupport: React.FC = () => {
             >
               <option value="Thời điểm yêu cầu tư vấn">Thời điểm yêu cầu tư vấn</option>
               <option value="Số lượng nhân viên đã hỗ trợ">Số lượng nhân viên đã hỗ trợ</option>
-              <option value="Liên quan đến bạn nhất">Liên quan đến bạn nhất</option>
+              <option value="Hoạt động gần đây">Hoạt động gần đây</option>
             </Form.Select>
           </div>
 
           {/* Chat List */}
           <div className="flex-grow-1" style={{ overflowY: 'auto' }}>
-            {filteredChatboxes.map(chatbox => (
-              <div
-                key={chatbox.chatboxId}
-                className={`d-flex align-items-center p-3 border-bottom cursor-pointer ${
-                  selectedChatbox?.chatboxId === chatbox.chatboxId ? 'bg-light' : ''
-                }`}
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleChatboxSelect(chatbox)}
-                onMouseEnter={(e) => {
-                  if (selectedChatbox?.chatboxId !== chatbox.chatboxId) {
-                    e.currentTarget.style.backgroundColor = '#f8f9fa';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedChatbox?.chatboxId !== chatbox.chatboxId) {
-                    e.currentTarget.style.backgroundColor = '';
-                  }
-                }}
-              >
-                {/* Avatar */}
-                <div 
-                  className="rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0 me-3"
-                  style={{
-                    width: '50px',
-                    height: '50px',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    backgroundColor: getAvatarColor(chatbox.customerName, true)
-                  }}
-                >
-                  {getAvatarLetter(chatbox.customerName, true)}
+            {chatboxListLoading ? (
+              <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
+                <div className="text-center">
+                  <Spinner animation="border" variant="primary" />
+                  <p className="mt-2 text-muted small">Đang tải...</p>
                 </div>
+              </div>
+            ) : (
+              <>
+                {filteredChatboxes.map(chatbox => (
+                  <div
+                    key={chatbox.chatboxId}
+                    className={`d-flex align-items-center p-3 border-bottom cursor-pointer ${
+                      selectedChatbox?.chatboxId === chatbox.chatboxId ? 'bg-light' : ''
+                    }`}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => handleChatboxSelect(chatbox)}
+                    onMouseEnter={(e) => {
+                      if (selectedChatbox?.chatboxId !== chatbox.chatboxId) {
+                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedChatbox?.chatboxId !== chatbox.chatboxId) {
+                        e.currentTarget.style.backgroundColor = '';
+                      }
+                    }}
+                  >
+                    {/* Avatar */}
+                    <div 
+                      className="rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0 me-3"
+                      style={{
+                        width: '50px',
+                        height: '50px',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        backgroundColor: getAvatarColor(chatbox.customerName, true)
+                      }}
+                    >
+                      {getAvatarLetter(chatbox.customerName, true)}
+                    </div>
 
-                {/* Chat Info */}
-                <div className="flex-grow-1 min-width-0">
-                  <div className="d-flex justify-content-between align-items-center mb-1">
-                    <h6 className="mb-0 text-truncate">{chatbox.customerName || 'Khách hàng'}</h6>
-                    <small className="text-muted flex-shrink-0 ms-2">
-                      {chatbox.lastMessageTime ? formatTime(chatbox.lastMessageTime) : '14:30'}
-                    </small>
+                    {/* Chat Info */}
+                    <div className="flex-grow-1 min-width-0">
+                      <div className="d-flex justify-content-between align-items-center mb-1">
+                        <h6 className="mb-0 text-truncate">{chatbox.customerName || 'Khách hàng'}</h6>
+                        <small className="text-muted flex-shrink-0 ms-2">
+                          {chatbox.lastMessageTime ? formatTime(chatbox.lastMessageTime) : '14:30'}
+                        </small>
+                      </div>
+                      
+                      {(chatbox.lastMessageContent || 'Tin nhắn mẫu từ khách hàng') && (
+                        <p className="mb-0 text-muted small text-truncate">
+                          {getLastMessagePrefix(chatbox)}{chatbox.lastMessageContent || 'Tin nhắn mẫu từ khách hàng'}
+                        </p>
+                      )}
+                      
+                      {/* Removed unread count badge */}
+                    </div>
                   </div>
-                  
-                  {(chatbox.lastMessageContent || 'Tin nhắn mẫu từ khách hàng') && (
-                    <p className="mb-0 text-muted small text-truncate">
-                      {getLastMessagePrefix(chatbox)}{chatbox.lastMessageContent || 'Tin nhắn mẫu từ khách hàng'}
-                    </p>
-                  )}
-                  
-                  {/* Removed unread count badge */}
-                </div>
-              </div>
-            ))}
-            
-            {filteredChatboxes.length === 0 && (
-              <div className="text-center p-4 text-muted">
-                <i className="bi bi-chat-square-dots fs-1 mb-3 d-block"></i>
-                Không có hội thoại nào
-              </div>
+                ))}
+                
+                {filteredChatboxes.length === 0 && (
+                  <div className="text-center p-4 text-muted">
+                    <i className="bi bi-chat-square-dots fs-1 mb-3 d-block"></i>
+                    Không có hội thoại nào
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

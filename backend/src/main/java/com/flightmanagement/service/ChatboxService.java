@@ -19,4 +19,8 @@ public interface ChatboxService {
     ChatboxDto getChatboxByCustomerId(Integer customerId);
     
     List<ChatboxDto> getAllChatboxesSortedByCustomerMessageTime();
+    
+    List<ChatboxDto> getAllChatboxesSortedByEmployeeSupportCount();
+    
+    List<ChatboxDto> getAllChatboxesSortedByRecentActivity();
 }
