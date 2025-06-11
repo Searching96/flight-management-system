@@ -103,20 +103,20 @@ public class TicketServiceImpl implements TicketService {
             ticket.setPassenger(passenger);
         }
 
-        System.out.println("Creating ticket with details at 2025-06-11 07:34:18 UTC by thinh0704hcm: " + ticketDto);
 
         Ticket savedTicket = ticketRepository.save(ticket);
         TicketDto savedTicketDto = ticketMapper.toDto(savedTicket);
 
         // Send single ticket confirmation email after successful ticket creation
-        try {
-            sendSingleTicketConfirmation(savedTicketDto, bookingCustomer, passenger);
-            System.out.println("Single ticket confirmation email sent for ticket: " + savedTicketDto.getTicketId() +
+        if (savedTicket.getTicketStatus() == 0) {
+            System.out.println("Ticket info: " + savedTicketDto +
                     " at 2025-06-11 07:34:18 UTC by thinh0704hcm");
-        } catch (Exception e) {
-            System.err.println("Failed to send ticket confirmation email for ticket: " +
-                    savedTicketDto.getTicketId() + " - " + e.getMessage());
-            // Don't fail ticket creation if email fails
+            try {
+                sendSingleTicketConfirmation(savedTicketDto, bookingCustomer, passenger);
+            } catch (Exception e) {
+                System.err.println("Failed to send ticket confirmation email for ticket: " +
+                        savedTicketDto.getTicketId() + " - " + e.getMessage());
+            }
         }
 
         return savedTicketDto;
@@ -127,43 +127,82 @@ public class TicketServiceImpl implements TicketService {
      */
     private void sendSingleTicketConfirmation(TicketDto ticket, Customer customer, Passenger passenger) {
         try {
-            if (customer == null || customer.getAccount() == null) {
-                System.err.println("Cannot send ticket confirmation: customer or account is null at 2025-06-11 07:34:18 UTC");
-                return;
+            if (ticket.getBookCustomerId() != null) {
+                // Customer booking
+                if (customer == null || customer.getAccount() == null) {
+                    System.err.println("Cannot send ticket confirmation: customer or account is null at 2025-06-11 10:47:59 UTC by thinh0704hcm");
+                    return;
+                }
+
+                // Get flight information
+                Flight flight = flightRepository.findById(ticket.getFlightId())
+                        .orElseThrow(() -> new RuntimeException("Flight not found"));
+
+                String customerEmail = customer.getAccount().getEmail();
+                String customerName = customer.getAccount().getAccountName();
+                String passengerName = passenger != null ? passenger.getPassengerName() : "Hành khách";
+
+                // Format departure time
+                String formattedDepartureTime = flight.getDepartureTime()
+                        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+
+                // Check if payment is needed
+                boolean needsPayment = ticket.getTicketStatus() == null || ticket.getTicketStatus() == 0;
+
+                // Send single ticket confirmation email for customer booking
+                emailService.sendSingleTicketConfirmation(
+                        customerEmail,
+                        customerName,
+                        passengerName,
+                        ticket.getConfirmationCode(),
+                        flight.getFlightCode(),
+                        flight.getDepartureAirport().getCityName(),
+                        flight.getArrivalAirport().getCityName(), // Fixed: was departure twice
+                        formattedDepartureTime,
+                        ticket.getSeatNumber(),
+                        ticket.getFare(),
+                        needsPayment
+                );
+            } else {
+                // Guest booking - use passenger information
+                if (passenger == null) {
+                    System.err.println("Cannot send ticket confirmation: passenger is null for guest booking at 2025-06-11 10:47:59 UTC by thinh0704hcm");
+                    return;
+                }
+
+                // Get flight information
+                Flight flight = flightRepository.findById(ticket.getFlightId())
+                        .orElseThrow(() -> new RuntimeException("Flight not found"));
+
+                String guestEmail = passenger.getEmail(); // Assuming passenger has email field
+                String guestName = passenger.getPassengerName();
+                String passengerName = passenger.getPassengerName();
+
+                // Format departure time
+                String formattedDepartureTime = flight.getDepartureTime()
+                        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+
+                // Check if payment is needed
+                boolean needsPayment = ticket.getTicketStatus() == null || ticket.getTicketStatus() == 0;
+
+                // Send single ticket confirmation email for guest booking
+                emailService.sendSingleTicketConfirmation(
+                        guestEmail,
+                        guestName,
+                        passengerName,
+                        ticket.getConfirmationCode(),
+                        flight.getFlightCode(),
+                        flight.getDepartureAirport().getCityName(),
+                        flight.getArrivalAirport().getCityName(),
+                        formattedDepartureTime,
+                        ticket.getSeatNumber(),
+                        ticket.getFare(),
+                        needsPayment
+                );
             }
-
-            // Get flight information
-            Flight flight = flightRepository.findById(ticket.getFlightId())
-                    .orElseThrow(() -> new RuntimeException("Flight not found"));
-
-            String customerEmail = customer.getAccount().getEmail();
-            String customerName = customer.getAccount().getAccountName();
-            String passengerName = passenger != null ? passenger.getPassengerName() : "Hành khách";
-
-            // Format departure time
-            String formattedDepartureTime = flight.getDepartureTime()
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy lúc HH:mm"));
-
-            // Check if payment is needed
-            boolean needsPayment = ticket.getTicketStatus() == null || ticket.getTicketStatus() == 0;
-
-            // Send single ticket confirmation email
-            emailService.sendSingleTicketConfirmation(
-                    customerEmail,
-                    customerName,
-                    passengerName,
-                    ticket.getConfirmationCode(),
-                    flight.getFlightCode(),
-                    flight.getDepartureAirport().getCityName(),
-                    flight.getDepartureAirport().getCityName(),
-                    formattedDepartureTime,
-                    ticket.getSeatNumber(),
-                    ticket.getFare(),
-                    needsPayment
-            );
-
         } catch (Exception e) {
-            throw new RuntimeException("Failed to send single ticket confirmation: " + e.getMessage(), e);
+            System.err.println("Error sending single ticket confirmation email: " + e.getMessage());
+            throw new RuntimeException("Failed to send ticket confirmation email", e);
         }
     }
 

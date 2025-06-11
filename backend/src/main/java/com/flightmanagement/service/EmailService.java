@@ -1,8 +1,6 @@
 package com.flightmanagement.service;
 
-import com.flightmanagement.dto.EmailBookingRequest;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 
 @Service

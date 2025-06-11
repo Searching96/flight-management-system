@@ -139,7 +139,8 @@ const TicketingManagement: React.FC = () => {
             ticket.flightCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
             ticket.passengerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             ticket.passengerCitizenId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            ticket.confirmationCode.toLowerCase().includes(searchTerm.toLowerCase())
+            ticket.confirmationCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            ticket.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase())
          );
       }
 

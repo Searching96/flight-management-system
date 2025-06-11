@@ -92,9 +92,7 @@ const Header: React.FC = () => {
                 {permissions.hasRole('EMPLOYEE_TICKETING') && (
                   <>
                     <Nav.Link as={Link} to="/search" className="text-decoration-none">🔍 Tìm chuyến bay</Nav.Link>
-                    <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">📋 Quản lý đặt chỗ</Nav.Link>
-                    {/* Future: Ticketing Panel for Tickets List */}
-                    {/* <Nav.Link as={Link} to="/ticketing" className="text-decoration-none">🎫 Danh sách vé</Nav.Link> */}
+                    <Nav.Link as={Link} to="/ticketing" className="text-decoration-none">📋 Quản lý vé</Nav.Link>
                   </>
                 )}
                 

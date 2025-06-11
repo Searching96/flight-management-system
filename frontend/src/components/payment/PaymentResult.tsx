@@ -29,6 +29,7 @@ const PaymentResult: React.FC = () => {
 
         // Convert hex back to confirmation code
         const bytes = new Uint8Array(hexPart.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
+
         return new TextDecoder().decode(bytes);
       }
 
@@ -63,35 +64,6 @@ const PaymentResult: React.FC = () => {
       alert('Không thể tạo thanh toán. Vui lòng thử lại sau.');
     }
   };
-  // Helper function to decode hex string to UTF-8 string
-  const decodeHexToString = (hexString: string): string => {
-    try {
-      // Remove any whitespace and ensure even length
-      const cleanHex = hexString.replace(/\s/g, '');
-      if (cleanHex.length % 2 !== 0) {
-        throw new Error('Invalid hex string length');
-      }
-      
-      // Convert hex pairs to bytes, then to string
-      const bytes = [];
-      for (let i = 0; i < cleanHex.length; i += 2) {
-        const hexPair = cleanHex.substr(i, 2);
-        const byte = parseInt(hexPair, 16);
-        if (isNaN(byte)) {
-          throw new Error('Invalid hex character');
-        }
-        bytes.push(byte);
-      }
-      
-      // Convert bytes to UTF-8 string
-      const uint8Array = new Uint8Array(bytes);
-      return new TextDecoder('utf-8').decode(uint8Array);
-    } catch (error) {
-      console.error('Error decoding hex string:', error);
-      // Return original string if decoding fails
-      return hexString;
-    }
-  };
 
   const updateCustomerScoreAfterPayment = async (vnpTxnRef: string) => {
     if (!user?.id || user.accountTypeName !== "Customer") {
@@ -107,7 +79,7 @@ const PaymentResult: React.FC = () => {
 
     try {
       // Decode hex-encoded confirmation code
-      const confirmationCode = decodeHexToString(vnpTxnRef);
+      const confirmationCode = extractConfirmationCode(vnpTxnRef);
       console.log('Decoded confirmation code:', confirmationCode);
       
       // Get tickets by confirmation code to calculate score
@@ -234,17 +206,6 @@ const PaymentResult: React.FC = () => {
     }
   };
 
-  // Format txnRef to show time component
-  const formatTxnRef = (txnRef: string): string => {
-    if (txnRef && txnRef.length > 6 && /^\d{6}/.test(txnRef.substring(0, 6))) {
-      const timePart = txnRef.substring(0, 6);
-      const hexPart = txnRef.substring(6);
-      const timeFormatted = `${timePart.substring(0, 2)}:${timePart.substring(2, 4)}:${timePart.substring(4, 6)}`;
-      return `${timeFormatted}-${hexPart}`;
-    }
-    return txnRef || 'N/A';
-  };
-
   // Format currency
   const formatCurrency = (amount: number): string => {
     return amount.toLocaleString('vi-VN', {
@@ -316,7 +277,7 @@ const PaymentResult: React.FC = () => {
                   <Row className="mb-4 g-3">
                     <Col xs={12} sm={6} className="fw-bold">Mã giao dịch:</Col>
                     <Col xs={12} sm={6} className="font-monospace small text-break">
-                      {formatTxnRef(transactionDetails.data.vnp_TxnRef || '')}
+                      {(transactionDetails.data.vnp_TxnRef || '')}
                     </Col>
 
                     <Col xs={12} sm={6} className="fw-bold">Mã xác nhận đặt chỗ:</Col>

@@ -20,7 +20,7 @@ public class PassengerMapper {
         dto.setPassengerName(entity.getPassengerName());
         dto.setEmail(entity.getEmail());
         dto.setCitizenId(entity.getCitizenId());
-        
+        dto.setPhoneNumber(entity.getPhoneNumber());
         return dto;
     }
     

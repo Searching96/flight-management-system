@@ -350,8 +350,17 @@ const BookingForm: React.FC = () => {
         }
       }
 
-      // Remove score update from here - it should happen after payment
-      // Score will be updated when payment is successful
+      // Save earned score to customer account after successful booking
+      if (user?.accountTypeName === "Customer" && user?.id && score > 0) {
+        try {
+          const updatedScore = customerScore + score;
+          await customerService.updateCustomerScore(user.id, updatedScore);
+          console.log(`Score updated: ${customerScore} + ${score} = ${updatedScore}`);
+        } catch (err: any) {
+          console.error("Error updating customer score:", err);
+          // Don't fail the booking if score update fails
+        }
+      }
 
       const confirmationData = bookingConfirmationService.createConfirmation(
         confirmationCode,
@@ -698,13 +707,6 @@ const BookingForm: React.FC = () => {
                             ${selectedClass.specifiedFare}
                           </Col>
 
-                          <Col xs={6}>
-                            <strong>Subtotal:</strong>
-                          </Col>
-                          <Col xs={6} className="text-end">
-                            ${(selectedClass.specifiedFare * passengerCount).toFixed(2)}
-                          </Col>
-
                           {user?.accountTypeName === "Customer" && (
                             <>
                               <Col xs={6}>
@@ -867,6 +869,7 @@ const BookingForm: React.FC = () => {
                 variant="secondary"
                 onClick={handleCancelBooking}
                 disabled={submitting}
+                size="lg"
               >
                 Cancel
               </Button>

@@ -36,16 +36,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Handle CORS preflight requests
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            System.out.println("Handling CORS preflight request at 2025-06-11 08:14:55 UTC by thinh0704hcm");
             response.setStatus(HttpServletResponse.SC_OK);
             return;
         }
 
         final String authorizationHeader = request.getHeader("Authorization");
-        final String requestURI = request.getRequestURI();
-        final String method = request.getMethod();
-
-        System.out.println("Processing request: " + method + " " + requestURI + " at 2025-06-11 08:14:55 UTC by thinh0704hcm");
 
         String username = null;
         String jwt = null;
@@ -54,9 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             jwt = authorizationHeader.substring(7);
             try {
                 username = jwtUtil.extractUsername(jwt);
-                System.out.println("Extracted username from JWT: " + username + " at 2025-06-11 08:14:55 UTC by thinh0704hcm");
             } catch (Exception e) {
-                System.err.println("JWT token validation failed at 2025-06-11 08:14:55 UTC by thinh0704hcm: " + e.getMessage());
                 logger.error("JWT token validation failed", e);
             }
         }
@@ -71,12 +64,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                    System.out.println("Authentication set for user: " + username + " at 2025-06-11 08:14:55 UTC by thinh0704hcm");
-                } else {
-                    System.err.println("JWT token validation failed for user: " + username + " at 2025-06-11 08:14:55 UTC by thinh0704hcm");
                 }
             } catch (Exception e) {
-                System.err.println("Error loading user details for: " + username + " at 2025-06-11 08:14:55 UTC by thinh0704hcm");
                 logger.error("Error loading user details", e);
             }
         }

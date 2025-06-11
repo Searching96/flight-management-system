@@ -163,29 +163,12 @@ public class VNPayServiceImpl implements PaymentService {
      */
     private String extractConfirmationCode(String txnRef) {
         try {
-            String hexPart;
+            String hexPart = "";
 
             // Check if txnRef starts with exactly 6 digits (HHMMSS format)
             if (txnRef.length() > TIME_PREFIX_LENGTH && txnRef.substring(0, TIME_PREFIX_LENGTH).matches("\\d{6}")) {
                 // New format: HHMMSS + hex
                 hexPart = txnRef.substring(TIME_PREFIX_LENGTH);
-
-                // Log the extracted parts for debugging
-                String timePart = txnRef.substring(0, TIME_PREFIX_LENGTH);
-                System.out.println("Extracted time: " + timePart + " (HH:mm:ss = " +
-                        timePart.substring(0, 2) + ":" + timePart.substring(2, 4) + ":" + timePart.substring(4, 6) +
-                        "), hex: " + hexPart);
-            } else if (txnRef.contains("-")) {
-                // Legacy format with dash: counter-hex
-                String[] parts = txnRef.split("-", 2);
-                if (parts.length > 1) {
-                    hexPart = parts[1];
-                } else {
-                    hexPart = txnRef;
-                }
-            } else {
-                // Old format: assume entire string is hex
-                hexPart = txnRef;
             }
 
             // Convert hex back to confirmation code
@@ -235,6 +218,7 @@ public class VNPayServiceImpl implements PaymentService {
 
             // Process payment for each ticket
             tickets.forEach(ticket -> {
+                if (ticket.getTicketStatus() == 1 && ticket.getPaymentTime() != null) return;
                 ticketService.payTicket(ticket.getTicketId());
 
                 // Send notification email to each passenger
