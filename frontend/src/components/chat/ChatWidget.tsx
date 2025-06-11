@@ -3,6 +3,7 @@ import { Card, Form, Button, Spinner, Badge, OverlayTrigger, Tooltip } from 'rea
 import { useAuth } from '../../hooks/useAuth';
 import { chatService } from '../../services/chatService';
 import { webSocketService } from '../../services/websocketService';
+import { accountChatboxService } from '../../services/accountChatboxService';
 import { Chatbox, Message as ChatMessage, SendMessageRequest } from '../../models/Chat';
 
 interface Message {
@@ -36,9 +37,11 @@ const ChatWidget: React.FC = () => {
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const unreadPollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -66,6 +69,9 @@ const ChatWidget: React.FC = () => {
 
   useEffect(() => {
     if (isOpen && chatbox?.chatboxId && user) {
+      // Update last visit time and reset unread count when opening chat
+      updateLastVisitTime();
+      
       startPolling();
 
       // Connect to WebSocket
@@ -99,6 +105,13 @@ const ChatWidget: React.FC = () => {
         // Reload messages when new message arrives
         if (chatbox?.chatboxId) {
           loadMessages(chatbox.chatboxId);
+          
+          // Update last visit time if chat is open, otherwise update unread count
+          if (isOpen) {
+            updateLastVisitTime();
+          } else if (user?.id) {
+            loadUnreadCount(chatbox.chatboxId);
+          }
         }
       };
 
@@ -152,13 +165,63 @@ const ChatWidget: React.FC = () => {
           employeeName: msg.employeeName,
           isFromCustomer: !msg.employeeId // If employeeId is null, it's from customer
         }));
-        setMessages(formattedMessages); // Cache trong state
+        setMessages(formattedMessages);
+        
+        // Load unread count
+        await loadUnreadCount(chatboxData.chatboxId);
       }
     } catch (error) {
       console.error('Failed to initialize chat:', error);
       setError('Failed to load chat. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadUnreadCount = async (chatboxId: number) => {
+    if (!user?.id) return;
+    
+    try {
+      console.log('Loading unread count for user:', user.id, 'chatbox:', chatboxId);
+      const count = await accountChatboxService.getUnreadMessageCount(user.id, chatboxId);
+      console.log('Unread count received:', count);
+      setUnreadCount(count);
+    } catch (error) {
+      console.error('Failed to load unread count:', error);
+      setUnreadCount(0);
+    }
+  };
+
+  const startUnreadPolling = () => {
+    if (unreadPollingIntervalRef.current) return;
+    
+    console.log('Starting unread count polling');
+    unreadPollingIntervalRef.current = setInterval(async () => {
+      if (chatbox?.chatboxId && user?.id && !isOpen) {
+        console.log('Polling unread count - chatbox:', chatbox.chatboxId, 'user:', user.id);
+        await loadUnreadCount(chatbox.chatboxId);
+      }
+    }, 2000); // Poll every 2 seconds
+  };
+
+  const stopUnreadPolling = () => {
+    if (unreadPollingIntervalRef.current) {
+      console.log('Stopping unread count polling');
+      clearInterval(unreadPollingIntervalRef.current);
+      unreadPollingIntervalRef.current = null;
+    }
+  };
+
+  const updateLastVisitTime = async () => {
+    if (!user?.id || !chatbox?.chatboxId) return;
+    
+    try {
+      console.log('Updating last visit time for user:', user.id, 'chatbox:', chatbox.chatboxId);
+      await accountChatboxService.updateLastVisitTime(user.id, chatbox.chatboxId);
+      console.log('Last visit time updated, resetting unread count to 0');
+      setUnreadCount(0); // Reset unread count when updating visit time
+    } catch (error) {
+      console.error('Failed to update last visit time:', error);
     }
   };
 
@@ -194,7 +257,17 @@ const ChatWidget: React.FC = () => {
             employeeName: msg.employeeName,
             isFromCustomer: !msg.employeeId // If employeeId is null, it's from customer
           }));
-          setMessages(formattedMessages);
+          
+          // Only update if there are actually new messages
+          if (JSON.stringify(formattedMessages) !== JSON.stringify(messages)) {
+            setMessages(formattedMessages);
+            
+            // Update unread count if chat is not open
+            if (!isOpen && user?.id) {
+              console.log('Chat is closed, updating unread count due to new messages');
+              await loadUnreadCount(chatbox.chatboxId);
+            }
+          }
         } catch (error) {
           console.error('Failed to poll messages:', error);
         }
@@ -462,6 +535,27 @@ const ChatWidget: React.FC = () => {
     }
   }, [isDragging, dragStart]);
 
+  // Add polling for unread count when chat is closed
+  useEffect(() => {
+    if (!isOpen && chatbox?.chatboxId && user?.id) {
+      console.log('Chat is closed, starting unread count polling');
+      startUnreadPolling();
+    } else {
+      console.log('Chat is open or no chatbox, stopping unread count polling');
+      stopUnreadPolling();
+    }
+
+    return () => stopUnreadPolling();
+  }, [isOpen, chatbox, user]);
+
+  // Initialize chatbox even when widget is closed to get unread counts
+  useEffect(() => {
+    if (user && !chatbox) {
+      console.log('User logged in but no chatbox, initializing...');
+      initializeChat();
+    }
+  }, [user]);
+
   if (!user) {
     return (
       <>
@@ -480,7 +574,7 @@ const ChatWidget: React.FC = () => {
             <OverlayTrigger
               placement="left"
               overlay={
-                <Tooltip id="chat-bubble-tooltip" style={{ textAlign: 'center' }}>
+                <Tooltip id="chat-bubble-tooltip" style={{ textAlign: 'center', lineHeight: '1.4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   Chat hỗ trợ khách hàng<br />
                   Có thể kéo thả để di chuyển
                 </Tooltip>
@@ -518,7 +612,7 @@ const ChatWidget: React.FC = () => {
               >
                 <div className="d-flex align-items-center">
                   <i className="bi bi-chat-dots me-2"></i>
-                  <span className="fw-bold">Support Chat</span>
+                  <span className="fw-bold">Hỗ trợ tư vấn khách hàng</span>
                 </div>
                 <Button
                   variant="link"
@@ -590,7 +684,7 @@ const ChatWidget: React.FC = () => {
           <OverlayTrigger
             placement="left"
             overlay={
-              <Tooltip id="chat-bubble-tooltip-logged-in" style={{ textAlign: 'center' }}>
+              <Tooltip id="chat-bubble-tooltip-logged-in" style={{ textAlign: 'center', lineHeight: '1.4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 Chat hỗ trợ khách hàng<br />
                 Có thể kéo thả để di chuyển<br />
                 <small className="text-muted">Bấm để mở chat</small>
@@ -613,11 +707,17 @@ const ChatWidget: React.FC = () => {
             >
               <i className="bi bi-chat-dots fs-4 text-white"></i>
               {/* Unread indicator */}
-              {messages.length > 0 && (
+              {unreadCount > 0 && (
                 <span 
-                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                  style={{ fontSize: '0.6rem' }}
+                  className="position-absolute badge rounded-pill bg-danger"
+                  style={{ 
+                    fontSize: '0.6rem',
+                    top: '8px',
+                    right: '8px',
+                    transform: 'translate(50%, -50%)'
+                  }}
                 >
+                  {unreadCount}
                   <span className="visually-hidden">new messages</span>
                 </span>
               )}
@@ -638,7 +738,7 @@ const ChatWidget: React.FC = () => {
             >
               <div className="d-flex align-items-center">
                 <i className="bi bi-chat-dots me-2"></i>
-                <span className="fw-bold">Support Chat</span>
+                <span className="fw-bold">Hỗ trợ tư vấn khách hàng</span>
               </div>
               <Button
                 variant="link"
