@@ -35,7 +35,7 @@ const ChatWidget: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (isOpen && user && !chatbox) {
@@ -250,6 +250,7 @@ const ChatWidget: React.FC = () => {
     // Reset typing timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
     }
 
     // Stop typing after 2 seconds of inactivity
@@ -282,6 +283,7 @@ const ChatWidget: React.FC = () => {
         );
         if (typingTimeoutRef.current) {
           clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = null;
         }
       }
 

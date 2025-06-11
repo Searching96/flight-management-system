@@ -1,5 +1,3 @@
-import SockJS from 'sockjs-client';
-
 interface WebSocketMessage {
   type: string;
   chatboxId?: string;
@@ -25,45 +23,42 @@ class WebSocketService {
 
   connect(chatboxId: string, userId: string, userType: 'employee' | 'customer', userName: string) {
     try {
-      // Use SockJS for better compatibility
-      const sockjs = new SockJS('http://localhost:8080/ws/chat');
-      this.socket = sockjs as any;
+      // Use native WebSocket instead of SockJS to avoid global variable issues
+      this.socket = new WebSocket('ws://localhost:8080/ws/chat');
 
-      if (this.socket) {
-        this.socket.onopen = () => {
-          console.log('WebSocket connected');
-          this.isConnected = true;
-          this.reconnectAttempts = 0;
+      this.socket.onopen = () => {
+        console.log('WebSocket connected');
+        this.isConnected = true;
+        this.reconnectAttempts = 0;
 
-          // Join the chat room
-          this.send({
-            type: 'join_chat',
-            chatboxId,
-            userId,
-            userType,
-            userName
-          });
-        };
+        // Join the chat room
+        this.send({
+          type: 'join_chat',
+          chatboxId,
+          userId,
+          userType,
+          userName
+        });
+      };
 
-        this.socket.onmessage = (event) => {
-          try {
-            const message: WebSocketMessage = JSON.parse(event.data);
-            this.handleMessage(message);
-          } catch (error) {
-            console.error('Error parsing WebSocket message:', error);
-          }
-        };
+      this.socket.onmessage = (event) => {
+        try {
+          const message: WebSocketMessage = JSON.parse(event.data);
+          this.handleMessage(message);
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
 
-        this.socket.onclose = () => {
-          console.log('WebSocket disconnected');
-          this.isConnected = false;
-          this.attemptReconnect(chatboxId, userId, userType, userName);
-        };
+      this.socket.onclose = () => {
+        console.log('WebSocket disconnected');
+        this.isConnected = false;
+        this.attemptReconnect(chatboxId, userId, userType, userName);
+      };
 
-        this.socket.onerror = (error) => {
-          console.error('WebSocket error:', error);
-        };
-      }
+      this.socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
 
     } catch (error) {
       console.error('Error connecting to WebSocket:', error);
