@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, Form, Button, Spinner, Badge } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
 import { chatService } from '../../services/chatService';
+import { webSocketService } from '../../services/websocketService';
 import { Chatbox, Message as ChatMessage, SendMessageRequest } from '../../models/Chat';
 
 interface Message {
@@ -14,6 +15,12 @@ interface Message {
   isFromCustomer: boolean;
 }
 
+interface TypingUser {
+  userId: string;
+  userType: string;
+  userName: string;
+}
+
 const ChatWidget: React.FC = () => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -23,9 +30,12 @@ const ChatWidget: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     if (isOpen && user && !chatbox) {
@@ -49,6 +59,62 @@ const ChatWidget: React.FC = () => {
 
     return () => stopPolling();
   }, [isOpen, chatbox]);
+
+  useEffect(() => {
+    if (isOpen && chatbox?.chatboxId && user) {
+      startPolling();
+
+      // Connect to WebSocket
+      webSocketService.connect(
+        chatbox.chatboxId.toString(),
+        user.id!.toString(),
+        'customer',
+        user.accountName || 'Customer'
+      );
+
+      // Set up WebSocket event listeners
+      const handleTypingStart = (data: TypingUser) => {
+        if (data.userType === 'employee') {
+          setTypingUsers(prev => {
+            const exists = prev.some(u => u.userId === data.userId && u.userType === data.userType);
+            if (!exists) {
+              return [...prev, data];
+            }
+            return prev;
+          });
+        }
+      };
+
+      const handleTypingStop = (data: TypingUser) => {
+        if (data.userType === 'employee') {
+          setTypingUsers(prev => prev.filter(u => !(u.userId === data.userId && u.userType === data.userType)));
+        }
+      };
+
+      const handleNewMessage = () => {
+        // Reload messages when new message arrives
+        if (chatbox?.chatboxId) {
+          loadMessages(chatbox.chatboxId);
+        }
+      };
+
+      webSocketService.onTypingStart(handleTypingStart);
+      webSocketService.onTypingStop(handleTypingStop);
+      webSocketService.onNewMessage(handleNewMessage);
+
+      return () => {
+        webSocketService.removeEventListener('typing_start', handleTypingStart);
+        webSocketService.removeEventListener('typing_stop', handleTypingStop);
+        webSocketService.removeEventListener('new_message', handleNewMessage);
+      };
+    } else {
+      stopPolling();
+      webSocketService.disconnect();
+      setTypingUsers([]);
+    }
+
+    return () => stopPolling();
+  }, [isOpen, chatbox, user]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -92,31 +158,20 @@ const ChatWidget: React.FC = () => {
     }
   };
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !chatbox?.chatboxId || !user) return;
-
+  const loadMessages = async (chatboxId: number) => {
     try {
-      // Add user message to UI immediately
-      const userMessage: Message = {
-        messageId: Date.now(),
-        chatboxId: chatbox.chatboxId,
-        content: newMessage.trim(),
-        sendTime: new Date().toISOString(),
-        employeeName: undefined,
-        isFromCustomer: true
-      };
-      
-      setMessages(prev => [...prev, userMessage]);
-      const messageContent = newMessage.trim();
-      setNewMessage('');
-      setShouldAutoScroll(true); // Always scroll when user sends message
-      
-      // Send message to API using createCustomerMessage
-      await chatService.createCustomerMessage(chatbox.chatboxId, messageContent);
+      const messages = await chatService.getMessagesByChatboxId(chatboxId);
+      const formattedMessages: Message[] = messages.map(msg => ({
+        messageId: msg.messageId,
+        chatboxId: msg.chatboxId || chatboxId,
+        content: msg.content,
+        sendTime: msg.sendTime || new Date().toISOString(),
+        employeeName: msg.employeeName,
+        isFromCustomer: !msg.employeeId // If employeeId is null, it's from customer
+      }));
+      setMessages(formattedMessages);
     } catch (error) {
-      console.error('Failed to send message:', error);
-      setError('Failed to send message. Please try again.');
+      console.error('Failed to load messages:', error);
     }
   };
 
@@ -169,6 +224,92 @@ const ChatWidget: React.FC = () => {
         isFromCustomer: !msg.employeeId
       }));
       setMessages(formattedMessages);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      setError('Failed to send message. Please try again.');
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewMessage(value);
+
+    if (!chatbox || !user) return;
+
+    // Start typing indicator
+    if (!isTyping && value.trim()) {
+      setIsTyping(true);
+      webSocketService.startTyping(
+        chatbox.chatboxId!.toString(),
+        user.id!.toString(),
+        'customer',
+        user.accountName || 'Customer'
+      );
+    }
+
+    // Reset typing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Stop typing after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      if (isTyping) {
+        setIsTyping(false);
+        webSocketService.stopTyping(
+          chatbox.chatboxId!.toString(),
+          user.id!.toString(),
+          'customer',
+          user.accountName || 'Customer'
+        );
+      }
+    }, 2000);
+  };
+
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !chatbox?.chatboxId || !user) return;
+
+    try {
+      // Stop typing immediately when sending
+      if (isTyping) {
+        setIsTyping(false);
+        webSocketService.stopTyping(
+          chatbox.chatboxId.toString(),
+          user.id!.toString(),
+          'customer',
+          user.accountName || 'Customer'
+        );
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        }
+      }
+
+      // Add user message to UI immediately
+      const userMessage: Message = {
+        messageId: Date.now(),
+        chatboxId: chatbox.chatboxId,
+        content: newMessage.trim(),
+        sendTime: new Date().toISOString(),
+        employeeName: undefined,
+        isFromCustomer: true
+      };
+      
+      setMessages(prev => [...prev, userMessage]);
+      const messageContent = newMessage.trim();
+      setNewMessage('');
+      setShouldAutoScroll(true);
+      
+      // Send message to API
+      await chatService.createCustomerMessage(chatbox.chatboxId, messageContent);
+
+      // Notify WebSocket about new message
+      webSocketService.notifyNewMessage(
+        chatbox.chatboxId.toString(),
+        user.id!.toString(),
+        'customer'
+      );
+      
     } catch (error) {
       console.error('Failed to send message:', error);
       setError('Failed to send message. Please try again.');
@@ -454,14 +595,14 @@ const ChatWidget: React.FC = () => {
                   <Form.Control
                     type="text"
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={handleInputChange}
                     placeholder="Type your message..."
                     disabled={loading || !chatbox}
                     size="sm"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        handleSendMessage(newMessage);
+                        sendMessage(e);
                       }
                     }}
                   />

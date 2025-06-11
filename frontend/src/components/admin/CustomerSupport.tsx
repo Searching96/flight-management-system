@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Form, Button, Spinner, InputGroup } from 're
 import { chatService, messageService } from '../../services';
 import { Chatbox, Message } from '../../models/Chat';
 import { useAuth } from '../../hooks/useAuth';
+import { webSocketService } from '../../services/websocketService';
 
 interface FormattedMessage {
   messageId?: number;
@@ -14,6 +15,12 @@ interface FormattedMessage {
   isFromCustomer: boolean;
 }
 
+interface TypingUser {
+  userId: string;
+  userType: string;
+  userName: string;
+}
+
 const CustomerSupport: React.FC = () => {
   const { user } = useAuth();
   const [chatboxes, setChatboxes] = useState<Chatbox[]>([]);
@@ -21,15 +28,18 @@ const CustomerSupport: React.FC = () => {
   const [messages, setMessages] = useState<FormattedMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
-  const [chatboxListLoading, setChatboxListLoading] = useState(false); // New state for chatbox list loading
+  const [chatboxListLoading, setChatboxListLoading] = useState(false);
   const [error, setError] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const [sortOption, setSortOption] = useState('Thời điểm yêu cầu tư vấn');
   const [isNearBottom, setIsNearBottom] = useState(true);
+  const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const chatboxPollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     loadChatboxes();
@@ -197,17 +207,76 @@ const CustomerSupport: React.FC = () => {
     setError('');
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewMessage(value);
+
+    if (!selectedChatbox || !user?.id) return;
+
+    // Start typing indicator
+    if (!isTyping && value.trim()) {
+      setIsTyping(true);
+      webSocketService.startTyping(
+        selectedChatbox.chatboxId!.toString(),
+        user.id.toString(),
+        'employee',
+        user.accountName || 'Employee'
+      );
+    }
+
+    // Reset typing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+
+    // Stop typing after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      if (isTyping && selectedChatbox && user?.id) {
+        setIsTyping(false);
+        webSocketService.stopTyping(
+          selectedChatbox.chatboxId!.toString(),
+          user.id.toString(),
+          'employee',
+          user.accountName || 'Employee'
+        );
+      }
+    }, 2000);
+  };
+
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedChatbox || !user) return;
+    if (!newMessage.trim() || !selectedChatbox || !user?.id) return;
 
     try {
       setSendingMessage(true);
       
+      // Stop typing immediately when sending
+      if (isTyping) {
+        setIsTyping(false);
+        webSocketService.stopTyping(
+          selectedChatbox.chatboxId!.toString(),
+          user.id.toString(),
+          'employee',
+          user.accountName || 'Employee'
+        );
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = null;
+        }
+      }
+
       await messageService.createEmployeeMessage(
         selectedChatbox.chatboxId!,
-        user.id!,
+        user.id,
         newMessage.trim()
+      );
+
+      // Notify WebSocket about new message
+      webSocketService.notifyNewMessage(
+        selectedChatbox.chatboxId!.toString(),
+        user.id.toString(),
+        'employee'
       );
       
       await loadMessages(selectedChatbox.chatboxId!);
@@ -220,6 +289,61 @@ const CustomerSupport: React.FC = () => {
       setSendingMessage(false);
     }
   };
+
+  useEffect(() => {
+    if (selectedChatbox && user?.id) {
+      loadMessages(selectedChatbox.chatboxId!);
+      startPolling();
+      setIsNearBottom(true);
+
+      // Connect to WebSocket for this chat
+      webSocketService.connect(
+        selectedChatbox.chatboxId!.toString(),
+        user.id.toString(),
+        'employee',
+        user.accountName || 'Employee'
+      );
+
+      // Set up WebSocket event listeners
+      const handleTypingStart = (data: TypingUser) => {
+        if (data.userType === 'customer') {
+          setTypingUsers(prev => {
+            const exists = prev.some(u => u.userId === data.userId && u.userType === data.userType);
+            if (!exists) {
+              return [...prev, data];
+            }
+            return prev;
+          });
+        }
+      };
+
+      const handleTypingStop = (data: TypingUser) => {
+        if (data.userType === 'customer') {
+          setTypingUsers(prev => prev.filter(u => !(u.userId === data.userId && u.userType === data.userType)));
+        }
+      };
+
+      const handleNewMessage = () => {
+        // Reload messages when new message arrives
+        loadMessages(selectedChatbox.chatboxId!);
+      };
+
+      webSocketService.onTypingStart(handleTypingStart);
+      webSocketService.onTypingStop(handleTypingStop);
+      webSocketService.onNewMessage(handleNewMessage);
+
+      return () => {
+        webSocketService.removeEventListener('typing_start', handleTypingStart);
+        webSocketService.removeEventListener('typing_stop', handleTypingStop);
+        webSocketService.removeEventListener('new_message', handleNewMessage);
+      };
+    } else {
+      stopPolling();
+      webSocketService.disconnect();
+      setTypingUsers([]);
+    }
+    return () => stopPolling();
+  }, [selectedChatbox, user]);
 
   const getAvatarLetter = (name?: string, isFromCustomer?: boolean) => {
     if (name && name.trim()) {
@@ -568,6 +692,41 @@ const CustomerSupport: React.FC = () => {
                     </div>
                   ));
                 })()}
+
+                {/* Typing Indicator */}
+                {typingUsers.length > 0 && (
+                  <div className="mb-3 d-flex justify-content-start">
+                    <div 
+                      className="rounded-circle text-white d-flex align-items-center justify-content-center me-2 flex-shrink-0"
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        backgroundColor: '#0084ff'
+                      }}
+                    >
+                      {getAvatarLetter(selectedChatbox?.customerName, true)}
+                    </div>
+                    
+                    <div style={{ maxWidth: '70%' }}>
+                      <div 
+                        className="p-2 rounded-3 bg-white text-dark d-flex align-items-center"
+                        style={{ borderRadius: '18px 18px 18px 4px' }}
+                      >
+                        <div className="typing-dots me-2">
+                          <span></span>
+                          <span></span>
+                          <span></span>
+                        </div>
+                        <small className="text-muted">
+                          {typingUsers[0].userName} đang soạn tin nhắn...
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div ref={messagesEndRef} />
               </div>
 
@@ -579,7 +738,7 @@ const CustomerSupport: React.FC = () => {
                       type="text"
                       placeholder="Nhập tin nhắn..."
                       value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
+                      onChange={handleInputChange}
                       disabled={sendingMessage}
                       style={{ 
                         borderRadius: '20px 0 0 20px', 
