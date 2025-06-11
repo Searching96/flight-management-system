@@ -201,6 +201,115 @@ const Statistics: React.FC = () => {
                ) : (
                   <div style={{ textAlign: 'center', padding: '40px' }}>No yearly statistics available</div>
                )}
+
+               {/* Yearly Statistics Table */}
+               {yearlyStats && (
+                  <div style={{ marginTop: '40px' }}>
+                     <h4 style={{ marginBottom: '20px', color: '#333' }}>Yearly Statistics Summary</h4>
+                     <div style={{ 
+                        overflowX: 'auto', 
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', 
+                        borderRadius: '8px',
+                        backgroundColor: '#fff'
+                     }}>
+                        <table style={{ 
+                           width: '100%', 
+                           borderCollapse: 'collapse',
+                           fontSize: '14px'
+                        }}>
+                           <thead>
+                              <tr style={{ backgroundColor: '#f8f9fa' }}>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Year</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Total Flights</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Total Passengers</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Total Revenue</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Revenue Rate (%)</th>
+                              </tr>
+                           </thead>
+                           <tbody>
+                              {yearlyStats.map((entry: any, index: number) => {
+                                 const totalRevenue = yearlyStats.reduce((sum: number, item: any) => sum + item.totalRevenue, 0);
+                                 const revenueRate = ((entry.totalRevenue / totalRevenue) * 100).toFixed(2);
+                                 
+                                 return (
+                                    <tr key={entry.year} style={{ 
+                                       backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
+                                       transition: 'background-color 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e3f2fd'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#fff' : '#f8f9fa'}
+                                    >
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          fontWeight: '500',
+                                          color: '#333',
+                                          textAlign: 'center'
+                                       }}>{entry.year}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#495057'
+                                       }}>{entry.totalFlights.toLocaleString()}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#495057'
+                                       }}>{entry.totalPassengers.toLocaleString()}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#28a745',
+                                          fontWeight: '500'
+                                       }}>${entry.totalRevenue.toLocaleString()}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#007bff',
+                                          fontWeight: '500'
+                                       }}>{revenueRate}%</td>
+                                    </tr>
+                                 );
+                              })}
+                           </tbody>
+                        </table>
+                     </div>
+                  </div>
+               )}
             </div>
          )}
 
@@ -210,16 +319,37 @@ const Statistics: React.FC = () => {
                <h3>Monthly Statistics</h3>
 
                <div className="input-group" style={{ marginBottom: '20px' }}>
-                  <label htmlFor="year-picker" style={{ marginRight: '10px' }}>Year:</label>
+                  <label htmlFor="year-picker" style={{ 
+                     marginRight: '15px', 
+                     fontSize: '16px', 
+                     fontWeight: '500',
+                     color: '#333'
+                  }}>
+                     Select Year:
+                  </label>
                   <select
                      id="year-picker"
                      value={selectedYear}
                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                      className="year-input"
-                     style={{ padding: '5px 10px' }}
+                     style={{ 
+                        padding: '8px 12px',
+                        fontSize: '14px',
+                        border: '2px solid #ddd',
+                        borderRadius: '8px',
+                        backgroundColor: '#fff',
+                        color: '#333',
+                        cursor: 'pointer',
+                        outline: 'none',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        minWidth: '120px'
+                     }}
+                     onFocus={(e) => e.target.style.borderColor = '#007bff'}
+                     onBlur={(e) => e.target.style.borderColor = '#ddd'}
                   >
                      {availableYears.map(year => (
-                        <option key={year} value={year}>{year}</option>
+                        <option key={year} value={year} style={{ padding: '8px' }}>{year}</option>
                      ))}
                   </select>
                </div>
@@ -321,6 +451,115 @@ const Statistics: React.FC = () => {
                   </div>
                ) : (
                   <div style={{ textAlign: 'center', padding: '40px' }}>No monthly statistics available for {selectedYear}</div>
+               )}
+
+               {/* Monthly Statistics Table */}
+               {monthlyStats && (
+                  <div style={{ marginTop: '40px' }}>
+                     <h4 style={{ marginBottom: '20px', color: '#333' }}>Monthly Statistics Summary ({selectedYear})</h4>
+                     <div style={{ 
+                        overflowX: 'auto', 
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', 
+                        borderRadius: '8px',
+                        backgroundColor: '#fff'
+                     }}>
+                        <table style={{ 
+                           width: '100%', 
+                           borderCollapse: 'collapse',
+                           fontSize: '14px'
+                        }}>
+                           <thead>
+                              <tr style={{ backgroundColor: '#f8f9fa' }}>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Month</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Total Flights</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Total Passengers</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Total Revenue</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Revenue Rate (%)</th>
+                              </tr>
+                           </thead>
+                           <tbody>
+                              {monthlyStats.map((entry: any, index: number) => {
+                                 const totalRevenue = monthlyStats.reduce((sum: number, item: any) => sum + item.totalRevenue, 0);
+                                 const revenueRate = ((entry.totalRevenue / totalRevenue) * 100).toFixed(2);
+                                 
+                                 return (
+                                    <tr key={entry.month} style={{ 
+                                       backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
+                                       transition: 'background-color 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e3f2fd'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#fff' : '#f8f9fa'}
+                                    >
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          fontWeight: '500',
+                                          color: '#333',
+                                          textAlign: 'center'
+                                       }}>{entry.month}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#495057'
+                                       }}>{entry.totalFlights.toLocaleString()}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#495057'
+                                       }}>{entry.totalPassengers.toLocaleString()}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#28a745',
+                                          fontWeight: '500'
+                                       }}>${entry.totalRevenue.toLocaleString()}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#007bff',
+                                          fontWeight: '500'
+                                       }}>{revenueRate}%</td>
+                                    </tr>
+                                 );
+                              })}
+                           </tbody>
+                        </table>
+                     </div>
+                  </div>
                )}
             </div>
          )}
