@@ -109,18 +109,7 @@ const BookingConfirmation: React.FC = () => {
   };
 
   const handlePayment = async () => {
-    try {
-      const response = await paymentService.createPayment(booking.confirmationCode);
-      if (response && response.data) {
-        console.log('Redirecting to payment URL:', response.data);
-        window.location.href = response.data;
-      } else {
-        alert('Invalid payment URL received. Please try again.');
-      }
-    } catch (error) {
-      console.error('Payment creation failed:', error);
-      alert('Failed to create payment. Please try again later.');
-    }
+    navigate('/payment/' + booking.confirmationCode);
   };
 
   return (

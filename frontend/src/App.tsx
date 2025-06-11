@@ -20,6 +20,7 @@ import ResetPassword from './components/profile/ResetPassword';
 import PaymentResult from './components/payment/PaymentResult';
 import ForgetPasswordForm from './components/auth/ForgetPasswordForm';
 import ResetPasswordForm from './components/auth/ResetPasswordForm';
+import PaymentHandler from './components/payment/PaymentHandler';
 
 // Management Components
 import FlightManagement from './components/admin/FlightManagement';
@@ -49,7 +50,10 @@ const App: React.FC = () => {
             <Route path="/booking" element={<BookingForm />} />
             <Route path="/profile/edit" element={<EditProfile />} />
             <Route path="/profile/reset-password" element={<ResetPassword />} />
-            <Route path="/payment/result" element={<PaymentResult />} />
+
+            {/* Payment routes */}
+            <Route path="/payment/:confirmationCode" element={<PaymentHandler />} />
+            <Route path="/payment-result" element={<PaymentResult />} />
 
             {/* Debug Route */}
             <Route path="/debug/log-me-in/:accountName" element={<DebugLogin />} />
@@ -155,6 +159,7 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+
 
             {/* Fallback Route */}
             <Route path="*" element={<div>Page not found</div>} />

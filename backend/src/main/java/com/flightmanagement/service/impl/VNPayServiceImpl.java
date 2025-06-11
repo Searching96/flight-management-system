@@ -5,7 +5,6 @@ import com.flightmanagement.dto.TicketDto;
 import com.flightmanagement.service.PaymentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import com.flightmanagement.service.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,29 +32,31 @@ import java.util.regex.Pattern;
 public class VNPayServiceImpl implements PaymentService {
 
     @Autowired
-    private TicketService ticketService; // Assuming this service provides ticket-related operations
+    private TicketService ticketService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final String VERSION = "2.1.0";
     private static final String TIME_ZONE = "Etc/GMT+7";
     private static final String CURRENCY_CODE = "VND";
+    private static final int TIME_PREFIX_LENGTH = 6; // HHMMSS format
 
     @Override
     public Map<String, Object> createPayment(String confirmationCode, String bankCode, String language,
-            HttpServletRequest request) {
+                                             HttpServletRequest request) {
         try {
-            // Generate unique transaction reference (must be unique per day)
+            // Calculate amount
             BigDecimal amount = ticketService.getTicketsOnConfirmationCode(confirmationCode)
                     .stream()
                     .filter(ticketDto -> ticketDto.getTicketStatus() == 0 && ticketDto.getPaymentTime() == null)
                     .map(TicketDto::getFare)
                     .reduce(BigDecimal.ZERO, BigDecimal::add)
                     .multiply(BigDecimal.valueOf(100));
-            String txnRef = HexFormat.of().formatHex(confirmationCode.getBytes(StandardCharsets.UTF_8));
+
+            // Generate unique transaction reference with HHMMSS prefix
+            String txnRef = generateUniqueTxnRef(confirmationCode);
             String ipAddr = VNPayConfig.getIpAddress(request);
 
-            // Format orderInfo to match VNPAY requirements (no special characters, no
-            // accented Vietnamese)
+            // Format orderInfo to match VNPAY requirements
             String rawOrderInfo = "Thanh toan ve may bay. Ma don hang:" + confirmationCode;
             String orderInfo = removeAccent(rawOrderInfo);
 
@@ -63,8 +64,7 @@ public class VNPayServiceImpl implements PaymentService {
             Calendar calendar = createCalendar();
             String createDate = formatter.format(calendar.getTime());
 
-            // Calculate amount (must multiply by 100 to remove decimal points as per VNPAY
-            // requirements)
+            // Validate amount
             try {
                 if (amount.compareTo(BigDecimal.ZERO) < 0) {
                     throw new IllegalArgumentException("Invalid payment amount");
@@ -78,37 +78,116 @@ public class VNPayServiceImpl implements PaymentService {
 
             // Build parameters map according to VNPAY API documentation
             Map<String, String> params = new HashMap<>();
-            params.put("vnp_Version", VERSION); // Required: API version
-            params.put("vnp_Command", "pay"); // Required: payment command
-            params.put("vnp_TmnCode", VNPayConfig.vnp_TmnCode); // Required: Terminal ID
-            params.put("vnp_Amount", amount.toBigInteger().toString());// Required: Amount (×100, no decimals)
-            params.put("vnp_CurrCode", CURRENCY_CODE); // Required: Currency (VND only)
-            params.put("vnp_TxnRef", txnRef); // Required: Unique transaction reference
-            params.put("vnp_OrderInfo", orderInfo); // Required: Order description
-            params.put("vnp_OrderType", "190000"); // Required: Order type code (airline tickets)
-            params.put("vnp_Locale", language != null && !language.isEmpty() ? language : "vn"); // Required: Language
-            params.put("vnp_ReturnUrl", VNPayConfig.vnp_ReturnUrl); // Required: Return URL
-            params.put("vnp_IpAddr", ipAddr); // Required: Customer IP
-            params.put("vnp_CreateDate", createDate); // Required: Create date (GMT+7)
+            params.put("vnp_Version", VERSION);
+            params.put("vnp_Command", "pay");
+            params.put("vnp_TmnCode", VNPayConfig.vnp_TmnCode);
+            params.put("vnp_Amount", amount.toBigInteger().toString());
+            params.put("vnp_CurrCode", CURRENCY_CODE);
+            params.put("vnp_TxnRef", txnRef);
+            params.put("vnp_OrderInfo", orderInfo);
+            params.put("vnp_OrderType", "190000");
+            params.put("vnp_Locale", language != null && !language.isEmpty() ? language : "vn");
+            params.put("vnp_ReturnUrl", VNPayConfig.vnp_ReturnUrl);
+            params.put("vnp_IpAddr", ipAddr);
+            params.put("vnp_CreateDate", createDate);
 
-            // Add bank code if provided (optional parameter)
+            // Add bank code if provided
             if (bankCode != null && !bankCode.isEmpty()) {
-                params.put("vnp_BankCode", bankCode); // Optional: Banking method
+                params.put("vnp_BankCode", bankCode);
             }
 
             // Add expiration date (15 minutes from now)
             calendar.add(Calendar.MINUTE, 15);
-            params.put("vnp_ExpireDate", formatter.format(calendar.getTime())); // Required: Expiration time
+            params.put("vnp_ExpireDate", formatter.format(calendar.getTime()));
 
             // Generate payment URL with secure hash
             String paymentUrl = buildPaymentUrl(params);
 
+            // Log payment creation for debugging - Current time: 2025-06-11 05:07:16
+            System.out.println("Payment created at 2025-06-11 05:07:16 UTC by thinh0704hcm");
+            System.out.println("TxnRef generated: " + txnRef + " for confirmation: " + confirmationCode);
+
             // Format response
             return formatCreatePaymentResponse(paymentUrl, orderInfo, txnRef);
-        } catch (
-
-        Exception e) {
+        } catch (Exception e) {
             return createErrorResponse(e.getMessage());
+        }
+    }
+
+    /**
+     * Generate unique transaction reference with HHMMSS prefix + hex confirmation code
+     * Format: [HHMMSS][HEX_CONFIRMATION_CODE]
+     * Example: 050716486454C4C4F (HHMMSS + hex confirmation code)
+     */
+    private String generateUniqueTxnRef(String confirmationCode) {
+        // Get current time and format as HHMMSS (24-hour format)
+        LocalDateTime now = LocalDateTime.now();
+        String timePrefix = now.format(DateTimeFormatter.ofPattern("HHmmss"));
+
+        // Convert confirmation code to hex
+        String hexConfirmationCode = HexFormat.of().formatHex(confirmationCode.getBytes(StandardCharsets.UTF_8));
+
+        // Combine time prefix with hex confirmation code
+        String txnRef = timePrefix + hexConfirmationCode;
+
+        // Ensure it doesn't exceed 100 characters (VNPAY limit)
+        if (txnRef.length() > 100) {
+            // Truncate hex part if necessary, keeping the full time prefix
+            int maxHexLength = 100 - TIME_PREFIX_LENGTH;
+            if (maxHexLength > 0) {
+                hexConfirmationCode = hexConfirmationCode.substring(0, Math.min(hexConfirmationCode.length(), maxHexLength));
+                txnRef = timePrefix + hexConfirmationCode;
+            } else {
+                // Fallback: use only time prefix if confirmation code is too long
+                txnRef = timePrefix;
+            }
+        }
+
+        return txnRef;
+    }
+
+    /**
+     * Extract confirmation code from txnRef
+     * Handles both old format (hex only) and new format (HHMMSS + hex)
+     */
+    private String extractConfirmationCode(String txnRef) {
+        try {
+            String hexPart;
+
+            // Check if txnRef starts with exactly 6 digits (HHMMSS format)
+            if (txnRef.length() > TIME_PREFIX_LENGTH && txnRef.substring(0, TIME_PREFIX_LENGTH).matches("\\d{6}")) {
+                // New format: HHMMSS + hex
+                hexPart = txnRef.substring(TIME_PREFIX_LENGTH);
+
+                // Log the extracted parts for debugging
+                String timePart = txnRef.substring(0, TIME_PREFIX_LENGTH);
+                System.out.println("Extracted time: " + timePart + " (HH:mm:ss = " +
+                        timePart.substring(0, 2) + ":" + timePart.substring(2, 4) + ":" + timePart.substring(4, 6) +
+                        "), hex: " + hexPart);
+            } else if (txnRef.contains("-")) {
+                // Legacy format with dash: counter-hex
+                String[] parts = txnRef.split("-", 2);
+                if (parts.length > 1) {
+                    hexPart = parts[1];
+                } else {
+                    hexPart = txnRef;
+                }
+            } else {
+                // Old format: assume entire string is hex
+                hexPart = txnRef;
+            }
+
+            // Convert hex back to confirmation code
+            if (hexPart.isEmpty()) {
+                return txnRef; // Return original if no hex part found
+            }
+
+            byte[] decodedBytes = HexFormat.of().parseHex(hexPart);
+            return new String(decodedBytes, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            // Log error but don't fail the transaction
+            System.err.println("Error extracting confirmation code from txnRef: " + txnRef + " - " + e.getMessage());
+            return txnRef; // Return as-is for manual handling
         }
     }
 
@@ -118,17 +197,18 @@ public class VNPayServiceImpl implements PaymentService {
         Map<String, String> fields = new HashMap<>();
 
         // Extract parameters from request
-        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
+        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements(); ) {
             String fieldName = params.nextElement();
             String fieldValue = request.getParameter(fieldName);
             if ((fieldValue != null) && (!fieldValue.isEmpty())) {
                 fields.put(fieldName, fieldValue);
             }
         }
+
         // Verify signature
         String vnp_SecureHash = request.getParameter("vnp_SecureHash");
         fields.remove("vnp_SecureHash");
-        fields.remove("vnp_SecureHashType"); // Add this line
+        fields.remove("vnp_SecureHashType");
 
         String signValue = VNPayConfig.hashAllFields(fields);
         boolean checkSignature = signValue.equals(vnp_SecureHash);
@@ -136,15 +216,13 @@ public class VNPayServiceImpl implements PaymentService {
 
         // RED ALERT - MEANT TO BE REMOVE AND SWITCHED TO IPN
         if (checkSignature && ("00".equals(responseCode) || "01".equals(responseCode))) {
-            byte[] decodedBytes = HexFormat.of().parseHex(request.getParameter("vnp_TxnRef"));
-            String confirmationCode = new String(decodedBytes, StandardCharsets.UTF_8);
+            String confirmationCode = extractConfirmationCode(request.getParameter("vnp_TxnRef"));
 
             List<TicketDto> tickets = ticketService.getTicketsOnConfirmationCode(confirmationCode);
             tickets.forEach(ticket -> ticketService.payTicket(ticket.getTicketId()));
         }
-        ;
 
-        // Return all relevant info for UI display, no DB update here
+        // Return all relevant info for UI display
         response.put("code", responseCode);
         response.put("message", getResponseMessage(responseCode));
         response.put("signatureValid", checkSignature);
@@ -156,7 +234,7 @@ public class VNPayServiceImpl implements PaymentService {
         response.put("cardType", fields.get("vnp_CardType"));
         response.put("paymentDate", fields.get("vnp_PayDate"));
         response.put("transactionStatus", fields.get("vnp_TransactionStatus"));
-        response.put("data", fields); // Optional: include all raw fields
+        response.put("data", fields);
 
         return response;
     }
@@ -164,7 +242,7 @@ public class VNPayServiceImpl implements PaymentService {
     @Override
     public Map<String, String> processIPN(HttpServletRequest request) {
         Map<String, String> fields = new HashMap<>();
-        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
+        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements(); ) {
             String fieldName = params.nextElement();
             String fieldValue = request.getParameter(fieldName);
             if (fieldValue != null && !fieldValue.isEmpty()) {
@@ -186,8 +264,7 @@ public class VNPayServiceImpl implements PaymentService {
                 return result;
             }
 
-            byte[] decodedBytes = HexFormat.of().parseHex(request.getParameter("vnp_TxnRef"));
-            String confirmationCode = new String(decodedBytes, StandardCharsets.UTF_8);
+            String confirmationCode = extractConfirmationCode(request.getParameter("vnp_TxnRef"));
             String amount = fields.get("vnp_Amount");
             String responseCode = fields.get("vnp_ResponseCode");
 
@@ -250,12 +327,10 @@ public class VNPayServiceImpl implements PaymentService {
         try {
             // Common request parameters
             Map<String, String> paramValues = new HashMap<>();
-
             paramValues.put("command", "querydr");
 
-            String txn_ref = HexFormat.of().formatHex(orderId.getBytes(StandardCharsets.UTF_8));
+            String txn_ref = generateUniqueTxnRef(orderId);
             paramValues.put("txnRef", txn_ref);
-
             paramValues.put("transDate", transDate);
             paramValues.put("orderInfo", "Kiem tra ket qua GD OrderId:" + orderId);
 
@@ -284,7 +359,7 @@ public class VNPayServiceImpl implements PaymentService {
 
     @Override
     public Map<String, Object> refundTransaction(String orderId, String amount, String transDate, String user,
-            String transType, HttpServletRequest request) {
+                                                 String transType, HttpServletRequest request) {
         try {
             // Common request parameters
             Map<String, String> paramValues = new HashMap<>();
@@ -360,11 +435,7 @@ public class VNPayServiceImpl implements PaymentService {
         return params;
     }
 
-    /**
-     * Builds the payment URL for redirect-based payment
-     */
     private String buildPaymentUrl(Map<String, String> vnp_Params) {
-        // Sort field names (required for correct checksum calculation)
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
 
@@ -376,12 +447,10 @@ public class VNPayServiceImpl implements PaymentService {
             String fieldName = itr.next();
             String fieldValue = vnp_Params.get(fieldName);
             if ((fieldValue != null) && (!fieldValue.isEmpty())) {
-                // Build hash data
                 hashData.append(fieldName);
                 hashData.append('=');
                 hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
 
-                // Build query
                 query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII));
                 query.append('=');
                 query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
@@ -393,7 +462,6 @@ public class VNPayServiceImpl implements PaymentService {
             }
         }
 
-        // Add secure hash to query string
         String queryUrl = query.toString();
         String vnp_SecureHash = VNPayConfig.generateHmacSHA512Signature(hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
@@ -401,10 +469,6 @@ public class VNPayServiceImpl implements PaymentService {
         return VNPayConfig.vnp_PayUrl + "?" + queryUrl;
     }
 
-    /**
-     * Remove diacritical marks (accents) from Vietnamese text
-     * VNPAY requires text without accents and special characters
-     */
     private String removeAccent(String text) {
         String temp = Normalizer.normalize(text, Normalizer.Form.NFD);
         Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
@@ -413,14 +477,10 @@ public class VNPayServiceImpl implements PaymentService {
         return temp.replaceAll("[^a-zA-Z0-9. ]", " ");
     }
 
-    /**
-     * Makes an API request to VNPay with the provided parameters and secure hash
-     */
     private Map<String, Object> makeVnpayApiRequest(ObjectNode vnp_Params, String vnp_SecureHash) {
         try {
             vnp_Params.put("vnp_SecureHash", vnp_SecureHash);
 
-            // Make API call to VNPay
             URL url = new URI(VNPayConfig.vnp_ApiUrl).toURL();
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
@@ -437,25 +497,15 @@ public class VNPayServiceImpl implements PaymentService {
         }
     }
 
-    /**
-     * Creates a standard date formatter in the expected VNPay format
-     */
     private SimpleDateFormat createDateFormatter() {
         return new SimpleDateFormat("yyyyMMddHHmmss");
     }
 
-    /**
-     * Creates a calendar with the VNPay expected timezone
-     */
     private Calendar createCalendar() {
         return Calendar.getInstance(TimeZone.getTimeZone(TIME_ZONE));
     }
 
-    /**
-     * Processes HTTP connection response
-     */
     private static Map<String, Object> getResponse(HttpURLConnection con) throws IOException {
-        // int responseCode = con.getResponseCode();
         BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
         String output;
         StringBuilder responseData = new StringBuilder();
@@ -471,9 +521,6 @@ public class VNPayServiceImpl implements PaymentService {
         return response;
     }
 
-    /**
-     * Creates a formatted response for payment creation
-     */
     private Map<String, Object> formatCreatePaymentResponse(String paymentUrl, String orderInfo, String orderCode) {
         Map<String, Object> response = new HashMap<>();
         Map<String, Object> responseData = new HashMap<>();
@@ -486,9 +533,6 @@ public class VNPayServiceImpl implements PaymentService {
         return response;
     }
 
-    /**
-     * Creates a standardized error response
-     */
     private Map<String, Object> createErrorResponse(String errorMessage) {
         Map<String, Object> response = new HashMap<>();
         Map<String, Object> responseData = new HashMap<>();
