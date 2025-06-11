@@ -1,33 +1,92 @@
-HELP.md
+# Build outputs
 target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+build/
+bin/
+out/
+dist/
+release/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# IDEs
+.idea/
 *.iml
 *.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+.springBeans
+.sts4-cache
+nbproject/
+.nb-gradle/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
+# Maven
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+pom.xml.bak
+.mvn/timing.properties
+!.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle/
+.gradletasknamecache
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.test
+application-dev.properties
+application-prod.properties
+
+# OS files
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+*~
+.directory
+.Trash-*
+
+# Mobile development
+*.apk
+*.aab
+*.dex
+google-services.json
+Pods/
+
+# Node.js
+node_modules/
+.npm
+.yarn-integrity
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+temp/
+tmp/
+
+# Documentation
+HELP.md
+
+# Keep important files
+!**/src/main/**/target/
+!**/src/test/**/target/
 !**/src/main/**/build/
 !**/src/test/**/build/
-
-### VS Code ###
-.vscode/

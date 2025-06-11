@@ -9,6 +9,7 @@ const BookingConfirmation: React.FC = () => {
   const navigate = useNavigate();
 
   const { confirmationCode, confirmationData, message } = location.state || {};
+
   if (!confirmationCode || !confirmationData) {
     return (
       <Container className="py-5">
@@ -31,16 +32,85 @@ const BookingConfirmation: React.FC = () => {
   }
 
   const booking: BookingConfirmationType = confirmationData;
-  const isPaid = booking.tickets.every(ticket => ticket.ticketStatus === 1); // Check if booking status is paid (1)
+  const isPaid = booking.tickets.every(ticket => ticket.ticketStatus === 1);
 
   const handlePrint = () => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+    @media print {
+      /* Remove all margins and padding from page */
+      @page {
+        margin: 0 !important;
+        size: A4;
+      }
+      
+      /* Remove body margins */
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      
+      /* Hide everything except print area */
+      body * {
+        visibility: hidden;
+      }
+      
+      .print-area, .print-area * {
+        visibility: visible;
+      }
+      
+      .print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        margin: 0;
+        padding: 15px; /* Only internal padding for content */
+        box-sizing: border-box;
+      }
+      
+      .no-print {
+        display: none !important;
+      }
+      
+      .print-header {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #333;
+        padding-bottom: 10px;
+      }
+      
+      /* Remove Bootstrap container padding/margins */
+      .container, .container-fluid {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: none !important;
+        width: 100% !important;
+      }
+      
+      /* Remove card margins */
+      .card {
+        margin: 0 0 15px 0 !important;
+        box-shadow: none !important;
+      }
+    }
+  `;
+
+    document.head.appendChild(style);
+
     window.print();
+
+    // Clean up
+    setTimeout(() => {
+      document.head.removeChild(style);
+
+    }, 1000);
   };
 
   const handlePayment = async () => {
     try {
       const response = await paymentService.createPayment(booking.confirmationCode);
-      // Use window.location.href for a full page redirect to the payment URL
       if (response && response.data) {
         console.log('Redirecting to payment URL:', response.data);
         window.location.href = response.data;
@@ -51,152 +121,142 @@ const BookingConfirmation: React.FC = () => {
       console.error('Payment creation failed:', error);
       alert('Failed to create payment. Please try again later.');
     }
-  }
+  };
 
   return (
     <Container className="py-5">
       <Row className="justify-content-center">
         <Col lg={8}>
-          {/* Success Header */}
-          <Card className="mb-4 border-success">
-            <Card.Body className="text-center py-4">
-              <div className="display-1 text-success mb-3">✅</div>
-              <h1 className="text-success mb-3">Đặt chỗ thành công!</h1>
-              <div className="mb-3">
-                <Badge bg={isPaid ? "success" : "warning"} className="fs-5 px-3 py-2">
-                  {isPaid ? 
-                    <><i className="bi bi-check-circle me-2"></i>Đã thanh toán</> : 
-                    <><i className="bi bi-clock-history me-2"></i>Chờ thanh toán</>
-                  }
-                </Badge>
-              </div>
-              {message && (
-                <Alert variant="success" className="mb-0">
-                  {message}
+          {/* Print Area - This will be the only thing printed */}
+          <div className="print-area">
+            {/* Success Header */}
+            <Card className="mb-4 border-success">
+              <Card.Body className="text-center py-4">
+                <div className="display-1 text-success mb-3">✅</div>
+                <h1 className="text-success mb-3">Đặt chỗ thành công!</h1>
+                <div className="mb-3">
+                  <Badge bg={isPaid ? "success" : "warning"} className="fs-5 px-3 py-2">
+                    {isPaid ?
+                      <><i className="bi bi-check-circle me-2"></i>Đã thanh toán</> :
+                      <><i className="bi bi-clock-history me-2"></i>Chờ thanh toán</>
+                    }
+                  </Badge>
+                </div>
+                {message && (
+                  <Alert variant="success" className="mb-0 no-print">
+                    {message}
+                  </Alert>
+                )}
+              </Card.Body>
+            </Card>
+
+            {/* Confirmation Code */}
+            <Card className="mb-4 border-primary">
+              <Card.Header className="bg-primary text-white">
+                <h4 className="mb-0">Mã xác nhận của bạn</h4>
+              </Card.Header>
+              <Card.Body className="text-center print-section">
+                <div className="bg-light p-4 rounded mb-3">
+                  <h2 className="text-primary fw-bold mb-0 font-monospace">
+                    {booking.confirmationCode}
+                  </h2>
+                </div>
+                <Alert variant="warning" className="mb-0">
+                  <strong>⚠️ Quan trọng:</strong> Vui lòng lưu mã xác nhận này.
+                  Bạn sẽ cần nó để truy xuất hoặc quản lý đặt chỗ sau này.
                 </Alert>
-              )}
-            </Card.Body>
-          </Card>
+              </Card.Body>
+            </Card>
 
-          {/* Confirmation Code */}
-          <Card className="mb-4 border-primary">
-            <Card.Header className="bg-primary text-white">
-              <h4 className="mb-0">Mã xác nhận của bạn</h4>
-            </Card.Header>
-            <Card.Body className="text-center">
-              <div className="bg-light p-4 rounded mb-3">
-                <h2 className="text-primary fw-bold mb-0 font-monospace">
-                  {booking.confirmationCode}
-                </h2>
-              </div>
-              <Alert variant="warning" className="mb-0">
-                <strong>⚠️ Quan trọng:</strong> Vui lòng lưu mã xác nhận này.
-                Bạn sẽ cần nó để truy xuất hoặc quản lý đặt chỗ sau này.
-              </Alert>
-            </Card.Body>
-          </Card>
-
-          {/* Booking Details */}
-          <Card className="mb-4">
-            <Card.Header>
-              <h4 className="mb-0">Chi tiết đặt chỗ</h4>
-            </Card.Header>
-            <Card.Body>
-              {/* Flight Information */}
-              <div className="mb-4">
-                <h5 className="text-primary mb-3">Thông tin chuyến bay</h5>
-                <Row className="g-3">
-                  <Col sm={6}>
+            {/* Booking Details */}
+            <Card className="mb-4">
+              <Card.Header>
+                <h4 className="mb-0">Chi tiết đặt chỗ</h4>
+              </Card.Header>
+              <Card.Body>
+                {/* Flight Information */}
+                <div className="mb-4 print-section">
+                  <h5 className="text-primary mb-3">Thông tin chuyến bay</h5>
+                  <div className="print-row">
                     <strong>Chuyến bay:</strong>
-                    <div>{booking.flightInfo.flightCode}</div>
-                  </Col>
-                  <Col sm={6}>
+                    <span>{booking.flightInfo.flightCode}</span>
+                  </div>
+                  <div className="print-row">
                     <strong>Tuyến đường:</strong>
-                    <div>{booking.flightInfo.departureCity} → {booking.flightInfo.arrivalCity}</div>
-                  </Col>
-                  <Col sm={6}>
+                    <span>{booking.flightInfo.departureCity} → {booking.flightInfo.arrivalCity}</span>
+                  </div>
+                  <div className="print-row">
                     <strong>Khởi hành:</strong>
-                    <div>
+                    <span>
                       {new Date(booking.flightInfo.departureTime).toLocaleDateString()} lúc{' '}
                       {new Date(booking.flightInfo.departureTime).toLocaleTimeString()}
-                    </div>
-                  </Col>
+                    </span>
+                  </div>
                   {booking.flightInfo.arrivalTime && (
-                    <Col sm={6}>
+                    <div className="print-row">
                       <strong>Đến:</strong>
-                      <div>
+                      <span>
                         {new Date(booking.flightInfo.arrivalTime).toLocaleDateString()} lúc{' '}
                         {new Date(booking.flightInfo.arrivalTime).toLocaleTimeString()}
-                      </div>
-                    </Col>
+                      </span>
+                    </div>
                   )}
-                </Row>
-              </div>
+                </div>
 
-              {/* Passenger Information */}
-              <div className="mb-4">
-                <h5 className="text-primary mb-3">Thông tin hành khách</h5>
-                <ListGroup>
-                  {booking.tickets.map((ticket, index) => (
-                    <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong>
-                          Hành khách {index + 1}: {booking.passengers && booking.passengers[index]}
-                        </strong>
-                        <div className="text-muted">
-                          Ghế: {ticket.seatNumber}{' '}
-                          {ticket.ticketStatus !== undefined && (
-                            <Badge bg={ticket.ticketStatus === 1 ? "success" : "warning"} className="ms-2">
-                              {ticket.ticketStatus === 1 ? "Đã thanh toán" : "Chờ thanh toán"}
-                            </Badge>
-                          )}
+                {/* Passenger Information */}
+                <div className="mb-4 print-section">
+                  <h5 className="text-primary mb-3">Thông tin hành khách</h5>
+                  <ListGroup>
+                    {booking.tickets.map((ticket, index) => (
+                      <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>
+                            Hành khách {index + 1}: {booking.passengers && booking.passengers[index]}
+                          </strong>
+                          <div className="text-muted">
+                            Ghế: {ticket.seatNumber}{' '}
+                            {ticket.ticketStatus !== undefined && (
+                              <Badge bg={ticket.ticketStatus === 1 ? "success" : "warning"} className="ms-2">
+                                {ticket.ticketStatus === 1 ? "Đã thanh toán" : "Chờ thanh toán"}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <Badge bg="primary" className="fs-6">${ticket.fare}</Badge>
-                    </ListGroup.Item>
-                  ))}
-                </ListGroup>
-              </div>
+                        <Badge bg="primary" className="fs-6">${ticket.fare}</Badge>
+                      </ListGroup.Item>
+                    ))}
+                  </ListGroup>
+                </div>
 
-              {/* Booking Summary */}
-              <div className="mb-0">
-                <h5 className="text-primary mb-3">Tóm tắt đặt chỗ</h5>
-                <Row className="g-3">
-                  <Col sm={6}>
+                {/* Booking Summary */}
+                <div className="mb-0 print-section">
+                  <h5 className="text-primary mb-3">Tóm tắt đặt chỗ</h5>
+                  <div className="print-row">
                     <strong>Ngày đặt:</strong>
-                    <div>{new Date(booking.bookingDate).toLocaleDateString()}</div>
-                  </Col>
-                  <Col sm={6}>
+                    <span>{new Date(booking.bookingDate).toLocaleDateString()}</span>
+                  </div>
+                  <div className="print-row">
                     <strong>Tổng hành khách:</strong>
-                    <div>{booking.tickets.length}</div>
-                  </Col>
-                  <Col sm={6}>
+                    <span>{booking.tickets.length}</span>
+                  </div>
+                  <div className="print-row">
                     <strong>Trạng thái thanh toán:</strong>
-                    <div>
-                      <Badge bg={isPaid ? "success" : "warning"}>
-                        {isPaid ? "Đã thanh toán" : "Chờ thanh toán"}
-                      </Badge>
-                    </div>
-                  </Col>
-                  <Col xs={12}>
-                    <div className="border-top pt-3">
-                      <Row>
-                        <Col>
-                          <strong className="fs-5">Tổng tiền:</strong>
-                        </Col>
-                        <Col className="text-end">
-                          <strong className="fs-4 text-primary">${booking.totalAmount}</strong>
-                        </Col>
-                      </Row>
-                    </div>
-                  </Col>
-                </Row>
-              </div>
-            </Card.Body>
-          </Card>
+                    <span>
+                      {isPaid ? "Đã thanh toán" : "Chờ thanh toán"}
+                    </span>
+                  </div>
+                  <div className="print-total print-row">
+                    <strong>Tổng tiền:</strong>
+                    <strong>${booking.totalAmount}</strong>
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
 
-          {/* Action Buttons */}
-          <Card className="mb-4">
+          </div>
+
+          {/* Action Buttons - Hidden during print */}
+          <Card className="mb-4 no-print">
             <Card.Body>
               <Row className="g-3">
                 <Col xs={12} lg={isPaid ? 4 : 3}>
@@ -205,6 +265,7 @@ const BookingConfirmation: React.FC = () => {
                     variant="outline-secondary"
                     className="w-100 mb-2"
                   >
+                    <i className="bi bi-printer me-2"></i>
                     In phiếu đặt chỗ
                   </Button>
                 </Col>
@@ -242,8 +303,8 @@ const BookingConfirmation: React.FC = () => {
             </Card.Body>
           </Card>
 
-          {/* Next Steps */}
-          <Card className="bg-light">
+          {/* Next Steps - Hidden during print */}
+          <Card className="bg-light no-print">
             <Card.Header>
               <h4 className="mb-0">Tiếp theo là gì?</h4>
             </Card.Header>
