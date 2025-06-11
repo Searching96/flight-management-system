@@ -4,6 +4,7 @@ import { chatService, messageService } from '../../services';
 import { Chatbox, Message } from '../../models/Chat';
 import { useAuth } from '../../hooks/useAuth';
 import { webSocketService } from '../../services/websocketService';
+import { accountChatboxService } from '../../services/accountChatboxService';
 
 interface FormattedMessage {
   messageId?: number;
@@ -24,6 +25,7 @@ interface TypingUser {
 const CustomerSupport: React.FC = () => {
   const { user } = useAuth();
   const [chatboxes, setChatboxes] = useState<Chatbox[]>([]);
+  const [unreadCounts, setUnreadCounts] = useState<Record<number, number>>({});
   const [selectedChatbox, setSelectedChatbox] = useState<Chatbox | null>(null);
   const [messages, setMessages] = useState<FormattedMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -116,8 +118,24 @@ const CustomerSupport: React.FC = () => {
       }
       
       setChatboxes(data);
+      console.log('Loaded chatboxes:', data);
+      
+      // Load unread counts for employee
+      if (user?.id) {
+        try {
+          console.log('Loading unread counts for user:', user.id);
+          const unreadData = await accountChatboxService.getUnreadCountsForAllChatboxes(user.id);
+          console.log('Unread counts received:', unreadData);
+          setUnreadCounts(unreadData);
+        } catch (error) {
+          console.error('Failed to load unread counts:', error);
+          // Set empty unread counts on error
+          setUnreadCounts({});
+        }
+      }
     } catch (err: any) {
       setError('Failed to load chatboxes');
+      console.error('Error loading chatboxes:', err);
     } finally {
       setLoading(false);
       setChatboxListLoading(false);
@@ -202,9 +220,30 @@ const CustomerSupport: React.FC = () => {
     }
   };
 
-  const handleChatboxSelect = (chatbox: Chatbox) => {
+  const handleChatboxSelect = async (chatbox: Chatbox) => {
     setSelectedChatbox(chatbox);
     setError('');
+    
+    // Update last visit time when selecting chatbox
+    if (user?.id && chatbox.chatboxId) {
+      try {
+        console.log(`Updating last visit time for user ${user.id} and chatbox ${chatbox.chatboxId}`);
+        await accountChatboxService.updateLastVisitTime(user.id, chatbox.chatboxId);
+        console.log('Last visit time updated successfully');
+        
+        // Remove unread count for this chatbox
+        setUnreadCounts(prev => {
+          const newCounts = {
+            ...prev,
+            [chatbox.chatboxId!]: 0
+          };
+          console.log('Updated unread counts:', newCounts);
+          return newCounts;
+        });
+      } catch (error) {
+        console.error('Failed to update last visit time:', error);
+      }
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -571,9 +610,20 @@ const CustomerSupport: React.FC = () => {
                     <div className="flex-grow-1 min-width-0">
                       <div className="d-flex justify-content-between align-items-center mb-1">
                         <h6 className="mb-0 text-truncate">{chatbox.customerName || 'Khách hàng'}</h6>
-                        <small className="text-muted flex-shrink-0 ms-2">
-                          {chatbox.lastMessageTime ? formatTime(chatbox.lastMessageTime) : '14:30'}
-                        </small>
+                        <div className="d-flex align-items-center flex-shrink-0 ms-2">
+                          <small className="text-muted me-2">
+                            {chatbox.lastMessageTime ? formatTime(chatbox.lastMessageTime) : '14:30'}
+                          </small>
+                          {(() => {
+                            const unreadCount = unreadCounts[chatbox.chatboxId!] || 0;
+                            console.log(`Chatbox ${chatbox.chatboxId} unread count:`, unreadCount);
+                            return unreadCount > 0 ? (
+                              <span className="badge bg-primary rounded-pill" style={{ fontSize: '0.7rem' }}>
+                                {unreadCount}
+                              </span>
+                            ) : null;
+                          })()}
+                        </div>
                       </div>
                       
                       {(chatbox.lastMessageContent || 'Tin nhắn mẫu từ khách hàng') && (

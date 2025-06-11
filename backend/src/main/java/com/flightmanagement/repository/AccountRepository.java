@@ -32,4 +32,7 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
             "FROM Account a WHERE a.email = :email AND a.deletedAt IS NULL")
     boolean existsByEmailAndNotDeleted(String email);
+
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM Account a WHERE a.accountId = ?1 AND a.deletedAt IS NULL")
+    boolean existsById(Integer accountId);
 }
