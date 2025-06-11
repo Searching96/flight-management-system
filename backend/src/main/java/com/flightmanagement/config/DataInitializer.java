@@ -136,9 +136,6 @@ public class DataInitializer implements CommandLineRunner {
                 accountingEmployee.setEmail("accounting@flightms.com");
                 accountingEmployee.setPassword("123Abc");
                 accountingEmployee.setCitizenId("555555555");
-                accountingEmployee.setPhoneNumber("0123456785");
-                accountingEmployee.setAccountType(2); // Employee
-                accountingEmployee.setEmployeeType(4); // Nhân viên kế toán
                 accountService.createAccount(accountingEmployee);
 
                 // Nhân viên quản lý nhân sự

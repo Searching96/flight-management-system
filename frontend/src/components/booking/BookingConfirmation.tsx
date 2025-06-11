@@ -7,6 +7,7 @@ import { paymentService } from '../../services';
 const BookingConfirmation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  //const { user } = useAuth();
 
   const { confirmationCode, confirmationData, message } = location.state || {};
   if (!confirmationCode || !confirmationData) {
@@ -52,6 +53,19 @@ const BookingConfirmation: React.FC = () => {
       alert('Failed to create payment. Please try again later.');
     }
   }
+
+  // const handleScoreUpdate = async () => {
+  //   if (!user) return;
+
+  //   try {
+  //     // Assuming updateScore is a method in customerService to update the user's score
+  //     await customerService.updateScore(user.id, booking.totalAmount);
+  //     alert('Điểm thưởng của bạn đã được cập nhật!');
+  //   } catch (error) {
+  //     console.error('Failed to update score:', error);
+  //     alert('Không thể cập nhật điểm thưởng. Vui lòng thử lại sau.');
+  //   }
+  // }
 
   return (
     <Container className="py-5">

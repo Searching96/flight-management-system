@@ -350,17 +350,8 @@ const BookingForm: React.FC = () => {
         }
       }
 
-      // Save earned score to customer account after successful booking
-      if (user?.accountTypeName === "Customer" && user?.id && score > 0) {
-        try {
-          const updatedScore = customerScore + score;
-          await customerService.updateCustomerScore(user.id, updatedScore);
-          console.log(`Score updated: ${customerScore} + ${score} = ${updatedScore}`);
-        } catch (err: any) {
-          console.error("Error updating customer score:", err);
-          // Don't fail the booking if score update fails
-        }
-      }
+      // Remove score update from here - it should happen after payment
+      // Score will be updated when payment is successful
 
       const confirmationData = bookingConfirmationService.createConfirmation(
         confirmationCode,

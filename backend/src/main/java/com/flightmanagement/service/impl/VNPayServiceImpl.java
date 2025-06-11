@@ -141,6 +141,8 @@ public class VNPayServiceImpl implements PaymentService {
 
             List<TicketDto> tickets = ticketService.getTicketsOnConfirmationCode(confirmationCode);
             tickets.forEach(ticket -> ticketService.payTicket(ticket.getTicketId()));
+
+            
         }
         ;
 

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Alert, Button, Spinner } from 'react-bootstrap';
-import { paymentService } from '../../services';
+import { paymentService, customerService, ticketService } from '../../services';
+import { useAuth } from '../../hooks/useAuth';
 import { PaymentReturnResponse } from '../../models';
 
 const PaymentResult: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState<'success' | 'pending' | 'failed'>('pending');
   const [processingError, setProcessingError] = useState<string | null>(null);
@@ -28,6 +30,72 @@ const PaymentResult: React.FC = () => {
     }
   }
 
+  // Helper function to decode hex string to UTF-8 string
+  const decodeHexToString = (hexString: string): string => {
+    try {
+      // Remove any whitespace and ensure even length
+      const cleanHex = hexString.replace(/\s/g, '');
+      if (cleanHex.length % 2 !== 0) {
+        throw new Error('Invalid hex string length');
+      }
+      
+      // Convert hex pairs to bytes, then to string
+      const bytes = [];
+      for (let i = 0; i < cleanHex.length; i += 2) {
+        const hexPair = cleanHex.substr(i, 2);
+        const byte = parseInt(hexPair, 16);
+        if (isNaN(byte)) {
+          throw new Error('Invalid hex character');
+        }
+        bytes.push(byte);
+      }
+      
+      // Convert bytes to UTF-8 string
+      const uint8Array = new Uint8Array(bytes);
+      return new TextDecoder('utf-8').decode(uint8Array);
+    } catch (error) {
+      console.error('Error decoding hex string:', error);
+      // Return original string if decoding fails
+      return hexString;
+    }
+  };
+
+  const updateCustomerScoreAfterPayment = async (vnpTxnRef: string) => {
+    if (!user?.id || user.accountTypeName !== "Customer") {
+      return;
+    }
+
+    try {
+      // Decode hex-encoded confirmation code
+      const confirmationCode = decodeHexToString(vnpTxnRef);
+      console.log('Decoded confirmation code:', confirmationCode);
+      
+      // Get tickets by confirmation code to calculate score
+      const tickets = await ticketService.getTicketsOnConfirmationCode(confirmationCode);
+      if (!tickets || tickets.length === 0) {
+        console.warn('No tickets found for confirmation code:', confirmationCode);
+        return;
+      }
+
+      // Calculate total amount and score
+      const totalAmount = tickets.reduce((sum, ticket) => sum + (ticket.fare ?? 0), 0);
+      const scoreToAdd = Math.floor(totalAmount / 10000); // 1 point per 10,000 currency units
+
+      if (scoreToAdd > 0) {
+        // Get current customer score
+        const customerInfo = await customerService.getCustomerById(user.id);
+        const currentScore = customerInfo.score || 0;
+        const newScore = currentScore + scoreToAdd;
+
+        // Update customer score
+        await customerService.updateCustomerScore(user.id, newScore);
+        console.log(`Customer score updated: ${currentScore} + ${scoreToAdd} = ${newScore}`);
+      }
+    } catch (error) {
+      console.error('Error updating customer score after payment:', error);
+      // Don't fail the payment result if score update fails
+    }
+  };
 
   useEffect(() => {
     const processPaymentResult = async () => {
@@ -55,10 +123,12 @@ const PaymentResult: React.FC = () => {
         // Check payment result
         if (paymentResult.signatureValid && (responseCode === "00" || responseCode === "01")) {
           setPaymentStatus('success');
-
-          // } else if (responseCode === "24" || responseCode === "11") {
-          //   setPaymentStatus('pending');
-          //   setProcessingError(responseMessage);
+          
+          // Update customer score after successful payment
+          if (paymentResult.data?.vnp_TxnRef) {
+            await updateCustomerScoreAfterPayment(paymentResult.data.vnp_TxnRef);
+          }
+          
         } else {
           setPaymentStatus('failed');
           setProcessingError(responseMessage);
