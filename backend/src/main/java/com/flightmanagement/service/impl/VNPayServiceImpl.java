@@ -1,5 +1,6 @@
 package com.flightmanagement.service.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.flightmanagement.config.VNPayConfig;
 import com.flightmanagement.dto.FlightDto;
 import com.flightmanagement.dto.PassengerDto;
@@ -8,9 +9,13 @@ import com.flightmanagement.service.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.client.RestClient;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -34,14 +39,12 @@ public class VNPayServiceImpl implements PaymentService {
 
     @Autowired
     private TicketService ticketService;
-    ;
 
     @Autowired
     private PassengerService passengerService;
 
     @Autowired
     private FlightService flightService;
-
     @Autowired
     private EmailService emailService;
 
@@ -219,7 +222,7 @@ public class VNPayServiceImpl implements PaymentService {
             // Process payment for each ticket
             tickets.forEach(ticket -> {
                 if (ticket.getTicketStatus() == 1 && ticket.getPaymentTime() != null) return;
-                ticketService.payTicket(ticket.getTicketId());
+                ticketService.payTicket(ticket.getTicketId(), fields.get("vnp_TxnRef"));
 
                 // Send notification email to each passenger
                 try {
@@ -417,50 +420,170 @@ public class VNPayServiceImpl implements PaymentService {
     public Map<String, Object> refundTransaction(String orderId, String amount, String transDate, String user,
                                                  String transType, HttpServletRequest request) {
         try {
-            // Common request parameters
-            Map<String, String> paramValues = new HashMap<>();
-            paramValues.put("command", "refund");
+            System.out.println("Start refunding transaction for OrderId: " + orderId + " at " +
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
-            String txn_ref = HexFormat.of().formatHex(orderId.getBytes(StandardCharsets.UTF_8));
-            paramValues.put("txnRef", txn_ref);
+            // Build refund parameters
+            String requestId = VNPayConfig.getRandomNumber().toString();
+            String ipAddr = VNPayConfig.getIpAddress(request);
+            Calendar calendar = createCalendar();
+            SimpleDateFormat formatter = createDateFormatter();
+            String createDate = formatter.format(calendar.getTime());
 
-            paramValues.put("amount", String.valueOf(Long.parseLong(amount) * 100));
-            paramValues.put("transDate", transDate);
-            paramValues.put("user", user);
-            paramValues.put("transType", transType);
-            paramValues.put("orderInfo", "Hoan tien GD OrderId:" + orderId);
+            // Convert amount to VNPay format (multiply by 100)
+            String vnpAmount = String.valueOf(Long.parseLong(amount) * 100);
 
-            // Build parameters for VNPay API
-            ObjectNode params = buildCommonApiParams(paramValues, request);
-
-            // Add refund-specific parameters
-            params.put("vnp_TransactionType", transType);
-            params.put("vnp_Amount", paramValues.get("amount"));
+            ObjectNode params = objectMapper.createObjectNode();
+            params.put("vnp_RequestId", requestId);
+            params.put("vnp_Version", VERSION);
+            params.put("vnp_Command", "refund");
+            params.put("vnp_TmnCode", VNPayConfig.vnp_TmnCode);
+            params.put("vnp_TxnRef", orderId);
+            params.put("vnp_Amount", vnpAmount);
+            params.put("vnp_OrderInfo", "Hoan tien GD OrderId:" + orderId);
             params.put("vnp_TransactionDate", transDate);
+            params.put("vnp_CreateDate", createDate);
             params.put("vnp_CreateBy", user);
+            params.put("vnp_IpAddr", ipAddr);
+            params.put("vnp_TransactionType", transType);
 
-            // Generate secure hash for refund
-            String requestId = params.get("vnp_RequestId").asText();
-            String version = params.get("vnp_Version").asText();
-            String command = params.get("vnp_Command").asText();
-            String tmnCode = params.get("vnp_TmnCode").asText();
-            String txnRef = params.get("vnp_TxnRef").asText();
-            String vnpAmount = params.get("vnp_Amount").asText();
-            String transactionNo = ""; // Optional parameter
-            String createBy = params.get("vnp_CreateBy").asText();
-            String createDate = params.get("vnp_CreateDate").asText();
-            String ipAddr = params.get("vnp_IpAddr").asText();
-            String orderInfo = params.get("vnp_OrderInfo").asText();
-
-            String hashData = String.join("|", requestId, version, command, tmnCode, transType, txnRef, vnpAmount,
-                    transactionNo, transDate, createBy, createDate, ipAddr, orderInfo);
+            // Generate secure hash - CRITICAL: Must match VNPay's expected order
+            String hashData = String.join("|",
+                    requestId, VERSION, "refund", VNPayConfig.vnp_TmnCode,
+                    transType, orderId, vnpAmount, "", transDate,
+                    user, createDate, ipAddr, "Hoan tien GD OrderId:" + orderId
+            );
 
             String secureHash = VNPayConfig.generateHmacSHA512Signature(hashData);
+            params.put("vnp_SecureHash", secureHash);
 
-            return makeVnpayApiRequest(params, secureHash);
+            System.out.println("Hash data: " + hashData);
+            System.out.println("Secure hash: " + secureHash);
+
+            // Create RestClient with proper configuration
+            RestClient restClient = RestClient.builder()
+                    .baseUrl("https://sandbox.vnpayment.vn/merchant_webapi")
+                    .defaultHeader("Content-Type", "application/json")
+                    .defaultHeader("Accept", "application/json")
+                    .build();
+
+            // Convert ObjectNode to Map
+            Map<String, Object> requestBody = convertObjectNodeToMap(params);
+
+            // Send request
+            ResponseEntity<String> response = restClient.post()
+                    .uri("/api/transaction")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(requestBody)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, (req, resp) -> {
+                        try {
+                            String errorBody = new String(resp.getBody().readAllBytes());
+                            System.err.println("4xx Error: " + errorBody);
+                            throw new RuntimeException("VNPay API Client Error: " + resp.getStatusCode() + " - " + errorBody);
+                        } catch (IOException e) {
+                            throw new RuntimeException("VNPay API Client Error: " + resp.getStatusCode());
+                        }
+                    })
+                    .onStatus(HttpStatusCode::is5xxServerError, (req, resp) -> {
+                        try {
+                            String errorBody = new String(resp.getBody().readAllBytes());
+                            System.err.println("5xx Error: " + errorBody);
+                            throw new RuntimeException("VNPay API Server Error: " + resp.getStatusCode() + " - " + errorBody);
+                        } catch (IOException e) {
+                            throw new RuntimeException("VNPay API Server Error: " + resp.getStatusCode());
+                        }
+                    })
+                    .toEntity(String.class);
+
+            // Parse response
+            Map<String, Object> vnpayResponse = objectMapper.readValue(response.getBody(), Map.class);
+            System.out.println("Refund response: " + vnpayResponse);
+            return processVNPayResponse(vnpayResponse);
+
         } catch (Exception e) {
-            return createErrorResponse(e.getMessage());
+            System.err.println("Refund error: " + e.getMessage());
+            e.printStackTrace();
+            return createErrorResponse("Refund failed: " + e.getMessage());
         }
+    }
+
+    // Helper method to convert ObjectNode to Map
+    private Map<String, Object> convertObjectNodeToMap(ObjectNode objectNode) {
+        Map<String, Object> map = new HashMap<>();
+        objectNode.fields().forEachRemaining(entry -> {
+            String key = entry.getKey();
+            JsonNode value = entry.getValue();
+            if (value.isTextual()) {
+                map.put(key, value.asText());
+            } else if (value.isNumber()) {
+                map.put(key, value.asLong());
+            } else if (value.isBoolean()) {
+                map.put(key, value.asBoolean());
+            } else {
+                map.put(key, value.toString());
+            }
+        });
+        return map;
+    }
+
+    // Method to process VNPay response
+    private Map<String, Object> processVNPayResponse(Map<String, Object> vnpayResponse) {
+        if (vnpayResponse == null) {
+            return createErrorResponse("No response from VNPay");
+        }
+
+        String responseCode = (String) vnpayResponse.get("vnp_ResponseCode");
+        String message = (String) vnpayResponse.get("vnp_Message");
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", "00".equals(responseCode));
+        result.put("responseCode", responseCode);
+        result.put("message", message);
+        result.put("timestamp", "2025-06-11 12:47:08");
+        result.put("user", "thinh0704hcm");
+        result.put("vnpayResponse", vnpayResponse);
+
+        // Add response code meanings for better understanding
+        switch (responseCode != null ? responseCode : "") {
+            case "00":
+                result.put("status", "SUCCESS");
+                result.put("description", "Yêu cầu thành công");
+                break;
+            case "02":
+                result.put("status", "INVALID_TMN_CODE");
+                result.put("description", "Mã định danh kết nối không hợp lệ");
+                break;
+            case "03":
+                result.put("status", "INVALID_DATA_FORMAT");
+                result.put("description", "Dữ liệu gửi sang không đúng định dạng");
+                break;
+            case "91":
+                result.put("status", "TRANSACTION_NOT_FOUND");
+                result.put("description", "Không tìm thấy giao dịch yêu cầu hoàn trả");
+                break;
+            case "94":
+                result.put("status", "DUPLICATE_REQUEST");
+                result.put("description", "Giao dịch đã được gửi yêu cầu hoàn tiền trước đó");
+                break;
+            case "95":
+                result.put("status", "TRANSACTION_FAILED");
+                result.put("description", "Giao dịch này không thành công bên VNPAY");
+                break;
+            case "97":
+                result.put("status", "INVALID_CHECKSUM");
+                result.put("description", "Checksum không hợp lệ");
+                break;
+            case "99":
+                result.put("status", "OTHER_ERROR");
+                result.put("description", "Các lỗi khác");
+                break;
+            default:
+                result.put("status", "UNKNOWN");
+                result.put("description", "Mã lỗi không xác định");
+        }
+
+        return result;
     }
 
     /**

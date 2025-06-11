@@ -22,6 +22,7 @@ public class TicketMapper implements BaseMapper<Ticket, TicketDto> {
         dto.setPaymentTime(entity.getPaymentTime());
         dto.setFare(entity.getFare());
         dto.setConfirmationCode(entity.getConfirmationCode());
+        dto.setOrderId(entity.getOrderId());
 
         if (entity.getFlight() != null) {
             dto.setFlightId(entity.getFlight().getFlightId());

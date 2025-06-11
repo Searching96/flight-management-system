@@ -4,10 +4,8 @@ import com.flightmanagement.dto.*;
 import com.flightmanagement.entity.*;
 import com.flightmanagement.mapper.TicketMapper;
 import com.flightmanagement.repository.*;
-import com.flightmanagement.service.EmailService;
-import com.flightmanagement.service.FlightTicketClassService;
-import com.flightmanagement.service.PassengerService;
-import com.flightmanagement.service.TicketService;
+import com.flightmanagement.service.*;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -386,12 +384,13 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public TicketDto payTicket(Integer ticketId) {
+    public TicketDto payTicket(Integer ticketId, String orderId) {
         Ticket ticket = ticketRepository.findActiveById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + ticketId));
 
         ticket.setTicketStatus((byte) 1); // 1: paid
         ticket.setPaymentTime(LocalDateTime.now());
+        ticket.setOrderId(orderId);
 
 //        Customer customer = ticket.getBookCustomer();
 //        customer.setScore(customer.getScore() + ticket.getFare());

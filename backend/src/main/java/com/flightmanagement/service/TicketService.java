@@ -2,6 +2,7 @@ package com.flightmanagement.service;
 
 import com.flightmanagement.dto.BookingDto;
 import com.flightmanagement.dto.TicketDto;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
@@ -16,7 +17,7 @@ public interface TicketService {
     TicketDto updateTicket(Integer id, TicketDto ticketDto);
     
     void deleteTicket(Integer id);
-    
+
     List<TicketDto> getTicketsByFlightId(Integer flightId);
     
     List<TicketDto> getTicketsByCustomerId(Integer customerId);
@@ -27,7 +28,7 @@ public interface TicketService {
     
     List<TicketDto> bookTickets(BookingDto bookingDto);
     
-    TicketDto payTicket(Integer ticketId);
+    TicketDto payTicket(Integer ticketId, String orderId);
     
     void cancelTicket(Integer ticketId);
     

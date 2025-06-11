@@ -51,6 +51,9 @@ public class Ticket {
 
     @Column(name = "confirmation_code", nullable = false, length = 20)
     private String confirmationCode;
+
+    @Column(name = "order_id", nullable = true, length = 100)
+    private String orderId;
     
     @Column(name = "deletedAt")
     private LocalDateTime deletedAt;

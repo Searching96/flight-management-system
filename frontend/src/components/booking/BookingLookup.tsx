@@ -87,7 +87,7 @@ const BookingLookup: React.FC = () => {
       'Bạn có chắc chắn muốn hủy đặt chỗ này không? Hành động này không thể hoàn tác.'
     );
 
-    if (confirmed && !isPaid) {
+    if (confirmed) {
       setShowCancelModal(false);
 
       try {
@@ -463,25 +463,23 @@ const BookingLookup: React.FC = () => {
                       </Col>
                     )}
                     <Col xs={12} md={isPaid ? 6 : 4}>
-                      {!isPaid ? (
-                        <Button
-                          onClick={handleCancelBooking}
-                          variant="danger"
-                          className="w-100 mb-2"
-                        >
-                          <i className="bi bi-x-circle me-2"></i>
-                          Hủy đặt chỗ
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline-primary"
-                          onClick={() => navigate('/')}
-                          className="w-100 mb-2"
-                        >
-                          <i className="bi bi-house me-2"></i>
-                          Trang chủ
-                        </Button>
-                      )}
+                      <Button
+                        onClick={handleCancelBooking}
+                        variant="danger"
+                        className="w-100 mb-2"
+                      >
+                        <i className="bi bi-x-circle me-2"></i>
+                        Hủy đặt chỗ
+                      </Button>
+
+                      <Button
+                        variant="outline-primary"
+                        onClick={() => navigate('/')}
+                        className="w-100 mb-2"
+                      >
+                        <i className="bi bi-house me-2"></i>
+                        Trang chủ
+                      </Button>
                     </Col>
                   </Row>
 
