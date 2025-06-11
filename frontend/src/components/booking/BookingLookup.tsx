@@ -19,7 +19,7 @@ const BookingLookup: React.FC = () => {
     e.preventDefault();
 
     if (!searchData.confirmationCode.trim()) {
-      setError('Please enter a confirmation code');
+      setError('Vui lòng nhập mã xác nhận');
       return;
     }
 
@@ -31,7 +31,7 @@ const BookingLookup: React.FC = () => {
       const tickets = await ticketService.getTicketsOnConfirmationCode(searchData.confirmationCode);
 
       if (!tickets || tickets.length === 0) {
-        setError('No booking found with this confirmation code');
+        setError('Không tìm thấy đặt chỗ với mã xác nhận này');
         return;
       }
 
@@ -70,7 +70,7 @@ const BookingLookup: React.FC = () => {
       setBooking(bookingData);
     } catch (err: any) {
       console.error('Error looking up booking:', err);
-      setError('Failed to find booking. Please check your confirmation code and try again.');
+      setError('Không thể tìm thấy đặt chỗ. Vui lòng kiểm tra mã xác nhận và thử lại.');
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ const BookingLookup: React.FC = () => {
     if (!booking) return;
 
     const confirmed = window.confirm(
-      'Are you sure you want to cancel this booking? This action cannot be undone.'
+      'Bạn có chắc chắn muốn hủy đặt chỗ này không? Hành động này không thể hoàn tác.'
     );
 
     if (confirmed && !isPaid) {
@@ -102,12 +102,12 @@ const BookingLookup: React.FC = () => {
           }
         }
 
-        alert('Booking and all tickets cancelled successfully.');
+        alert('Đặt chỗ và tất cả vé đã được hủy thành công.');
         setBooking(null);
         setSearchData({ confirmationCode: '' });
       } catch (err: any) {
         console.error('Error canceling booking:', err);
-        alert('Failed to cancel booking: ' + (err.message || 'Unknown error'));
+        alert('Không thể hủy đặt chỗ: ' + (err.message || 'Lỗi không xác định'));
       }
     }
   };
@@ -243,11 +243,11 @@ const BookingLookup: React.FC = () => {
         console.log('Redirecting to payment URL:', response.data);
         window.location.href = response.data;
       } else {
-        alert('Invalid payment URL received. Please try again.');
+        alert('URL thanh toán không hợp lệ. Vui lòng thử lại.');
       }
     } catch (error) {
       console.error('Payment creation failed:', error);
-      alert('Failed to create payment. Please try again later.');
+      alert('Không thể tạo thanh toán. Vui lòng thử lại sau.');
     }
   };
 
@@ -261,14 +261,14 @@ const BookingLookup: React.FC = () => {
         <Col lg={8}>
           {/* Header */}
           <div className="text-center mb-5 no-print">
-            <h1 className="mb-3">Manage Your Booking</h1>
-            <p className="text-muted">Enter your booking confirmation code to view and manage your reservation</p>
+            <h1 className="mb-3">Quản lý đặt chỗ của bạn</h1>
+            <p className="text-muted">Nhập mã xác nhận đặt chỗ để xem và quản lý việc đặt chỗ của bạn</p>
           </div>
 
           {/* Search Form */}
           <Card className="mb-4 no-print">
             <Card.Header>
-              <h4 className="mb-0">Find Your Booking</h4>
+              <h4 className="mb-0">Tìm đặt chỗ của bạn</h4>
             </Card.Header>
             <Card.Body>
               <Form onSubmit={handleSearch}>
@@ -318,7 +318,7 @@ const BookingLookup: React.FC = () => {
                     variant="outline-secondary"
                     onClick={() => navigate('/')}
                   >
-                    Back to Home
+                    Về trang chủ
                   </Button>
                 </div>
               </Form>
@@ -331,23 +331,23 @@ const BookingLookup: React.FC = () => {
               <Card className="mb-4">
                 <Card.Header className={isPaid ? "bg-success text-white" : "bg-warning"}>
                   <div className="d-flex justify-content-between align-items-center">
-                    <h4 className="mb-0">Booking Found</h4>
+                    <h4 className="mb-0">Đã tìm thấy đặt chỗ</h4>
                     <div className="d-flex gap-2 align-items-center">
                       <Badge bg={isPaid ? "success" : "warning"} className="fs-6 py-2 px-3">
                         {isPaid ? (
                           <>
                             <i className="bi bi-check-circle me-2"></i>
-                            Paid
+                            Đã thanh toán
                           </>
                         ) : (
                           <>
                             <i className="bi bi-hourglass-split me-2"></i>
-                            Payment Pending
+                            Chờ thanh toán
                           </>
                         )}
                       </Badge>
                       <Badge bg="light" text="dark" className="fs-6">
-                        Code: {booking.confirmationCode}
+                        Mã: {booking.confirmationCode}
                       </Badge>
                     </div>
                   </div>
@@ -355,24 +355,24 @@ const BookingLookup: React.FC = () => {
                 <Card.Body>
                   {/* Flight Information */}
                   <div className="mb-4">
-                    <h5 className="text-primary mb-3">Flight Information</h5>
+                    <h5 className="text-primary mb-3">Thông tin chuyến bay</h5>
                     <Row className="g-3">
                       <Col sm={6}>
-                        <strong>Flight:</strong>
+                        <strong>Chuyến bay:</strong>
                         <div>{booking.flightInfo.flightCode}</div>
                       </Col>
                       <Col sm={6}>
-                        <strong>Route:</strong>
+                        <strong>Tuyến bay:</strong>
                         <div>{booking.flightInfo.departureCity} → {booking.flightInfo.arrivalCity}</div>
                       </Col>
                       <Col sm={6}>
-                        <strong>Departure:</strong>
-                        <div>{new Date(booking.flightInfo.departureTime).toLocaleString()}</div>
+                        <strong>Khởi hành:</strong>
+                        <div>{new Date(booking.flightInfo.departureTime).toLocaleString('vi-VN')}</div>
                       </Col>
                       {booking.flightInfo.arrivalTime && (
                         <Col sm={6}>
-                          <strong>Arrival:</strong>
-                          <div>{new Date(booking.flightInfo.arrivalTime).toLocaleString()}</div>
+                          <strong>Đến:</strong>
+                          <div>{new Date(booking.flightInfo.arrivalTime).toLocaleString('vi-VN')}</div>
                         </Col>
                       )}
                     </Row>
@@ -380,23 +380,23 @@ const BookingLookup: React.FC = () => {
 
                   {/* Passenger Information */}
                   <div className="mb-4">
-                    <h5 className="text-primary mb-3">Passenger Information</h5>
+                    <h5 className="text-primary mb-3">Thông tin hành khách</h5>
                     <ListGroup>
                       {booking.tickets.map((ticket, index) => (
                         <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
                           <div>
-                            <strong>Passenger {index + 1} : {booking.passengers[index]}</strong>
+                            <strong>Hành khách {index + 1}: {booking.passengers[index]}</strong>
                             <div className="text-muted d-flex align-items-center">
-                              Seat: {ticket.seatNumber}
+                              Ghế: {ticket.seatNumber}
                               <Badge
                                 bg={ticket.ticketStatus === 1 ? "success" : "warning"}
                                 className="ms-2"
                               >
-                                {ticket.ticketStatus === 1 ? "Paid" : "Pending"}
+                                {ticket.ticketStatus === 1 ? "Đã thanh toán" : "Chờ thanh toán"}
                               </Badge>
                             </div>
                           </div>
-                          <Badge bg="primary" className="fs-6">${ticket.fare}</Badge>
+                          <Badge bg="primary" className="fs-6">{ticket.fare?.toLocaleString('vi-VN')} VND</Badge>
                         </ListGroup.Item>
                       ))}
                     </ListGroup>
@@ -404,30 +404,30 @@ const BookingLookup: React.FC = () => {
 
                   {/* Booking Summary */}
                   <div className="mb-0">
-                    <h5 className="text-primary mb-3">Booking Summary</h5>
+                    <h5 className="text-primary mb-3">Tóm tắt đặt chỗ</h5>
                     <Row className="g-3">
                       <Col sm={6}>
-                        <strong>Booking Date:</strong>
-                        <div>{new Date(booking.bookingDate).toLocaleDateString()}</div>
+                        <strong>Ngày đặt:</strong>
+                        <div>{new Date(booking.bookingDate).toLocaleDateString('vi-VN')}</div>
                       </Col>
                       <Col sm={6}>
-                        <strong>Total Passengers:</strong>
+                        <strong>Tổng số hành khách:</strong>
                         <div>{booking.tickets.length}</div>
                       </Col>
                       <Col sm={6}>
-                        <strong>Payment Status:</strong>
+                        <strong>Trạng thái thanh toán:</strong>
                         <div>
                           <Badge bg={isPaid ? "success" : "warning"}>
-                            {isPaid ? "Paid" : "Payment Pending"}
+                            {isPaid ? "Đã thanh toán" : "Chờ thanh toán"}
                           </Badge>
                         </div>
                       </Col>
                       {!isPaid && (
                         <Col sm={6}>
-                          <strong>Payment Required By:</strong>
+                          <strong>Cần thanh toán trước:</strong>
                           <div>
                             <Badge bg="danger">
-                              {new Date(booking.flightInfo.departureTime).toLocaleDateString()}
+                              {new Date(booking.flightInfo.departureTime).toLocaleDateString('vi-VN')}
                             </Badge>
                           </div>
                         </Col>
@@ -436,10 +436,10 @@ const BookingLookup: React.FC = () => {
                         <div className="border-top pt-3">
                           <Row>
                             <Col>
-                              <strong className="fs-5">Total Amount:</strong>
+                              <strong className="fs-5">Tổng số tiền:</strong>
                             </Col>
                             <Col className="text-end">
-                              <strong className="fs-4 text-primary">${booking.totalAmount}</strong>
+                              <strong className="fs-4 text-primary">{booking.totalAmount.toLocaleString('vi-VN')} VND</strong>
                             </Col>
                           </Row>
                         </div>
@@ -458,7 +458,7 @@ const BookingLookup: React.FC = () => {
                         className="w-100 mb-2"
                       >
                         <i className="bi bi-printer me-2"></i>
-                        Print Booking
+                        In đặt chỗ
                       </Button>
                     </Col>
                     {!isPaid && (
@@ -469,7 +469,7 @@ const BookingLookup: React.FC = () => {
                           className="w-100 mb-2"
                         >
                           <i className="bi bi-credit-card me-2"></i>
-                          Pay Now
+                          Thanh toán ngay
                         </Button>
                       </Col>
                     )}
@@ -481,7 +481,7 @@ const BookingLookup: React.FC = () => {
                           className="w-100 mb-2"
                         >
                           <i className="bi bi-x-circle me-2"></i>
-                          Cancel Booking
+                          Hủy đặt chỗ
                         </Button>
                       ) : (
                         <Button
@@ -490,7 +490,7 @@ const BookingLookup: React.FC = () => {
                           className="w-100 mb-2"
                         >
                           <i className="bi bi-house me-2"></i>
-                          Home
+                          Trang chủ
                         </Button>
                       )}
                     </Col>
@@ -499,8 +499,8 @@ const BookingLookup: React.FC = () => {
                   {!isPaid && (
                     <Alert variant="info" className="mb-0 mt-3">
                       <i className="bi bi-info-circle-fill me-2"></i>
-                      <strong>Important:</strong> This booking requires payment to be confirmed.
-                      Unpaid bookings may be cancelled automatically 24 hours before departure.
+                      <strong>Quan trọng:</strong> Đặt chỗ này cần thanh toán để được xác nhận.
+                      Các đặt chỗ chưa thanh toán có thể bị hủy tự động 24 giờ trước khi khởi hành.
                     </Alert>
                   )}
                 </Card.Footer>
@@ -511,14 +511,14 @@ const BookingLookup: React.FC = () => {
           {/* Help Section */}
           <Card className="bg-light no-print">
             <Card.Header>
-              <h5 className="mb-0">Need Help?</h5>
+              <h5 className="mb-0">Cần trợ giúp?</h5>
             </Card.Header>
             <Card.Body>
               <ul className="mb-0">
-                <li>Make sure you enter the confirmation code exactly as shown</li>
-                <li>The confirmation code format is: FMS-YYYYMMDD-XXXX</li>
-                <li>If you can't find your booking, contact customer service</li>
-                <li>Guest bookings are stored locally for up to 10 recent bookings</li>
+                <li>Đảm bảo bạn nhập mã xác nhận chính xác như đã hiển thị</li>
+                <li>Định dạng mã xác nhận là: FMS-YYYYMMDD-XXXX</li>
+                <li>Nếu không tìm thấy đặt chỗ của bạn, hãy liên hệ dịch vụ khách hàng</li>
+                <li>Các đặt chỗ khách được lưu trữ cục bộ cho tối đa 10 đặt chỗ gần đây</li>
               </ul>
             </Card.Body>
           </Card>
@@ -535,23 +535,23 @@ const BookingLookup: React.FC = () => {
         <Modal.Header closeButton className="bg-danger text-white">
           <Modal.Title>
             <i className="bi bi-exclamation-triangle me-2"></i>
-            Cancel Booking
+            Hủy đặt chỗ
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4">
           <div className="text-center mb-3">
             <i className="bi bi-exclamation-circle text-danger" style={{ fontSize: '3rem' }}></i>
           </div>
-          <h5 className="text-center mb-3">Are you sure you want to cancel this booking?</h5>
+          <h5 className="text-center mb-3">Bạn có chắc chắn muốn hủy đặt chỗ này không?</h5>
           <p className="text-center text-muted mb-0">
-            This action cannot be undone. All tickets for this booking will be permanently cancelled.
+            Hành động này không thể hoàn tác. Tất cả vé cho đặt chỗ này sẽ bị hủy vĩnh viễn.
           </p>
           {booking && (
             <div className="mt-3 p-3 bg-light rounded">
               <div className="text-center">
-                <strong>Booking: {booking.confirmationCode}</strong><br />
-                <span className="text-muted">{booking.flightInfo.flightCode} - {booking.tickets.length} passenger(s)</span><br />
-                <span className="text-primary fw-bold">${booking.totalAmount}</span>
+                <strong>Đặt chỗ: {booking.confirmationCode}</strong><br />
+                <span className="text-muted">{booking.flightInfo.flightCode} - {booking.tickets.length} hành khách</span><br />
+                <span className="text-primary fw-bold">{booking.totalAmount.toLocaleString('vi-VN')} VND</span>
               </div>
             </div>
           )}
@@ -561,14 +561,14 @@ const BookingLookup: React.FC = () => {
             variant="secondary"
             onClick={handleCloseCancelModal}
           >
-            Keep Booking
+            Giữ đặt chỗ
           </Button>
           <Button
             variant="danger"
             onClick={confirmCancelBooking}
           >
             <i className="bi bi-trash me-2"></i>
-            Yes, Cancel Booking
+            Có, hủy đặt chỗ
           </Button>
         </Modal.Footer>
       </Modal>
