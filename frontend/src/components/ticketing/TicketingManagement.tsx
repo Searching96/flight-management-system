@@ -393,26 +393,26 @@ const TicketingManagement: React.FC = () => {
                   </Card.Header>
                   <Card.Body>
                     <dl className="row mb-0">
-                      <dt className="col-sm-4">Name:</dt>
-                      <dd className="col-sm-8">{selectedTicket.passengerName}</dd>
+                      <dt className="col-sm-5">Name:</dt>
+                      <dd className="col-sm-7">{selectedTicket.passengerName}</dd>
                       
-                      <dt className="col-sm-4">Citizen ID:</dt>
-                      <dd className="col-sm-8">{selectedTicket.passengerCitizenId}</dd>
+                      <dt className="col-sm-5">Citizen ID:</dt>
+                      <dd className="col-sm-7">{selectedTicket.passengerCitizenId}</dd>
                       
-                      <dt className="col-sm-4">Phone:</dt>
-                      <dd className="col-sm-8">{selectedTicket.phoneNumber || 'N/A'}</dd>
+                      <dt className="col-sm-5">Phone:</dt>
+                      <dd className="col-sm-7">{selectedTicket.phoneNumber || 'N/A'}</dd>
                       
-                      <dt className="col-sm-4">Confirmation:</dt>
-                      <dd className="col-sm-8"><code>{selectedTicket.confirmationCode}</code></dd>
+                      <dt className="col-sm-5">Confirmation:</dt>
+                      <dd className="col-sm-7"><code>{selectedTicket.confirmationCode}</code></dd>
                       
-                      <dt className="col-sm-4">Status:</dt>
-                      <dd className="col-sm-8">{getStatusBadge(selectedTicket.ticketStatus)}</dd>
+                      <dt className="col-sm-5">Status:</dt>
+                      <dd className="col-sm-7">{getStatusBadge(selectedTicket.ticketStatus)}</dd>
                       
-                      <dt className="col-sm-4">Fare:</dt>
-                      <dd className="col-sm-8"><strong>{formatCurrency(selectedTicket.fare)}</strong></dd>
+                      <dt className="col-sm-5">Fare:</dt>
+                      <dd className="col-sm-7"><strong>{formatCurrency(selectedTicket.fare)}</strong></dd>
                       
-                      <dt className="col-sm-4">Payment Time:</dt>
-                      <dd className="col-sm-8">
+                      <dt className="col-sm-5">Payment Time:</dt>
+                      <dd className="col-sm-7">
                         {selectedTicket.paymentTime ? formatDateTime(selectedTicket.paymentTime) : 'Not paid'}
                       </dd>
                     </dl>
