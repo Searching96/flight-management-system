@@ -586,6 +586,42 @@ const ChatWidget: React.FC = () => {
                       </div>
                     ));
                   })()}
+
+                  {/* Typing Indicator */}
+                  {typingUsers.length > 0 && (
+                    <div className="mb-3 d-flex justify-content-start">
+                      <div 
+                        className="me-2 rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                        style={{ 
+                          width: '32px', 
+                          height: '32px', 
+                          fontSize: '12px', 
+                          fontWeight: 'bold',
+                          backgroundColor: getAvatarColor(typingUsers[0].userName, false)
+                        }}
+                      >
+                        {getAvatarLetter(typingUsers[0].userName, false)}
+                      </div>
+                      
+                      <div 
+                        className="p-2 rounded-3 bg-white border d-flex align-items-center"
+                        style={{ 
+                          maxWidth: '70%',
+                          borderRadius: '18px 18px 18px 4px'
+                        }}
+                      >
+                        <div className="typing-dots me-2">
+                          <span></span>
+                          <span></span>
+                          <span></span>
+                        </div>
+                        <small className="text-muted">
+                          {typingUsers[0].userName} đang soạn tin nhắn...
+                        </small>
+                      </div>
+                    </div>
+                  )}
+
                   <div ref={messagesEndRef} />
                 </>
               )}
