@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
@@ -1022,15 +1021,4 @@ public class EmailServiceImpl implements EmailService {
             throw new RuntimeException("Gửi email thông tin nhân viên thất bại", e);
         }
     }
-
-    /**
-     * Tạo liên kết thanh toán cho trang thanh toán frontend
-     * Định dạng: {frontendUrl}/payment/{confirmationCode}
-     */
-    private String generatePaymentLink(String confirmationCode) {
-        // Đảm bảo frontendUrl kết thúc bằng dấu gạch chéo
-        String baseUrl = frontendUrl.endsWith("/") ? frontendUrl : frontendUrl + "/";
-        return baseUrl + "payment/" + confirmationCode;
-    }
-
 }

@@ -21,11 +21,7 @@ const PaymentResult: React.FC = () => {
       // Check if txnRef starts with exactly 6 digits (HHMMSS format)
       if (txnRef && txnRef.length > 6 && /^\d{6}/.test(txnRef.substring(0, 6))) {
         // New format: HHMMSS + hex
-        const timePart = txnRef.substring(0, 6);
         const hexPart = txnRef.substring(6);
-
-        // Log for debugging
-        console.log(`Trích xuất thời gian: ${timePart} (${timePart.substring(0, 2)}:${timePart.substring(2, 4)}:${timePart.substring(4, 6)}), hex: ${hexPart}`);
 
         // Convert hex back to confirmation code
         const bytes = new Uint8Array(hexPart.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
@@ -127,9 +123,6 @@ const PaymentResult: React.FC = () => {
         // Extract query parameters
         const queryParams = new URLSearchParams(location.search);
         const responseCode = queryParams.get('vnp_ResponseCode');
-        const txnRef = queryParams.get('vnp_TxnRef');
-
-        console.log(`Xử lý kết quả thanh toán tại 2025-06-11 05:14:08 UTC - Response Code: ${responseCode}, TxnRef: ${txnRef}`);
 
         // Process payment return
         const paymentResult = await paymentService.processPaymentReturn(location.search);
@@ -143,7 +136,6 @@ const PaymentResult: React.FC = () => {
         // Check payment result
         if (paymentResult.signatureValid && (responseCode === "00" || responseCode === "01")) {
           setPaymentStatus('success');
-          console.log('Thanh toán thành công');
           
           // Update customer score after successful payment
           if (paymentResult.data?.vnp_TxnRef) {
