@@ -28,7 +28,8 @@
     "react-router-bootstrap": "^0.26.3",
     "react-router-dom": "^6.28.0",
     "react-time-picker": "^7.0.0",
-    "react-toastify": "^10.0.4"
+    "react-toastify": "^10.0.4",
+    "sockjs-client": "^1.6.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
@@ -39,6 +40,7 @@
     "@types/lodash": "^4.14.202",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
+    "@types/sockjs-client": "^1.5.4",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^2.1.8",
     "@vitest/ui": "^2.1.8",

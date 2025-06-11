@@ -159,6 +159,21 @@ CREATE TABLE IF NOT EXISTS message
     FOREIGN KEY (chatbox_id) REFERENCES chatbox(chatbox_id),
     FOREIGN KEY (employee_id) REFERENCES employee(employee_id)
 );
+
+CREATE TABLE IF NOT EXISTS account_chatbox (
+    account_id INT NOT NULL,
+    chatbox_id INT NOT NULL,
+    last_visit_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME DEFAULT NULL,
+    PRIMARY KEY (account_id, chatbox_id),
+    FOREIGN KEY (account_id) REFERENCES account(account_id),
+    FOREIGN KEY (chatbox_id) REFERENCES chatbox(chatbox_id),
+    INDEX idx_account_chatbox_last_visit (account_id, last_visit_time),
+    INDEX idx_chatbox_last_visit (chatbox_id, last_visit_time)
+);
+
 -- insert into customer values (3, 0, null);
 select * from account;
 select * from airport;

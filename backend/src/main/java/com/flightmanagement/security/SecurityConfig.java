@@ -65,7 +65,7 @@ public class SecurityConfig {
                                 "/api/tickets/confirmation-code", "/api/tickets", "/api/tickets/{id}",
                                 "/api/flight-details/flight/{flightId}", "/api/parameters",
                                 "/api/tickets/booking-lookup/{confirmationCode}", "/api/tickets/booking-lookup/{id}",
-                                "/api/debug/login-by-name/{name}",
+                                "/api/debug/login-by-name/{name}", "/ws/**", "/sockjs-node/**",
                                 "/api/payment/create", "/api/payment/return", "/api/payment/IPN",
                                 // Add OPTIONS method for all API endpoints
                                 "/api/**")
