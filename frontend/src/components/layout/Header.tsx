@@ -24,7 +24,6 @@ const Header: React.FC = () => {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link as={Link} to="/" className="text-decoration-none">Home</Nav.Link>
-            <Nav.Link as={Link} to="/test" className="text-decoration-none">Test</Nav.Link>
             {!user && (
               <>
                 <Nav.Link as={Link} to="/search" className="text-decoration-none">Search Flights</Nav.Link>

@@ -250,7 +250,63 @@ const ChatWidget: React.FC = () => {
   };
 
   if (!user) {
-    return null;
+    return (
+      <div 
+        className="position-fixed bottom-0 end-0 m-3"
+        style={{ zIndex: 1050, width: isOpen ? '350px' : 'auto' }}
+      >
+        <Card className="shadow-lg border-0">
+          <Card.Header 
+            className="bg-primary text-white d-flex justify-content-between align-items-center"
+            style={{ cursor: 'pointer' }}
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <div className="d-flex align-items-center">
+              <i className="bi bi-chat-dots me-2"></i>
+              <span className="fw-bold">Support Chat</span>
+            </div>
+            <div className="d-flex align-items-center">
+              <i className={`bi ${isOpen ? 'bi-dash' : 'bi-plus'}`}></i>
+            </div>
+          </Card.Header>
+
+          {isOpen && (
+            <div>
+              <div 
+                className="p-3 bg-light text-center"
+                style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <div>
+                  <i className="bi bi-person-lock fs-1 text-muted mb-3 d-block"></i>
+                  <h6 className="text-muted">Vui lòng đăng nhập để nhận được hỗ trợ tư vấn</h6>
+                  <p className="small text-muted mt-2">
+                    Bạn cần đăng nhập vào tài khoản để có thể sử dụng dịch vụ chat hỗ trợ
+                  </p>
+                </div>
+              </div>
+
+              <Card.Footer className="p-2">
+                <div className="d-flex gap-2">
+                  <Form.Control
+                    type="text"
+                    placeholder="Vui lòng đăng nhập để chat..."
+                    disabled
+                    size="sm"
+                  />
+                  <Button 
+                    variant="primary"
+                    size="sm"
+                    disabled
+                  >
+                    <i className="bi bi-send"></i>
+                  </Button>
+                </div>
+              </Card.Footer>
+            </div>
+          )}
+        </Card>
+      </div>
+    );
   }
 
   // Only show chat widget for customers
