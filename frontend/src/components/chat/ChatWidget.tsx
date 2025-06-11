@@ -42,6 +42,7 @@ const ChatWidget: React.FC = () => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const unreadPollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastVisitPollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -73,6 +74,7 @@ const ChatWidget: React.FC = () => {
       updateLastVisitTime();
       
       startPolling();
+      startLastVisitPolling(); // Start continuous last visit time updates
 
       // Connect to WebSocket
       webSocketService.connect(
@@ -123,14 +125,19 @@ const ChatWidget: React.FC = () => {
         webSocketService.removeEventListener('typing_start', handleTypingStart);
         webSocketService.removeEventListener('typing_stop', handleTypingStop);
         webSocketService.removeEventListener('new_message', handleNewMessage);
+        stopLastVisitPolling(); // Stop last visit time polling when chat closes
       };
     } else {
       stopPolling();
+      stopLastVisitPolling(); // Stop last visit time polling when chat is not open
       webSocketService.disconnect();
       setTypingUsers([]);
     }
 
-    return () => stopPolling();
+    return () => {
+      stopPolling();
+      stopLastVisitPolling();
+    };
   }, [isOpen, chatbox, user]);
 
   const scrollToBottom = () => {
@@ -212,6 +219,30 @@ const ChatWidget: React.FC = () => {
     }
   };
 
+  const startLastVisitPolling = () => {
+    if (lastVisitPollingIntervalRef.current) return;
+    
+    console.log('Starting last visit time polling for chat widget');
+    lastVisitPollingIntervalRef.current = setInterval(async () => {
+      if (chatbox?.chatboxId && user?.id && isOpen) {
+        try {
+          console.log('Updating last visit time during polling - chatbox:', chatbox.chatboxId, 'user:', user.id);
+          await accountChatboxService.updateLastVisitTime(user.id, chatbox.chatboxId);
+        } catch (error) {
+          console.error('Failed to update last visit time during polling:', error);
+        }
+      }
+    }, 3000); // Update every 3 seconds when chat is open
+  };
+
+  const stopLastVisitPolling = () => {
+    if (lastVisitPollingIntervalRef.current) {
+      console.log('Stopping last visit time polling for chat widget');
+      clearInterval(lastVisitPollingIntervalRef.current);
+      lastVisitPollingIntervalRef.current = null;
+    }
+  };
+
   const updateLastVisitTime = async () => {
     if (!user?.id || !chatbox?.chatboxId) return;
     
@@ -261,6 +292,16 @@ const ChatWidget: React.FC = () => {
           // Only update if there are actually new messages
           if (JSON.stringify(formattedMessages) !== JSON.stringify(messages)) {
             setMessages(formattedMessages);
+            
+            // Update last visit time when new messages arrive in open chat
+            if (isOpen && user?.id) {
+              try {
+                await accountChatboxService.updateLastVisitTime(user.id, chatbox.chatboxId);
+                console.log('Last visit time updated due to new messages in open chat');
+              } catch (error) {
+                console.error('Failed to update last visit time after new messages:', error);
+              }
+            }
             
             // Update unread count if chat is not open
             if (!isOpen && user?.id) {
@@ -573,6 +614,8 @@ const ChatWidget: React.FC = () => {
           >
             <OverlayTrigger
               placement="left"
+              delay={{ show: 300, hide: 0 }}
+              show={isDragging ? false : undefined}
               overlay={
                 <Tooltip id="chat-bubble-tooltip" style={{ textAlign: 'center', lineHeight: '1.4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   Chat hỗ trợ khách hàng<br />
@@ -683,6 +726,8 @@ const ChatWidget: React.FC = () => {
         >
           <OverlayTrigger
             placement="left"
+            delay={{ show: 300, hide: 0 }}
+            show={isDragging ? false : undefined}
             overlay={
               <Tooltip id="chat-bubble-tooltip-logged-in" style={{ textAlign: 'center', lineHeight: '1.4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 Chat hỗ trợ khách hàng<br />
