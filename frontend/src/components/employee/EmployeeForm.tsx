@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Employee, RegisterRequest, UpdateEmployeeRequest } from '../../models';
 
@@ -21,7 +21,6 @@ export const EmployeeForm = ({ initialData, onSubmit, isAdding }: EmployeeFormPr
   const {
     register,
     handleSubmit,
-    setValue,
     reset,
     formState: { errors }
   } = useForm<EmployeeFormData>({

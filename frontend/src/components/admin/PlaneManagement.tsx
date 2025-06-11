@@ -113,16 +113,16 @@ const PlaneManagement: React.FC<{
         setShowForm(true);
     };
 
-    const handleDelete = async (planeId: number) => {
-        if (!window.confirm('Are you sure you want to delete this plane? This will affect all associated flights.')) return;
+    // const handleDelete = async (planeId: number) => {
+    //     if (!window.confirm('Are you sure you want to delete this plane? This will affect all associated flights.')) return;
 
-        try {
-            await planeService.deletePlane(planeId);
-            loadPlanes();
-        } catch (err: any) {
-            setError(err.message || 'Failed to delete plane');
-        }
-    };
+    //     try {
+    //         await planeService.deletePlane(planeId);
+    //         loadPlanes();
+    //     } catch (err: any) {
+    //         setError(err.message || 'Failed to delete plane');
+    //     }
+    // };
 
     const handleCancel = () => {
         setShowForm(false);
