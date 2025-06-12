@@ -27,6 +27,7 @@ const TicketingManagement: React.FC = () => {
    const [error, setError] = useState<string | null>(null);
    const [searchTerm, setSearchTerm] = useState('');
    const [statusFilter, setStatusFilter] = useState<'ALL' | 'PAID' | 'UNPAID'>('ALL');
+   const [dateFilter, setDateFilter] = useState<'ALL' | 'UPCOMING' | 'TODAY' | 'PAST'>('ALL');
    const [selectedTicket, setSelectedTicket] = useState<TicketInfo | null>(null);
    const [showDetailsModal, setShowDetailsModal] = useState(false);
    const [showCancelModal, setShowCancelModal] = useState(false);
@@ -44,7 +45,7 @@ const TicketingManagement: React.FC = () => {
 
    useEffect(() => {
       filterTickets();
-   }, [tickets, searchTerm, statusFilter]);
+   }, [tickets, searchTerm, statusFilter, dateFilter]);
 
    const fetchAllTickets = async () => {
       try {
@@ -150,9 +151,33 @@ const TicketingManagement: React.FC = () => {
          );
       }
 
-      // Filter by status
+      // Filter by payment status
       if (statusFilter !== 'ALL') {
          filtered = filtered.filter(ticket => ticket.ticketStatus === statusFilter);
+      }
+
+      // Filter by flight date
+      if (dateFilter !== 'ALL') {
+         const now = new Date();
+         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+         const tomorrow = new Date(today);
+         tomorrow.setDate(tomorrow.getDate() + 1);
+
+         filtered = filtered.filter(ticket => {
+            const flightDate = new Date(ticket.departureTime);
+            const flightDateOnly = new Date(flightDate.getFullYear(), flightDate.getMonth(), flightDate.getDate());
+
+            switch (dateFilter) {
+               case 'UPCOMING':
+                  return flightDateOnly >= tomorrow;
+               case 'TODAY':
+                  return flightDateOnly.getTime() === today.getTime();
+               case 'PAST':
+                  return flightDateOnly < today;
+               default:
+                  return true;
+            }
+         });
       }
 
       setFilteredTickets(filtered);
@@ -201,6 +226,28 @@ const TicketingManagement: React.FC = () => {
          default:
             return '#6c757d'; // default gray
       }
+   };
+
+   const getDateStatusBadge = (departureTime: string) => {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const flightDate = new Date(departureTime);
+      const flightDateOnly = new Date(flightDate.getFullYear(), flightDate.getMonth(), flightDate.getDate());
+
+      if (flightDateOnly.getTime() === today.getTime()) {
+         return <Badge bg="info" className="ms-1">Hôm nay</Badge>;
+      } else if (flightDateOnly < today) {
+         return <Badge bg="secondary" className="ms-1">Đã bay</Badge>;
+      } else {
+         const diffTime = flightDateOnly.getTime() - today.getTime();
+         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+         if (diffDays === 1) {
+            return <Badge bg="warning" className="ms-1">Ngày mai</Badge>;
+         } else if (diffDays <= 7) {
+            return <Badge bg="primary" className="ms-1">{diffDays} ngày nữa</Badge>;
+         }
+      }
+      return null;
    };
 
    const handleCancelTicket = () => {
@@ -339,7 +386,7 @@ const TicketingManagement: React.FC = () => {
                                  />
                               </InputGroup>
                            </Col>
-                           <Col md={3}>
+                           <Col md={2}>
                               <Form.Select
                                  value={statusFilter}
                                  onChange={(e) => setStatusFilter(e.target.value as 'ALL' | 'PAID' | 'UNPAID')}
@@ -349,7 +396,18 @@ const TicketingManagement: React.FC = () => {
                                  <option value="UNPAID">Chưa thanh toán</option>
                               </Form.Select>
                            </Col>
-                           <Col md={3}>
+                           <Col md={2}>
+                              <Form.Select
+                                 value={dateFilter}
+                                 onChange={(e) => setDateFilter(e.target.value as 'ALL' | 'UPCOMING' | 'TODAY' | 'PAST')}
+                              >
+                                 <option value="ALL">Tất cả thời gian</option>
+                                 <option value="UPCOMING">Chuyến bay sắp tới</option>
+                                 <option value="TODAY">Chuyến bay hôm nay</option>
+                                 <option value="PAST">Chuyến bay đã qua</option>
+                              </Form.Select>
+                           </Col>
+                           <Col md={2}>
                               <Button variant="outline-primary" onClick={fetchAllTickets} className="w-100">
                                  <i className="bi bi-arrow-clockwise me-1"></i>
                                  Làm mới
@@ -402,6 +460,7 @@ const TicketingManagement: React.FC = () => {
                                        <td>
                                           <div className="small">
                                              <strong>Dep:</strong> {formatDateTime(ticket.departureTime)}
+                                             {getDateStatusBadge(ticket.departureTime)}
                                              <br />
                                              <strong>Arr:</strong> {formatDateTime(ticket.arrivalTime)}
                                           </div>

@@ -56,7 +56,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.refreshToken(request.getToken()));
     }
 
-    @PostMapping("/validate-token")
+    @PostMapping("/validate")
     public ResponseEntity<Boolean> validatePasswordResetToken(@RequestBody TokenRequest request) {
         return ResponseEntity.ok(authService.validatePasswordResetToken(request.getToken()));
     }

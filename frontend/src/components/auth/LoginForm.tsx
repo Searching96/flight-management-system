@@ -33,7 +33,7 @@ const LoginForm: React.FC = () => {
       setLoading(true);
       setError('');
       await login(data);
-      navigate('/dashboard');
+      navigate('/');
     } catch (err: any) {
       setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.');
     } finally {

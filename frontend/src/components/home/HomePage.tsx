@@ -43,7 +43,8 @@ const HomePage: React.FC = () => {
         <Container>
           <Row className="align-items-center min-vh-50">
             <Col lg={6}>
-              <h1 className="display-4 fw-bold mb-4">Tìm chuyến bay hoàn hảo</h1>
+              <h1 className="display-4 fw-bold mb-0">Tìm chuyến bay</h1>
+              <h1 className="display-4 fw-bold mb-4">hoàn hảo</h1>
               <p className="lead mb-4">
                 Khám phá những điểm đến tuyệt vời với giá cả không thể chối từ và trải nghiệm đặt vé liền mạch
               </p>              <div className="d-flex gap-3 flex-wrap">

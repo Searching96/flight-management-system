@@ -16,7 +16,7 @@ public interface TicketService {
     
     TicketDto updateTicket(Integer id, TicketDto ticketDto);
     
-    void deleteTicket(Integer id);
+    void    deleteTicket(Integer id);
 
     List<TicketDto> getTicketsByFlightId(Integer flightId);
     

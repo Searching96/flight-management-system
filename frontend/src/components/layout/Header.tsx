@@ -29,8 +29,9 @@ const Header: React.FC = () => {
   // Helper function to get employee type for display in Vietnamese
   const getEmployeeTypeDisplay = (role: string | undefined) => {
     if (!role) return '';
-    
+
     const typeMap: Record<string, string> = {
+      'CUSTOMER': 'Khách hàng',
       'EMPLOYEE_FLIGHT_SCHEDULING': 'Quản lý lịch bay',
       'EMPLOYEE_TICKETING': 'Nhân viên bán vé',
       'EMPLOYEE_SUPPORT': 'Chăm sóc khách hàng',
@@ -39,7 +40,7 @@ const Header: React.FC = () => {
       'EMPLOYEE_HUMAN_RESOURCES': 'Quản lý nhân sự',
       'EMPLOYEE_ADMINISTRATOR': 'Quản trị viên'
     };
-    
+
     return typeMap[role] || role.replace('EMPLOYEE_', '').replace('_', ' ');
   };
 
@@ -55,24 +56,23 @@ const Header: React.FC = () => {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             <Nav.Link as={Link} to="/" className="text-decoration-none">Trang chủ</Nav.Link>
-            
+
             {/* Public links (when not logged in) - Vietnamese */}
             {!user && (
               <>
-                <Nav.Link as={Link} to="/search" className="text-decoration-none">Tìm chuyến bay</Nav.Link>
-                <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Quản lý đặt chỗ</Nav.Link>
+                <Nav.Link as={Link} to="/search" className="text-decoration-none">✈️ Tìm chuyến bay</Nav.Link>
+                <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">🔍 Tra cứu đặt chỗ</Nav.Link>
               </>
             )}
-            
+
             {/* Customer links - Vietnamese */}
             {user && permissions.isCustomer() && (
               <>
-                <Nav.Link as={Link} to="/search" className="text-decoration-none">Tìm chuyến bay</Nav.Link>
-                <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">Quản lý đặt chỗ</Nav.Link>
-                <Nav.Link as={Link} to="/dashboard" className="text-decoration-none">Bảng điều khiển</Nav.Link>
+                <Nav.Link as={Link} to="/search" className="text-decoration-none">✈️ Tìm chuyến bay</Nav.Link>
+                <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">🔍 Tra cứu đặt chỗ</Nav.Link>
               </>
             )}
-            
+
             {/* Employee links - Role-based navigation - Vietnamese 2025-06-11 09:00:54 UTC by thinh0704hcm */}
             {user && permissions.isEmployee() && (
               <>
@@ -83,7 +83,7 @@ const Header: React.FC = () => {
                 {permissions.hasRole('EMPLOYEE_FLIGHT_SCHEDULING') && (
                   <Nav.Link as={Link} to="/flights" className="text-decoration-none">✈️ Quản lý lịch bay</Nav.Link>
                 )}
-                
+
                 {/* ============================================= */}
                 {/* EMPLOYEE TYPE 2: TICKETING EMPLOYEE */}
                 {/* "Danh sách vé, Tìm kiếm chuyến bay, Quản lý đặt chỗ" */}
@@ -95,7 +95,7 @@ const Header: React.FC = () => {
                     <Nav.Link as={Link} to="/ticketing" className="text-decoration-none">📋 Quản lý vé</Nav.Link>
                   </>
                 )}
-                
+
                 {/* ============================================= */}
                 {/* EMPLOYEE TYPE 3: CUSTOMER SUPPORT EMPLOYEE */}
                 {/* "Chăm sóc khách hàng", "Tra cứu thông tin", "Quản lý khách hàng" */}
@@ -106,7 +106,7 @@ const Header: React.FC = () => {
                     <Nav.Link as={Link} to="/booking-lookup" className="text-decoration-none">🔍 Tra cứu thông tin</Nav.Link>
                   </>
                 )}
-                
+
                 {/* ============================================= */}
                 {/* EMPLOYEE TYPE 4: ACCOUNTING EMPLOYEE */}
                 {/* "Kế toán" */}
@@ -117,7 +117,7 @@ const Header: React.FC = () => {
                     <Nav.Link as={Link} to="/accounting" className="text-decoration-none">📊 Báo cáo thống kê</Nav.Link>
                   </>
                 )}
-                
+
                 {/* ============================================= */}
                 {/* EMPLOYEE TYPE 5: SERVICE MANAGEMENT (FLIGHT OPERATIONS) */}
                 {/* "Quản lý máy bay", "Quản lý hạng vé", "Quản sân bay", "Quản lý tham số" */}
@@ -130,7 +130,7 @@ const Header: React.FC = () => {
                     <Nav.Link as={Link} to="/regulations" className="text-decoration-none">📜 Quản lý tham số</Nav.Link>
                   </>
                 )}
-                
+
                 {/* ============================================= */}
                 {/* EMPLOYEE TYPE 6: HUMAN RESOURCES EMPLOYEE */}
                 {/* "Quản lý nhân viên" */}
@@ -140,7 +140,7 @@ const Header: React.FC = () => {
                     <Nav.Link as={Link} to="/employees" className="text-decoration-none">👥 Quản lý nhân viên</Nav.Link>
                   </>
                 )}
-                
+
                 {/* ============================================= */}
                 {/* EMPLOYEE TYPE 7: ADMINISTRATOR - ADMIN PANEL ONLY */}
                 {/* Full access through Admin Panel */}
@@ -151,7 +151,7 @@ const Header: React.FC = () => {
               </>
             )}
           </Nav>
-          
+
           <Nav className="ms-auto">
             {user ? (
               <Dropdown align="end" className='d-flex align-items-center'>
