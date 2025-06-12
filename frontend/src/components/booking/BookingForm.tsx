@@ -49,7 +49,7 @@ const BookingForm: React.FC = () => {
     const searchParams = new URLSearchParams(location.search);
     return {
       flightId: searchParams.get('flightId'),
-      queryPassengers: searchParams.get('passengers'),
+      queryPassengers: searchParams.get('passengerCount'),
       queryClass: searchParams.get('class')
     };
   };

@@ -66,20 +66,20 @@ public class TicketController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTicket(@PathVariable Integer id, HttpServletRequest request) {
-        TicketDto ticket = ticketService.getTicketById(id);
+        // TicketDto ticket = ticketService.getTicketById(id);
         ticketService.deleteTicket(id);
 
-        if (ticket.getOrderId().equals("PAID_WITH_CASH")) {
-            System.out.println("Ticket was paid with cash, no need to refund.");
-            return ResponseEntity.noContent().build();
-        }
-        if (ticket.getTicketStatus() == 1 && ticket.getPaymentTime() != null) {
-            System.out.println("Start refunding.");
-            paymentService.refundTransaction(ticket.getOrderId(), String.valueOf(ticket.getFare().intValueExact())
-                    , ticket.getPaymentTime().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
-                    , passengerService.getPassengerById(ticket.getPassengerId()).getPassengerName(), "02", request);
-            return ResponseEntity.noContent().build();
-        }
+        // if (ticket.getOrderId().equals("PAID_WITH_CASH")) {
+        //     System.out.println("Ticket was paid with cash, no need to refund.");
+        //     return ResponseEntity.noContent().build();
+        // }
+        // if (ticket.getTicketStatus() == 1 && ticket.getPaymentTime() != null) {
+        //     System.out.println("Start refunding.");
+        //     paymentService.refundTransaction(ticket.getOrderId(), String.valueOf(ticket.getFare().intValueExact())
+        //             , ticket.getPaymentTime().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+        //             , passengerService.getPassengerById(ticket.getPassengerId()).getPassengerName(), "02", request);
+        //     return ResponseEntity.noContent().build();
+        // }
         return ResponseEntity.noContent().build();
     }
 

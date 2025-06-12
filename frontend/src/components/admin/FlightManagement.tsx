@@ -102,6 +102,7 @@ const FlightManagement: React.FC<{
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [editingAssociation, setEditingAssociation] = useState<FlightTicketClass | null>(null);
     const [ticketClassValidationError, setTicketClassValidationError] = useState<string>('');
+    const [cardValidationErrors, setCardValidationErrors] = useState<Map<number, string>>(new Map());
 
     // System parameters
     const [parameters, setParameters] = useState<Parameter | null>(null);
@@ -267,53 +268,58 @@ const FlightManagement: React.FC<{
         }
     };
 
-    const handleTicketClassUpdate = async (
+    const handleTicketClassUpdate = (
         ticketClassId: number,
         data: Partial<FlightTicketClass>
     ) => {
-        try {
-            const originalAssociation = await flightTicketClassService.getFlightTicketClassById(
-                selectedFlightForClasses!.flightId!,
-                ticketClassId
-            );
-            if (!originalAssociation) return;
+        const originalAssociation = flightTicketClasses.find(ftc => ftc.ticketClassId === ticketClassId);
+        if (!originalAssociation) return;
 
-            const changedFields: Partial<FlightTicketClass> = {};
+        const changedFields: Partial<FlightTicketClass> = {};
 
-            if (data.ticketQuantity !== undefined && data.ticketQuantity !== originalAssociation.ticketQuantity) {
-                changedFields.ticketQuantity = data.ticketQuantity;
-            }
-
-            if (data.specifiedFare !== undefined && data.specifiedFare !== originalAssociation.specifiedFare) {
-                changedFields.specifiedFare = data.specifiedFare;
-            }
-
-            if (data.remainingTicketQuantity !== undefined && data.remainingTicketQuantity !== originalAssociation.remainingTicketQuantity) {
-                changedFields.remainingTicketQuantity = data.remainingTicketQuantity;
-            }
-
-            if (Object.keys(changedFields).length === 0) {
-                if (modifiedTicketClasses.has(ticketClassId)) {
-                    setModifiedTicketClasses(prev => {
-                        const newMap = new Map(prev);
-                        newMap.delete(ticketClassId);
-                        return newMap;
-                    });
-                }
-                setEditingAssociation(null);
-                return;
-            }
-
-            setModifiedTicketClasses(prev => {
-                const newMap = new Map(prev);
-                newMap.set(ticketClassId, changedFields);
-                return newMap;
-            });
-
-            setEditingAssociation(null);
-        } catch (err: any) {
-            setError('Failed to load original ticket class data');
+        if (data.ticketQuantity !== undefined && data.ticketQuantity !== originalAssociation.ticketQuantity) {
+            changedFields.ticketQuantity = data.ticketQuantity;
         }
+
+        if (data.specifiedFare !== undefined && data.specifiedFare !== originalAssociation.specifiedFare) {
+            changedFields.specifiedFare = data.specifiedFare;
+        }
+
+        if (data.remainingTicketQuantity !== undefined && data.remainingTicketQuantity !== originalAssociation.remainingTicketQuantity) {
+            changedFields.remainingTicketQuantity = data.remainingTicketQuantity;
+        }
+
+        if (Object.keys(changedFields).length === 0) {
+            if (modifiedTicketClasses.has(ticketClassId)) {
+                setModifiedTicketClasses(prev => {
+                    const newMap = new Map(prev);
+                    newMap.delete(ticketClassId);
+                    return newMap;
+                });
+            }
+            setEditingAssociation(null);
+            return;
+        }
+
+        setModifiedTicketClasses(prev => {
+            const newMap = new Map(prev);
+            newMap.set(ticketClassId, changedFields);
+            return newMap;
+        });
+
+        setEditingAssociation(null);
+    };
+
+    const handleCardValidationError = (ticketClassId: number, error: string | null) => {
+        setCardValidationErrors(prev => {
+            const newMap = new Map(prev);
+            if (error) {
+                newMap.set(ticketClassId, error);
+            } else {
+                newMap.delete(ticketClassId);
+            }
+            return newMap;
+        });
     };
 
     const handleUndoTicketClassChanges = (ticketClassId: number) => {
@@ -346,7 +352,7 @@ const FlightManagement: React.FC<{
 
             if (plane.seatQuantity !== totalAssignedSeats) {
                 setTicketClassValidationError(
-                    `Total seat allocation (${totalAssignedSeats}) must match plane capacity (${plane.seatQuantity})`
+                    `Tổng số ghế (${totalAssignedSeats}) phải khớp với sức chứa máy bay (${plane.seatQuantity})`
                 );
                 return;
             }
@@ -451,6 +457,7 @@ const FlightManagement: React.FC<{
         setFlightTicketClasses([]);
         setShowCreateForm(false);
         setEditingAssociation(null);
+        setCardValidationErrors(new Map());
         setError('');
     };
 
@@ -560,10 +567,30 @@ const FlightManagement: React.FC<{
                             {availableTicketClasses.length > 0 && (
                                 <Button
                                     variant="primary"
+                                    disabled={!selectedFlightForClasses || 
+                                        planes.find(p => p.planeId === selectedFlightForClasses.planeId)?.seatQuantity === 
+                                        flightTicketClasses.reduce((total, ftc) => {
+                                            const modified = modifiedTicketClasses.get(ftc.ticketClassId!);
+                                            const quantity = modified?.ticketQuantity !== undefined
+                                                ? modified.ticketQuantity
+                                                : ftc.ticketQuantity!;
+                                            return total + quantity;
+                                        }, 0)
+                                    }
                                     onClick={() => setShowCreateForm(true)}
                                 >
                                     <i className="bi bi-plus-circle me-2"></i>
-                                    Thêm hạng vé
+                                    {selectedFlightForClasses && 
+                                     planes.find(p => p.planeId === selectedFlightForClasses.planeId)?.seatQuantity === 
+                                     flightTicketClasses.reduce((total, ftc) => {
+                                         const modified = modifiedTicketClasses.get(ftc.ticketClassId!);
+                                         const quantity = modified?.ticketQuantity !== undefined
+                                             ? modified.ticketQuantity
+                                             : ftc.ticketQuantity!;
+                                         return total + quantity;
+                                     }, 0) 
+                                     ? 'Máy bay đã đầy' 
+                                     : 'Thêm hạng vé'}
                                 </Button>
                             )}
                         </Col>
@@ -610,7 +637,7 @@ const FlightManagement: React.FC<{
                     {/* Ticket Class Cards */}
                     <Row className="g-3 mt-2">
                         {flightTicketClasses.map(association => (
-                            <Col lg={6} xl={4} key={`${association.flightId}-${association.ticketClassId}`}>
+                            <Col md={6} key={`${association.flightId}-${association.ticketClassId}`}>
                                 <TicketClassCard
                                     association={association}
                                     className={getTicketClassName(association.ticketClassId!)}
@@ -632,6 +659,7 @@ const FlightManagement: React.FC<{
                                     selectedFlightForClasses={selectedFlightForClasses}
                                     planes={planes}
                                     flightTicketClasses={flightTicketClasses}
+                                    onValidationChange={(error) => handleCardValidationError(association.ticketClassId!, error)}
                                 />
                             </Col>
                         ))}
@@ -652,7 +680,7 @@ const FlightManagement: React.FC<{
                     <Button
                         variant="success"
                         onClick={handleSaveAllTicketClasses}
-                        disabled={modifiedTicketClasses.size === 0}
+                        disabled={modifiedTicketClasses.size === 0 || cardValidationErrors.size > 0}
                     >
                         <i className="bi bi-save me-2"></i>
                         Lưu thay đổi
@@ -887,13 +915,6 @@ const PlaneInfoCard: React.FC<PlaneInfoCardProps> = ({
                 </div>
 
                 {/* Status alerts */}
-                {planeInfo.availableSeats === 0 && (
-                    <Alert variant="danger" className="mt-3 mb-0 small">
-                        <i className="bi bi-exclamation-triangle me-1"></i>
-                        Máy bay đã đầy! Không thể thêm hạng vé mới.
-                    </Alert>
-                )}
-
                 {planeInfo.availableSeats > 0 && planeInfo.availableSeats <= 10 && (
                     <Alert variant="warning" className="mt-3 mb-0 small">
                         <i className="bi bi-info-circle me-1"></i>
@@ -928,7 +949,7 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
         ticketQuantity: '',
         specifiedFare: ''
     });
-    const [formErrors, setFormErrors] = useState<string>('');
+    const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
     const ticketClassOptions = availableClasses.map(tc => ({
         value: tc.ticketClassId!,
@@ -951,38 +972,103 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
         return plane.seatQuantity - totalAssignedSeats;
     }, [selectedFlightForClasses, planes, flightTicketClasses]);
 
+    // Live validation for ticket quantity
+    const validateTicketQuantity = (value: string) => {
+        const quantity = Number(value);
+        
+        if (!value) {
+            return 'Số lượng ghế là bắt buộc';
+        }
+        
+        if (quantity <= 0) {
+            return 'Số lượng ghế phải lớn hơn 0';
+        }
+        
+        if (quantity > availableSeats) {
+            return `Số lượng ghế không thể vượt quá ${availableSeats} ghế còn lại của máy bay`;
+        }
+        
+        return '';
+    };
+
+    // Live validation for fare
+    const validateFare = (value: string) => {
+        const fare = Number(value);
+        
+        if (!value) {
+            return 'Giá vé là bắt buộc';
+        }
+        
+        if (fare <= 0) {
+            return 'Giá vé phải lớn hơn 0';
+        }
+        
+        return '';
+    };
+
+    // Live validation for ticket class
+    const validateTicketClass = (value: number | '') => {
+        if (!value) {
+            return 'Hạng vé là bắt buộc';
+        }
+        return '';
+    };
+
+    // Handle field changes with live validation
+    const handleTicketQuantityChange = (value: string) => {
+        setFormData(prev => ({ ...prev, ticketQuantity: value }));
+        const error = validateTicketQuantity(value);
+        setFieldErrors(prev => ({ ...prev, ticketQuantity: error }));
+    };
+
+    const handleFareChange = (value: string) => {
+        setFormData(prev => ({ ...prev, specifiedFare: value }));
+        const error = validateFare(value);
+        setFieldErrors(prev => ({ ...prev, specifiedFare: error }));
+    };
+
+    const handleTicketClassChange = (option: any) => {
+        const value = option?.value as number || '';
+        setSelectedTicketClass(value);
+        const error = validateTicketClass(value);
+        setFieldErrors(prev => ({ ...prev, ticketClass: error }));
+    };
+
+    // Check if form is valid
+    const isFormValid = useMemo(() => {
+        const hasAllFields = selectedTicketClass && formData.ticketQuantity && formData.specifiedFare;
+        const hasNoErrors = !Object.values(fieldErrors).some(error => error);
+        return hasAllFields && hasNoErrors;
+    }, [selectedTicketClass, formData, fieldErrors]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!selectedTicketClass || !formData.ticketQuantity || !formData.specifiedFare) {
-            setFormErrors('Vui lòng điền đầy đủ tất cả các trường');
+        // Final validation check
+        const ticketClassError = validateTicketClass(selectedTicketClass);
+        const quantityError = validateTicketQuantity(formData.ticketQuantity);
+        const fareError = validateFare(formData.specifiedFare);
+
+        setFieldErrors({
+            ticketClass: ticketClassError,
+            ticketQuantity: quantityError,
+            specifiedFare: fareError
+        });
+
+        if (ticketClassError || quantityError || fareError) {
             return;
         }
 
-        if (Number(formData.ticketQuantity) <= 0) {
-            setFormErrors('Số lượng ghế phải lớn hơn 0');
-            return;
-        }
-
-        if (Number(formData.specifiedFare) <= 0) {
-            setFormErrors('Giá vé phải lớn hơn 0');
-            return;
-        }
-
-        if (Number(formData.ticketQuantity) > availableSeats) {
-            setFormErrors(`Số lượng ghế không thể vượt quá ${availableSeats} ghế còn lại của máy bay.`);
-            return;
-        }
-
-        setFormErrors('');
         onSubmit({
             ticketClassId: Number(selectedTicketClass),
             ticketQuantity: Number(formData.ticketQuantity),
             specifiedFare: Number(formData.specifiedFare)
         });
 
+        // Reset form
         setSelectedTicketClass('');
         setFormData({ ticketQuantity: '', specifiedFare: '' });
+        setFieldErrors({});
     };
 
     return (
@@ -991,12 +1077,6 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
                 <Card.Title as="h4" className="mb-0">Thêm hạng vé</Card.Title>
             </Card.Header>
             <Card.Body>
-                {formErrors && (
-                    <Alert variant="danger" className="mb-3">
-                        {formErrors}
-                    </Alert>
-                )}
-
                 <Form onSubmit={handleSubmit}>
                     <Row className="g-3">
                         <Col md={4}>
@@ -1005,11 +1085,14 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
                                 <TypeAhead
                                     options={ticketClassOptions}
                                     value={selectedTicketClass}
-                                    onChange={(option) => {
-                                        setSelectedTicketClass(option?.value as number || '');
-                                    }}
+                                    onChange={handleTicketClassChange}
                                     placeholder="Tìm hạng vé..."
                                 />
+                                {fieldErrors.ticketClass && (
+                                    <div className="text-danger small mt-1">
+                                        {fieldErrors.ticketClass}
+                                    </div>
+                                )}
                             </Form.Group>
                         </Col>
 
@@ -1028,12 +1111,15 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
                                     min="1"
                                     max={availableSeats || undefined}
                                     value={formData.ticketQuantity}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, ticketQuantity: e.target.value }))}
-                                    required
+                                    onChange={(e) => handleTicketQuantityChange(e.target.value)}
                                     placeholder="vd: 100"
                                     disabled={availableSeats === 0}
+                                    isInvalid={!!fieldErrors.ticketQuantity}
                                 />
-                                {availableSeats > 0 && (
+                                <Form.Control.Feedback type="invalid">
+                                    {fieldErrors.ticketQuantity}
+                                </Form.Control.Feedback>
+                                {availableSeats > 0 && !fieldErrors.ticketQuantity && (
                                     <Form.Text className="text-muted">
                                         Còn {availableSeats} ghế trống
                                     </Form.Text>
@@ -1049,12 +1135,17 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
                                         type="number"
                                         min="1"
                                         value={formData.specifiedFare}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, specifiedFare: e.target.value }))}
-                                        required
+                                        onChange={(e) => handleFareChange(e.target.value)}
                                         disabled={availableSeats === 0}
+                                        isInvalid={!!fieldErrors.specifiedFare}
                                     />
                                     <InputGroup.Text>VND</InputGroup.Text>
                                 </InputGroup>
+                                {fieldErrors.specifiedFare && (
+                                    <div className="text-danger small mt-1">
+                                        {fieldErrors.specifiedFare}
+                                    </div>
+                                )}
                             </Form.Group>
                         </Col>
                     </Row>
@@ -1067,7 +1158,7 @@ const CreateAssociationFormWithTypeAhead: React.FC<CreateAssociationFormProps> =
                         <Button
                             type="submit"
                             variant="primary"
-                            disabled={availableSeats === 0}
+                            disabled={!isFormValid || availableSeats === 0}
                         >
                             <i className="bi bi-plus-circle me-1"></i>
                             Thêm hạng vé
@@ -1095,6 +1186,7 @@ interface TicketClassCardProps {
     selectedFlightForClasses: Flight | null;
     planes: Plane[];
     flightTicketClasses: FlightTicketClass[];
+    onValidationChange: (error: string | null) => void;
 }
 
 const TicketClassCard: React.FC<TicketClassCardProps> = ({
@@ -1111,7 +1203,8 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
     modifiedTicketClasses,
     selectedFlightForClasses,
     planes,
-    flightTicketClasses
+    flightTicketClasses,
+    onValidationChange
 }) => {
     const [editData, setEditData] = useState({
         ticketQuantity: association.ticketQuantity || 0,
@@ -1167,21 +1260,29 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
         const minTotalQuantity = soldSeats;
 
         if (editData.ticketQuantity < minTotalQuantity) {
-            setValidationError(`Tổng số ghế không thể ít hơn ${minTotalQuantity} (${soldSeats} vé đã bán không thể thay đổi)`);
+            const error = `Tổng số ghế không thể ít hơn ${minTotalQuantity} (${soldSeats} vé đã bán không thể thay đổi)`;
+            setValidationError(error);
+            onValidationChange(error);
             return;
         }
 
         const newRemainingQuantity = editData.ticketQuantity - soldSeats;
 
         if (newRemainingQuantity < 0) {
-            setValidationError(`Số ghế còn lại không thể âm. Tối thiểu cần ${soldSeats} ghế cho các vé đã bán.`);
+            const error = `Số ghế còn lại không thể âm. Tối thiểu cần ${soldSeats} ghế cho các vé đã bán.`;
+            setValidationError(error);
+            onValidationChange(error);
             return;
         }
 
         if (planeInfo && editData.ticketQuantity > planeInfo.availableSeats) {
-            setValidationError(`Tổng số ghế không thể vượt quá ${planeInfo.availableSeats} (máy bay ${planeInfo.totalSeats} ghế, còn trống ${planeInfo.availableSeats} ghế).`);
+            const error = `Tổng số ghế không thể vượt quá ${planeInfo.availableSeats} (máy bay ${planeInfo.totalSeats} ghế, còn trống ${planeInfo.availableSeats} ghế).`;
+            setValidationError(error);
+            onValidationChange(error);
             return;
         }
+
+        onValidationChange(null);
 
         const calculatedRemainingQuantity = editData.ticketQuantity - soldSeats;
         if (editData.remainingTicketQuantity !== calculatedRemainingQuantity) {
