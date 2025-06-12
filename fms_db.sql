@@ -132,8 +132,8 @@ CREATE TABLE IF NOT EXISTS ticket
     ticket_status TINYINT DEFAULT 0, -- 0: unpaid, 1: paid,
     payment_time DATETIME, -- nullable
     fare DECIMAL(10,2) NOT NULL,
-    confirmation_code varchar(20) not null,
-    order_id varchar(100) DEFAULT NULL,
+    confirmation_code varchar(20) not null, -- format : (`FMS-yyyyMMdd` + random 4 alphanumerical digits uppercase)
+    order_id varchar(100) DEFAULT NULL, -- format : convert to hex(`hhmmss`+`confirmation_code`)
     deleted_at DATETIME DEFAULT NULL,
     FOREIGN KEY (flight_id) REFERENCES flight(flight_id),
     FOREIGN KEY (ticket_class_id) REFERENCES ticket_class(ticket_class_id),

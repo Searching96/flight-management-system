@@ -537,19 +537,21 @@ const TicketingManagement: React.FC = () => {
             </Modal.Body>
             <Modal.Footer>
                <Button variant="secondary" onClick={() => setShowDetailsModal(false)}>
-                  Đóng
+                 Đóng
                </Button>
-               {selectedTicket && selectedTicket.ticketStatus === 'UNPAID' && (
-                  <Button variant="success" onClick={handleCashPayment}>
+               {selectedTicket &&
+                 selectedTicket.ticketStatus === 'UNPAID' &&
+                 new Date(selectedTicket.departureTime) > new Date() && (
+                   <Button variant="success" onClick={handleCashPayment}>
                      <i className="bi bi-cash-coin me-2"></i>
                      Thanh toán tiền mặt tại quầy
-                  </Button>
+                   </Button>
                )}
-               {selectedTicket && (
-                  <Button variant="danger" onClick={handleCancelTicket}>
-                     <i className="bi bi-x-circle me-2"></i>
-                     Hủy vé
-                  </Button>
+               {selectedTicket && new Date(selectedTicket.departureTime) > new Date() && (
+                 <Button variant="danger" onClick={handleCancelTicket}>
+                   <i className="bi bi-x-circle me-2"></i>
+                   Hủy vé
+                 </Button>
                )}
             </Modal.Footer>
          </Modal>
