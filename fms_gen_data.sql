@@ -563,7 +563,7 @@ BEGIN
 
         -- Update flight_code to 'VN-{last 3 digits of flight_id}'
         UPDATE flight
-        SET flight_code = CONCAT('VN', LPAD(MOD(new_flight_id, 1000), 3, '0'))
+        SET flight_code = CONCAT('VN-', LPAD(MOD(new_flight_id, 1000), 3, '0'))
         WHERE flight_id = new_flight_id;
 
         SET i = i + 1;
