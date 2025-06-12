@@ -563,7 +563,7 @@ BEGIN
 
         -- Update flight_code to 'VN-{last 3 digits of flight_id}'
         UPDATE flight
-        SET flight_code = CONCAT('VN-', LPAD(MOD(new_flight_id, 1000), 3, '0'))
+        SET flight_code = CONCAT('VN', LPAD(MOD(new_flight_id, 1000), 3, '0'))
         WHERE flight_id = new_flight_id;
 
         SET i = i + 1;
@@ -1154,7 +1154,6 @@ INSERT INTO ticket (flight_id, ticket_class_id, book_customer_id, passenger_id, 
 (1, 3, 21, 31, '3A', 1, '2023-08-24 20:00:00', 5400000.00, 'FMS-20230824-BH1Z1', '32303030303046244D532D32303233303832342D4248315A31', NULL),
 
 -- ============= CURRENT USER BOOKINGS (thinh0704hcm related) =============
-
 -- Assuming thinh0704hcm has customer_id: 91
 -- Recent booking for tomorrow's flight (PAID)
 (111, 1, 91, 101, '31D', 1, '2025-06-11 16:45:00', 2500000.00, 'FMS-20250611-A5U1', '31363435303046244D532D32303235303631312D41355531', NULL),
@@ -1191,3 +1190,91 @@ INSERT INTO ticket (flight_id, ticket_class_id, book_customer_id, passenger_id, 
 -- VN156 - Last few bookings before departure (current time: 17:23)
 (106, 1, 25, 107, '26F', 0, NULL, 2500000.00, 'FMS-20250611-R1T1', '31373230303046244D532D32303235303631312D52315431', NULL),
 (106, 1, 55, 108, '27A', 0, NULL, 2500000.00, 'FMS-20250611-R1T2', '31373231303046244D532D32303235303631312D52315432', NULL);
+
+-- INSERT PASSENGER
+INSERT INTO passenger (passenger_name, email, citizen_id, phone_number) VALUES
+('Nguyễn Văn An', 'nguyenvanan@email.com', '001199001234', '0901234567'),
+('Trần Thị Bình', 'tranthibinh@email.com', '001299002345', '0902345678'),
+('Lê Hoàng Cường', 'lehoangcuong@email.com', '001399003456', '0903456789'),
+('Phạm Thị Dung', 'phamthidung@email.com', '001499004567', '0904567890'),
+('Hoàng Văn Em', 'hoangvanem@email.com', '001599005678', '0905678901'),
+('Vũ Thị Phượng', 'vuthiphuong@email.com', '001699006789', '0906789012'),
+('Đặng Văn Giang', 'dangvangiang@email.com', '001799007890', '0907890123'),
+('Bùi Thị Hoa', 'buithihoa@email.com', '001899008901', '0908901234'),
+('Ngô Văn Inh', 'ngovaninh@email.com', '001999009012', '0909012345'),
+('Cao Thị Kim', 'caothikim@email.com', '002099010123', '0910123456'),
+('Lý Văn Long', 'lyvanlong@email.com', '002199011234', '0911234567'),
+('Phan Thị Mai', 'phanthimai@email.com', '002299012345', '0912345678'),
+('Đinh Văn Nam', 'dinhvannam@email.com', '002399013456', '0913456789'),
+('Tô Thị Oanh', 'tothioanh@email.com', '002499014567', '0914567890'),
+('Võ Văn Phúc', 'vovanphuc@email.com', '002599015678', '0915678901'),
+('Đỗ Thị Quỳnh', 'dothiquynh@email.com', '002699016789', '0916789012'),
+('Trương Văn Rồng', 'truongvanrong@email.com', '002799017890', '0917890123'),
+('Lương Thị Sen', 'luongthisen@email.com', '002899018901', '0918901234'),
+('Dương Văn Tâm', 'duongvantam@email.com', '002999019012', '0919012345'),
+('Huỳnh Thị Uyên', 'huynhthiuyen@email.com', '003099020123', '0920123456'),
+('Trịnh Văn Việt', 'trinhvanviet@email.com', '003199021234', '0921234567'),
+('Lại Thị Xuân', 'laithixuan@email.com', '003299022345', '0922345678'),
+('Phùng Văn Yên', 'phungvanyen@email.com', '003399023456', '0923456789'),
+('Tạ Thị Zoan', 'tathizoan@email.com', '003499024567', '0924567890'),
+('Mạc Văn An', 'macvanan@email.com', '003599025678', '0925678901');
+
+INSERT INTO ticket (flight_id, ticket_class_id, book_customer_id, passenger_id, seat_number, ticket_status, payment_time, fare, confirmation_code, order_id) 
+SELECT 
+    -- Random flight_id from existing flights
+    (SELECT flight_id FROM flight ORDER BY RAND() LIMIT 1) as flight_id,
+    
+    -- Random ticket_class_id from existing ticket classes
+    (SELECT ticket_class_id FROM ticket_class ORDER BY RAND() LIMIT 1) as ticket_class_id,
+    
+    -- Random book_customer_id (nullable, 70% chance of having a value)
+    CASE WHEN RAND() > 0.3 THEN (SELECT customer_id FROM customer ORDER BY RAND() LIMIT 1) ELSE NULL END as book_customer_id,
+    
+    -- Random passenger_id from existing passengers
+    (SELECT passenger_id FROM passenger ORDER BY RAND() LIMIT 1) as passenger_id,
+    
+    -- Random seat number (format: 12A, 34B, etc.)
+    CONCAT(
+        LPAD(FLOOR(RAND() * 50) + 1, 2, '0'),
+        CHAR(65 + FLOOR(RAND() * 6))
+    ) as seat_number,
+    
+    -- Status = 1 (paid)
+    1 as ticket_status,
+    
+    -- Random payment_time between 2023-04-12 and 2025-10-25
+    DATE_ADD(
+        '2023-04-12 00:00:00',
+        INTERVAL FLOOR(RAND() * DATEDIFF('2025-10-25', '2023-04-12')) DAY
+    ) + INTERVAL FLOOR(RAND() * 24) HOUR + INTERVAL FLOOR(RAND() * 60) MINUTE + INTERVAL FLOOR(RAND() * 60) SECOND as payment_time,
+    
+    -- Random fare between 500,000 and 15,000,000 VND
+    ROUND((RAND() * 14500000) + 500000, 2) as fare,
+    
+    -- Random confirmation code (6 characters alphanumeric)
+    CONCAT(
+        CHAR(65 + FLOOR(RAND() * 26)),
+        CHAR(65 + FLOOR(RAND() * 26)),
+        LPAD(FLOOR(RAND() * 10), 1, '0'),
+        CHAR(65 + FLOOR(RAND() * 26)),
+        LPAD(FLOOR(RAND() * 10), 1, '0'),
+        CHAR(65 + FLOOR(RAND() * 26))
+    ) as confirmation_code,
+    
+    -- Random order_id (format: ORD-YYYY-XXXXXXXX)
+    CONCAT(
+        'ORD-',
+        YEAR(CURDATE()),
+        '-',
+        LPAD(FLOOR(RAND() * 99999999) + 1, 8, '0')
+    ) as order_id
+
+FROM 
+    (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION 
+     SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10) t1
+CROSS JOIN 
+    (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION 
+     SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10) t2
+CROSS JOIN 
+    (SELECT 1 UNION SELECT 2) t3
+LIMIT 150;

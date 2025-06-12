@@ -464,15 +464,7 @@ const BookingLookup: React.FC = () => {
                         </Button>
                       </Col>
                     )}
-                    <Col xs={12} md={isPaid ? 6 : 4}>
-                      <Button
-                        onClick={handleCancelBooking}
-                        variant="danger"
-                        className="w-100 mb-2"
-                      >
-                        <i className="bi bi-x-circle me-2"></i>
-                        Hủy đặt chỗ
-                      </Button>
+                    <Col xs={12} md={isPaid? 6 : 4}>
 
                       <Button
                         variant="outline-primary"
@@ -483,6 +475,19 @@ const BookingLookup: React.FC = () => {
                         Trang chủ
                       </Button>
                     </Col>
+                    {/* {isPaid && (
+                      <Col xs={12} md={4}>
+                        <Button
+                          onClick={handleCancelBooking}
+                          variant="danger"
+                          className="w-100 mb-2"
+                        >
+                          <i className="bi bi-x-circle me-2"></i>
+                          Hủy đặt chỗ
+                        </Button>
+                      </Col>
+                    )} */}
+
                   </Row>
 
                   {!isPaid && (
