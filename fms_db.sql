@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS flight_ticket_class
     ticket_class_id INT NOT NULL,
     ticket_quantity INT NOT NULL,
     remaining_ticket_quantity INT NOT NULL,
-    specified_fare DECIMAL(10,2) NOT NULL,
+    specified_fare DECIMAL(11,2) NOT NULL,
     deleted_at DATETIME DEFAULT NULL,
     PRIMARY KEY (flight_id, ticket_class_id),
     FOREIGN KEY (ticket_class_id) REFERENCES ticket_class(ticket_class_id),
@@ -176,17 +176,17 @@ CREATE TABLE IF NOT EXISTS account_chatbox (
 );
 
 -- insert into customer values (3, 0, null);
-select * from account;
-select * from airport;
-select * from chatbox;
-select * from customer;
-select * from employee;
-select * from flight;
-select * from flight_detail;
-select * from flight_ticket_class;
-select * from message;
-select * from parameter;
-select * from passenger;
-select * from plane;
-select * from ticket;
-select * from ticket_class;
+-- select * from account;
+-- select * from airport;
+-- select * from chatbox;
+-- select * from customer;
+-- select * from employee;
+-- select * from flight;
+-- select * from flight_detail;
+-- select * from flight_ticket_class;
+-- select * from message;
+-- select * from parameter;
+-- select * from passenger;
+-- select * from plane;
+-- select * from ticket;
+-- select * from ticket_class;
