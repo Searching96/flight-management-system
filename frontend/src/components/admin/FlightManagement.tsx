@@ -346,7 +346,7 @@ const FlightManagement: React.FC<{
 
             if (plane.seatQuantity !== totalAssignedSeats) {
                 setTicketClassValidationError(
-                    `Total seat allocation (${totalAssignedSeats}) must match plane capacity (${plane.seatQuantity})`
+                    `Tổng số ghế của các hạng vé (${totalAssignedSeats}) phải bằng sức chứa của máy bay (${plane.seatQuantity})`
                 );
                 return;
             }
@@ -1178,9 +1178,38 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
             return;
         }
 
-        if (planeInfo && editData.ticketQuantity > planeInfo.availableSeats) {
-            setValidationError(`Tổng số ghế không thể vượt quá ${planeInfo.availableSeats} (máy bay ${planeInfo.totalSeats} ghế, còn trống ${planeInfo.availableSeats} ghế).`);
-            return;
+        if (planeInfo) {
+            const originalQuantity = association.ticketQuantity || 0;
+            const maxAllowedQuantity = planeInfo.availableSeats + originalQuantity;
+            
+            // Only validate capacity if we're not at 100% utilization
+            // When at 100%, allow any modification as long as total doesn't exceed plane capacity
+            const currentUtilization = ((planeInfo.totalSeats - planeInfo.availableSeats) / planeInfo.totalSeats) * 100;
+            
+            if (currentUtilization < 100 && editData.ticketQuantity > maxAllowedQuantity) {
+                setValidationError(`Tổng số ghế không thể vượt quá ${maxAllowedQuantity} (máy bay ${planeInfo.totalSeats} ghế, còn trống ${planeInfo.availableSeats} ghế + hiện tại ${originalQuantity} ghế của hạng này).`);
+                return;
+            }
+            
+            // For 100% utilization, only check that we don't exceed the absolute plane capacity
+            if (currentUtilization >= 100) {
+                const otherClassesTotalSeats = flightTicketClasses
+                    .filter(ftc => ftc.ticketClassId !== association.ticketClassId)
+                    .reduce((total, ftc) => {
+                        const modified = modifiedTicketClasses.get(ftc.ticketClassId!);
+                        const quantity = modified?.ticketQuantity !== undefined
+                            ? modified.ticketQuantity
+                            : ftc.ticketQuantity!;
+                        return total + quantity;
+                    }, 0);
+                
+                const newTotalSeats = otherClassesTotalSeats + editData.ticketQuantity;
+                
+                if (newTotalSeats > planeInfo.totalSeats) {
+                    setValidationError(`Tổng số ghế không thể vượt quá sức chứa máy bay (${planeInfo.totalSeats} ghế).`);
+                    return;
+                }
+            }
         }
 
         const calculatedRemainingQuantity = editData.ticketQuantity - soldSeats;
@@ -1284,7 +1313,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                                         ticketQuantity: parseInt(e.target.value) || 0
                                     }))}
                                     min={minTotalQuantity}
-                                    max={planeInfo?.availableSeats || undefined}
+                                    max={planeInfo ? planeInfo.totalSeats : undefined}
                                     isInvalid={!!validationError}
                                 />
                                 <Form.Control.Feedback type="invalid">
@@ -1292,6 +1321,9 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                                 </Form.Control.Feedback>
                                 <div className="text-muted small">
                                     Tối thiểu: {minTotalQuantity} ({soldSeats} đã bán)
+                                    {planeInfo && (
+                                        <> | Tối đa: {planeInfo.totalSeats} (sức chứa máy bay)</>
+                                    )}
                                 </div>
                             </Form.Group>
                         </Col>

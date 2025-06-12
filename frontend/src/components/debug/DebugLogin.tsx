@@ -57,7 +57,7 @@ const DebugLogin: React.FC = () => {
         if (response.userDetails.accountTypeName === "Customer") {
           // Customer - redirect to dashboard
           console.log('Redirecting customer to dashboard');
-          window.location.href = '/dashboard';
+          window.location.href = '/';
         } else if (response.userDetails.role === "EMPLOYEE_ADMINISTRATOR") {
           // Employee - redirect to admin panel
           console.log('Redirecting employee to admin panel');

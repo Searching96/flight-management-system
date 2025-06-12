@@ -13,7 +13,6 @@ import {
    Cell,
    ResponsiveContainer
 } from 'recharts';
-import './Statistics.css';
 
 const Statistics: React.FC = () => {
    const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -68,81 +67,95 @@ const Statistics: React.FC = () => {
    const availableYears = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
 
    return (
-      <div className="statistics-container">
+      <div className="statistics-container" style={{ padding: '20px' }}>
          {/* Navigation Buttons */}
-         <div className="navigation-buttons">
+         <div style={{ marginBottom: '30px', display: 'flex', gap: '10px' }}>
             <button
                onClick={() => setActiveView('yearly')}
-               className={`nav-button ${activeView === 'yearly' ? 'active' : 'inactive'}`}
+               style={{
+                  padding: '10px 20px',
+                  backgroundColor: activeView === 'yearly' ? '#007bff' : '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer'
+               }}
             >
-               Thống kê theo năm
+               Yearly Statistics
             </button>
             <button
                onClick={() => setActiveView('monthly')}
-               className={`nav-button ${activeView === 'monthly' ? 'active' : 'inactive'}`}
+               style={{
+                  padding: '10px 20px',
+                  backgroundColor: activeView === 'monthly' ? '#007bff' : '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer'
+               }}
             >
-               Thống kê theo tháng
+               Monthly Statistics
             </button>
          </div>
 
          {/* Yearly Statistics Section */}
          {activeView === 'yearly' && (
             <div className="yearly-stats-section">
-               <h3 className="section-title">Thống kê theo năm</h3>
+               <h3>Yearly Statistics</h3>
 
                {loading ? (
-                  <div className="loading-message">Đang tải thống kê theo năm...</div>
+                  <div style={{ textAlign: 'center', padding: '40px' }}>Loading yearly statistics...</div>
                ) : yearlyStats ? (
-                  <div className="charts-grid">
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginTop: '20px' }}>
                      {/* Total Flights Line Chart */}
-                     <div className="chart-container">
-                        <h4>Tổng số chuyến bay theo năm</h4>
+                     <div>
+                        <h4>Total Flights by Year</h4>
                         <ResponsiveContainer width="100%" height={300}>
                            <LineChart data={yearlyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="year" />
                               <YAxis />
-                              <Tooltip formatter={(value, name) => [value, name === 'totalFlights' ? 'Tổng chuyến bay' : name]} />
-                              <Legend formatter={(value) => value === 'totalFlights' ? 'Tổng chuyến bay' : value} />
+                              <Tooltip formatter={(value, name) => [value, name === 'totalFlights' ? 'Total Flights' : name]} />
+                              <Legend formatter={(value) => value === 'totalFlights' ? 'Total Flights' : value} />
                               <Line type="monotone" dataKey="totalFlights" stroke="#8884d8" strokeWidth={2} />
                            </LineChart>
                         </ResponsiveContainer>
                      </div>
 
                      {/* Total Passengers Line Chart */}
-                     <div className="chart-container">
-                        <h4>Tổng số hành khách theo năm</h4>
+                     <div>
+                        <h4>Total Passengers by Year</h4>
                         <ResponsiveContainer width="100%" height={300}>
                            <LineChart data={yearlyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="year" />
                               <YAxis />
-                              <Tooltip formatter={(value, name) => [value, name === 'totalPassengers' ? 'Tổng hành khách' : name]} />
-                              <Legend formatter={(value) => value === 'totalPassengers' ? 'Tổng hành khách' : value} />
+                              <Tooltip formatter={(value, name) => [value, name === 'totalPassengers' ? 'Total Passengers' : name]} />
+                              <Legend formatter={(value) => value === 'totalPassengers' ? 'Total Passengers' : value} />
                               <Line type="monotone" dataKey="totalPassengers" stroke="#82ca9d" strokeWidth={2} />
                            </LineChart>
                         </ResponsiveContainer>
                      </div>
 
                      {/* Total Revenue Line Chart */}
-                     <div className="chart-container">
-                        <h4>Tổng doanh thu theo năm</h4>
+                     <div>
+                        <h4>Total Revenue by Year</h4>
                         <ResponsiveContainer width="100%" height={300}>
                            <LineChart data={yearlyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="year" />
                               <YAxis />
-                              <Tooltip formatter={(value) => [`${value.toLocaleString('vi-VN')} VND`, 'Doanh thu']} />
-                              <Legend formatter={(value) => value === 'totalRevenue' ? 'Tổng doanh thu' : value} />
+                              <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']} />
+                              <Legend formatter={(value) => value === 'totalRevenue' ? 'Total Revenue' : value} />
                               <Line type="monotone" dataKey="totalRevenue" stroke="#ffc658" strokeWidth={2} />
                            </LineChart>
                         </ResponsiveContainer>
                      </div>
 
                      {/* Revenue Distribution Pie Chart */}
-                     <div className="pie-chart-container">
-                        <div className="pie-chart-wrapper">
-                           <h4>Phân bổ doanh thu theo năm</h4>
+                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+                        <div style={{ flex: '0 0 auto' }}>
+                           <h4>Revenue Distribution by Year</h4>
                            <ResponsiveContainer width={350} height={350}>
                               <PieChart margin={{ top: 5, right: 10, left: 20, bottom: 10 }}>
                                  <Pie
@@ -158,46 +171,89 @@ const Statistics: React.FC = () => {
                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                  </Pie>
-                                 <Tooltip formatter={(value) => [`${value.toLocaleString('vi-VN')} VND`, 'Doanh thu']} />
+                                 <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']} />
                               </PieChart>
                            </ResponsiveContainer>
                         </div>
-                        <div className="pie-legend-container">
-                           <div className="legend-title">Các năm</div>
-                           <div className="legend-items">
+                        <div style={{ flex: '1', paddingTop: '60px' }}>
+                           <div style={{ textAlign: 'left', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold', color: '#333' }}>
+                              Years
+                           </div>
+                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                               {yearlyStats.map((entry: any, index: number) => (
-                                 <div key={entry.year} className="legend-item">
-                                    <div 
-                                       className="legend-color-box"
-                                       style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                                    ></div>
-                                    <span className="legend-text">{entry.year}</span>
+                                 <div key={entry.year} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ 
+                                       width: '12px', 
+                                       height: '12px', 
+                                       backgroundColor: COLORS[index % COLORS.length],
+                                       borderRadius: '2px'
+                                    }}></div>
+                                    <span style={{ fontSize: '12px' }}>{entry.year}</span>
                                  </div>
                               ))}
                            </div>
-                           <div className="legend-note">
-                              <em>Lưu ý: Mỗi màu đại diện cho một năm khác nhau</em>
+                           <div style={{ textAlign: 'left', marginTop: '15px', fontSize: '12px', color: '#666' }}>
+                              <em>Note: Each color represents a different year</em>
                            </div>
                         </div>
                      </div>
                   </div>
                ) : (
-                  <div className="no-data-message">Không có dữ liệu thống kê theo năm</div>
+                  <div style={{ textAlign: 'center', padding: '40px' }}>No yearly statistics available</div>
                )}
 
                {/* Yearly Statistics Table */}
                {yearlyStats && (
-                  <div className="table-container">
-                     <h4 className="table-title">Tóm tắt thống kê theo năm</h4>
-                     <div className="table-wrapper">
-                        <table className="statistics-table">
-                           <thead className="table-header">
-                              <tr>
-                                 <th className="table-header-cell">Năm</th>
-                                 <th className="table-header-cell">Tổng chuyến bay</th>
-                                 <th className="table-header-cell">Tổng hành khách</th>
-                                 <th className="table-header-cell">Tổng doanh thu</th>
-                                 <th className="table-header-cell">Tỷ lệ doanh thu (%)</th>
+                  <div style={{ marginTop: '40px' }}>
+                     <h4 style={{ marginBottom: '20px', color: '#333' }}>Yearly Statistics Summary</h4>
+                     <div style={{ 
+                        overflowX: 'auto', 
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', 
+                        borderRadius: '8px',
+                        backgroundColor: '#fff'
+                     }}>
+                        <table style={{ 
+                           width: '100%', 
+                           borderCollapse: 'collapse',
+                           fontSize: '14px'
+                        }}>
+                           <thead>
+                              <tr style={{ backgroundColor: '#f8f9fa' }}>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Year</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Total Flights</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Total Passengers</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Total Revenue</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Revenue Rate (%)</th>
                               </tr>
                            </thead>
                            <tbody>
@@ -206,12 +262,46 @@ const Statistics: React.FC = () => {
                                  const revenueRate = ((entry.totalRevenue / totalRevenue) * 100).toFixed(2);
                                  
                                  return (
-                                    <tr key={entry.year} className={`table-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
-                                       <td className="table-cell year-month">{entry.year}</td>
-                                       <td className="table-cell">{entry.totalFlights.toLocaleString('vi-VN')}</td>
-                                       <td className="table-cell">{entry.totalPassengers.toLocaleString('vi-VN')}</td>
-                                       <td className="table-cell revenue">{entry.totalRevenue.toLocaleString('vi-VN')} VND</td>
-                                       <td className="table-cell rate">{revenueRate}%</td>
+                                    <tr key={entry.year} style={{ 
+                                       backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
+                                       transition: 'background-color 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e3f2fd'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#fff' : '#f8f9fa'}
+                                    >
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          fontWeight: '500',
+                                          color: '#333',
+                                          textAlign: 'center'
+                                       }}>{entry.year}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#495057'
+                                       }}>{entry.totalFlights.toLocaleString()}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#495057'
+                                       }}>{entry.totalPassengers.toLocaleString()}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#28a745',
+                                          fontWeight: '500'
+                                       }}>${entry.totalRevenue.toLocaleString()}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#007bff',
+                                          fontWeight: '500'
+                                       }}>{revenueRate}%</td>
                                     </tr>
                                  );
                               })}
@@ -226,77 +316,97 @@ const Statistics: React.FC = () => {
          {/* Monthly Statistics Section */}
          {activeView === 'monthly' && (
             <div className="monthly-stats-section">
-               <h3 className="section-title">Thống kê theo tháng</h3>
+               <h3>Monthly Statistics</h3>
 
-               <div className="year-selector-container">
-                  <label htmlFor="year-picker" className="year-selector-label">
-                     Chọn năm:
+               <div className="input-group" style={{ marginBottom: '20px' }}>
+                  <label htmlFor="year-picker" style={{ 
+                     marginRight: '15px', 
+                     fontSize: '16px', 
+                     fontWeight: '500',
+                     color: '#333'
+                  }}>
+                     Select Year:
                   </label>
                   <select
                      id="year-picker"
                      value={selectedYear}
                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                     className="year-selector"
+                     className="year-input"
+                     style={{ 
+                        padding: '8px 12px',
+                        fontSize: '14px',
+                        border: '2px solid #ddd',
+                        borderRadius: '8px',
+                        backgroundColor: '#fff',
+                        color: '#333',
+                        cursor: 'pointer',
+                        outline: 'none',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        minWidth: '120px'
+                     }}
+                     onFocus={(e) => e.target.style.borderColor = '#007bff'}
+                     onBlur={(e) => e.target.style.borderColor = '#ddd'}
                   >
                      {availableYears.map(year => (
-                        <option key={year} value={year}>{year}</option>
+                        <option key={year} value={year} style={{ padding: '8px' }}>{year}</option>
                      ))}
                   </select>
                </div>
 
                {monthlyLoading ? (
-                  <div className="loading-message">Đang tải thống kê theo tháng cho năm {selectedYear}...</div>
+                  <div style={{ textAlign: 'center', padding: '40px' }}>Loading monthly statistics for {selectedYear}...</div>
                ) : monthlyStats ? (
-                  <div className="charts-grid">
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginTop: '20px' }}>
                      {/* Monthly Total Flights Line Chart */}
-                     <div className="chart-container">
-                        <h4>Tổng số chuyến bay theo tháng ({selectedYear})</h4>
+                     <div>
+                        <h4>Total Flights by Month ({selectedYear})</h4>
                         <ResponsiveContainer width="100%" height={300}>
                            <LineChart data={monthlyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="month" />
                               <YAxis />
-                              <Tooltip formatter={(value, name) => [value, name === 'totalFlights' ? 'Tổng chuyến bay' : name]} />
-                              <Legend formatter={(value) => value === 'totalFlights' ? 'Tổng chuyến bay' : value} />
+                              <Tooltip formatter={(value, name) => [value, name === 'totalFlights' ? 'Total Flights' : name]} />
+                              <Legend formatter={(value) => value === 'totalFlights' ? 'Total Flights' : value} />
                               <Line type="monotone" dataKey="totalFlights" stroke="#8884d8" strokeWidth={2} />
                            </LineChart>
                         </ResponsiveContainer>
                      </div>
 
                      {/* Monthly Total Passengers Line Chart */}
-                     <div className="chart-container">
-                        <h4>Tổng số hành khách theo tháng ({selectedYear})</h4>
+                     <div>
+                        <h4>Total Passengers by Month ({selectedYear})</h4>
                         <ResponsiveContainer width="100%" height={300}>
                            <LineChart data={monthlyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="month" />
                               <YAxis />
-                              <Tooltip formatter={(value, name) => [value, name === 'totalPassengers' ? 'Tổng hành khách' : name]} />
-                              <Legend formatter={(value) => value === 'totalPassengers' ? 'Tổng hành khách' : value} />
+                              <Tooltip formatter={(value, name) => [value, name === 'totalPassengers' ? 'Total Passengers' : name]} />
+                              <Legend formatter={(value) => value === 'totalPassengers' ? 'Total Passengers' : value} />
                               <Line type="monotone" dataKey="totalPassengers" stroke="#82ca9d" strokeWidth={2} />
                            </LineChart>
                         </ResponsiveContainer>
                      </div>
 
                      {/* Monthly Total Revenue Line Chart */}
-                     <div className="chart-container">
-                        <h4>Tổng doanh thu theo tháng ({selectedYear})</h4>
+                     <div>
+                        <h4>Total Revenue by Month ({selectedYear})</h4>
                         <ResponsiveContainer width="100%" height={300}>
                            <LineChart data={monthlyStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="month" />
                               <YAxis />
-                              <Tooltip formatter={(value) => [`${value.toLocaleString('vi-VN')} VND`, 'Doanh thu']} />
-                              <Legend formatter={(value) => value === 'totalRevenue' ? 'Tổng doanh thu' : value} />
+                              <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']} />
+                              <Legend formatter={(value) => value === 'totalRevenue' ? 'Total Revenue' : value} />
                               <Line type="monotone" dataKey="totalRevenue" stroke="#ffc658" strokeWidth={2} />
                            </LineChart>
                         </ResponsiveContainer>
                      </div>
 
                      {/* Monthly Revenue Distribution Pie Chart */}
-                     <div className="pie-chart-container">
-                        <div className="pie-chart-wrapper">
-                           <h4>Phân bổ doanh thu theo tháng ({selectedYear})</h4>
+                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+                        <div style={{ flex: '0 0 auto' }}>
+                           <h4>Revenue Distribution by Month ({selectedYear})</h4>
                            <ResponsiveContainer width={350} height={350}>
                               <PieChart margin={{ top: 5, right: 10, left: 20, bottom: 10 }}>
                                  <Pie
@@ -312,46 +422,89 @@ const Statistics: React.FC = () => {
                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                  </Pie>
-                                 <Tooltip formatter={(value) => [`${value.toLocaleString('vi-VN')} VND`, 'Doanh thu']} />
+                                 <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']} />
                               </PieChart>
                            </ResponsiveContainer>
                         </div>
-                        <div className="pie-legend-container">
-                           <div className="legend-title">Các tháng</div>
-                           <div className="monthly-legend-items">
+                        <div style={{ flex: '1', paddingTop: '60px' }}>
+                           <div style={{ textAlign: 'left', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold', color: '#333' }}>
+                              Months
+                           </div>
+                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                               {Array.from({ length: 12 }, (_, i) => i + 1).map((month, index) => (
-                                 <div key={month} className="monthly-legend-item">
-                                    <div 
-                                       className="monthly-legend-color-box"
-                                       style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                                    ></div>
-                                    <span className="monthly-legend-text">Tháng {month}</span>
+                                 <div key={month} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    <div style={{ 
+                                       width: '10px', 
+                                       height: '10px', 
+                                       backgroundColor: COLORS[index % COLORS.length],
+                                       borderRadius: '2px'
+                                    }}></div>
+                                    <span style={{ fontSize: '11px' }}>{month}</span>
                                  </div>
                               ))}
                            </div>
-                           <div className="legend-note">
-                              <em>Lưu ý: Mỗi màu đại diện cho một tháng khác nhau</em>
+                           <div style={{ textAlign: 'left', marginTop: '15px', fontSize: '12px', color: '#666' }}>
+                              <em>Note: Each color represents a different month</em>
                            </div>
                         </div>
                      </div>
                   </div>
                ) : (
-                  <div className="no-data-message">Không có dữ liệu thống kê theo tháng cho năm {selectedYear}</div>
+                  <div style={{ textAlign: 'center', padding: '40px' }}>No monthly statistics available for {selectedYear}</div>
                )}
 
                {/* Monthly Statistics Table */}
                {monthlyStats && (
-                  <div className="table-container">
-                     <h4 className="table-title">Tóm tắt thống kê theo tháng ({selectedYear})</h4>
-                     <div className="table-wrapper">
-                        <table className="statistics-table">
-                           <thead className="table-header">
-                              <tr>
-                                 <th className="table-header-cell">Tháng</th>
-                                 <th className="table-header-cell">Tổng chuyến bay</th>
-                                 <th className="table-header-cell">Tổng hành khách</th>
-                                 <th className="table-header-cell">Tổng doanh thu</th>
-                                 <th className="table-header-cell">Tỷ lệ doanh thu (%)</th>
+                  <div style={{ marginTop: '40px' }}>
+                     <h4 style={{ marginBottom: '20px', color: '#333' }}>Monthly Statistics Summary ({selectedYear})</h4>
+                     <div style={{ 
+                        overflowX: 'auto', 
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', 
+                        borderRadius: '8px',
+                        backgroundColor: '#fff'
+                     }}>
+                        <table style={{ 
+                           width: '100%', 
+                           borderCollapse: 'collapse',
+                           fontSize: '14px'
+                        }}>
+                           <thead>
+                              <tr style={{ backgroundColor: '#f8f9fa' }}>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Month</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Total Flights</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Total Passengers</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Total Revenue</th>
+                                 <th style={{ 
+                                    padding: '15px', 
+                                    textAlign: 'center', 
+                                    borderBottom: '2px solid #dee2e6',
+                                    fontWeight: '600',
+                                    color: '#495057'
+                                 }}>Revenue Rate (%)</th>
                               </tr>
                            </thead>
                            <tbody>
@@ -360,12 +513,46 @@ const Statistics: React.FC = () => {
                                  const revenueRate = ((entry.totalRevenue / totalRevenue) * 100).toFixed(2);
                                  
                                  return (
-                                    <tr key={entry.month} className={`table-row ${index % 2 === 0 ? 'even' : 'odd'}`}>
-                                       <td className="table-cell year-month">Tháng {entry.month}</td>
-                                       <td className="table-cell">{entry.totalFlights.toLocaleString('vi-VN')}</td>
-                                       <td className="table-cell">{entry.totalPassengers.toLocaleString('vi-VN')}</td>
-                                       <td className="table-cell revenue">{entry.totalRevenue.toLocaleString('vi-VN')} VND</td>
-                                       <td className="table-cell rate">{revenueRate}%</td>
+                                    <tr key={entry.month} style={{ 
+                                       backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
+                                       transition: 'background-color 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e3f2fd'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#fff' : '#f8f9fa'}
+                                    >
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          fontWeight: '500',
+                                          color: '#333',
+                                          textAlign: 'center'
+                                       }}>{entry.month}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#495057'
+                                       }}>{entry.totalFlights.toLocaleString()}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#495057'
+                                       }}>{entry.totalPassengers.toLocaleString()}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#28a745',
+                                          fontWeight: '500'
+                                       }}>${entry.totalRevenue.toLocaleString()}</td>
+                                       <td style={{ 
+                                          padding: '12px 15px', 
+                                          textAlign: 'center', 
+                                          borderBottom: '1px solid #dee2e6',
+                                          color: '#007bff',
+                                          fontWeight: '500'
+                                       }}>{revenueRate}%</td>
                                     </tr>
                                  );
                               })}

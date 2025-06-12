@@ -166,8 +166,8 @@ const FlightTable: React.FC<FlightTableProps> = ({
                 <Row className="mt-2">
                     <Col>
                         <small className="text-muted">
-                            Hiển thị {currentFlights.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredFlights.length)} 
-                            trong tổng số {filteredFlights.length} chuyến bay
+                            Hiển thị {currentFlights.length > 0 ? startIndex + 1 : 0}
+                            -{Math.min(endIndex, filteredFlights.length)} trong tổng số {filteredFlights.length} chuyến bay
                             {searchTerm && ` (lọc từ ${flights.length} chuyến bay)`}
                         </small>
                     </Col>

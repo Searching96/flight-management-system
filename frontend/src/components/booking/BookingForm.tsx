@@ -37,7 +37,7 @@ const BookingForm: React.FC = () => {
         // console.log('Parsed booking data from sessionStorage:', parsed);
         return {
           flightId: parsed.flightId?.toString(),
-          queryPassengers: parsed.passengers?.toString(),
+          queryPassengers: parsed.passengerCount?.toString(),
           queryClass: parsed.class?.toString()
         };
       } catch (error) {
@@ -49,7 +49,7 @@ const BookingForm: React.FC = () => {
     const searchParams = new URLSearchParams(location.search);
     return {
       flightId: searchParams.get('flightId'),
-      queryPassengers: searchParams.get('passengers'),
+      queryPassengers: searchParams.get('passengerCount'),
       queryClass: searchParams.get('class')
     };
   };
