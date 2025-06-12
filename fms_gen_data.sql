@@ -517,310 +517,67 @@ INSERT INTO plane (plane_code, plane_type, seat_quantity, deleted_at) VALUES
 ('VN-A012', 'Airbus A320-200', 180, '2025-06-01 09:30:00'),  -- Heavy maintenance
 ('VN-B009', 'Boeing 737-800', 189, '2025-06-05 14:20:00');   -- Engine overhaul
 
--- Dữ liệu chuyến bay (flight)
-INSERT INTO flight (flight_number, departure_airport, arrival_airport, departure_time, arrival_time, aircraft_id, base_price, deleted_at) VALUES
+DELIMITER $$
 
--- TUYẾN NỘI ĐỊA CHÍNH - Tháng 6-12/2025
+CREATE PROCEDURE generate_chronological_flights()
+BEGIN
+    DECLARE i INT DEFAULT 0;
+    DECLARE rand_plane INT;
+    DECLARE rand_dep_airport INT;
+    DECLARE rand_arr_airport INT;
+    DECLARE dep_time DATETIME;
+    DECLARE arr_time DATETIME;
+    DECLARE new_flight_id INT;
 
--- HAN - SGN (Tuyến vàng) - 4 chuyến/ngày
-('VN101', 'HAN', 'SGN', '2025-06-12 06:00:00', '2025-06-12 08:15:00', 1, 2500000, NULL),
-('VN102', 'SGN', 'HAN', '2025-06-12 10:00:00', '2025-06-12 12:15:00', 1, 2500000, NULL),
-('VN103', 'HAN', 'SGN', '2025-06-12 14:00:00', '2025-06-12 16:15:00', 2, 2500000, NULL),
-('VN104', 'SGN', 'HAN', '2025-06-12 18:00:00', '2025-06-12 20:15:00', 2, 2500000, NULL),
-('VN105', 'HAN', 'SGN', '2025-06-13 07:30:00', '2025-06-13 09:45:00', 3, 2500000, NULL),
-('VN106', 'SGN', 'HAN', '2025-06-13 11:30:00', '2025-06-13 13:45:00', 3, 2500000, NULL),
-('VN107', 'HAN', 'SGN', '2025-06-13 15:30:00', '2025-06-13 17:45:00', 4, 2500000, NULL),
-('VN108', 'SGN', 'HAN', '2025-06-13 19:30:00', '2025-06-13 21:45:00', 4, 2500000, NULL),
+    -- Set the start and end date
+    DECLARE start_date DATETIME DEFAULT '2024-06-01 06:00:00';
+    DECLARE end_date DATETIME DEFAULT '2025-12-31 23:00:00';
+    DECLARE total_flights INT DEFAULT 100;
+    DECLARE interval_seconds BIGINT;
+    DECLARE seconds_to_add BIGINT;
 
--- HAN - DAD (Miền Trung) - 3 chuyến/ngày  
-('VN201', 'HAN', 'DAD', '2025-06-12 06:30:00', '2025-06-12 07:50:00', 9, 1800000, NULL),
-('VN202', 'DAD', 'HAN', '2025-06-12 09:00:00', '2025-06-12 10:20:00', 9, 1800000, NULL),
-('VN203', 'HAN', 'DAD', '2025-06-12 13:00:00', '2025-06-12 14:20:00', 10, 1800000, NULL),
-('VN204', 'DAD', 'HAN', '2025-06-12 16:00:00', '2025-06-12 17:20:00', 10, 1800000, NULL),
-('VN205', 'HAN', 'DAD', '2025-06-12 19:00:00', '2025-06-12 20:20:00', 11, 1800000, NULL),
-('VN206', 'DAD', 'HAN', '2025-06-12 21:30:00', '2025-06-12 22:50:00', 11, 1800000, NULL),
+    -- Calculate the interval in seconds between each flight
+    SET interval_seconds = TIMESTAMPDIFF(SECOND, start_date, end_date) DIV (total_flights - 1);
 
--- SGN - DAD - 2 chuyến/ngày
-('VN301', 'SGN', 'DAD', '2025-06-12 08:00:00', '2025-06-12 09:15:00', 12, 1600000, NULL),
-('VN302', 'DAD', 'SGN', '2025-06-12 11:00:00', '2025-06-12 12:15:00', 12, 1600000, NULL),
-('VN303', 'SGN', 'DAD', '2025-06-12 16:00:00', '2025-06-12 17:15:00', 13, 1600000, NULL),
-('VN304', 'DAD', 'SGN', '2025-06-12 19:00:00', '2025-06-12 20:15:00', 13, 1600000, NULL),
+    WHILE i < total_flights DO
+        -- Get random plane_id
+        SELECT plane_id INTO rand_plane FROM plane ORDER BY RAND() LIMIT 1;
 
--- Tuyến du lịch biển đảo
--- SGN - PQC (Phú Quốc) - 2 chuyến/ngày
-('VN401', 'SGN', 'PQC', '2025-06-12 07:00:00', '2025-06-12 08:00:00', 6, 2200000, NULL),
-('VN402', 'PQC', 'SGN', '2025-06-12 10:30:00', '2025-06-12 11:30:00', 6, 2200000, NULL),
-('VN403', 'SGN', 'PQC', '2025-06-12 15:00:00', '2025-06-12 16:00:00', 7, 2200000, NULL),
-('VN404', 'PQC', 'SGN', '2025-06-12 18:30:00', '2025-06-12 19:30:00', 7, 2200000, NULL),
+        -- Get two distinct random airport_ids
+        SELECT airport_id INTO rand_dep_airport FROM airport ORDER BY RAND() LIMIT 1;
+        SELECT airport_id INTO rand_arr_airport FROM airport WHERE airport_id != rand_dep_airport ORDER BY RAND() LIMIT 1;
 
--- HAN - PQC
-('VN405', 'HAN', 'PQC', '2025-06-12 09:00:00', '2025-06-12 11:15:00', 8, 2800000, NULL),
-('VN406', 'PQC', 'HAN', '2025-06-12 13:00:00', '2025-06-12 15:15:00', 8, 2800000, NULL),
+        -- Calculate departure time for this flight
+        SET seconds_to_add = i * interval_seconds;
+        SET dep_time = DATE_ADD(start_date, INTERVAL seconds_to_add SECOND);
 
--- SGN - CXR (Cam Ranh/Nha Trang)
-('VN501', 'SGN', 'CXR', '2025-06-12 06:45:00', '2025-06-12 07:50:00', 14, 1900000, NULL),
-('VN502', 'CXR', 'SGN', '2025-06-12 09:30:00', '2025-06-12 10:35:00', 14, 1900000, NULL),
-('VN503', 'SGN', 'CXR', '2025-06-12 14:45:00', '2025-06-12 15:50:00', 5, 1900000, NULL),
-('VN504', 'CXR', 'SGN', '2025-06-12 17:30:00', '2025-06-12 18:35:00', 5, 1900000, NULL),
+        -- Arrival time: 1 to 5 hours after departure
+        SET arr_time = DATE_ADD(dep_time, INTERVAL FLOOR(1 + RAND() * 5) HOUR);
 
--- Tuyến regional
--- SGN - VCS (Côn Đảo) - ATR 72
-('VN601', 'SGN', 'VCS', '2025-06-12 08:00:00', '2025-06-12 09:15:00', 25, 3500000, NULL),
-('VN602', 'VCS', 'SGN', '2025-06-12 11:00:00', '2025-06-12 12:15:00', 25, 3500000, NULL),
+        -- Insert the flight with placeholder flight_code
+        INSERT INTO flight (plane_id, departure_airport_id, arrival_airport_id, flight_code, departure_time, arrival_time, deleted_at)
+        VALUES (rand_plane, rand_dep_airport, rand_arr_airport, '', dep_time, arr_time, NULL);
 
--- HAN - DIN (Điện Biên) - ATR 72
-('VN701', 'HAN', 'DIN', '2025-06-12 07:30:00', '2025-06-12 08:45:00', 26, 2800000, NULL),
-('VN702', 'DIN', 'HAN', '2025-06-12 10:15:00', '2025-06-12 11:30:00', 26, 2800000, NULL),
+        -- Get the last inserted flight_id
+        SET new_flight_id = LAST_INSERT_ID();
 
--- TUYẾN QUỐC TẾ ĐÔNG NAM Á - Narrow-body
+        -- Update flight_code to 'VN-{last 3 digits of flight_id}'
+        UPDATE flight
+        SET flight_code = CONCAT('VN-', LPAD(MOD(new_flight_id, 1000), 3, '0'))
+        WHERE flight_id = new_flight_id;
 
--- HAN - BKK (Bangkok) - 2 chuyến/ngày
-('VN801', 'HAN', 'BKK', '2025-06-12 08:30:00', '2025-06-12 10:00:00', 1, 4500000, NULL),
-('VN802', 'BKK', 'HAN', '2025-06-12 12:00:00', '2025-06-12 15:30:00', 1, 4500000, NULL),
-('VN803', 'HAN', 'BKK', '2025-06-12 20:00:00', '2025-06-12 21:30:00', 2, 4500000, NULL),
-('VN804', 'BKK', 'HAN', '2025-06-13 01:00:00', '2025-06-13 04:30:00', 2, 4500000, NULL),
+        SET i = i + 1;
+    END WHILE;
+END$$
 
--- SGN - BKK
-('VN805', 'SGN', 'BKK', '2025-06-12 09:00:00', '2025-06-12 10:15:00', 3, 4200000, NULL),
-('VN806', 'BKK', 'SGN', '2025-06-12 12:15:00', '2025-06-12 15:30:00', 3, 4200000, NULL),
-('VN807', 'SGN', 'BKK', '2025-06-12 18:30:00', '2025-06-12 19:45:00', 4, 4200000, NULL),
-('VN808', 'BKK', 'SGN', '2025-06-12 22:00:00', '2025-06-13 01:15:00', 4, 4200000, NULL),
+DELIMITER ;
 
--- HAN/SGN - SIN (Singapore)
-('VN811', 'HAN', 'SIN', '2025-06-12 10:30:00', '2025-06-12 13:45:00', 9, 5200000, NULL),
-('VN812', 'SIN', 'HAN', '2025-06-12 15:45:00', '2025-06-12 21:00:00', 9, 5200000, NULL),
-('VN813', 'SGN', 'SIN', '2025-06-12 11:00:00', '2025-06-12 13:15:00', 10, 4800000, NULL),
-('VN814', 'SIN', 'SGN', '2025-06-12 15:15:00', '2025-06-12 19:30:00', 10, 4800000, NULL),
+-- Call the procedure to generate 100 chronological flights
+CALL generate_chronological_flights();
 
--- TUYẾN QUỐC TẾ ĐÔNG Á - Narrow-body & Wide-body
+-- (Optional) Drop the procedure after use
+DROP PROCEDURE generate_chronological_flights;
 
--- HAN - ICN (Seoul)
-('VN821', 'HAN', 'ICN', '2025-06-12 08:00:00', '2025-06-12 12:30:00', 6, 6500000, NULL),
-('VN822', 'ICN', 'HAN', '2025-06-12 14:30:00', '2025-06-12 17:00:00', 6, 6500000, NULL),
-('VN823', 'SGN', 'ICN', '2025-06-12 22:30:00', '2025-06-13 05:00:00', 7, 7200000, NULL),
-('VN824', 'ICN', 'SGN', '2025-06-13 07:00:00', '2025-06-13 11:30:00', 7, 7200000, NULL),
-
--- HAN/SGN - NRT (Tokyo)
-('VN831', 'HAN', 'NRT', '2025-06-12 09:30:00', '2025-06-12 15:00:00', 8, 7800000, NULL),
-('VN832', 'NRT', 'HAN', '2025-06-12 17:00:00', '2025-06-12 20:30:00', 8, 7800000, NULL),
-('VN833', 'SGN', 'NRT', '2025-06-12 23:00:00', '2025-06-13 06:30:00', 15, 8500000, NULL),
-('VN834', 'NRT', 'SGN', '2025-06-13 09:00:00', '2025-06-13 14:30:00', 15, 8500000, NULL),
-
--- TUYẾN QUỐC TẾ CHÂU ÂU - Wide-body
-
--- HAN - CDG (Paris)
-('VN851', 'HAN', 'CDG', '2025-06-12 23:30:00', '2025-06-13 06:45:00', 17, 25000000, NULL),
-('VN852', 'CDG', 'HAN', '2025-06-13 11:00:00', '2025-06-14 04:15:00', 17, 25000000, NULL),
-
--- SGN - FRA (Frankfurt)
-('VN861', 'SGN', 'FRA', '2025-06-12 00:30:00', '2025-06-12 07:15:00', 18, 28000000, NULL),
-('VN862', 'FRA', 'SGN', '2025-06-12 12:30:00', '2025-06-13 05:15:00', 18, 28000000, NULL),
-
--- TUYẾN QUỐC TẾ BẮC MỸ - Wide-body
-
--- HAN - SFO (San Francisco)
-('VN871', 'HAN', 'SFO', '2025-06-12 11:00:00', '2025-06-12 07:30:00', 19, 32000000, NULL),
-('VN872', 'SFO', 'HAN', '2025-06-12 13:30:00', '2025-06-13 19:00:00', 19, 32000000, NULL),
-
--- SGN - LAX (Los Angeles)
-('VN881', 'SGN', 'LAX', '2025-06-12 02:00:00', '2025-06-11 22:45:00', 20, 35000000, NULL),
-('VN882', 'LAX', 'SGN', '2025-06-12 01:15:00', '2025-06-13 06:30:00', 20, 35000000, NULL),
-
--- TUYẾN QUỐC TẾ ÚC - Wide-body
-
--- SGN - SYD (Sydney)
-('VN891', 'SGN', 'SYD', '2025-06-12 22:30:00', '2025-06-13 09:15:00', 21, 18000000, NULL),
-('VN892', 'SYD', 'SGN', '2025-06-13 12:15:00', '2025-06-13 18:45:00', 21, 18000000, NULL),
-
--- HAN - MEL (Melbourne)
-('VN893', 'HAN', 'MEL', '2025-06-12 23:45:00', '2025-06-13 11:30:00', 22, 19500000, NULL),
-('VN894', 'MEL', 'HAN', '2025-06-13 14:30:00', '2025-06-13 21:15:00', 22, 19500000, NULL),
-
--- CHUYẾN BAY THÊM CHO CÁC NGÀY TIẾP THEO (Tạo pattern cho tháng 6-12/2025)
-
--- Tuyến chính HAN-SGN tiếp tục ngày 14/6
-('VN109', 'HAN', 'SGN', '2025-06-14 06:00:00', '2025-06-14 08:15:00', 1, 2500000, NULL),
-('VN110', 'SGN', 'HAN', '2025-06-14 10:00:00', '2025-06-14 12:15:00', 1, 2500000, NULL),
-('VN111', 'HAN', 'SGN', '2025-06-14 14:00:00', '2025-06-14 16:15:00', 2, 2500000, NULL),
-('VN112', 'SGN', 'HAN', '2025-06-14 18:00:00', '2025-06-14 20:15:00', 2, 2500000, NULL),
-
--- Tuyến du lịch mùa hè (tháng 7-8/2025)
-('VN415', 'HAN', 'PQC', '2025-07-15 08:00:00', '2025-07-15 10:15:00', 8, 3200000, NULL),
-('VN416', 'PQC', 'HAN', '2025-07-15 12:00:00', '2025-07-15 14:15:00', 8, 3200000, NULL),
-('VN417', 'SGN', 'PQC', '2025-07-15 16:00:00', '2025-07-15 17:00:00', 6, 2800000, NULL),
-('VN418', 'PQC', 'SGN', '2025-07-15 19:00:00', '2025-07-15 20:00:00', 6, 2800000, NULL),
-
--- Tuyến quốc tế mùa cao điểm (tháng 12/2025)
-('VN835', 'SGN', 'NRT', '2025-12-20 23:30:00', '2025-12-21 07:00:00', 16, 12000000, NULL),
-('VN836', 'NRT', 'SGN', '2025-12-21 09:30:00', '2025-12-21 15:00:00', 16, 12000000, NULL),
-('VN825', 'HAN', 'ICN', '2025-12-22 09:00:00', '2025-12-22 13:30:00', 7, 8500000, NULL),
-('VN826', 'ICN', 'HAN', '2025-12-22 15:30:00', '2025-12-22 18:00:00', 7, 8500000, NULL),
-
--- Chuyến bay Tết Nguyên Đán 2026 (tháng 1/2026 - Advance booking)
-('VN901', 'SGN', 'HAN', '2025-01-25 05:30:00', '2025-01-25 07:45:00', 1, 4500000, NULL),
-('VN902', 'HAN', 'SGN', '2025-01-25 09:00:00', '2025-01-25 11:15:00', 1, 4500000, NULL),
-('VN903', 'SGN', 'HAN', '2025-01-25 13:30:00', '2025-01-25 15:45:00', 2, 4500000, NULL),
-('VN904', 'HAN', 'SGN', '2025-01-25 17:00:00', '2025-01-25 19:15:00', 2, 4500000, NULL);
-
--- Tháng 9/2023 - Khởi động lại sau COVID
--- HAN-SGN (Tuyến chính phục hồi)
-('VN101', 'HAN', 'SGN', '2023-09-01 06:00:00', '2023-09-01 08:15:00', 1, 1800000, NULL),
-('VN102', 'SGN', 'HAN', '2023-09-01 10:00:00', '2023-09-01 12:15:00', 1, 1800000, NULL),
-('VN103', 'HAN', 'SGN', '2023-09-01 14:00:00', '2023-09-01 16:15:00', 2, 1800000, NULL),
-('VN104', 'SGN', 'HAN', '2023-09-01 18:00:00', '2023-09-01 20:15:00', 2, 1800000, NULL),
-('VN105', 'HAN', 'SGN', '2023-09-15 07:30:00', '2023-09-15 09:45:00', 3, 1800000, NULL),
-('VN106', 'SGN', 'HAN', '2023-09-15 11:30:00', '2023-09-15 13:45:00', 3, 1800000, NULL),
-
--- HAN-DAD (Phục hồi từ từ)
-('VN201', 'HAN', 'DAD', '2023-09-01 08:00:00', '2023-09-01 09:20:00', 9, 1200000, NULL),
-('VN202', 'DAD', 'HAN', '2023-09-01 11:00:00', '2023-09-01 12:20:00', 9, 1200000, NULL),
-('VN203', 'HAN', 'DAD', '2023-09-15 15:00:00', '2023-09-15 16:20:00', 10, 1200000, NULL),
-('VN204', 'DAD', 'HAN', '2023-09-15 18:00:00', '2023-09-15 19:20:00', 10, 1200000, NULL),
-
--- Quốc tế bắt đầu mở lại - ASEAN
-('VN801', 'HAN', 'BKK', '2023-09-10 09:00:00', '2023-09-10 10:30:00', 1, 3200000, NULL),
-('VN802', 'BKK', 'HAN', '2023-09-10 13:00:00', '2023-09-10 16:30:00', 1, 3200000, NULL),
-('VN813', 'SGN', 'SIN', '2023-09-12 11:00:00', '2023-09-12 13:15:00', 10, 3500000, NULL),
-('VN814', 'SIN', 'SGN', '2023-09-12 15:15:00', '2023-09-12 19:30:00', 10, 3500000, NULL),
-
--- Tháng 10/2023 - Tăng tần suất dần
-('VN107', 'HAN', 'SGN', '2023-10-10 06:00:00', '2023-10-10 08:15:00', 1, 1900000, NULL),
-('VN108', 'SGN', 'HAN', '2023-10-10 10:00:00', '2023-10-10 12:15:00', 1, 1900000, NULL),
-('VN109', 'HAN', 'SGN', '2023-10-10 14:00:00', '2023-10-10 16:15:00', 2, 1900000, NULL),
-('VN110', 'SGN', 'HAN', '2023-10-10 18:00:00', '2023-10-10 20:15:00', 2, 1900000, NULL),
-
--- SGN-PQC mùa thu (giá thấp)
-('VN401', 'SGN', 'PQC', '2023-10-15 07:00:00', '2023-10-15 08:00:00', 6, 1600000, NULL),
-('VN402', 'PQC', 'SGN', '2023-10-15 10:30:00', '2023-10-15 11:30:00', 6, 1600000, NULL),
-
--- Tháng 11-12/2023 - Mùa cao điểm cuối năm
-('VN111', 'HAN', 'SGN', '2023-11-20 06:00:00', '2023-11-20 08:15:00', 1, 2200000, NULL),
-('VN112', 'SGN', 'HAN', '2023-11-20 10:00:00', '2023-11-20 12:15:00', 1, 2200000, NULL),
-('VN113', 'HAN', 'SGN', '2023-12-22 06:00:00', '2023-12-22 08:15:00', 1, 2800000, NULL),
-('VN114', 'SGN', 'HAN', '2023-12-22 10:00:00', '2023-12-22 12:15:00', 1, 2800000, NULL),
-
--- Quốc tế Đông Á mở lại dần
-('VN821', 'HAN', 'ICN', '2023-11-15 08:00:00', '2023-11-15 12:30:00', 6, 4500000, NULL),
-('VN822', 'ICN', 'HAN', '2023-11-15 14:30:00', '2023-11-15 17:00:00', 6, 4500000, NULL),
-('VN831', 'HAN', 'NRT', '2023-12-01 09:30:00', '2023-12-01 15:00:00', 8, 5500000, NULL),
-('VN832', 'NRT', 'HAN', '2023-12-01 17:00:00', '2023-12-01 20:30:00', 8, 5500000, NULL),
-
--- ============= NĂNG CAO CAPACITY 2024 =============
-
--- Q1/2024 - Tết Nguyên Đán 2024
-('VN115', 'SGN', 'HAN', '2024-02-08 05:30:00', '2024-02-08 07:45:00', 1, 3500000, NULL),
-('VN116', 'HAN', 'SGN', '2024-02-08 09:00:00', '2024-02-08 11:15:00', 1, 3500000, NULL),
-('VN117', 'SGN', 'HAN', '2024-02-09 13:30:00', '2024-02-09 15:45:00', 2, 3500000, NULL),
-('VN118', 'HAN', 'SGN', '2024-02-09 17:00:00', '2024-02-09 19:15:00', 2, 3500000, NULL),
-('VN119', 'SGN', 'HAN', '2024-02-10 06:00:00', '2024-02-10 08:15:00', 3, 3800000, NULL),
-('VN120', 'HAN', 'SGN', '2024-02-10 10:00:00', '2024-02-10 12:15:00', 3, 3800000, NULL),
-
--- Mở rộng mạng regional 2024
-('VN601', 'SGN', 'VCS', '2024-03-01 08:00:00', '2024-03-01 09:15:00', 25, 2800000, NULL),
-('VN602', 'VCS', 'SGN', '2024-03-01 11:00:00', '2024-03-01 12:15:00', 25, 2800000, NULL),
-('VN701', 'HAN', 'DIN', '2024-03-15 07:30:00', '2024-03-15 08:45:00', 26, 2200000, NULL),
-('VN702', 'DIN', 'HAN', '2024-03-15 10:15:00', '2024-03-15 11:30:00', 26, 2200000, NULL),
-
--- Q2/2024 - Mùa hè bắt đầu
-('VN403', 'SGN', 'PQC', '2024-04-20 07:00:00', '2024-04-20 08:00:00', 6, 2000000, NULL),
-('VN404', 'PQC', 'SGN', '2024-04-20 10:30:00', '2024-04-20 11:30:00', 6, 2000000, NULL),
-('VN405', 'HAN', 'PQC', '2024-05-01 09:00:00', '2024-05-01 11:15:00', 8, 2600000, NULL),
-('VN406', 'PQC', 'HAN', '2024-05-01 13:00:00', '2024-05-01 15:15:00', 8, 2600000, NULL),
-
-('VN501', 'SGN', 'CXR', '2024-05-15 06:45:00', '2024-05-15 07:50:00', 14, 1500000, NULL),
-('VN502', 'CXR', 'SGN', '2024-05-15 09:30:00', '2024-05-15 10:35:00', 14, 1500000, NULL),
-
--- Quốc tế mở rộng - Long-haul trở lại 2024
-('VN851', 'HAN', 'CDG', '2024-04-01 23:30:00', '2024-04-02 06:45:00', 17, 18000000, NULL),
-('VN852', 'CDG', 'HAN', '2024-04-02 11:00:00', '2024-04-03 04:15:00', 17, 18000000, NULL),
-('VN891', 'SGN', 'SYD', '2024-05-20 22:30:00', '2024-05-21 09:15:00', 21, 15000000, NULL),
-('VN892', 'SYD', 'SGN', '2024-05-21 12:15:00', '2024-05-21 18:45:00', 21, 15000000, NULL),
-
--- Q3/2024 - Mùa hè cao điểm
-('VN121', 'HAN', 'SGN', '2024-07-15 06:00:00', '2024-07-15 08:15:00', 1, 2200000, NULL),
-('VN122', 'SGN', 'HAN', '2024-07-15 10:00:00', '2024-07-15 12:15:00', 1, 2200000, NULL),
-('VN123', 'HAN', 'SGN', '2024-07-15 14:00:00', '2024-07-15 16:15:00', 2, 2200000, NULL),
-('VN124', 'SGN', 'HAN', '2024-07-15 18:00:00', '2024-07-15 20:15:00', 2, 2200000, NULL),
-
--- PQC mùa hè cao điểm
-('VN407', 'SGN', 'PQC', '2024-07-20 07:00:00', '2024-07-20 08:00:00', 6, 2800000, NULL),
-('VN408', 'PQC', 'SGN', '2024-07-20 10:30:00', '2024-07-20 11:30:00', 6, 2800000, NULL),
-('VN409', 'HAN', 'PQC', '2024-08-10 09:00:00', '2024-08-10 11:15:00', 8, 3200000, NULL),
-('VN410', 'PQC', 'HAN', '2024-08-10 13:00:00', '2024-08-10 15:15:00', 8, 3200000, NULL),
-
--- Q4/2024 - Cuối năm 2024
-('VN125', 'HAN', 'SGN', '2024-10-01 06:00:00', '2024-10-01 08:15:00', 1, 2000000, NULL),
-('VN126', 'SGN', 'HAN', '2024-10-01 10:00:00', '2024-10-01 12:15:00', 1, 2000000, NULL),
-('VN127', 'HAN', 'SGN', '2024-11-15 14:00:00', '2024-11-15 16:15:00', 2, 2300000, NULL),
-('VN128', 'SGN', 'HAN', '2024-11-15 18:00:00', '2024-11-15 20:15:00', 2, 2300000, NULL),
-('VN129', 'HAN', 'SGN', '2024-12-20 06:00:00', '2024-12-20 08:15:00', 3, 2600000, NULL),
-('VN130', 'SGN', 'HAN', '2024-12-20 10:00:00', '2024-12-20 12:15:00', 3, 2600000, NULL),
-
--- ============= EXPANSION PHASE 2025 =============
-
--- Q1/2025 - Tết Ất Tỵ 2025 (Tết khủng)
-('VN131', 'SGN', 'HAN', '2025-01-26 05:30:00', '2025-01-26 07:45:00', 1, 4200000, NULL),
-('VN132', 'HAN', 'SGN', '2025-01-26 09:00:00', '2025-01-26 11:15:00', 1, 4200000, NULL),
-('VN133', 'SGN', 'HAN', '2025-01-27 13:30:00', '2025-01-27 15:45:00', 2, 4200000, NULL),
-('VN134', 'HAN', 'SGN', '2025-01-27 17:00:00', '2025-01-27 19:15:00', 2, 4200000, NULL),
-('VN135', 'SGN', 'HAN', '2025-01-28 06:00:00', '2025-01-28 08:15:00', 3, 4500000, NULL),
-('VN136', 'HAN', 'SGN', '2025-01-28 10:00:00', '2025-01-28 12:15:00', 3, 4500000, NULL),
-('VN137', 'SGN', 'HAN', '2025-01-29 14:00:00', '2025-01-29 16:15:00', 4, 4500000, NULL),
-('VN138', 'HAN', 'SGN', '2025-01-29 18:00:00', '2025-01-29 20:15:00', 4, 4500000, NULL),
-
--- Tết holidays cao điểm cực
-('VN411', 'SGN', 'PQC', '2025-01-30 07:00:00', '2025-01-30 08:00:00', 6, 3800000, NULL),
-('VN412', 'PQC', 'SGN', '2025-01-30 10:30:00', '2025-01-30 11:30:00', 6, 3800000, NULL),
-('VN413', 'HAN', 'PQC', '2025-01-31 09:00:00', '2025-01-31 11:15:00', 8, 4200000, NULL),
-('VN414', 'PQC', 'HAN', '2025-01-31 13:00:00', '2025-01-31 15:15:00', 8, 4200000, NULL),
-
--- Q2/2025 - Normalizing sau Tết
-('VN139', 'HAN', 'SGN', '2025-03-15 06:00:00', '2025-03-15 08:15:00', 1, 2200000, NULL),
-('VN140', 'SGN', 'HAN', '2025-03-15 10:00:00', '2025-03-15 12:15:00', 1, 2200000, NULL),
-('VN141', 'HAN', 'SGN', '2025-04-20 14:00:00', '2025-04-20 16:15:00', 2, 2300000, NULL),
-('VN142', 'SGN', 'HAN', '2025-04-20 18:00:00', '2025-04-20 20:15:00', 2, 2300000, NULL),
-
--- Mở rộng quốc tế - Bắc Mỹ 2025
-('VN871', 'HAN', 'SFO', '2025-03-01 11:00:00', '2025-03-01 07:30:00', 19, 28000000, NULL),
-('VN872', 'SFO', 'HAN', '2025-03-01 13:30:00', '2025-03-02 19:00:00', 19, 28000000, NULL),
-('VN881', 'SGN', 'LAX', '2025-04-15 02:00:00', '2025-04-14 22:45:00', 20, 32000000, NULL),
-('VN882', 'LAX', 'SGN', '2025-04-15 01:15:00', '2025-04-16 06:30:00', 20, 32000000, NULL),
-
--- HIỆN TẠI - THÁNG 6/2025 (Dữ liệu gần real-time)
-
--- Tháng 6/2025 - Current operations
-('VN143', 'HAN', 'SGN', '2025-06-01 06:00:00', '2025-06-01 08:15:00', 1, 2400000, NULL),
-('VN144', 'SGN', 'HAN', '2025-06-01 10:00:00', '2025-06-01 12:15:00', 1, 2400000, NULL),
-('VN145', 'HAN', 'SGN', '2025-06-01 14:00:00', '2025-06-01 16:15:00', 2, 2400000, NULL),
-('VN146', 'SGN', 'HAN', '2025-06-01 18:00:00', '2025-06-01 20:15:00', 2, 2400000, NULL),
-
-('VN147', 'HAN', 'SGN', '2025-06-05 06:00:00', '2025-06-05 08:15:00', 1, 2400000, NULL),
-('VN148', 'SGN', 'HAN', '2025-06-05 10:00:00', '2025-06-05 12:15:00', 1, 2400000, NULL),
-('VN149', 'HAN', 'SGN', '2025-06-08 14:00:00', '2025-06-08 16:15:00', 2, 2400000, NULL),
-('VN150', 'SGN', 'HAN', '2025-06-08 18:00:00', '2025-06-08 20:15:00', 2, 2400000, NULL),
-
--- HIỆN TẠI gần ngày 11/6/2025 (Dữ liệu real-time)
-('VN151', 'HAN', 'SGN', '2025-06-10 06:00:00', '2025-06-10 08:15:00', 1, 2500000, NULL),
-('VN152', 'SGN', 'HAN', '2025-06-10 10:00:00', '2025-06-10 12:15:00', 1, 2500000, NULL),
-('VN153', 'HAN', 'SGN', '2025-06-11 06:00:00', '2025-06-11 08:15:00', 2, 2500000, NULL),
-('VN154', 'SGN', 'HAN', '2025-06-11 10:00:00', '2025-06-11 12:15:00', 2, 2500000, NULL),
-('VN155', 'HAN', 'SGN', '2025-06-11 14:00:00', '2025-06-11 16:15:00', 3, 2500000, NULL),
-('VN156', 'SGN', 'HAN', '2025-06-11 18:00:00', '2025-06-11 20:15:00', 3, 2500000, NULL),
-
--- Chuyến bay vừa completed (11/6/2025 trưa)
-('VN157', 'HAN', 'DAD', '2025-06-11 08:00:00', '2025-06-11 09:20:00', 9, 1800000, NULL),
-('VN158', 'DAD', 'HAN', '2025-06-11 11:00:00', '2025-06-11 12:20:00', 9, 1800000, NULL),
-('VN159', 'SGN', 'PQC', '2025-06-11 09:00:00', '2025-06-11 10:00:00', 6, 2200000, NULL),
-('VN160', 'PQC', 'SGN', '2025-06-11 12:30:00', '2025-06-11 13:30:00', 6, 2200000, NULL),
-
--- ===== FUTURE FLIGHTS (Sau 11/6/2025 16:35) =====
--- Dữ liệu tương lai từ các issue trước
-('VN101', 'HAN', 'SGN', '2025-06-12 06:00:00', '2025-06-12 08:15:00', 1, 2500000, NULL),
-('VN102', 'SGN', 'HAN', '2025-06-12 10:00:00', '2025-06-12 12:15:00', 1, 2500000, NULL),
-('VN103', 'HAN', 'SGN', '2025-06-12 14:00:00', '2025-06-12 16:15:00', 2, 2500000, NULL),
-('VN104', 'SGN', 'HAN', '2025-06-12 18:00:00', '2025-06-12 20:15:00', 2, 2500000, NULL),
-('VN105', 'HAN', 'SGN', '2025-06-13 07:30:00', '2025-06-13 09:45:00', 3, 2500000, NULL),
-('VN106', 'SGN', 'HAN', '2025-06-13 11:30:00', '2025-06-13 13:45:00', 3, 2500000, NULL);
 
 -- ============= BẢNG TICKET_CLASS (Master Data) =============
 
@@ -831,456 +588,194 @@ INSERT INTO ticket_class (ticket_class_name, color, deleted_at) VALUES
 ('First', '#9C27B0', NULL);            -- Tím - hạng nhất
 
 -- ============= BẢNG FLIGHT_TICKET_CLASS (Flight-specific Data) =============
+DELIMITER $$
+
+CREATE PROCEDURE generate_flight_ticket_classes()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE flightId INT;
+    DECLARE planeSeats INT;
+    DECLARE ticketClassCount INT;
+    DECLARE ticketClassId INT;
+    DECLARE totalAllocated DECIMAL(11,2);
+    DECLARE remainingSeats DECIMAL(11,2);
+    DECLARE weightSum INT;
+    DECLARE specifiedFare DECIMAL(11,2);
+    DECLARE ticketQuantity DECIMAL(11,2);
+    DECLARE remainingQuantity INT;
+    DECLARE weight INT;
+
+    -- Cursor for all flights with their plane's seat capacity
+    DECLARE flight_cursor CURSOR FOR
+        SELECT f.flight_id, p.seat_quantity
+        FROM flight f
+        JOIN plane p ON f.plane_id = p.plane_id;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN flight_cursor;
+
+    flight_loop: LOOP
+        FETCH flight_cursor INTO flightId, planeSeats;
+        IF done THEN
+            LEAVE flight_loop;
+        END IF;
+
+        -- Determine how many ticket classes to assign (1 to all)
+        SELECT COUNT(*) INTO ticketClassCount FROM ticket_class;
+        SET ticketClassCount = 1 + FLOOR(RAND() * ticketClassCount);
+
+        -- Temporary table for random ticket_class_ids with weights
+        CREATE TEMPORARY TABLE temp_ticket_class (
+            ticket_class_id INT,
+            weight INT
+        );
+
+        -- Assign random weights to selected classes
+        INSERT INTO temp_ticket_class
+        SELECT ticket_class_id, FLOOR(1 + RAND() * 10)
+        FROM ticket_class
+        ORDER BY RAND()
+        LIMIT ticketClassCount;
+
+        -- Calculate total weight for distribution
+        SELECT SUM(weight) INTO weightSum FROM temp_ticket_class;
+
+        -- Allocate seats proportionally based on weights
+        SET totalAllocated = 0;
+        SET remainingSeats = planeSeats;
+
+        ticket_class_loop: BEGIN
+            DECLARE done2 INT DEFAULT 0;
+            DECLARE cur CURSOR FOR SELECT ticket_class_id, weight FROM temp_ticket_class;
+            DECLARE CONTINUE HANDLER FOR NOT FOUND SET done2 = 1;
+
+            OPEN cur;
+            ticket_class_inner: LOOP
+                FETCH cur INTO ticketClassId, weight;
+                IF done2 THEN
+                    LEAVE ticket_class_inner;
+                END IF;
+
+                -- Calculate seats for this class (proportional to weight), no rounding
+                IF weightSum > 0 THEN
+                    SET ticketQuantity = planeSeats * (weight / weightSum);
+                ELSE
+                    SET ticketQuantity = planeSeats;
+                END IF;
+
+                -- Handle remaining seats
+                IF remainingSeats - ticketQuantity < 0 THEN
+                    SET ticketQuantity = remainingSeats;
+                END IF;
+
+                SET remainingSeats = remainingSeats - ticketQuantity;
+                SET totalAllocated = totalAllocated + ticketQuantity;
+
+                -- Generate remaining tickets (50-100% of allocated), rounded as integer
+                SET remainingQuantity = FLOOR(ticketQuantity * (0.5 + RAND() * 0.5));
+                SET specifiedFare = 500000 + FLOOR(RAND() * 4500001);
+
+                INSERT INTO flight_ticket_class (
+                    flight_id,
+                    ticket_class_id,
+                    ticket_quantity,
+                    remaining_ticket_quantity,
+                    specified_fare,
+                    deleted_at
+                ) VALUES (
+                    flightId,
+                    ticketClassId,
+                    ticketQuantity,
+                    remainingQuantity,
+                    specifiedFare,
+                    NULL
+                );
 
-INSERT INTO flight_ticket_class (flight_id, ticket_class_id, ticket_quantity, remaining_ticket_quantity, specified_fare, deleted_at) VALUES
-
--- ============= CHUYẾN BAY LỊCH SỬ 2023 =============
-
--- VN101 (HAN-SGN 2023-09-01) - A320-200 (Flight ID: 1, Capacity: 180)
-(1, 1, 162, 145, 1800000.00, NULL),    -- Economy: 162 ghế, 145 còn lại
-(1, 2, 12, 8, 2700000.00, NULL),       -- Premium Economy: 12 ghế, 8 còn lại (1.5x)
-(1, 3, 6, 2, 5400000.00, NULL),        -- Business: 6 ghế, 2 còn lại (3.0x)
-
--- VN102 (SGN-HAN 2023-09-01) - A320-200 (Flight ID: 2)
-(2, 1, 162, 138, 1800000.00, NULL),
-(2, 2, 12, 6, 2700000.00, NULL),
-(2, 3, 6, 1, 5400000.00, NULL),
-
--- VN103 (HAN-SGN 2023-09-01) - A320-200 (Flight ID: 3)
-(3, 1, 162, 150, 1800000.00, NULL),
-(3, 2, 12, 9, 2700000.00, NULL),
-(3, 3, 6, 3, 5400000.00, NULL),
-
--- VN104 (SGN-HAN 2023-09-01) - A320-200 (Flight ID: 4)
-(4, 1, 162, 142, 1800000.00, NULL),
-(4, 2, 12, 7, 2700000.00, NULL),
-(4, 3, 6, 2, 5400000.00, NULL),
-
--- VN105 (HAN-SGN 2023-09-15) - A320-200 (Flight ID: 5)
-(5, 1, 162, 148, 1800000.00, NULL),
-(5, 2, 12, 10, 2700000.00, NULL),
-(5, 3, 6, 4, 5400000.00, NULL),
-
--- VN106 (SGN-HAN 2023-09-15) - A320-200 (Flight ID: 6)
-(6, 1, 162, 140, 1800000.00, NULL),
-(6, 2, 12, 5, 2700000.00, NULL),
-(6, 3, 6, 1, 5400000.00, NULL),
-
--- VN201 (HAN-DAD 2023-09-01) - B737-800 (Flight ID: 7, Capacity: 189)
-(7, 1, 171, 155, 1200000.00, NULL),    -- Economy
-(7, 2, 12, 8, 1680000.00, NULL),       -- Premium Economy (1.4x)
-(7, 3, 6, 3, 3360000.00, NULL),        -- Business (2.8x)
-
--- VN202 (DAD-HAN 2023-09-01) - B737-800 (Flight ID: 8)
-(8, 1, 171, 160, 1200000.00, NULL),
-(8, 2, 12, 10, 1680000.00, NULL),
-(8, 3, 6, 4, 3360000.00, NULL),
-
--- VN203 (HAN-DAD 2023-09-15) - B737-800 (Flight ID: 9)
-(9, 1, 171, 158, 1200000.00, NULL),
-(9, 2, 12, 9, 1680000.00, NULL),
-(9, 3, 6, 3, 3360000.00, NULL),
-
--- VN204 (DAD-HAN 2023-09-15) - B737-800 (Flight ID: 10)
-(10, 1, 171, 162, 1200000.00, NULL),
-(10, 2, 12, 11, 1680000.00, NULL),
-(10, 3, 6, 5, 3360000.00, NULL),
-
--- VN801 (HAN-BKK 2023-09-10) - A320-200 International (Flight ID: 11)
-(11, 1, 156, 120, 3200000.00, NULL),   -- Economy
-(11, 2, 15, 8, 5760000.00, NULL),      -- Premium Economy (1.8x)
-(11, 3, 9, 2, 12800000.00, NULL),      -- Business (4.0x)
-
--- VN802 (BKK-HAN 2023-09-10) - A320-200 (Flight ID: 12)
-(12, 1, 156, 115, 3200000.00, NULL),
-(12, 2, 15, 6, 5760000.00, NULL),
-(12, 3, 9, 1, 12800000.00, NULL),
-
--- VN813 (SGN-SIN 2023-09-12) - B737-800 International (Flight ID: 13)
-(13, 1, 162, 130, 3500000.00, NULL),
-(13, 2, 18, 10, 6300000.00, NULL),     -- Premium Economy (1.8x)
-(13, 3, 9, 3, 14000000.00, NULL),      -- Business (4.0x)
-
--- VN814 (SIN-SGN 2023-09-12) - B737-800 (Flight ID: 14)
-(14, 1, 162, 125, 3500000.00, NULL),
-(14, 2, 18, 8, 6300000.00, NULL),
-(14, 3, 9, 2, 14000000.00, NULL),
-
--- ============= WIDE-BODY INTERNATIONAL 2024 =============
-
--- VN851 (HAN-CDG 2024-04-01) - A330-300 Long-haul (Flight ID: 39)
-(39, 1, 255, 180, 18000000.00, NULL),  -- Economy
-(39, 2, 51, 25, 39600000.00, NULL),    -- Premium Economy (2.2x)
-(39, 3, 28, 8, 99000000.00, NULL),     -- Business (5.5x)
-(39, 4, 6, 2, 216000000.00, NULL),     -- First (12.0x)
-
--- VN852 (CDG-HAN 2024-04-02) - A330-300 (Flight ID: 40)
-(40, 1, 255, 190, 18000000.00, NULL),
-(40, 2, 51, 30, 39600000.00, NULL),
-(40, 3, 28, 12, 99000000.00, NULL),
-(40, 4, 6, 3, 216000000.00, NULL),
-
--- VN891 (SGN-SYD 2024-05-20) - B777-200 (Flight ID: 41)
-(41, 1, 262, 200, 15000000.00, NULL),  -- Economy
-(41, 2, 53, 30, 30000000.00, NULL),    -- Premium Economy (2.0x)
-(41, 3, 31, 10, 75000000.00, NULL),    -- Business (5.0x)
-(41, 4, 4, 1, 150000000.00, NULL),     -- First (10.0x)
-
--- VN892 (SYD-SGN 2024-05-21) - B777-200 (Flight ID: 42)
-(42, 1, 262, 210, 15000000.00, NULL),
-(42, 2, 53, 35, 30000000.00, NULL),
-(42, 3, 31, 15, 75000000.00, NULL),
-(42, 4, 4, 2, 150000000.00, NULL),
-
--- ============= REGIONAL AIRCRAFT =============
-
--- VN601 (SGN-VCS 2024-03-01) - ATR 72-500 (Flight ID: 35) - Economy only
-(35, 1, 70, 45, 2800000.00, NULL),     -- Economy only
-
--- VN602 (VCS-SGN 2024-03-01) - ATR 72-500 (Flight ID: 36)
-(36, 1, 70, 50, 2800000.00, NULL),
-
--- VN701 (HAN-DIN 2024-03-15) - ATR 72-600 (Flight ID: 37)
-(37, 1, 78, 55, 2200000.00, NULL),
-
--- VN702 (DIN-HAN 2024-03-15) - ATR 72-600 (Flight ID: 38)
-(38, 1, 78, 60, 2200000.00, NULL),
-
--- ============= A321 LEISURE ROUTES 2024 =============
-
--- VN405 (HAN-PQC 2024-05-01) - A321-200 Leisure (Flight ID: 47)
-(47, 1, 176, 140, 2600000.00, NULL),   -- Economy
-(47, 2, 33, 20, 4160000.00, NULL),     -- Premium Economy (1.6x)
-(47, 3, 11, 5, 8320000.00, NULL),      -- Business (3.2x)
-
--- VN406 (PQC-HAN 2024-05-01) - A321-200 (Flight ID: 48)
-(48, 1, 176, 145, 2600000.00, NULL),
-(48, 2, 33, 25, 4160000.00, NULL),
-(48, 3, 11, 7, 8320000.00, NULL),
-
--- ============= BOEING 737 MAX 2024 =============
-
--- VN501 (SGN-CXR 2024-05-15) - B737-MAX 8 (Flight ID: 49)
-(49, 1, 180, 160, 1500000.00, NULL),   -- Economy
-(49, 2, 14, 8, 2250000.00, NULL),      -- Premium Economy (1.5x)
-(49, 3, 6, 2, 4500000.00, NULL),       -- Business (3.0x)
-
--- VN502 (CXR-SGN 2024-05-15) - B737-MAX 8 (Flight ID: 50)
-(50, 1, 180, 165, 1500000.00, NULL),
-(50, 2, 14, 10, 2250000.00, NULL),
-(50, 3, 6, 3, 4500000.00, NULL),
-
--- ============= NORTH AMERICA ROUTES 2025 =============
-
--- VN871 (HAN-SFO 2025-03-01) - A350-900 Trans-Pacific (Flight ID: 85)
-(85, 1, 245, 150, 28000000.00, NULL),  -- Economy
-(85, 2, 70, 30, 70000000.00, NULL),    -- Premium Economy (2.5x)
-(85, 3, 28, 8, 168000000.00, NULL),    -- Business (6.0x)
-(85, 4, 7, 2, 420000000.00, NULL),     -- First (15.0x)
-
--- VN872 (SFO-HAN 2025-03-01) - A350-900 (Flight ID: 86)
-(86, 1, 245, 160, 28000000.00, NULL),
-(86, 2, 70, 35, 70000000.00, NULL),
-(86, 3, 28, 12, 168000000.00, NULL),
-(86, 4, 7, 3, 420000000.00, NULL),
-
--- VN881 (SGN-LAX 2025-04-15) - A350-900 (Flight ID: 87)
-(87, 1, 245, 140, 32000000.00, NULL),  -- Economy
-(87, 2, 70, 25, 80000000.00, NULL),    -- Premium Economy (2.5x)
-(87, 3, 28, 6, 192000000.00, NULL),    -- Business (6.0x)
-(87, 4, 7, 1, 480000000.00, NULL),     -- First (15.0x)
-
--- VN882 (LAX-SGN 2025-04-15) - A350-900 (Flight ID: 88)
-(88, 1, 245, 155, 32000000.00, NULL),
-(88, 2, 70, 30, 80000000.00, NULL),
-(88, 3, 28, 10, 192000000.00, NULL),
-(88, 4, 7, 2, 480000000.00, NULL),
-
--- ============= CURRENT FLIGHTS (11/6/2025) =============
-
--- VN153 (HAN-SGN 2025-06-11 06:00) - A320-200 (Flight ID: 103) - COMPLETED
-(103, 1, 162, 0, 2500000.00, NULL),    -- SOLD OUT
-(103, 2, 12, 0, 3750000.00, NULL),     -- SOLD OUT
-(103, 3, 6, 0, 7500000.00, NULL),      -- SOLD OUT
-
--- VN154 (SGN-HAN 2025-06-11 10:00) - A320-200 (Flight ID: 104) - COMPLETED
-(104, 1, 162, 0, 2500000.00, NULL),    -- SOLD OUT
-(104, 2, 12, 0, 3750000.00, NULL),     -- SOLD OUT
-(104, 3, 6, 0, 7500000.00, NULL),      -- SOLD OUT
-
--- VN155 (HAN-SGN 2025-06-11 14:00) - A320-200 (Flight ID: 105) - IN PROGRESS (16:44 - Almost landing)
-(105, 1, 162, 0, 2500000.00, NULL),    -- SOLD OUT
-(105, 2, 12, 0, 3750000.00, NULL),     -- SOLD OUT  
-(105, 3, 6, 0, 7500000.00, NULL),      -- SOLD OUT
-
--- VN156 (SGN-HAN 2025-06-11 18:00) - A320-200 (Flight ID: 106) - SCHEDULED (Available for booking)
-(106, 1, 162, 45, 2500000.00, NULL),   -- 45 ghế Economy còn lại
-(106, 2, 12, 3, 3750000.00, NULL),     -- 3 ghế Premium Economy còn lại
-(106, 3, 6, 1, 7500000.00, NULL),      -- 1 ghế Business còn lại
-
--- VN157 (HAN-DAD 2025-06-11 08:00) - B737-800 (Flight ID: 107) - COMPLETED
-(107, 1, 171, 0, 1800000.00, NULL),    -- SOLD OUT
-(107, 2, 12, 0, 2520000.00, NULL),     -- SOLD OUT
-(107, 3, 6, 0, 5040000.00, NULL),      -- SOLD OUT
-
--- VN158 (DAD-HAN 2025-06-11 11:00) - B737-800 (Flight ID: 108) - COMPLETED
-(108, 1, 171, 0, 1800000.00, NULL),    -- SOLD OUT
-(108, 2, 12, 0, 2520000.00, NULL),     -- SOLD OUT
-(108, 3, 6, 0, 5040000.00, NULL),      -- SOLD OUT
-
--- VN159 (SGN-PQC 2025-06-11 09:00) - A321-200 (Flight ID: 109) - COMPLETED
-(109, 1, 176, 0, 2200000.00, NULL),    -- SOLD OUT
-(109, 2, 33, 0, 3520000.00, NULL),     -- SOLD OUT
-(109, 3, 11, 0, 7040000.00, NULL),     -- SOLD OUT
-
--- VN160 (PQC-SGN 2025-06-11 12:30) - A321-200 (Flight ID: 110) - COMPLETED
-(110, 1, 176, 0, 2200000.00, NULL),    -- SOLD OUT
-(110, 2, 33, 0, 3520000.00, NULL),     -- SOLD OUT
-(110, 3, 11, 0, 7040000.00, NULL),     -- SOLD OUT
-
--- ============= TOMORROW'S FLIGHTS (12/6/2025) - Available for booking =============
-
--- VN101 (HAN-SGN 2025-06-12 06:00) - A320-200 (Flight ID: 111)
-(111, 1, 162, 120, 2500000.00, NULL),  -- 120 ghế Economy available
-(111, 2, 12, 8, 3750000.00, NULL),     -- 8 ghế Premium Economy available
-(111, 3, 6, 4, 7500000.00, NULL),      -- 4 ghế Business available
-
--- VN102 (SGN-HAN 2025-06-12 10:00) - A320-200 (Flight ID: 112)
-(112, 1, 162, 115, 2500000.00, NULL),
-(112, 2, 12, 7, 3750000.00, NULL),
-(112, 3, 6, 3, 7500000.00, NULL),
-
--- VN103 (HAN-SGN 2025-06-12 14:00) - A320-200 (Flight ID: 113)
-(113, 1, 162, 125, 2500000.00, NULL),
-(113, 2, 12, 9, 3750000.00, NULL),
-(113, 3, 6, 5, 7500000.00, NULL),
-
--- VN104 (SGN-HAN 2025-06-12 18:00) - A320-200 (Flight ID: 114)
-(114, 1, 162, 130, 2500000.00, NULL),
-(114, 2, 12, 10, 3750000.00, NULL),
-(114, 3, 6, 6, 7500000.00, NULL),
-
--- VN201 (HAN-DAD 2025-06-12 06:30) - B737-800 (Flight ID: 115)
-(115, 1, 171, 140, 1800000.00, NULL),
-(115, 2, 12, 8, 2520000.00, NULL),
-(115, 3, 6, 4, 5040000.00, NULL),
-
--- VN202 (DAD-HAN 2025-06-12 09:00) - B737-800 (Flight ID: 116)
-(116, 1, 171, 135, 1800000.00, NULL),
-(116, 2, 12, 7, 2520000.00, NULL),
-(116, 3, 6, 3, 5040000.00, NULL),
-
--- VN401 (SGN-PQC 2025-06-12 07:00) - A321-200 (Flight ID: 117)
-(117, 1, 176, 150, 2200000.00, NULL),
-(117, 2, 33, 25, 3520000.00, NULL),
-(117, 3, 11, 8, 7040000.00, NULL),
-
--- VN402 (PQC-SGN 2025-06-12 10:30) - A321-200 (Flight ID: 118)
-(118, 1, 176, 145, 2200000.00, NULL),
-(118, 2, 33, 20, 3520000.00, NULL),
-(118, 3, 11, 6, 7040000.00, NULL),
-
--- VN801 (HAN-BKK 2025-06-12 08:30) - A320-200 International (Flight ID: 119)
-(119, 1, 156, 100, 4500000.00, NULL),  -- International pricing
-(119, 2, 15, 8, 8100000.00, NULL),     -- Premium Economy (1.8x)
-(119, 3, 9, 4, 18000000.00, NULL),     -- Business (4.0x)
-
--- VN802 (BKK-HAN 2025-06-12 12:00) - A320-200 (Flight ID: 120)
-(120, 1, 156, 95, 4500000.00, NULL),
-(120, 2, 15, 6, 8100000.00, NULL),
-(120, 3, 9, 3, 18000000.00, NULL);
-
--- Bổ sung dữ liệu layover cho nhiều chuyến bay (flight_detail)
-INSERT INTO flight_detail (flight_id, medium_airport_id, arrival_time, layover_duration, deleted_at) VALUES
-
--- ============= EXISTING DATA (đã có) =============
--- Flight ID 39, 40, 41, 42, 85, 86, 87, 88 đã có layover
-
--- ============= EUROPE ROUTES - MULTIPLE FLIGHTS =============
-
--- Các chuyến HAN-CDG khác với layover Bangkok
--- VN851 mỗi tuần có nhiều chuyến, không chỉ 1 chuyến
--- Flight IDs cho các chuyến CDG khác trong dataset
-
--- HAN-CDG flights khác (nếu có multiple trong week)
--- Giả sử có Flight ID 170-175 cho weekly CDG flights
-(170, 3, '2024-04-08 01:20:00', 110, NULL),   -- Monday CDG flight via BKK
-(171, 3, '2024-04-09 01:15:00', 105, NULL),   -- Tuesday CDG flight via BKK  
-(172, 3, '2024-04-11 01:25:00', 115, NULL),   -- Thursday CDG flight via BKK
-(173, 3, '2024-04-13 01:10:00', 100, NULL),   -- Saturday CDG flight via BKK
-
--- CDG-HAN return flights
-(174, 3, '2024-04-09 02:35:00', 125, NULL),   -- Tuesday return via BKK
-(175, 3, '2024-04-10 02:30:00', 120, NULL),   -- Wednesday return via BKK
-(176, 3, '2024-04-12 02:40:00', 130, NULL),   -- Friday return via BKK
-(177, 3, '2024-04-14 02:25:00', 115, NULL),   -- Sunday return via BKK
-
--- SGN-FRA flights với layover Bangkok  
--- Frankfurt flights từ SGN qua BKK
-(178, 3, '2024-04-05 02:20:00', 95, NULL),    -- Friday FRA flight via BKK
-(179, 3, '2024-04-07 02:15:00', 105, NULL),   -- Sunday FRA flight via BKK
-(180, 3, '2024-04-12 02:25:00', 100, NULL),   -- Friday FRA flight via BKK
-(181, 3, '2024-04-14 02:10:00', 90, NULL),    -- Sunday FRA flight via BKK
-
--- FRA-SGN return flights  
-(182, 3, '2024-04-06 04:50:00', 110, NULL),   -- Saturday return via BKK
-(183, 3, '2024-04-08 04:45:00', 105, NULL),   -- Monday return via BKK
-(184, 3, '2024-04-13 04:55:00', 115, NULL),   -- Saturday return via BKK
-(185, 3, '2024-04-15 04:40:00', 100, NULL),   -- Monday return via BKK
-
--- ============= TRANS-PACIFIC ROUTES - MULTIPLE FLIGHTS =============
-
--- HAN-SFO flights khác via NRT (weekly schedule)
--- Các chuyến bay trong tuần với layover Tokyo
-(186, 8, '2025-03-03 15:35:00', 155, NULL),   -- Monday SFO via NRT
-(187, 8, '2025-03-05 15:25:00', 145, NULL),   -- Wednesday SFO via NRT
-(188, 8, '2025-03-08 15:40:00', 160, NULL),   -- Saturday SFO via NRT
-(189, 8, '2025-03-10 15:30:00', 150, NULL),   -- Monday SFO via NRT
-
--- SFO-HAN return flights
-(190, 8, '2025-03-04 17:10:00', 140, NULL),   -- Tuesday return via NRT
-(191, 8, '2025-03-06 17:00:00', 135, NULL),   -- Thursday return via NRT  
-(192, 8, '2025-03-09 17:15:00', 145, NULL),   -- Sunday return via NRT
-(193, 8, '2025-03-11 17:05:00', 130, NULL),   -- Tuesday return via NRT
-
--- SGN-LAX flights khác via ICN (bi-weekly schedule)
-(194, 6, '2025-04-17 08:35:00', 185, NULL),   -- Thursday LAX via ICN
-(195, 6, '2025-04-20 08:25:00', 175, NULL),   -- Sunday LAX via ICN
-(196, 6, '2025-04-22 08:40:00', 190, NULL),   -- Tuesday LAX via ICN
-(197, 6, '2025-04-25 08:30:00', 180, NULL),   -- Friday LAX via ICN
-
--- LAX-SGN return flights
-(198, 6, '2025-04-18 06:05:00', 170, NULL),   -- Friday return via ICN
-(199, 6, '2025-04-21 06:00:00', 165, NULL),   -- Monday return via ICN
-(200, 6, '2025-04-23 06:10:00', 175, NULL),   -- Wednesday return via ICN
-(201, 6, '2025-04-26 05:55:00', 160, NULL),   -- Saturday return via ICN
-
--- ============= AUSTRALIA ROUTES - MULTIPLE FLIGHTS =============
-
--- SGN-SYD flights khác via SIN (3x weekly)
-(202, 5, '2024-05-22 01:20:00', 125, NULL),   -- Wednesday SYD via SIN
-(203, 5, '2024-05-25 01:15:00', 120, NULL),   -- Saturday SYD via SIN  
-(204, 5, '2024-05-27 01:25:00', 130, NULL),   -- Monday SYD via SIN
-(205, 5, '2024-05-29 01:10:00', 115, NULL),   -- Wednesday SYD via SIN
-
--- SYD-SGN return flights
-(206, 5, '2024-05-23 15:35:00', 155, NULL),   -- Thursday return via SIN
-(207, 5, '2024-05-26 15:30:00', 150, NULL),   -- Sunday return via SIN
-(208, 5, '2024-05-28 15:40:00', 160, NULL),   -- Tuesday return via SIN
-(209, 5, '2024-05-30 15:25:00', 145, NULL),   -- Thursday return via SIN
-
--- HAN-MEL flights via SIN (weekly)
-(210, 5, '2024-06-01 03:35:00', 140, NULL),   -- Saturday MEL via SIN
-(211, 5, '2024-06-08 03:30:00', 135, NULL),   -- Saturday MEL via SIN
-(212, 5, '2024-06-15 03:40:00', 145, NULL),   -- Saturday MEL via SIN
-(213, 5, '2024-06-22 03:35:00', 140, NULL),   -- Saturday MEL via SIN
-
--- MEL-HAN return flights
-(214, 5, '2024-06-02 14:35:00', 125, NULL),   -- Sunday return via SIN
-(215, 5, '2024-06-09 14:30:00', 120, NULL),   -- Sunday return via SIN
-(216, 5, '2024-06-16 14:40:00', 130, NULL),   -- Sunday return via SIN
-(217, 5, '2024-06-23 14:35:00', 125, NULL),   -- Sunday return via SIN
-
--- ============= EAST ASIA LONG ROUTES WITH LAYOVERS =============
-
--- HAN-NRT có một số chuyến cần layover via ICN (technical/commercial)
-(218, 6, '2023-12-03 13:15:00', 90, NULL),    -- Sunday NRT via ICN
-(219, 6, '2023-12-10 13:20:00', 95, NULL),    -- Sunday NRT via ICN
-(220, 6, '2023-12-17 13:10:00', 85, NULL),    -- Sunday NRT via ICN
-(221, 6, '2023-12-24 13:25:00', 100, NULL),   -- Sunday NRT via ICN
-
--- NRT-HAN return via ICN
-(222, 6, '2023-12-04 15:30:00', 105, NULL),   -- Monday return via ICN
-(223, 6, '2023-12-11 15:35:00', 110, NULL),   -- Monday return via ICN
-(224, 6, '2023-12-18 15:25:00', 100, NULL),   -- Monday return via ICN
-(225, 6, '2023-12-25 15:40:00', 115, NULL),   -- Monday return via ICN
-
--- ============= SEASONAL ROUTES WITH LAYOVERS =============
-
--- Tết 2025 special flights có layover (high demand routing)
--- SGN-HAN Tết flights via DAD (capacity overflow)
-(226, 4, '2025-01-27 06:50:00', 50, NULL),    -- Tết overflow via DAD
-(227, 4, '2025-01-28 06:45:00', 45, NULL),    -- Tết overflow via DAD
-(228, 4, '2025-01-29 06:55:00', 55, NULL),    -- Tết overflow via DAD
-(229, 4, '2025-01-30 06:40:00', 40, NULL),    -- Tết overflow via DAD
-
--- HAN-SGN Tết return via CXR (alternative routing)
-(230, 7, '2025-02-03 18:25:00', 45, NULL),    -- Tết return via CXR
-(231, 7, '2025-02-04 18:20:00', 40, NULL),    -- Tết return via CXR
-(232, 7, '2025-02-05 18:30:00', 50, NULL),    -- Tết return via CXR
-(233, 7, '2025-02-06 18:15:00', 35, NULL),    -- Tết return via CXR
-
--- ============= SUMMER 2024 HIGH SEASON LAYOVERS =============
-
--- PQC summer flights với layover CXR (fuel efficiency)
--- HAN-PQC via CXR during peak summer
-(234, 7, '2024-07-01 11:35:00', 60, NULL),    -- Summer PQC via CXR
-(235, 7, '2024-07-15 11:30:00', 55, NULL),    -- Summer PQC via CXR
-(236, 7, '2024-08-01 11:40:00', 65, NULL),    -- Summer PQC via CXR
-(237, 7, '2024-08-15 11:35:00', 60, NULL),    -- Summer PQC via CXR
-
--- PQC-HAN return via CXR
-(238, 7, '2024-07-01 16:25:00', 50, NULL),    -- Summer return via CXR
-(239, 7, '2024-07-15 16:20:00', 45, NULL),    -- Summer return via CXR
-(240, 7, '2024-08-01 16:30:00', 55, NULL),    -- Summer return via CXR
-(241, 7, '2024-08-15 16:25:00', 50, NULL),    -- Summer return via CXR
-
--- ============= REGIONAL CONNECTIONS WITH TECHNICAL STOPS =============
-
--- ATR flights needing fuel stops on longer routes
--- SGN-VCS via CXR (ATR range limitation on some days)
-(242, 7, '2024-03-05 08:35:00', 30, NULL),    -- VCS via CXR (fuel)
-(243, 7, '2024-03-12 08:30:00', 25, NULL),    -- VCS via CXR (fuel)
-(244, 7, '2024-03-19 08:40:00', 35, NULL),    -- VCS via CXR (fuel)
-(245, 7, '2024-03-26 08:35:00', 30, NULL),    -- VCS via CXR (fuel)
-
--- VCS-SGN return via CXR
-(246, 7, '2024-03-05 13:45:00', 35, NULL),    -- Return via CXR
-(247, 7, '2024-03-12 13:40:00', 30, NULL),    -- Return via CXR
-(248, 7, '2024-03-19 13:50:00', 40, NULL),    -- Return via CXR
-(249, 7, '2024-03-26 13:45:00', 35, NULL),    -- Return via CXR
-
--- ============= CURRENT OPERATIONS (June 2025) =============
-
--- Không có layover flights hôm nay (11/6/2025) - tất cả direct
--- Completed flights hôm nay: VN153-160 đều direct flights
-
--- Tomorrow flights (12/6/2025) - checking for any layovers
--- VN801 HAN-BKK tomorrow có thể có technical stop
--- (Chỉ nếu có weather/technical requirements)
-
--- ============= FUTURE FLIGHTS WITH LAYOVERS =============
-
--- Upcoming long-haul flights cần layover (13/6/2025 onwards)
--- VN851 HAN-CDG next flight via BKK
-(250, 3, '2025-06-13 01:15:00', 105, NULL),   -- Friday CDG via BKK
-(251, 3, '2025-06-14 02:30:00', 120, NULL),   -- Saturday return via BKK
-
--- VN871 HAN-SFO next flight via NRT  
-(252, 8, '2025-06-15 15:30:00', 150, NULL),   -- Sunday SFO via NRT
-(253, 8, '2025-06-16 17:00:00', 135, NULL),   -- Monday return via NRT
-
--- ============= CARGO/CHARTER FLIGHTS WITH STOPS =============
-
--- Cargo flights với technical stops
--- HAN-LAX cargo via ANC (Anchorage fuel stop)
-(254, 19, '2025-06-20 15:30:00', 120, NULL),  -- Cargo via Anchorage
-(255, 19, '2025-06-27 15:35:00', 125, NULL),  -- Cargo via Anchorage
-
--- SGN-FRA cargo via SVO (Moscow technical)
-(256, 20, '2025-06-25 09:15:00', 90, NULL),   -- Cargo via Moscow
-(257, 20, '2025-07-02 09:20:00', 95, NULL),   -- Cargo via Moscow
-
--- ============= MAINTENANCE/FERRY FLIGHTS =============
-
--- Aircraft positioning flights với stops
--- A350 ferry HAN-LAX via NRT (positioning)
-(258, 8, '2025-07-01 14:45:00', 180, NULL),   -- Ferry positioning via NRT
-
--- A330 ferry SGN-CDG via BKK (return to base)
-(259, 3, '2025-07-15 02:15:00', 240, NULL);   -- Extended layover for maintenance
+                SET ticketClassCount = ticketClassCount - 1;
+                SET weightSum = weightSum - weight;
+            END LOOP ticket_class_inner;
+            CLOSE cur;
+        END ticket_class_loop;
+
+        DROP TEMPORARY TABLE IF EXISTS temp_ticket_class;
+    END LOOP flight_loop;
+
+    CLOSE flight_cursor;
+END$$
+
+DELIMITER ;
+
+
+
+-- Call the procedure
+CALL generate_flight_ticket_classes();
+
+-- (Optional) Drop the procedure
+DROP PROCEDURE generate_flight_ticket_classes;
 
 -- ============= BẢNG CHATBOX =============
+-- Generate 24 customer accounts (Khách A -> Khách Z, excluding J, W)
+INSERT INTO `account` (account_name, `password`, account_type, email, citizen_id, phone_number) VALUES
+('Khách A', 'password123', 1, 'khach.a@email.com', '001000000001', '0900000001'),
+('Khách B', 'password123', 1, 'khach.b@email.com', '001000000002', '0900000002'),
+('Khách C', 'password123', 1, 'khach.c@email.com', '001000000003', '0900000003'),
+('Khách D', 'password123', 1, 'khach.d@email.com', '001000000004', '0900000004'),
+('Khách E', 'password123', 1, 'khach.e@email.com', '001000000005', '0900000005'),
+('Khách F', 'password123', 1, 'khach.f@email.com', '001000000006', '0900000006'),
+('Khách G', 'password123', 1, 'khach.g@email.com', '001000000007', '0900000007'),
+('Khách H', 'password123', 1, 'khach.h@email.com', '001000000008', '0900000008'),
+('Khách I', 'password123', 1, 'khach.i@email.com', '001000000009', '0900000009'),
+('Khách K', 'password123', 1, 'khach.k@email.com', '001000000010', '0900000010'),
+('Khách L', 'password123', 1, 'khach.l@email.com', '001000000011', '0900000011'),
+('Khách M', 'password123', 1, 'khach.m@email.com', '001000000012', '0900000012'),
+('Khách N', 'password123', 1, 'khach.n@email.com', '001000000013', '0900000013'),
+('Khách O', 'password123', 1, 'khach.o@email.com', '001000000014', '0900000014'),
+('Khách P', 'password123', 1, 'khach.p@email.com', '001000000015', '0900000015'),
+('Khách Q', 'password123', 1, 'khach.q@email.com', '001000000016', '0900000016'),
+('Khách R', 'password123', 1, 'khach.r@email.com', '001000000017', '0900000017'),
+('Khách S', 'password123', 1, 'khach.s@email.com', '001000000018', '0900000018'),
+('Khách T', 'password123', 1, 'khach.t@email.com', '001000000019', '0900000019'),
+('Khách U', 'password123', 1, 'khach.u@email.com', '001000000020', '0900000020'),
+('Khách V', 'password123', 1, 'khach.v@email.com', '001000000021', '0900000021'),
+('Khách X', 'password123', 1, 'khach.x@email.com', '001000000022', '0900000022'),
+('Khách Y', 'password123', 1, 'khach.y@email.com', '001000000023', '0900000023'),
+('Khách Z', 'password123', 1, 'khach.z@email.com', '001000000024', '0900000024');
+
+-- Generate corresponding customer records
+INSERT INTO customer (customer_id, score) 
+SELECT account_id, 0 FROM `account` WHERE account_type = 1 AND account_name LIKE 'Khách %';
+
+-- Generate 24 employee accounts for customer support (Chăm A -> Chăm Z, excluding J, W)
+INSERT INTO `account` (account_name, `password`, account_type, email, citizen_id, phone_number) VALUES
+('Chăm A', 'password123', 2, 'cham.a@company.com', '002000000001', '0800000001'),
+('Chăm B', 'password123', 2, 'cham.b@company.com', '002000000002', '0800000002'),
+('Chăm C', 'password123', 2, 'cham.c@company.com', '002000000003', '0800000003'),
+('Chăm D', 'password123', 2, 'cham.d@company.com', '002000000004', '0800000004'),
+('Chăm E', 'password123', 2, 'cham.e@company.com', '002000000005', '0800000005'),
+('Chăm F', 'password123', 2, 'cham.f@company.com', '002000000006', '0800000006'),
+('Chăm G', 'password123', 2, 'cham.g@company.com', '002000000007', '0800000007'),
+('Chăm H', 'password123', 2, 'cham.h@company.com', '002000000008', '0800000008'),
+('Chăm I', 'password123', 2, 'cham.i@company.com', '002000000009', '0800000009'),
+('Chăm K', 'password123', 2, 'cham.k@company.com', '002000000010', '0800000010'),
+('Chăm L', 'password123', 2, 'cham.l@company.com', '002000000011', '0800000011'),
+('Chăm M', 'password123', 2, 'cham.m@company.com', '002000000012', '0800000012'),
+('Chăm N', 'password123', 2, 'cham.n@company.com', '002000000013', '0800000013'),
+('Chăm O', 'password123', 2, 'cham.o@company.com', '002000000014', '0800000014'),
+('Chăm P', 'password123', 2, 'cham.p@company.com', '002000000015', '0800000015'),
+('Chăm Q', 'password123', 2, 'cham.q@company.com', '002000000016', '0800000016'),
+('Chăm R', 'password123', 2, 'cham.r@company.com', '002000000017', '0800000017'),
+('Chăm S', 'password123', 2, 'cham.s@company.com', '002000000018', '0800000018'),
+('Chăm T', 'password123', 2, 'cham.t@company.com', '002000000019', '0800000019'),
+('Chăm U', 'password123', 2, 'cham.u@company.com', '002000000020', '0800000020'),
+('Chăm V', 'password123', 2, 'cham.v@company.com', '002000000021', '0800000021'),
+('Chăm X', 'password123', 2, 'cham.x@company.com', '002000000022', '0800000022'),
+('Chăm Y', 'password123', 2, 'cham.y@company.com', '002000000023', '0800000023'),
+('Chăm Z', 'password123', 2, 'cham.z@company.com', '002000000024', '0800000024');
+
+-- Generate corresponding employee records (employee_type 3 = customer support)
+INSERT INTO employee (employee_id, employee_type) 
+SELECT account_id, 3 FROM `account` WHERE account_type = 2 AND account_name LIKE 'Chăm %';
+-- =============================================================
 
 INSERT INTO chatbox (customer_id, deleted_at) VALUES
 -- January 2025 - Week 1
