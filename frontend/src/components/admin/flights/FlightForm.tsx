@@ -89,7 +89,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
 
     const airportOptions = airports.map(airport => ({
         value: airport.airportId!,
-        label: `${airport.cityName} - ${airport.airportName}`,
+        label: `${airport.airportName} - ${airport.cityName}`,
         city: airport.cityName,
         name: airport.airportName
     }));
@@ -103,7 +103,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
 
     // Validation functions
     const validateFlightCode = (code: string): boolean => {
-        const flightCodeRegex = /^[A-Z]{2}\d{3,4}$/;
+        const flightCodeRegex = /^[A-Z]{2}-\d{3,4}$/;
         return flightCodeRegex.test(code);
     };
 
@@ -180,7 +180,7 @@ const FlightForm: React.FC<FlightFormProps> = ({
 
                 // Check if within flight window
                 if (stopArrival <= mainDeparture || stopDeparture >= mainArrival) {
-                    errors.stopoverTimes = 'Thời gian các điểm dừng phải nằm trong khoảng thời gian của chuyến bay.';
+                    errors.stopoverTimes = 'Thời gian các điểm dừng phải nằm trong khoảng thời gian bay của chuyến bay.';
                     break;
                 }
 
@@ -275,10 +275,10 @@ const FlightForm: React.FC<FlightFormProps> = ({
                             {...register('flightCode', {
                                 required: 'Mã chuyến bay là bắt buộc',
                                 validate: (value) => validateFlightCode(value) ||
-                                    'Mã chuyến bay không hợp lệ. Định dạng phải là 2 chữ cái + 3-4 số (VD: VN123, QH1234)'
+                                    'Mã chuyến bay không hợp lệ. Định dạng phải là 2 chữ cái + 3-4 số (VD: VN-123, QH-1234)'
                             })}
                             isInvalid={!!errors.flightCode}
-                            placeholder="vd: VN123"
+                            placeholder="vd: VN-123"
                         />
                         <Form.Control.Feedback type="invalid">
                             {errors.flightCode?.message}

@@ -1,9 +1,6 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.*;
-import com.flightmanagement.entity.Ticket;
-import com.flightmanagement.mapper.TicketMapper;
-import com.flightmanagement.service.PassengerService;
 import com.flightmanagement.service.TicketService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -22,11 +17,11 @@ public class TicketController {
     @Autowired
     private TicketService ticketService;
 
-    @Autowired
-    private PassengerService passengerService;
+    // @Autowired
+    // private PassengerService passengerService;
 
-    @Autowired
-    private PaymentController paymentService;
+    // @Autowired
+    // private PaymentController paymentService;
 
     @GetMapping
     public ResponseEntity<List<TicketDto>> getAllTickets() {

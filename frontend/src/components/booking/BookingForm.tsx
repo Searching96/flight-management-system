@@ -37,7 +37,7 @@ const BookingForm: React.FC = () => {
         // console.log('Parsed booking data from sessionStorage:', parsed);
         return {
           flightId: parsed.flightId?.toString(),
-          queryPassengers: parsed.passengers?.toString(),
+          queryPassengers: parsed.passengerCount?.toString(),
           queryClass: parsed.class?.toString()
         };
       } catch (error) {

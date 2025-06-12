@@ -352,7 +352,7 @@ const FlightManagement: React.FC<{
 
             if (plane.seatQuantity !== totalAssignedSeats) {
                 setTicketClassValidationError(
-                    `Tổng số ghế (${totalAssignedSeats}) phải khớp với sức chứa máy bay (${plane.seatQuantity})`
+                    `Tổng số ghế của các hạng vé (${totalAssignedSeats}) phải bằng sức chứa của máy bay (${plane.seatQuantity})`
                 );
                 return;
             }
@@ -1385,7 +1385,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                                         ticketQuantity: parseInt(e.target.value) || 0
                                     }))}
                                     min={minTotalQuantity}
-                                    max={planeInfo?.availableSeats || undefined}
+                                    max={planeInfo ? planeInfo.totalSeats : undefined}
                                     isInvalid={!!validationError}
                                 />
                                 <Form.Control.Feedback type="invalid">
@@ -1393,6 +1393,9 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                                 </Form.Control.Feedback>
                                 <div className="text-muted small">
                                     Tối thiểu: {minTotalQuantity} ({soldSeats} đã bán)
+                                    {planeInfo && (
+                                        <> | Tối đa: {planeInfo.totalSeats} (sức chứa máy bay)</>
+                                    )}
                                 </div>
                             </Form.Group>
                         </Col>
