@@ -1,9 +1,6 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.*;
-import com.flightmanagement.entity.Ticket;
-import com.flightmanagement.mapper.TicketMapper;
-import com.flightmanagement.service.PassengerService;
 import com.flightmanagement.service.TicketService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -22,11 +17,11 @@ public class TicketController {
     @Autowired
     private TicketService ticketService;
 
-    @Autowired
-    private PassengerService passengerService;
+    // @Autowired
+    // private PassengerService passengerService;
 
-    @Autowired
-    private PaymentController paymentService;
+    // @Autowired
+    // private PaymentController paymentService;
 
     @GetMapping
     public ResponseEntity<List<TicketDto>> getAllTickets() {
@@ -66,20 +61,7 @@ public class TicketController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTicket(@PathVariable Integer id, HttpServletRequest request) {
-        TicketDto ticket = ticketService.getTicketById(id);
         ticketService.deleteTicket(id);
-
-        if (ticket.getOrderId().equals("PAID_WITH_CASH")) {
-            System.out.println("Ticket was paid with cash, no need to refund.");
-            return ResponseEntity.noContent().build();
-        }
-        if (ticket.getTicketStatus() == 1 && ticket.getPaymentTime() != null) {
-            System.out.println("Start refunding.");
-            paymentService.refundTransaction(ticket.getOrderId(), String.valueOf(ticket.getFare().intValueExact())
-                    , ticket.getPaymentTime().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
-                    , passengerService.getPassengerById(ticket.getPassengerId()).getPassengerName(), "02", request);
-            return ResponseEntity.noContent().build();
-        }
         return ResponseEntity.noContent().build();
     }
 
