@@ -5,7 +5,11 @@ import { parameterService } from '../../services';
 import { usePermissions } from '../../hooks/useAuth';
 import { ParameterUpdateRequest } from '../../models';
 
-export const ParameterSettings: React.FC = () => {
+interface ParameterSettingsProps {
+    readOnly?: boolean;
+}
+
+export const ParameterSettings: React.FC<ParameterSettingsProps> = ({ readOnly = false }) => {
     const { canViewAdmin } = usePermissions();
     if (!canViewAdmin) {
         return (
@@ -94,7 +98,7 @@ export const ParameterSettings: React.FC = () => {
                 <Card.Header className="text-center bg-primary text-white">
                     <Card.Title as="h2" className="mb-2">
                         <i className="bi bi-gear-fill me-2"></i>
-                        Thay đổi quy định hệ thống
+                        {readOnly ? 'Xem quy định hệ thống' : 'Thay đổi quy định hệ thống'}
                     </Card.Title>
                 </Card.Header>
             </Card>
@@ -106,16 +110,23 @@ export const ParameterSettings: React.FC = () => {
                 </Alert>
             )}
 
-            {success && (
+            {success && !readOnly && (
                 <Alert variant="success" className="mb-4">
                     <Alert.Heading>Thành công</Alert.Heading>
                     {success}
                 </Alert>
             )}
 
+            {readOnly && (
+                <Alert variant="info" className="mb-4">
+                    <Alert.Heading>Chế độ chỉ xem</Alert.Heading>
+                    Bạn đang xem quy định hệ thống. Không thể chỉnh sửa trong chế độ này.
+                </Alert>
+            )}
+
             <Card>
                 <Card.Body className="p-4">
-                    <Form onSubmit={handleSubmit(onSubmit)}>
+                    <Form onSubmit={readOnly ? (e) => e.preventDefault() : handleSubmit(onSubmit)}>
                         {/* Flight Constraints Section */}
                         <div className="mb-5 pb-4 border-bottom">
                             <h5 className="text-primary mb-4">
@@ -131,17 +142,21 @@ export const ParameterSettings: React.FC = () => {
                                             type="number"
                                             min="0"
                                             max="10"
+                                            readOnly={readOnly}
+                                            disabled={readOnly}
                                             {...register('maxMediumAirport', {
-                                                required: 'Số sân bay trung gian tối đa là bắt buộc',
+                                                required: !readOnly && 'Số sân bay trung gian tối đa là bắt buộc',
                                                 min: { value: 0, message: 'Giá trị phải ít nhất là 0' },
                                                 max: { value: 10, message: 'Giá trị phải nhiều nhất là 10' },
                                                 valueAsNumber: true
                                             })}
-                                            isInvalid={!!errors.maxMediumAirport}
+                                            isInvalid={!readOnly && !!errors.maxMediumAirport}
                                         />
-                                        <Form.Control.Feedback type="invalid">
-                                            {errors.maxMediumAirport?.message}
-                                        </Form.Control.Feedback>
+                                        {!readOnly && (
+                                            <Form.Control.Feedback type="invalid">
+                                                {errors.maxMediumAirport?.message}
+                                            </Form.Control.Feedback>
+                                        )}
                                         <Form.Text className="text-muted">
                                             Quy định số điểm dừng trung gian tối đa được phép cho mỗi chuyến bay
                                         </Form.Text>
@@ -155,17 +170,21 @@ export const ParameterSettings: React.FC = () => {
                                             type="number"
                                             min="30"
                                             max="1440"
+                                            readOnly={readOnly}
+                                            disabled={readOnly}
                                             {...register('minFlightDuration', {
-                                                required: 'Thời gian bay tối thiểu là bắt buộc',
+                                                required: !readOnly && 'Thời gian bay tối thiểu là bắt buộc',
                                                 min: { value: 30, message: 'Thời gian tối thiểu là 30 phút' },
                                                 max: { value: 1440, message: 'Thời gian tối đa là 24 giờ (1440 phút)' },
                                                 valueAsNumber: true
                                             })}
-                                            isInvalid={!!errors.minFlightDuration}
+                                            isInvalid={!readOnly && !!errors.minFlightDuration}
                                         />
-                                        <Form.Control.Feedback type="invalid">
-                                            {errors.minFlightDuration?.message}
-                                        </Form.Control.Feedback>
+                                        {!readOnly && (
+                                            <Form.Control.Feedback type="invalid">
+                                                {errors.minFlightDuration?.message}
+                                            </Form.Control.Feedback>
+                                        )}
                                         <Form.Text className="text-muted">
                                             Quy định thời gian bay tối thiểu được phép cho mỗi chuyến
                                         </Form.Text>
@@ -189,17 +208,21 @@ export const ParameterSettings: React.FC = () => {
                                             type="number"
                                             min="30"
                                             max="720"
+                                            readOnly={readOnly}
+                                            disabled={readOnly}
                                             {...register('minLayoverDuration', {
-                                                required: 'Thời gian dừng chân tối thiểu là bắt buộc',
+                                                required: !readOnly && 'Thời gian dừng chân tối thiểu là bắt buộc',
                                                 min: { value: 30, message: 'Thời gian dừng chân tối thiểu là 30 phút' },
                                                 max: { value: 720, message: 'Thời gian dừng chân tối đa là 12 giờ (720 phút)' },
                                                 valueAsNumber: true
                                             })}
-                                            isInvalid={!!errors.minLayoverDuration}
+                                            isInvalid={!readOnly && !!errors.minLayoverDuration}
                                         />
-                                        <Form.Control.Feedback type="invalid">
-                                            {errors.minLayoverDuration?.message}
-                                        </Form.Control.Feedback>
+                                        {!readOnly && (
+                                            <Form.Control.Feedback type="invalid">
+                                                {errors.minLayoverDuration?.message}
+                                            </Form.Control.Feedback>
+                                        )}
                                         <Form.Text className="text-muted">
                                             Quy định thời gian dừng chân tối thiểu cần thiết giữa các chuyến bay kết nối
                                         </Form.Text>
@@ -213,17 +236,21 @@ export const ParameterSettings: React.FC = () => {
                                             type="number"
                                             min="60"
                                             max="1440"
+                                            readOnly={readOnly}
+                                            disabled={readOnly}
                                             {...register('maxLayoverDuration', {
-                                                required: 'Thời gian dừng chân tối đa là bắt buộc',
+                                                required: !readOnly && 'Thời gian dừng chân tối đa là bắt buộc',
                                                 min: { value: 60, message: 'Thời gian tối thiểu là 60 phút' },
                                                 max: { value: 1440, message: 'Thời gian tối đa là 24 giờ (1440 phút)' },
                                                 valueAsNumber: true
                                             })}
-                                            isInvalid={!!errors.maxLayoverDuration}
+                                            isInvalid={!readOnly && !!errors.maxLayoverDuration}
                                         />
-                                        <Form.Control.Feedback type="invalid">
-                                            {errors.maxLayoverDuration?.message}
-                                        </Form.Control.Feedback>
+                                        {!readOnly && (
+                                            <Form.Control.Feedback type="invalid">
+                                                {errors.maxLayoverDuration?.message}
+                                            </Form.Control.Feedback>
+                                        )}
                                         <Form.Text className="text-muted">
                                             Quy định thời gian dừng chân tối đa được phép
                                         </Form.Text>
@@ -246,16 +273,20 @@ export const ParameterSettings: React.FC = () => {
                                         <Form.Control
                                             type="number"
                                             min="0"
+                                            readOnly={readOnly}
+                                            disabled={readOnly}
                                             {...register('minBookingInAdvanceDuration', {
-                                                required: 'Thời gian đặt vé trước tối thiểu là bắt buộc',
+                                                required: !readOnly && 'Thời gian đặt vé trước tối thiểu là bắt buộc',
                                                 min: { value: 0, message: 'Thời gian không được âm' },
                                                 valueAsNumber: true
                                             })}
-                                            isInvalid={!!errors.minBookingInAdvanceDuration}
+                                            isInvalid={!readOnly && !!errors.minBookingInAdvanceDuration}
                                         />
-                                        <Form.Control.Feedback type="invalid">
-                                            {errors.minBookingInAdvanceDuration?.message}
-                                        </Form.Control.Feedback>
+                                        {!readOnly && (
+                                            <Form.Control.Feedback type="invalid">
+                                                {errors.minBookingInAdvanceDuration?.message}
+                                            </Form.Control.Feedback>
+                                        )}
                                         <Form.Text className="text-muted">
                                             Quy định số ngày tối thiểu khách hàng phải đặt vé trước khi khởi hành
                                         </Form.Text>
@@ -269,16 +300,20 @@ export const ParameterSettings: React.FC = () => {
                                             type="number"
                                             min="0"
                                             max="720"
+                                            readOnly={readOnly}
+                                            disabled={readOnly}
                                             {...register('maxBookingHoldDuration', {
-                                                required: 'Thời gian giữ chỗ tối đa là bắt buộc',
+                                                required: !readOnly && 'Thời gian giữ chỗ tối đa là bắt buộc',
                                                 max: { value: 720, message: 'Thời gian giữ chỗ tối đa là 720 giờ (30 ngày)' },
                                                 valueAsNumber: true
                                             })}
-                                            isInvalid={!!errors.maxBookingHoldDuration}
+                                            isInvalid={!readOnly && !!errors.maxBookingHoldDuration}
                                         />
-                                        <Form.Control.Feedback type="invalid">
-                                            {errors.maxBookingHoldDuration?.message}
-                                        </Form.Control.Feedback>
+                                        {!readOnly && (
+                                            <Form.Control.Feedback type="invalid">
+                                                {errors.maxBookingHoldDuration?.message}
+                                            </Form.Control.Feedback>
+                                        )}
                                         <Form.Text className="text-muted">
                                             Quy định thời gian tối đa hệ thống giữ chỗ trước khi yêu cầu thanh toán
                                         </Form.Text>
@@ -287,28 +322,30 @@ export const ParameterSettings: React.FC = () => {
                             </Row>
                         </div>
 
-                        <div className="d-flex justify-content-center mt-5">
-                            <Button type="submit" variant="primary" disabled={saving} size="lg" className="px-5">
-                                {saving ? (
-                                    <>
-                                        <Spinner
-                                            as="span"
-                                            animation="border"
-                                            size="sm"
-                                            role="status"
-                                            aria-hidden="true"
-                                            className="me-2"
-                                        />
-                                        Đang lưu quy định...
-                                    </>
-                                ) : (
-                                    <>
-                                        <i className="bi bi-check-circle me-2"></i>
-                                        Lưu quy định hệ thống
-                                    </>
-                                )}
-                            </Button>
-                        </div>
+                        {!readOnly && (
+                            <div className="d-flex justify-content-center mt-5">
+                                <Button type="submit" variant="primary" disabled={saving} size="lg" className="px-5">
+                                    {saving ? (
+                                        <>
+                                            <Spinner
+                                                as="span"
+                                                animation="border"
+                                                size="sm"
+                                                role="status"
+                                                aria-hidden="true"
+                                                className="me-2"
+                                            />
+                                            Đang lưu quy định...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-check-circle me-2"></i>
+                                            Lưu quy định hệ thống
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        )}
                     </Form>
                 </Card.Body>
             </Card>
@@ -323,16 +360,36 @@ export const ParameterSettings: React.FC = () => {
                     <Row>
                         <Col md={6}>
                             <ul className="small text-muted mb-0">
-                                <li>Tất cả quy định áp dụng ngay sau khi lưu</li>
-                                <li>Thay đổi quy định có thể ảnh hưởng đến đặt vé hiện tại</li>
-                                <li>Thời gian tính bằng phút (1 giờ = 60 phút)</li>
+                                {readOnly ? (
+                                    <>
+                                        <li>Đang xem quy định hiện tại của hệ thống</li>
+                                        <li>Liên hệ quản trị viên để thay đổi quy định</li>
+                                        <li>Thời gian tính bằng phút (1 giờ = 60 phút)</li>
+                                    </>
+                                ) : (
+                                    <>
+                                        <li>Tất cả quy định áp dụng ngay sau khi lưu</li>
+                                        <li>Thay đổi quy định có thể ảnh hưởng đến đặt vé hiện tại</li>
+                                        <li>Thời gian tính bằng phút (1 giờ = 60 phút)</li>
+                                    </>
+                                )}
                             </ul>
                         </Col>
                         <Col md={6}>
                             <ul className="small text-muted mb-0">
-                                <li>Chỉ quản trị viên và nhân viên dịch vụ mới có quyền thay đổi</li>
-                                <li>Mọi thay đổi được ghi lại trong hệ thống</li>
-                                <li>Liên hệ IT nếu gặp sự cố kỹ thuật</li>
+                                {readOnly ? (
+                                    <>
+                                        <li>Chế độ chỉ xem - không thể chỉnh sửa</li>
+                                        <li>Mọi thay đổi phải được phê duyệt</li>
+                                        <li>Liên hệ IT nếu cần hỗ trợ</li>
+                                    </>
+                                ) : (
+                                    <>
+                                        <li>Chỉ quản trị viên và nhân viên dịch vụ mới có quyền thay đổi</li>
+                                        <li>Mọi thay đổi được ghi lại trong hệ thống</li>
+                                        <li>Liên hệ IT nếu gặp sự cố kỹ thuật</li>
+                                    </>
+                                )}
                             </ul>
                         </Col>
                     </Row>

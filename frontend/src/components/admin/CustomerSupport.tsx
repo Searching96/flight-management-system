@@ -590,7 +590,7 @@ const CustomerSupport: React.FC = () => {
     chatbox.lastMessageContent && chatbox.lastMessageContent.trim() !== ''
   );
 
-  const truncateMessage = (message: string, maxLength: number = 25) => {
+  const truncateMessage = (message: string, maxLength: number = 15) => {
     if (!message) return '';
     if (message.length <= maxLength) return message;
     return message.substring(0, maxLength) + '...';

@@ -124,7 +124,9 @@ const FlightCard: React.FC<FlightCardProps> = ({
           </Col>
           <Col xs="auto">
             <Badge bg="secondary" className="fs-6">
-              {formatDate(flight.departureTime)}
+              {formatDate(flight.departureTime) == formatDate(flight.arrivalTime) ?
+              formatDate(flight.departureTime) :
+              `${formatDate(flight.departureTime)} - ${formatDate(flight.arrivalTime)}`}
             </Badge>
           </Col>
         </Row>
@@ -218,13 +220,13 @@ const FlightCard: React.FC<FlightCardProps> = ({
                       </td>
                       <td className="text-center align-middle py-3">
                         {detail.arrivalTime 
-                          ? <span className="badge bg-info">{formatTime(detail.arrivalTime)}</span>
+                          ? <span className="badge bg-info">{formatTime(detail.arrivalTime)  + ' - ' + formatDate(detail.arrivalTime)}</span>
                           : <span className="text-muted">N/A</span>
                         }
                       </td>
                       <td className="text-center align-middle py-3">
                         {detail.layoverDuration 
-                          ? <span className="badge bg-secondary">{detail.layoverDuration}</span>
+                          ? <span className="badge bg-secondary">{detail.layoverDuration} phút</span>
                           : <span className="text-muted">N/A</span>
                         }
                       </td>

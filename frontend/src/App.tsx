@@ -30,6 +30,7 @@ import ParameterSettings from './components/admin/ParameterSettings';
 import AirportManagement from './components/admin/AirportManagement';
 import EmployeeManagement from './components/admin/EmployeeManagement';
 import Statistics from './components/Statistics/Statistics';
+import SupportSearch from './components/support/SupportSearch';
 // import TicketingPanel from './components/employee/TicketingPanel';
 // import AccountingPanel from './components/employee/AccountingPanel';
 
@@ -125,6 +126,14 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute requiredAccountType='Employee' requiredRoles={['EMPLOYEE_SUPPORT', 'EMPLOYEE_ADMINISTRATOR']}>
                   <CustomerSupport />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/support-search"
+              element={
+                <ProtectedRoute requiredAccountType='Employee' requiredRoles={['EMPLOYEE_SUPPORT', 'EMPLOYEE_ADMINISTRATOR']}>
+                  <SupportSearch />
                 </ProtectedRoute>
               }
             />

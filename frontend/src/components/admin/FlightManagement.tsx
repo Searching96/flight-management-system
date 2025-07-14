@@ -41,7 +41,8 @@ import FlightTable from './flights/FlightTable';
 const FlightManagement: React.FC<{
     showAddModal?: boolean;
     onCloseAddModal?: () => void;
-}> = ({ showAddModal = false, onCloseAddModal }) => {
+    readOnly?: boolean;
+}> = ({ showAddModal = false, onCloseAddModal, readOnly = false }) => {
     const permissions = usePermissions();
 
     // Check permissions first
@@ -119,10 +120,10 @@ const FlightManagement: React.FC<{
 
     // Handle external modal trigger
     useEffect(() => {
-        if (showAddModal) {
+        if (showAddModal && !readOnly) {
             setShowForm(true);
         }
-    }, [showAddModal]);
+    }, [showAddModal, readOnly]);
 
     const loadData = async () => {
         try {
@@ -484,18 +485,34 @@ const FlightManagement: React.FC<{
 
     return (
         <Container fluid className="py-4">
+            {/* Read-only mode alert */}
+            {readOnly && (
+                <Row className="mb-4">
+                    <Col>
+                        <Alert variant="info" className="text-center">
+                            <Alert.Heading>Chế độ chỉ xem</Alert.Heading>
+                            <p className="mb-0">Bạn đang xem danh sách chuyến bay. Không thể chỉnh sửa trong chế độ này.</p>
+                        </Alert>
+                    </Col>
+                </Row>
+            )}
+
             {/* Header */}
             <Row className="mb-4">
                 <Col>
                     <Card>
                         <Card.Header className="d-flex justify-content-between align-items-center">
-                            <Card.Title className="mb-0">✈️ Quản lý chuyến bay</Card.Title>
-                            <Button
-                                variant="primary"
-                                onClick={() => setShowForm(true)}
-                            >
-                                Thêm chuyến bay mới
-                            </Button>
+                            <Card.Title className="mb-0">
+                                ✈️ {readOnly ? 'Tra cứu chuyến bay' : 'Quản lý chuyến bay'}
+                            </Card.Title>
+                            {!readOnly && (
+                                <Button
+                                    variant="primary"
+                                    onClick={() => setShowForm(true)}
+                                >
+                                    Thêm chuyến bay mới
+                                </Button>
+                            )}
                         </Card.Header>
                     </Card>
                 </Col>
@@ -513,7 +530,7 @@ const FlightManagement: React.FC<{
             )}
 
             {/* Flight Form Modal */}
-            <Modal show={showForm} onHide={handleCancel} size="lg">
+            <Modal show={showForm && !readOnly} onHide={handleCancel} size="lg">
                 <Modal.Header closeButton>
                     <Modal.Title>{editingFlight ? 'Sửa chuyến bay' : 'Thêm chuyến bay mới'}</Modal.Title>
                 </Modal.Header>
@@ -552,10 +569,18 @@ const FlightManagement: React.FC<{
             >
                 <Modal.Header closeButton>
                     <Modal.Title>
-                        Hạng vé cho chuyến bay {selectedFlightForClasses?.flightCode}
+                        {readOnly ? 'Thông tin hạng vé' : 'Hạng vé cho'} chuyến bay {selectedFlightForClasses?.flightCode}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
+                    {/* Read-only mode alert in modal */}
+                    {readOnly && (
+                        <Alert variant="info" className="mb-3">
+                            <i className="bi bi-info-circle me-2"></i>
+                            Chế độ chỉ xem - không thể thay đổi thông tin hạng vé
+                        </Alert>
+                    )}
+
                     {/* Flight Route Info */}
                     <Row className="align-items-center mb-3">
                         <Col>
@@ -564,7 +589,7 @@ const FlightManagement: React.FC<{
                             </h5>
                         </Col>
                         <Col md="auto">
-                            {availableTicketClasses.length > 0 && (
+                            {!readOnly && availableTicketClasses.length > 0 && (
                                 <Button
                                     variant="primary"
                                     disabled={!selectedFlightForClasses || 
@@ -607,7 +632,7 @@ const FlightManagement: React.FC<{
                     )}
 
                     {/* Validation Errors */}
-                    {ticketClassValidationError && (
+                    {!readOnly && ticketClassValidationError && (
                         <Alert variant="danger" className="mb-3">
                             <i className="bi bi-exclamation-triangle-fill me-2"></i>
                             {ticketClassValidationError}
@@ -615,7 +640,7 @@ const FlightManagement: React.FC<{
                     )}
 
                     {/* Pending Changes Alert */}
-                    {modifiedTicketClasses.size > 0 && (
+                    {!readOnly && modifiedTicketClasses.size > 0 && (
                         <Alert variant="warning" className="mb-3">
                             <i className="bi bi-info-circle-fill me-2"></i>
                             Bạn có {modifiedTicketClasses.size} thay đổi chưa lưu. Nhấn "Lưu thay đổi" để áp dụng.
@@ -623,7 +648,7 @@ const FlightManagement: React.FC<{
                     )}
 
                     {/* Create Association Form */}
-                    {showCreateForm && (
+                    {!readOnly && showCreateForm && (
                         <CreateAssociationFormWithTypeAhead
                             availableClasses={availableTicketClasses}
                             onSubmit={handleCreateAssociation}
@@ -642,14 +667,14 @@ const FlightManagement: React.FC<{
                                     association={association}
                                     className={getTicketClassName(association.ticketClassId!)}
                                     classColor={getTicketClassColor(association.ticketClassId!)}
-                                    isEditing={editingAssociation?.ticketClassId === association.ticketClassId}
-                                    onEdit={() => setEditingAssociation(association)}
+                                    isEditing={!readOnly && editingAssociation?.ticketClassId === association.ticketClassId}
+                                    onEdit={() => !readOnly && setEditingAssociation(association)}
                                     onSave={(data) => handleTicketClassUpdate(
                                         association.ticketClassId!,
                                         data
                                     )}
                                     onCancel={() => setEditingAssociation(null)}
-                                    onDelete={() => handleDeleteAssociationClick(
+                                    onDelete={() => !readOnly && handleDeleteAssociationClick(
                                         association.flightId!,
                                         association.ticketClassId!
                                     )}
@@ -660,6 +685,7 @@ const FlightManagement: React.FC<{
                                     planes={planes}
                                     flightTicketClasses={flightTicketClasses}
                                     onValidationChange={(error) => handleCardValidationError(association.ticketClassId!, error)}
+                                    readOnly={readOnly}
                                 />
                             </Col>
                         ))}
@@ -669,7 +695,12 @@ const FlightManagement: React.FC<{
                     {flightTicketClasses.length === 0 && (
                         <Alert variant="info" className="text-center">
                             <Alert.Heading>Chưa có hạng vé nào</Alert.Heading>
-                            <p className="mb-0">Thêm hạng vé để cho phép đặt chỗ cho chuyến bay này.</p>
+                            <p className="mb-0">
+                                {readOnly 
+                                    ? 'Chuyến bay này chưa có hạng vé nào được cấu hình.'
+                                    : 'Thêm hạng vé để cho phép đặt chỗ cho chuyến bay này.'
+                                }
+                            </p>
                         </Alert>
                     )}
                 </Modal.Body>
@@ -677,16 +708,19 @@ const FlightManagement: React.FC<{
                     <Button variant="secondary" onClick={handleCancelTicketClasses}>
                         Đóng
                     </Button>
-                    <Button
-                        variant="success"
-                        onClick={handleSaveAllTicketClasses}
-                        disabled={modifiedTicketClasses.size === 0 || cardValidationErrors.size > 0}
-                    >
-                        <i className="bi bi-save me-2"></i>
-                        Lưu thay đổi
-                    </Button>
+                    {!readOnly && (
+                        <Button
+                            variant="success"
+                            onClick={handleSaveAllTicketClasses}
+                            disabled={modifiedTicketClasses.size === 0 || cardValidationErrors.size > 0}
+                        >
+                            <i className="bi bi-save me-2"></i>
+                            Lưu thay đổi
+                        </Button>
+                    )}
                 </Modal.Footer>
             </Modal>
+
             {/* Flights table - REPLACED WITH NEW COMPONENT */}
             <Row>
                 <Col>
@@ -695,122 +729,127 @@ const FlightManagement: React.FC<{
                         onEdit={handleEdit}
                         onDelete={handleDelete}
                         onManageTicketClasses={handleManageTicketClasses}
+                        readOnly={readOnly}
                     />
                 </Col>
             </Row>
 
             {/* Flight Delete Confirmation Modal */}
-            <Modal show={showDeleteFlightModal} onHide={() => !deletingFlight && setShowDeleteFlightModal(false)} centered>
-                <Modal.Header closeButton className="bg-danger text-white">
-                    <Modal.Title>
-                        <i className="bi bi-exclamation-triangle me-2"></i>
-                        Xác nhận xóa chuyến bay
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="p-4">
-                    <div className="text-center mb-3">
-                        <i className="bi bi-airplane text-danger" style={{ fontSize: '3rem' }}></i>
-                    </div>
-                    <h5 className="text-center mb-3">Bạn có chắc chắn muốn xóa chuyến bay này không?</h5>
-                    {flightToDelete && (
-                        <div className="p-3 bg-light rounded mb-3">
-                            <div className="text-center">
-                                <strong>{flightToDelete.flightCode}</strong><br />
-                                <span className="text-muted">
-                                    {flightToDelete.departureCityName} → {flightToDelete.arrivalCityName}
-                                </span><br />
-                                <small className="text-muted">
-                                    {new Date(flightToDelete.departureTime).toLocaleString('vi-VN')}
-                                </small>
-                            </div>
+            {!readOnly && (
+                <Modal show={showDeleteFlightModal} onHide={() => !deletingFlight && setShowDeleteFlightModal(false)} centered>
+                    <Modal.Header closeButton className="bg-danger text-white">
+                        <Modal.Title>
+                            <i className="bi bi-exclamation-triangle me-2"></i>
+                            Xác nhận xóa chuyến bay
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body className="p-4">
+                        <div className="text-center mb-3">
+                            <i className="bi bi-airplane text-danger" style={{ fontSize: '3rem' }}></i>
                         </div>
-                    )}
-                    <p className="text-center text-muted mb-0">
-                        Hành động này không thể hoàn tác. Chuyến bay và tất cả dữ liệu liên quan (vé đã đặt, thông tin hành khách) sẽ bị xóa vĩnh viễn.
-                    </p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button
-                        variant="secondary"
-                        onClick={() => setShowDeleteFlightModal(false)}
-                        disabled={deletingFlight}
-                    >
-                        Hủy
-                    </Button>
-                    <Button
-                        variant="danger"
-                        onClick={handleConfirmDeleteFlight}
-                        disabled={deletingFlight}
-                    >
-                        {deletingFlight ? (
-                            <>
-                                <Spinner animation="border" size="sm" className="me-2" />
-                                Đang xóa...
-                            </>
-                        ) : (
-                            <>
-                                <i className="bi bi-trash me-2"></i>
-                                Có, xóa chuyến bay
-                            </>
+                        <h5 className="text-center mb-3">Bạn có chắc chắn muốn xóa chuyến bay này không?</h5>
+                        {flightToDelete && (
+                            <div className="p-3 bg-light rounded mb-3">
+                                <div className="text-center">
+                                    <strong>{flightToDelete.flightCode}</strong><br />
+                                    <span className="text-muted">
+                                        {flightToDelete.departureCityName} → {flightToDelete.arrivalCityName}
+                                    </span><br />
+                                    <small className="text-muted">
+                                        {new Date(flightToDelete.departureTime).toLocaleString('vi-VN')}
+                                    </small>
+                                </div>
+                            </div>
                         )}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                        <p className="text-center text-muted mb-0">
+                            Hành động này không thể hoàn tác. Chuyến bay và tất cả dữ liệu liên quan (vé đã đặt, thông tin hành khách) sẽ bị xóa vĩnh viễn.
+                        </p>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button
+                            variant="secondary"
+                            onClick={() => setShowDeleteFlightModal(false)}
+                            disabled={deletingFlight}
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            variant="danger"
+                            onClick={handleConfirmDeleteFlight}
+                            disabled={deletingFlight}
+                        >
+                            {deletingFlight ? (
+                                <>
+                                    <Spinner animation="border" size="sm" className="me-2" />
+                                    Đang xóa...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="bi bi-trash me-2"></i>
+                                    Có, xóa chuyến bay
+                                </>
+                            )}
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+            )}
 
             {/* Association Delete Confirmation Modal */}
-            <Modal show={showDeleteAssociationModal} onHide={() => !deletingAssociation && setShowDeleteAssociationModal(false)} centered>
-                <Modal.Header closeButton className="bg-danger text-white">
-                    <Modal.Title>
-                        <i className="bi bi-exclamation-triangle me-2"></i>
-                        Xác nhận xóa hạng vé
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="p-4">
-                    <div className="text-center mb-3">
-                        <i className="bi bi-ticket text-danger" style={{ fontSize: '3rem' }}></i>
-                    </div>
-                    <h5 className="text-center mb-3">Bạn có chắc chắn muốn xóa hạng vé này không?</h5>
-                    {associationToDelete && (
-                        <div className="p-3 bg-light rounded mb-3">
-                            <div className="text-center">
-                                <strong>{associationToDelete.className}</strong><br />
-                                <span className="text-muted">
-                                    cho chuyến bay {selectedFlightForClasses?.flightCode}
-                                </span>
-                            </div>
+            {!readOnly && (
+                <Modal show={showDeleteAssociationModal} onHide={() => !deletingAssociation && setShowDeleteAssociationModal(false)} centered>
+                    <Modal.Header closeButton className="bg-danger text-white">
+                        <Modal.Title>
+                            <i className="bi bi-exclamation-triangle me-2"></i>
+                            Xác nhận xóa hạng vé
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body className="p-4">
+                        <div className="text-center mb-3">
+                            <i className="bi bi-ticket text-danger" style={{ fontSize: '3rem' }}></i>
                         </div>
-                    )}
-                    <p className="text-center text-muted mb-0">
-                        Hành động này không thể hoàn tác. Hạng vé sẽ bị xóa khỏi chuyến bay này và tất cả vé đã đặt cho hạng này sẽ bị ảnh hưởng.
-                    </p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button
-                        variant="secondary"
-                        onClick={() => setShowDeleteAssociationModal(false)}
-                        disabled={deletingAssociation}
-                    >
-                        Hủy
-                    </Button>
-                    <Button
-                        variant="danger"
-                        onClick={handleConfirmDeleteAssociation}
-                        disabled={deletingAssociation}
-                    >
-                        {deletingAssociation ? (
-                            <>
-                                <Spinner animation="border" size="sm" className="me-2" />
-                                Đang xóa...
-                            </>
-                        ) : (
-                            <>
-                                <i className="bi bi-trash me-2"></i>
-                                Có, xóa hạng vé
-                            </>
+                        <h5 className="text-center mb-3">Bạn có chắc chắn muốn xóa hạng vé này không?</h5>
+                        {associationToDelete && (
+                            <div className="p-3 bg-light rounded mb-3">
+                                <div className="text-center">
+                                    <strong>{associationToDelete.className}</strong><br />
+                                    <span className="text-muted">
+                                        cho chuyến bay {selectedFlightForClasses?.flightCode}
+                                    </span>
+                                </div>
+                            </div>
                         )}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                        <p className="text-center text-muted mb-0">
+                            Hành động này không thể hoàn tác. Hạng vé sẽ bị xóa khỏi chuyến bay này và tất cả vé đã đặt cho hạng này sẽ bị ảnh hưởng.
+                        </p>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button
+                            variant="secondary"
+                            onClick={() => setShowDeleteAssociationModal(false)}
+                            disabled={deletingAssociation}
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            variant="danger"
+                            onClick={handleConfirmDeleteAssociation}
+                            disabled={deletingAssociation}
+                        >
+                            {deletingAssociation ? (
+                                <>
+                                    <Spinner animation="border" size="sm" className="me-2" />
+                                    Đang xóa...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="bi bi-trash me-2"></i>
+                                    Có, xóa hạng vé
+                                </>
+                            )}
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+            )}
         </Container >
     );
 }
@@ -1187,6 +1226,7 @@ interface TicketClassCardProps {
     planes: Plane[];
     flightTicketClasses: FlightTicketClass[];
     onValidationChange: (error: string | null) => void;
+    readOnly?: boolean;
 }
 
 const TicketClassCard: React.FC<TicketClassCardProps> = ({
@@ -1204,7 +1244,8 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
     selectedFlightForClasses,
     planes,
     flightTicketClasses,
-    onValidationChange
+    onValidationChange,
+    readOnly = false
 }) => {
     const [editData, setEditData] = useState({
         ticketQuantity: association.ticketQuantity || 0,
@@ -1311,46 +1352,48 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                     <Card.Title as="h5" className="mb-0" style={{ color: classColor }}>
                         {className}
                     </Card.Title>
-                    {isModified && (
+                    {isModified && !readOnly && (
                         <Badge bg="warning" className="ms-2">Đã thay đổi</Badge>
                     )}
                 </div>
-                <div className="d-flex gap-1">
-                    {isEditing ? (
-                        <>
-                            <Button
-                                size="sm"
-                                variant="success"
-                                onClick={handleSave}
-                                disabled={!!validationError}
-                            >
-                                Áp dụng
-                            </Button>
-                            <Button size="sm" variant="secondary" onClick={onCancel}>
-                                Hủy
-                            </Button>
-                        </>
-                    ) : (
-                        <>
-                            {isModified && (
-                                <Button size="sm" variant="warning" onClick={onUndo} title="Hoàn tác thay đổi">
-                                    <i className="bi bi-arrow-counterclockwise"></i>
+                {!readOnly && (
+                    <div className="d-flex gap-1">
+                        {isEditing ? (
+                            <>
+                                <Button
+                                    size="sm"
+                                    variant="success"
+                                    onClick={handleSave}
+                                    disabled={!!validationError}
+                                >
+                                    Áp dụng
                                 </Button>
-                            )}
-                            <Button size="sm" variant="secondary" onClick={onEdit}>
-                                Sửa
-                            </Button>
-                            <Button size="sm" variant="outline-danger" onClick={onDelete}>
-                                Xóa
-                            </Button>
-                        </>
-                    )}
-                </div>
+                                <Button size="sm" variant="secondary" onClick={onCancel}>
+                                    Hủy
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                {isModified && (
+                                    <Button size="sm" variant="warning" onClick={onUndo} title="Hoàn tác thay đổi">
+                                        <i className="bi bi-arrow-counterclockwise"></i>
+                                    </Button>
+                                )}
+                                <Button size="sm" variant="secondary" onClick={onEdit}>
+                                    Sửa
+                                </Button>
+                                <Button size="sm" variant="outline-danger" onClick={onDelete}>
+                                    Xóa
+                                </Button>
+                            </>
+                        )}
+                    </div>
+                )}
             </Card.Header>
 
             <Card.Body>
                 {/* Show plane capacity info when editing */}
-                {isEditing && planeInfo && (
+                {!readOnly && isEditing && planeInfo && (
                     <Alert variant="info" className="mb-3 small">
                         <div className="d-flex justify-content-between">
                             <span>
@@ -1365,75 +1408,8 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                     </Alert>
                 )}
 
-                {isEditing ? (
-                    <Row className="g-3">
-                        <Col sm={6}>
-                            <Form.Group>
-                                <Form.Label>
-                                    Tổng số ghế
-                                    {planeInfo && (
-                                        <small className="text-muted ms-2">
-                                            (tối đa: {planeInfo.availableSeats})
-                                        </small>
-                                    )}
-                                </Form.Label>
-                                <Form.Control
-                                    type="number"
-                                    value={editData.ticketQuantity}
-                                    onChange={(e) => setEditData(prev => ({
-                                        ...prev,
-                                        ticketQuantity: parseInt(e.target.value) || 0
-                                    }))}
-                                    min={minTotalQuantity}
-                                    max={planeInfo ? planeInfo.totalSeats : undefined}
-                                    isInvalid={!!validationError}
-                                />
-                                <Form.Control.Feedback type="invalid">
-                                    {validationError}
-                                </Form.Control.Feedback>
-                                <div className="text-muted small">
-                                    Tối thiểu: {minTotalQuantity} ({soldSeats} đã bán)
-                                    {planeInfo && (
-                                        <> | Tối đa: {planeInfo.totalSeats} (sức chứa máy bay)</>
-                                    )}
-                                </div>
-                            </Form.Group>
-                        </Col>
-                        <Col sm={6}>
-                            <Form.Group>
-                                <Form.Label>Giá vé</Form.Label>
-                                <InputGroup>
-                                    <Form.Control
-                                        type="number"
-                                        className='pe-1'
-                                        value={editData.specifiedFare}
-                                        onChange={(e) => setEditData(prev => ({
-                                            ...prev,
-                                            specifiedFare: parseInt(e.target.value) || 0
-                                        }))}
-                                        min="0"
-                                    />
-                                    <InputGroup.Text>VND</InputGroup.Text>
-                                </InputGroup>
-                            </Form.Group>
-                        </Col>
-                        <Col xs={12}>
-                            <Form.Group>
-                                <Form.Label>Số ghế còn lại</Form.Label>
-                                <Form.Control
-                                    type="number"
-                                    value={editData.ticketQuantity - soldSeats}
-                                    disabled
-                                    className="bg-light"
-                                />
-                                <div className="text-muted small">
-                                    <i className="bi bi-lock me-1"></i>
-                                    Tự động tính: Tổng ghế ({editData.ticketQuantity}) - Đã bán ({soldSeats}) = {editData.ticketQuantity - soldSeats}
-                                </div>
-                            </Form.Group>
-                        </Col>
-                    </Row>
-                ) : (
+                {readOnly ? (
+                    // View mode
                     <>
                         <Row className="g-2 mb-3">
                             <Col xs={6}>
@@ -1525,10 +1501,79 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                             </Col>
                         </Row>
                     </>
+                ) : (
+                    // Editing form
+                    <Row className="g-3">
+                        <Col sm={6}>
+                            <Form.Group>
+                                <Form.Label>
+                                    Tổng số ghế
+                                    {planeInfo && (
+                                        <small className="text-muted ms-2">
+                                            (tối đa: {planeInfo.availableSeats})
+                                        </small>
+                                    )}
+                                </Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    value={editData.ticketQuantity}
+                                    onChange={(e) => setEditData(prev => ({
+                                        ...prev,
+                                        ticketQuantity: parseInt(e.target.value) || 0
+                                    }))}
+                                    min={minTotalQuantity}
+                                    max={planeInfo ? planeInfo.totalSeats : undefined}
+                                    isInvalid={!!validationError}
+                                />
+                                <Form.Control.Feedback type="invalid">
+                                    {validationError}
+                                </Form.Control.Feedback>
+                                <div className="text-muted small">
+                                    Tối thiểu: {minTotalQuantity} ({soldSeats} đã bán)
+                                    {planeInfo && (
+                                        <> | Tối đa: {planeInfo.totalSeats} (sức chứa máy bay)</>
+                                    )}
+                                </div>
+                            </Form.Group>
+                        </Col>
+                        <Col sm={6}>
+                            <Form.Group>
+                                <Form.Label>Giá vé</Form.Label>
+                                <InputGroup>
+                                    <Form.Control
+                                        type="number"
+                                        className='pe-1'
+                                        value={editData.specifiedFare}
+                                        onChange={(e) => setEditData(prev => ({
+                                            ...prev,
+                                            specifiedFare: parseInt(e.target.value) || 0
+                                        }))}
+                                        min="0"
+                                    />
+                                    <InputGroup.Text>VND</InputGroup.Text>
+                                </InputGroup>
+                            </Form.Group>
+                        </Col>
+                        <Col xs={12}>
+                            <Form.Group>
+                                <Form.Label>Số ghế còn lại</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    value={editData.ticketQuantity - soldSeats}
+                                    disabled
+                                    className="bg-light"
+                                />
+                                <div className="text-muted small">
+                                    <i className="bi bi-lock me-1"></i>
+                                    Tự động tính: Tổng ghế ({editData.ticketQuantity}) - Đã bán ({soldSeats}) = {editData.ticketQuantity - soldSeats}
+                                </div>
+                            </Form.Group>
+                        </Col>
+                    </Row>
                 )}
             </Card.Body>
 
-            {isModified && !isEditing && (
+            {!readOnly && isModified && !isEditing && (
                 <Card.Footer className="p-0 border-top">
                     <Row>
                         <Col xs={12} className="text-center py-2">

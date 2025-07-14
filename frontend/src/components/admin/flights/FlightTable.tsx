@@ -4,16 +4,18 @@ import { Flight } from '../../../models';
 
 interface FlightTableProps {
     flights: Flight[];
-    onEdit: (flight: Flight) => void;
-    onDelete: (flightId: number) => void;
+    onEdit?: (flight: Flight) => void;
+    onDelete?: (flightId: number) => void;
     onManageTicketClasses: (flight: Flight) => void;
+    readOnly?: boolean;
 }
 
 const FlightTable: React.FC<FlightTableProps> = ({
     flights,
     onEdit,
     onDelete,
-    onManageTicketClasses
+    onManageTicketClasses,
+    readOnly = false
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -129,7 +131,9 @@ const FlightTable: React.FC<FlightTableProps> = ({
             <Card.Header>
                 <Row className="align-items-center">
                     <Col>
-                        <Card.Title className="mb-0">Tất cả chuyến bay</Card.Title>
+                        <Card.Title className="mb-0">
+                            {readOnly ? 'Danh sách chuyến bay' : 'Tất cả chuyến bay'}
+                        </Card.Title>
                     </Col>
                     <Col md="auto">
                         <Row className="g-2">
@@ -190,7 +194,12 @@ const FlightTable: React.FC<FlightTableProps> = ({
                                 </Button>
                             </div>
                         ) : (
-                            <p className="text-muted mb-0">Không tìm thấy chuyến bay nào. Thêm chuyến bay đầu tiên để bắt đầu.</p>
+                            <p className="text-muted mb-0">
+                                {readOnly 
+                                    ? 'Không tìm thấy chuyến bay nào.'
+                                    : 'Không tìm thấy chuyến bay nào. Thêm chuyến bay đầu tiên để bắt đầu.'
+                                }
+                            </p>
                         )}
                     </div>
                 ) : (
@@ -203,7 +212,7 @@ const FlightTable: React.FC<FlightTableProps> = ({
                                     <th>Khởi hành</th>
                                     <th>Đến</th>
                                     <th>Máy bay</th>
-                                    <th>Thao tác</th>
+                                    <th>{readOnly ? 'Xem chi tiết' : 'Thao tác'}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -218,30 +227,48 @@ const FlightTable: React.FC<FlightTableProps> = ({
                                         <td>{flight.planeCode}</td>
                                         <td>
                                             <div className="d-flex gap-1 flex-wrap">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline-secondary"
-                                                    onClick={() => onEdit(flight)}
-                                                    title="Chỉnh sửa"
-                                                >
-                                                    <i className="bi bi-pencil"></i>
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline-primary"
-                                                    onClick={() => onManageTicketClasses(flight)}
-                                                    title="Quản lý hạng vé"
-                                                >
-                                                    <i className="bi bi-ticket"></i>
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline-danger"
-                                                    onClick={() => onDelete(flight.flightId!)}
-                                                    title="Xóa"
-                                                >
-                                                    <i className="bi bi-trash"></i>
-                                                </Button>
+                                                {readOnly ? (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline-info"
+                                                        onClick={() => onManageTicketClasses(flight)}
+                                                        title="Xem thông tin hạng vé"
+                                                    >
+                                                        <i className="bi bi-eye me-1"></i>
+                                                        Chi tiết
+                                                    </Button>
+                                                ) : (
+                                                    <>
+                                                        {onEdit && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline-secondary"
+                                                                onClick={() => onEdit(flight)}
+                                                                title="Chỉnh sửa"
+                                                            >
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>
+                                                        )}
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline-primary"
+                                                            onClick={() => onManageTicketClasses(flight)}
+                                                            title="Quản lý hạng vé"
+                                                        >
+                                                            <i className="bi bi-ticket"></i>
+                                                        </Button>
+                                                        {onDelete && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline-danger"
+                                                                onClick={() => onDelete(flight.flightId!)}
+                                                                title="Xóa"
+                                                            >
+                                                                <i className="bi bi-trash"></i>
+                                                            </Button>
+                                                        )}
+                                                    </>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

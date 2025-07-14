@@ -15,7 +15,8 @@ interface AirportFormData {
 const AirportManagement: React.FC<{
     showAddModal?: boolean;
     onCloseAddModal?: () => void;
-}> = ({ showAddModal = false, onCloseAddModal }) => {
+    readOnly?: boolean;
+}> = ({ showAddModal = false, onCloseAddModal, readOnly = false }) => {
   const { canViewAdmin } = usePermissions();
   if (!canViewAdmin) {
         return (
@@ -73,10 +74,10 @@ const AirportManagement: React.FC<{
   }, []);
 
   useEffect(() => {
-    if (showAddModal) {
+    if (showAddModal && !readOnly) {
         setShowForm(true);
     }
-  }, [showAddModal]);
+  }, [showAddModal, readOnly]);
 
   const loadAirports = async () => {
     try {
@@ -168,17 +169,33 @@ const AirportManagement: React.FC<{
 
     return (
         <Container fluid className="py-4">
+            {/* Read-only mode alert */}
+            {readOnly && (
+                <Row className="mb-4">
+                    <Col>
+                        <Alert variant="info" className="text-center">
+                            <Alert.Heading>Chế độ chỉ xem</Alert.Heading>
+                            <p className="mb-0">Bạn đang xem danh sách sân bay. Không thể chỉnh sửa trong chế độ này.</p>
+                        </Alert>
+                    </Col>
+                </Row>
+            )}
+
             <Row className="mb-4">
                 <Col>
                     <Card>
                         <Card.Header className="d-flex justify-content-between align-items-center">
-                            <Card.Title className="mb-0">🏢 Quản lý sân bay</Card.Title>
-                            <Button
-                                variant="primary"
-                                onClick={() => setShowForm(true)}
-                            >
-                                Thêm sân bay mới
-                            </Button>
+                            <Card.Title className="mb-0">
+                                🏢 {readOnly ? 'Danh sách sân bay' : 'Quản lý sân bay'}
+                            </Card.Title>
+                            {!readOnly && (
+                                <Button
+                                    variant="primary"
+                                    onClick={() => setShowForm(true)}
+                                >
+                                    Thêm sân bay mới
+                                </Button>
+                            )}
                         </Card.Header>
                     </Card>
                 </Col>
@@ -195,7 +212,7 @@ const AirportManagement: React.FC<{
             )}
 
             {/* Add/Edit Airport Modal */}
-            <Modal show={showForm} onHide={handleCancel} size="lg">
+            <Modal show={showForm && !readOnly} onHide={handleCancel} size="lg">
                 <Modal.Header closeButton>
                     <Modal.Title>{editingAirport ? 'Chỉnh sửa sân bay' : 'Thêm sân bay mới'}</Modal.Title>
                 </Modal.Header>
@@ -276,71 +293,80 @@ const AirportManagement: React.FC<{
             </Modal>
 
             {/* Delete Confirmation Modal */}
-            <Modal show={showDeleteModal} onHide={handleCancelDelete} centered>
-                <Modal.Header closeButton className="bg-danger text-white">
-                    <Modal.Title>
-                        <i className="bi bi-exclamation-triangle me-2"></i>
-                        Xác nhận xóa sân bay
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="p-4">
-                    <div className="text-center mb-3">
-                        <i className="bi bi-exclamation-circle text-danger" style={{ fontSize: '3rem' }}></i>
-                    </div>
-                    <h5 className="text-center mb-3">Bạn có chắc chắn muốn xóa sân bay này không?</h5>
-                    {airportToDelete && (
-                        <div className="p-3 bg-light rounded mb-3">
-                            <div className="text-center">
-                                <strong>{airportToDelete.airportName}</strong><br />
-                                <span className="text-muted">
-                                    {airportToDelete.cityName}, {airportToDelete.countryName}
-                                </span>
-                            </div>
+            {!readOnly && (
+                <Modal show={showDeleteModal} onHide={handleCancelDelete} centered>
+                    <Modal.Header closeButton className="bg-danger text-white">
+                        <Modal.Title>
+                            <i className="bi bi-exclamation-triangle me-2"></i>
+                            Xác nhận xóa sân bay
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body className="p-4">
+                        <div className="text-center mb-3">
+                            <i className="bi bi-exclamation-circle text-danger" style={{ fontSize: '3rem' }}></i>
                         </div>
-                    )}
-                    <p className="text-center text-muted mb-0">
-                        Hành động này không thể hoàn tác. Sân bay và tất cả dữ liệu liên quan sẽ bị xóa vĩnh viễn.
-                    </p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button
-                        variant="secondary"
-                        onClick={handleCancelDelete}
-                        disabled={deleting}
-                    >
-                        Hủy
-                    </Button>
-                    <Button
-                        variant="danger"
-                        onClick={handleConfirmDelete}
-                        disabled={deleting}
-                    >
-                        {deleting ? (
-                            <>
-                                <Spinner animation="border" size="sm" className="me-2" />
-                                Đang xóa...
-                            </>
-                        ) : (
-                            <>
-                                <i className="bi bi-trash me-2"></i>
-                                Có, xóa sân bay
-                            </>
+                        <h5 className="text-center mb-3">Bạn có chắc chắn muốn xóa sân bay này không?</h5>
+                        {airportToDelete && (
+                            <div className="p-3 bg-light rounded mb-3">
+                                <div className="text-center">
+                                    <strong>{airportToDelete.airportName}</strong><br />
+                                    <span className="text-muted">
+                                        {airportToDelete.cityName}, {airportToDelete.countryName}
+                                    </span>
+                                </div>
+                            </div>
                         )}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                        <p className="text-center text-muted mb-0">
+                            Hành động này không thể hoàn tác. Sân bay và tất cả dữ liệu liên quan sẽ bị xóa vĩnh viễn.
+                        </p>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button
+                            variant="secondary"
+                            onClick={handleCancelDelete}
+                            disabled={deleting}
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            variant="danger"
+                            onClick={handleConfirmDelete}
+                            disabled={deleting}
+                        >
+                            {deleting ? (
+                                <>
+                                    <Spinner animation="border" size="sm" className="me-2" />
+                                    Đang xóa...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="bi bi-trash me-2"></i>
+                                    Có, xóa sân bay
+                                </>
+                            )}
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+            )}
 
             {/* Airport Table */}
             <Row>
                 <Col>
                     <Card>
                         <Card.Header>
-                            <Card.Title className="mb-0">Tất cả sân bay</Card.Title>
+                            <Card.Title className="mb-0">
+                                {readOnly ? 'Danh sách sân bay' : 'Tất cả sân bay'}
+                            </Card.Title>
                         </Card.Header>
                         <Card.Body className="p-0">
                             {airports.length === 0 ? (
                                 <div className="text-center py-5">
-                                    <p className="text-muted mb-0">Không tìm thấy sân bay nào. Thêm sân bay đầu tiên để bắt đầu.</p>
+                                    <p className="text-muted mb-0">
+                                        {readOnly 
+                                            ? 'Không tìm thấy sân bay nào.'
+                                            : 'Không tìm thấy sân bay nào. Thêm sân bay đầu tiên để bắt đầu.'
+                                        }
+                                    </p>
                                 </div>
                             ) : (
                                 <Table responsive striped hover>
@@ -349,7 +375,7 @@ const AirportManagement: React.FC<{
                                             <th>Tên sân bay</th>
                                             <th>Thành phố</th>
                                             <th>Quốc gia</th>
-                                            <th>Thao tác</th>
+                                            {!readOnly && <th>Thao tác</th>}
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -360,25 +386,27 @@ const AirportManagement: React.FC<{
                                                     <Badge bg="info">{airport.cityName}</Badge>
                                                 </td>
                                                 <td>{airport.countryName}</td>
-                                                <td>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline-secondary"
-                                                        className="me-2"
-                                                        onClick={() => handleEdit(airport)}
-                                                        disabled={deleting}
-                                                    >
-                                                        Sửa
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline-danger"
-                                                        onClick={() => handleDeleteClick(airport)}
-                                                        disabled={deleting}
-                                                    >
-                                                        Xóa
-                                                    </Button>
-                                                </td>
+                                                {!readOnly && (
+                                                    <td>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline-secondary"
+                                                            className="me-2"
+                                                            onClick={() => handleEdit(airport)}
+                                                            disabled={deleting}
+                                                        >
+                                                            Sửa
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline-danger"
+                                                            onClick={() => handleDeleteClick(airport)}
+                                                            disabled={deleting}
+                                                        >
+                                                            Xóa
+                                                        </Button>
+                                                    </td>
+                                                )}
                                             </tr>
                                         ))}
                                     </tbody>

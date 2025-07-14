@@ -169,13 +169,13 @@ export const usePermissions = () => {
     canViewDashboard: () => hasRole('CUSTOMER'),
 
     // Updated Employee permissions based on corrected role structure
-    canViewAdmin: () => hasRole('EMPLOYEE_ADMINISTRATOR'),
-    canViewFlightManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_SCHEDULING', 'EMPLOYEE_ADMINISTRATOR']),
-    canViewAirportManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR']),
-    canViewPlaneManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR']),
-    canViewTicketClassManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR']),
+    canViewAdmin: () => hasAnyRole(['EMPLOYEE_ADMINISTRATOR', 'EMPLOYEE_SUPPORT']),
+    canViewFlightManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_SCHEDULING', 'EMPLOYEE_ADMINISTRATOR', 'EMPLOYEE_SUPPORT']),
+    canViewAirportManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR', 'EMPLOYEE_SUPPORT']),
+    canViewPlaneManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR', 'EMPLOYEE_SUPPORT']),
+    canViewTicketClassManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR', 'EMPLOYEE_SUPPORT']),
     canViewEmployeeManagement: () => hasAnyRole(['EMPLOYEE_HUMAN_RESOURCES', 'EMPLOYEE_ADMINISTRATOR']),
-    canViewParameterSettings: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR']),
+    canViewParameterSettings: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR', 'EMPLOYEE_SUPPORT']),
     canViewReports: () => hasAnyRole(['EMPLOYEE_ACCOUNTING', 'EMPLOYEE_ADMINISTRATOR']),
 
     // Department-specific permissions

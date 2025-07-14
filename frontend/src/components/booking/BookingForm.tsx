@@ -74,14 +74,14 @@ const BookingForm: React.FC = () => {
   // Helper to get user info for default values
   const [accountInfo, setAccountInfo] = useState<any>(null);
   const [customerScore, setCustomerScore] = useState<number>(0);
-  
+
   useEffect(() => {
     const logUserInfo = async () => {
       if (user?.accountTypeName === "Customer" && user?.id) {
         const userInfo = await accountService.getAccountById(user.id);
         console.log('User account info:', userInfo);
         setAccountInfo(userInfo);
-        
+
         // Get customer's current score using customerService
         try {
           const customerInfo = await customerService.getCustomerById(user.id);
@@ -191,11 +191,11 @@ const BookingForm: React.FC = () => {
   // Calculate score and discount
   const calculateScoreAndDiscount = () => {
     if (!selectedClass) return { score: 0, discount: 0, discountedPrice: 0 };
-    
+
     const standardPrice = selectedClass.specifiedFare;
     const totalStandardPrice = standardPrice * passengerCount;
     const score = Math.floor(totalStandardPrice / 10000);
-    
+
     let discountPercent = 0;
     if (customerScore >= 200000) {
       discountPercent = 8;
@@ -204,10 +204,10 @@ const BookingForm: React.FC = () => {
     } else if (customerScore >= 10000) {
       discountPercent = 2;
     }
-    
+
     const discountAmount = (totalStandardPrice * discountPercent) / 100;
     const discountedPrice = totalStandardPrice - discountAmount;
-    
+
     return { score, discount: discountPercent, discountedPrice, discountAmount };
   };
 
@@ -215,14 +215,14 @@ const BookingForm: React.FC = () => {
     try {
       setSubmitting(true);
       setError('');
-      
+
       /*
         VALIDATION LOGIC
       */
       // Check for duplicate citizen IDs
       const citizenIds = data.passengers.map(p => p.citizenId).filter(id => id);
       const duplicateCitizenIds = citizenIds.filter((id, index) => citizenIds.indexOf(id) !== index);
-      
+
       if (duplicateCitizenIds.length > 0) {
         setError('Tìm thấy CCCD trùng lặp. Mỗi hành khách phải có CCCD duy nhất.');
         return;
@@ -417,6 +417,13 @@ const BookingForm: React.FC = () => {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
+    });
+  };
+
+  const formatDate = (dateTimeString: string) => {
+    return new Date(dateTimeString).toLocaleDateString('vi-VN', {
+      month: 'short',
+      day: 'numeric'
     });
   };
 
@@ -655,13 +662,13 @@ const BookingForm: React.FC = () => {
                             </td>
                             <td className="text-center align-middle py-3">
                               {detail.arrivalTime
-                                ? <span className="badge bg-info">{formatTime(detail.arrivalTime)}</span>
+                                ? <span className="badge bg-info">{formatTime(detail.arrivalTime) + ' - ' + formatDate(detail.arrivalTime)}</span>
                                 : <span className="text-muted">N/A</span>
                               }
                             </td>
                             <td className="text-center align-middle py-3">
                               {detail.layoverDuration
-                                ? <span className="badge bg-secondary">{detail.layoverDuration}</span>
+                                ? <span className="badge bg-secondary">{detail.layoverDuration} phút</span>
                                 : <span className="text-muted">N/A</span>
                               }
                             </td>
