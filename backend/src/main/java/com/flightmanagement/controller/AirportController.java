@@ -14,9 +14,12 @@ import java.util.List;
 @RequestMapping("/api/airports")
 public class AirportController {
     
-    @Autowired
-    private AirportService airportService;
-    
+    private final AirportService airportService;
+
+    public AirportController(AirportService airportService) {
+        this.airportService = airportService;
+    }
+
     @GetMapping
     public ResponseEntity<List<AirportDto>> getAllAirports() {
         try {

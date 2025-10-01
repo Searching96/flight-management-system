@@ -17,8 +17,11 @@ import java.util.Map;
 @Validated
 public class PaymentController {
 
-    @Autowired
-    private PaymentService paymentService;
+    private final PaymentService paymentService;
+
+    public PaymentController(PaymentService paymentService) {
+        this.paymentService = paymentService;
+    }
 
     @PostMapping("/create")
     public ResponseEntity<Map<String, Object>> createPayment(

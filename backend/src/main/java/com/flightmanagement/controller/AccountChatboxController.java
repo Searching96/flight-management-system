@@ -11,11 +11,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/account-chatbox")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
 public class AccountChatboxController {
     
-    @Autowired
-    private AccountChatboxService accountChatboxService;
+    private final AccountChatboxService accountChatboxService;
+
+    public AccountChatboxController(AccountChatboxService accountChatboxService) {
+        this.accountChatboxService = accountChatboxService;
+    }
     
     @GetMapping
     public ResponseEntity<List<AccountChatboxDto>> getAllAccountChatboxes() {

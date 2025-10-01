@@ -16,8 +16,11 @@ import java.util.List;
 @RequestMapping("/api/flights")
 public class FlightController {
 
-    @Autowired
-    private FlightService flightService;
+    private final FlightService flightService;
+
+    public FlightController(FlightService flightService) {
+        this.flightService = flightService;
+    }
 
     @GetMapping
     public ResponseEntity<List<FlightDto>> getAllFlights() {

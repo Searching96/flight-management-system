@@ -13,28 +13,33 @@ import java.util.Map;
 @RequestMapping("/api/demo")
 public class DemoController {
 
-    @Autowired
-    private ParameterService parameterService;
+    private final ParameterService parameterService;
     
-    @Autowired
-    private TicketClassService ticketClassService;
+    private final TicketClassService ticketClassService;
     
-    @Autowired
-    private AirportService airportService;
+    private final AirportService airportService;
     
-    @Autowired
-    private PlaneService planeService;
+    private final PlaneService planeService;
     
-    @Autowired
-    private AccountService accountService;
+    private final AccountService accountService;
 
-    @Autowired
-    private PassengerService passengerService;
+    private final PassengerService passengerService;
     
-    @Autowired
-    private FlightService flightService;
+    private final FlightService flightService;
+
+    public DemoController(ParameterService parameterService, TicketClassService ticketClassService,
+                          AirportService airportService, PlaneService planeService,
+                          AccountService accountService, PassengerService passengerService,
+                          FlightService flightService) {
+        this.parameterService = parameterService;
+        this.ticketClassService = ticketClassService;
+        this.airportService = airportService;
+        this.planeService = planeService;
+        this.accountService = accountService;
+        this.passengerService = passengerService;
+        this.flightService = flightService;
+    }
     
-    @Autowired
     private FlightTicketClassService flightTicketClassService;
 
     @GetMapping("/health")

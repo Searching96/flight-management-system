@@ -10,11 +10,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/flight-ticket-classes")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
 public class FlightTicketClassController {
     
-    @Autowired
-    private FlightTicketClassService flightTicketClassService;
+    private final FlightTicketClassService flightTicketClassService;
+
+    public FlightTicketClassController(FlightTicketClassService flightTicketClassService) {
+        this.flightTicketClassService = flightTicketClassService;
+    }
     
     @GetMapping
     public ResponseEntity<List<FlightTicketClassDto>> getAllFlightTicketClasses() {

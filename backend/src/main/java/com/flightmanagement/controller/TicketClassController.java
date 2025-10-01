@@ -13,8 +13,11 @@ import java.util.List;
 @RequestMapping("/api/ticket-classes")
 public class TicketClassController {
     
-    @Autowired
-    private TicketClassService ticketClassService;
+    private final TicketClassService ticketClassService;
+
+    public TicketClassController(TicketClassService ticketClassService) {
+        this.ticketClassService = ticketClassService;
+    }
     
     @GetMapping
     public ResponseEntity<List<TicketClassDto>> getAllTicketClasses() {

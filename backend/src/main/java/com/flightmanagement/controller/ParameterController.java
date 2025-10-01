@@ -10,8 +10,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/parameters")
 public class ParameterController {
     
-    @Autowired
-    private ParameterService parameterService;
+    private final ParameterService parameterService;
+
+    public ParameterController(ParameterService parameterService) {
+        this.parameterService = parameterService;
+    }
     
     @GetMapping
     public ResponseEntity<ParameterDto> getParameters() {

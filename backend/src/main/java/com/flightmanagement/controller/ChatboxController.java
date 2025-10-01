@@ -13,8 +13,11 @@ import java.util.List;
 @RequestMapping("/api/chatboxes")
 public class ChatboxController {
     
-    @Autowired
-    private ChatboxService chatboxService;
+    private final ChatboxService chatboxService;
+
+    public ChatboxController(ChatboxService chatboxService) {
+        this.chatboxService = chatboxService;
+    }
     
     @GetMapping
     public ResponseEntity<List<ChatboxDto>> getAllChatboxes() {

@@ -14,8 +14,11 @@ import java.util.Map;
 @RequestMapping("/api/messages")
 public class MessageController {
     
-    @Autowired
-    private MessageService messageService;
+    private final MessageService messageService;
+
+    public MessageController(MessageService messageService) {
+        this.messageService = messageService;
+    }
     
     @GetMapping("/chatbox/{chatboxId}")
     public ResponseEntity<List<MessageDto>> getMessagesByChatboxId(@PathVariable Integer chatboxId) {

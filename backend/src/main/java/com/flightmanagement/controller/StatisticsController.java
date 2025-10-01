@@ -14,8 +14,11 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class StatisticsController {
 
-    @Autowired
-    private StatisticsService statisticsService;
+    private final StatisticsService statisticsService;
+
+    public StatisticsController(StatisticsService statisticsService) {
+        this.statisticsService = statisticsService;
+    }
 
     @GetMapping("/yearly")
     public ResponseEntity<List<YearlyStatisticsDto>> getYearlyStatistics() {

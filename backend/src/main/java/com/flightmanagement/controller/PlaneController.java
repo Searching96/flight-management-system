@@ -13,8 +13,11 @@ import java.util.List;
 @RequestMapping("/api/planes")
 public class PlaneController {
     
-    @Autowired
-    private PlaneService planeService;
+    private final PlaneService planeService;
+
+    public PlaneController(PlaneService planeService) {
+        this.planeService = planeService;
+    }
     
     @GetMapping
     public ResponseEntity<List<PlaneDto>> getAllPlanes() {

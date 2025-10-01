@@ -13,8 +13,11 @@ import java.util.List;
 @RequestMapping("/api/flight-details")
 public class FlightDetailController {
     
-    @Autowired
-    private FlightDetailService flightDetailService;
+    private final FlightDetailService flightDetailService;
+
+    public FlightDetailController(FlightDetailService flightDetailService) {
+        this.flightDetailService = flightDetailService;
+    }
     
     @GetMapping
     public ResponseEntity<List<FlightDetailDto>> getAllFlightDetails() {

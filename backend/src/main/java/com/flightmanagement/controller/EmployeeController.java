@@ -16,8 +16,11 @@ import java.util.List;
 @PreAuthorize("hasRole('EMPLOYEE')")
 public class EmployeeController {
 
-    @Autowired
-    private EmployeeService employeeService;
+    private final EmployeeService employeeService;
+
+    public EmployeeController(EmployeeService employeeService) {
+        this.employeeService = employeeService;
+    }
 
     /**
      * Get current logged-in employee information

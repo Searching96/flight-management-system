@@ -12,8 +12,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/debug")
 public class DebugController {
 
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
+
+    public DebugController(AuthService authService) {
+        this.authService = authService;
+    }
 
     @GetMapping("/login-by-name/{accountName}")
     public ResponseEntity<AuthResponse> debugLoginByName(@PathVariable String accountName) {

@@ -15,10 +15,13 @@ import java.util.List;
 // CustomerController.java
 @RestController
 @RequestMapping("/api/customers")
-@RequiredArgsConstructor
 public class CustomerController {
-    @Autowired
+
     private final CustomerService customerService;
+
+    public CustomerController(CustomerService customerService) {
+        this.customerService = customerService;
+    }
 
     @GetMapping
     @PreAuthorize("hasRole('EMPLOYEE')")
