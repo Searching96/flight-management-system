@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import com.flightmanagement.dto.UserDetailsDto;
 import com.flightmanagement.security.CustomUserDetails;
 
-// AuthMapper.java
 @Component
 public class AuthMapper {
     private String resolveRole(Collection<? extends GrantedAuthority> authorities) {

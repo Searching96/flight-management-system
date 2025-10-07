@@ -5,7 +5,6 @@ import com.flightmanagement.entity.Customer;
 import com.flightmanagement.mapper.CustomerMapper;
 import com.flightmanagement.repository.CustomerRepository;
 import com.flightmanagement.service.CustomerService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,11 +14,15 @@ import java.util.stream.Collectors;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
-    @Autowired
-    private CustomerRepository customerRepository;
-    @Autowired
-    private CustomerMapper customerMapper;
 
+    private final CustomerRepository customerRepository;
+
+    private final CustomerMapper customerMapper;
+
+    public CustomerServiceImpl(CustomerRepository customerRepository, CustomerMapper customerMapper) {
+        this.customerRepository = customerRepository;
+        this.customerMapper = customerMapper;
+    }
 
     @Override
     public CustomerDto getCustomerById(Integer id) {

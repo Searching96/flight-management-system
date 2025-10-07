@@ -26,12 +26,6 @@ public interface FlightTicketClassRepository extends JpaRepository<FlightTicketC
     
     @Query("SELECT ftc FROM FlightTicketClass ftc WHERE ftc.remainingTicketQuantity > 0 AND ftc.deletedAt IS NULL")
     List<FlightTicketClass> findAvailable();
-    
-    @Query("SELECT ftc FROM FlightTicketClass ftc JOIN ftc.flight f WHERE f.departureTime > CURRENT_TIMESTAMP AND ftc.remainingTicketQuantity > 0 AND ftc.deletedAt IS NULL")
-    List<FlightTicketClass> findAvailableForFutureFlights();
-
-    // @Query("SELECT (ftc.ticketQuantity - ftc.remainingTicketQuantity) FROM FlightTicketClass ftc WHERE ftc.flightId = ?1 AND ftc.ticketClassId = ?2 AND ftc.deletedAt IS NULL")
-    // Integer calculateOccupiedSeatsByFlightIdAndTicketClassId(Integer flightId, Integer ticketClassId);
 
     @Query(value = """
             SELECT (ticket_quantity - remaining_ticket_quantity)

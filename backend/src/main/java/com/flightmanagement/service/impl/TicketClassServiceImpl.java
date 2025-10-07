@@ -5,7 +5,6 @@ import com.flightmanagement.entity.TicketClass;
 import com.flightmanagement.mapper.TicketClassMapper;
 import com.flightmanagement.repository.TicketClassRepository;
 import com.flightmanagement.service.TicketClassService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,11 +13,14 @@ import java.util.List;
 @Service
 public class TicketClassServiceImpl implements TicketClassService {
     
-    @Autowired
-    private TicketClassRepository ticketClassRepository;
+    private final TicketClassRepository ticketClassRepository;
     
-    @Autowired
-    private TicketClassMapper ticketClassMapper;
+    private final TicketClassMapper ticketClassMapper;
+
+    public TicketClassServiceImpl(TicketClassRepository ticketClassRepository, TicketClassMapper ticketClassMapper) {
+        this.ticketClassRepository = ticketClassRepository;
+        this.ticketClassMapper = ticketClassMapper;
+    }
     
     @Override
     public List<TicketClassDto> getAllTicketClasses() {
@@ -68,6 +70,4 @@ public class TicketClassServiceImpl implements TicketClassService {
             .orElseThrow(() -> new RuntimeException("TicketClass not found with name: " + ticketClassName));
         return ticketClassMapper.toDto(ticketClass);
     }
-
-    
 }

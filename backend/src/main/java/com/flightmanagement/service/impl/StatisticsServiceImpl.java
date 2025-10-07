@@ -4,8 +4,6 @@ import com.flightmanagement.dto.MonthlyStatisticsDto;
 import com.flightmanagement.dto.YearlyStatisticsDto;
 import com.flightmanagement.repository.StatisticsRepository;
 import com.flightmanagement.service.StatisticsService;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -15,8 +13,11 @@ import java.util.List;
 @Service
 public class StatisticsServiceImpl implements StatisticsService {
 
-   @Autowired
-   private StatisticsRepository statisticsRepository;
+   private final StatisticsRepository statisticsRepository;
+
+   public StatisticsServiceImpl(StatisticsRepository statisticsRepository) {
+        this.statisticsRepository = statisticsRepository;
+   }
 
    public List<YearlyStatisticsDto> getYearlyStatistics() {
       List<Object[]> results = statisticsRepository.getStatisticsForLast5Years();

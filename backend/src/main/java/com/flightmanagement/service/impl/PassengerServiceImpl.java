@@ -5,7 +5,6 @@ import com.flightmanagement.entity.Passenger;
 import com.flightmanagement.mapper.PassengerMapper;
 import com.flightmanagement.repository.PassengerRepository;
 import com.flightmanagement.service.PassengerService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,11 +15,14 @@ import java.util.List;
 @Transactional
 public class PassengerServiceImpl implements PassengerService {
     
-    @Autowired
-    private PassengerRepository passengerRepository;
+    private final PassengerRepository passengerRepository;
     
-    @Autowired
-    private PassengerMapper passengerMapper;
+    private final PassengerMapper passengerMapper;
+
+    public PassengerServiceImpl(PassengerRepository passengerRepository, PassengerMapper passengerMapper) {
+        this.passengerRepository = passengerRepository;
+        this.passengerMapper = passengerMapper;
+    }
     
     @Override
     public List<PassengerDto> getAllPassengers() {

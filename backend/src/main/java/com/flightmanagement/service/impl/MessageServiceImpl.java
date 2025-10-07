@@ -6,7 +6,6 @@ import com.flightmanagement.mapper.MessageMapper;
 import com.flightmanagement.repository.MessageRepository;
 import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.service.MessageService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,14 +15,17 @@ import java.util.stream.Collectors;
 @Service
 public class MessageServiceImpl implements MessageService {
     
-    @Autowired
-    private MessageRepository messageRepository;
+    private final MessageRepository messageRepository;
     
-    @Autowired
-    private MessageMapper messageMapper;
+    private final MessageMapper messageMapper;
     
-    @Autowired
-    private AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
+
+    public MessageServiceImpl(MessageRepository messageRepository, MessageMapper messageMapper, AccountRepository accountRepository) {
+        this.messageRepository = messageRepository;
+        this.messageMapper = messageMapper;
+        this.accountRepository = accountRepository;
+    }
     
     @Override
     public List<MessageDto> getMessagesByChatboxId(Integer chatboxId) {

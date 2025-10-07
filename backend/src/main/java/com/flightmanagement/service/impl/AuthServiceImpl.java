@@ -15,7 +15,6 @@ import com.flightmanagement.security.JwtService;
 import com.flightmanagement.service.AuthService;
 
 import com.flightmanagement.service.EmailService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,27 +28,40 @@ import java.util.Random;
 
 @Service
 public class AuthServiceImpl implements AuthService {
-    @Autowired
-    private AuthMapper authMapper;
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private JwtService jwtService;
 
-    @Autowired
-    private AccountRepository accountRepo;
+    private final AuthMapper authMapper;
 
-    @Autowired
-    private CustomerRepository customerRepository;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    private EmployeeRepository employeeRepository;
+    private final JwtService jwtService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final AccountRepository accountRepo;
 
-    @Autowired
-    private EmailService emailService;
+    private final CustomerRepository customerRepository;
+
+    private final EmployeeRepository employeeRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
+    private final EmailService emailService;
+
+    public AuthServiceImpl(AuthMapper authMapper,
+                           AuthenticationManager authenticationManager,
+                           JwtService jwtService,
+                           AccountRepository accountRepo,
+                           CustomerRepository customerRepository,
+                           EmployeeRepository employeeRepository,
+                           PasswordEncoder passwordEncoder,
+                           EmailService emailService) {
+        this.authMapper = authMapper;
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
+        this.accountRepo = accountRepo;
+        this.customerRepository = customerRepository;
+        this.employeeRepository = employeeRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
+    }
 
     @Override
     public AuthResponse authenticate(LoginRequestDto request) {

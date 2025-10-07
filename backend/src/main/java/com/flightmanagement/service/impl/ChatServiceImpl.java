@@ -1,11 +1,11 @@
 package com.flightmanagement.service.impl;
 
 import com.flightmanagement.dto.ChatboxDto;
+import com.flightmanagement.entity.Account;
 import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.repository.ChatboxRepository;
 import com.flightmanagement.repository.MessageRepository;
 import com.flightmanagement.service.ChatService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,7 +35,7 @@ public class ChatServiceImpl implements ChatService {
 
                     // Get customer name
                     String customerName = accountRepository.findById(chatbox.getCustomerId())
-                            .map(account -> account.getAccountName())
+                            .map(Account::getAccountName)
                             .orElse("Unknown");
                     dto.setCustomerName(customerName);
 
@@ -51,7 +51,7 @@ public class ChatServiceImpl implements ChatService {
                                 if (msg.getEmployeeId() != null) {
                                     // Message from employee - get employee name
                                     String employeeName = accountRepository.findById(msg.getEmployeeId())
-                                            .map(account -> account.getAccountName())
+                                            .map(Account::getAccountName)
                                             .orElse("Employee");
                                     dto.setLastMessageSenderName(employeeName);
                                 } else {

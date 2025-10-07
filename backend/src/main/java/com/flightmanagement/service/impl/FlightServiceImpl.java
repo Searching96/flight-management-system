@@ -10,7 +10,6 @@ import com.flightmanagement.repository.FlightRepository;
 import com.flightmanagement.service.FlightService;
 import com.flightmanagement.service.FlightTicketClassService;
 import com.flightmanagement.service.ParameterService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,17 +22,23 @@ import java.util.List;
 @Transactional
 public class FlightServiceImpl implements FlightService {
     
-    @Autowired
-    private FlightRepository flightRepository;
+    private final FlightRepository flightRepository;
 
-    @Autowired
-    private FlightTicketClassService flightTicketClassService;
+    private final FlightTicketClassService flightTicketClassService;
     
-    @Autowired
-    private FlightMapper flightMapper;
+    private final FlightMapper flightMapper;
     
-    @Autowired
-    private ParameterService parameterService;
+    private final ParameterService parameterService;
+
+    public FlightServiceImpl(FlightRepository flightRepository,
+                             FlightMapper flightMapper,
+                             ParameterService parameterService,
+                             FlightTicketClassService flightTicketClassService) {
+        this.flightRepository = flightRepository;
+        this.flightMapper = flightMapper;
+        this.parameterService = parameterService;
+        this.flightTicketClassService = flightTicketClassService;
+    }
     
     @Override
     public List<FlightDto> getAllFlights() {

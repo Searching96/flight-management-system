@@ -14,11 +14,14 @@ import java.util.List;
 @Service
 public class PlaneServiceImpl implements PlaneService {
     
-    @Autowired
-    private PlaneRepository planeRepository;
+    private final PlaneRepository planeRepository;
     
-    @Autowired
-    private PlaneMapper planeMapper;
+    private final PlaneMapper planeMapper;
+
+    public PlaneServiceImpl(PlaneRepository planeRepository, PlaneMapper planeMapper) {
+        this.planeRepository = planeRepository;
+        this.planeMapper = planeMapper;
+    }
     
     @Override
     public List<PlaneDto> getAllPlanes() {

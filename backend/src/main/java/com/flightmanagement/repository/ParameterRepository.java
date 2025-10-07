@@ -12,7 +12,4 @@ public interface ParameterRepository extends JpaRepository<Parameter, Integer> {
     
     @Query("SELECT p FROM Parameter p WHERE p.deletedAt IS NULL ORDER BY p.id DESC LIMIT 1")
     Optional<Parameter> findLatestParameter();
-    
-    @Query("SELECT p FROM Parameter p ORDER BY p.id DESC LIMIT 1")
-    Optional<Parameter> findTopByOrderByIdDesc();
 }

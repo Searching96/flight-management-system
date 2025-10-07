@@ -4,7 +4,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -25,14 +24,12 @@ import java.util.stream.Collectors;
 @Component
 public class JwtUtil {
 
-    @Autowired
-    private JwtConfig jwtConfig;
-    @Autowired
-    private SecretKey jwtSecret;
+    private final JwtConfig jwtConfig;
+
+    private final SecretKey jwtSecret;
 
     private final JwtParser jwtParser;
 
-    @Autowired
     public JwtUtil(JwtConfig jwtConfig) {
         this.jwtConfig = jwtConfig;
         this.jwtSecret = Keys.hmacShaKeyFor(

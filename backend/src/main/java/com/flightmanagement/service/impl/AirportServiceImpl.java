@@ -5,7 +5,6 @@ import com.flightmanagement.entity.Airport;
 import com.flightmanagement.mapper.AirportMapper;
 import com.flightmanagement.repository.AirportRepository;
 import com.flightmanagement.service.AirportService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,11 +13,14 @@ import java.util.List;
 @Service
 public class AirportServiceImpl implements AirportService {
     
-    @Autowired
-    private AirportRepository airportRepository;
+    private final AirportRepository airportRepository;
     
-    @Autowired
-    private AirportMapper airportMapper;
+    private final AirportMapper airportMapper;
+
+    public AirportServiceImpl(AirportRepository airportRepository, AirportMapper airportMapper) {
+        this.airportRepository = airportRepository;
+        this.airportMapper = airportMapper;
+    }
     
     @Override
     public List<AirportDto> getAllAirports() {
