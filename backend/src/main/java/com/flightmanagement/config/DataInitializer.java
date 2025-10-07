@@ -2,7 +2,6 @@ package com.flightmanagement.config;
 
 import com.flightmanagement.dto.*;
 import com.flightmanagement.service.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -12,32 +11,39 @@ import java.time.LocalDateTime;
 @Component
 public class DataInitializer implements CommandLineRunner {
 
-    @Autowired
-    private ParameterService parameterService;
+    private final ParameterService parameterService;
 
-    @Autowired
-    private TicketClassService ticketClassService;
+    private final TicketClassService ticketClassService;
 
-    @Autowired
-    private AirportService airportService;
+    private final AirportService airportService;
 
-    @Autowired
-    private PlaneService planeService;
+    private final PlaneService planeService;
 
-    @Autowired
-    private AccountService accountService;
+    private final AccountService accountService;
 
-    @Autowired
-    private PassengerService passengerService;
+    private final PassengerService passengerService;
 
-    @Autowired
-    private FlightService flightService;
+    private final FlightService flightService;
 
-    @Autowired
-    private FlightDetailService flightDetailService;
+    private final FlightDetailService flightDetailService;
 
-    @Autowired
-    private FlightTicketClassService flightTicketClassService;
+    private final FlightTicketClassService flightTicketClassService;
+
+    public DataInitializer(ParameterService parameterService, TicketClassService ticketClassService,
+                           AirportService airportService, PlaneService planeService,
+                           AccountService accountService, PassengerService passengerService,
+                           FlightService flightService, FlightDetailService flightDetailService,
+                           FlightTicketClassService flightTicketClassService) {
+        this.parameterService = parameterService;
+        this.ticketClassService = ticketClassService;
+        this.airportService = airportService;
+        this.planeService = planeService;
+        this.accountService = accountService;
+        this.passengerService = passengerService;
+        this.flightService = flightService;
+        this.flightDetailService = flightDetailService;
+        this.flightTicketClassService = flightTicketClassService;
+    }
 
     @Override
     public void run(String... args) {
