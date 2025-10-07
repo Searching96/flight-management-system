@@ -16,8 +16,11 @@ import java.time.format.DateTimeFormatter;
 @Service
 public class EmailServiceImpl implements EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
+
+    public EmailServiceImpl(JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+    }
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -158,11 +161,12 @@ public class EmailServiceImpl implements EmailService {
 
             // Đặt cả nội dung văn bản và HTML
             helper.setText(plainTextContent, htmlContent);
-
+            System.out.println("Password reset email sent to " + mimeMessage);
             mailSender.send(mimeMessage);
 
+
         } catch (Exception e) {
-            throw new RuntimeException("Gửi email đặt lại mật khẩu thất bại", e);
+            throw new RuntimeException("Gửi email đặt lại mật khẩu thất bại" + e.getMessage(), e);
         }
     }
 
