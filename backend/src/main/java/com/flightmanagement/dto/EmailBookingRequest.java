@@ -12,11 +12,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmailBookingRequest {
-        private String email;
-        private String confirmationCode;
-        private Object bookingData; // The full booking confirmation data
-        private String paymentUrl; // URL for payment if not paid
-        private String printedBy;
-        private LocalDateTime printedAt;
-        private boolean includePaymentButton;
+    private String email;
+    private String confirmationCode;
+    private Object bookingData; // The full booking confirmation data
+    private String paymentUrl; // URL for payment if not paid
+    private String printedBy;
+    private LocalDateTime printedAt;
+    private boolean includePaymentButton;
 }
