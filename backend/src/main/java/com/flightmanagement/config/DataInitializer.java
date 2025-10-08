@@ -293,7 +293,7 @@ public class DataInitializer implements CommandLineRunner {
                 LocalDateTime dayAfter = LocalDateTime.now().plusDays(3);
 
                 // Flight 1: SGN -> HAN
-                FlightCreateRequest request1 = new FlightCreateRequest();
+                FlightRequest request1 = new FlightRequest();
                 request1.setFlightCode("VN001");
                 request1.setPlaneId(1);
                 request1.setDepartureAirportId(1);
@@ -303,7 +303,7 @@ public class DataInitializer implements CommandLineRunner {
                 flightService.createFlight(request1);
 
                 // Flight 2: HAN -> DAD
-                FlightCreateRequest request2 = new FlightCreateRequest();
+                FlightRequest request2 = new FlightRequest();
                 request2.setFlightCode("VN002");
                 request2.setPlaneId(2);
                 request2.setDepartureAirportId(2);
@@ -313,7 +313,7 @@ public class DataInitializer implements CommandLineRunner {
                 flightService.createFlight(request2);
 
                 // Flight 3: DAD -> CXR
-                FlightCreateRequest request3 = new FlightCreateRequest();
+                FlightRequest request3 = new FlightRequest();
                 request3.setFlightCode("VN003");
                 request3.setPlaneId(3);
                 request3.setDepartureAirportId(3);
@@ -323,7 +323,7 @@ public class DataInitializer implements CommandLineRunner {
                 flightService.createFlight(request3);
 
                 // Flight 4: SGN -> PQC
-                FlightCreateRequest request4 = new FlightCreateRequest();
+                FlightRequest request4 = new FlightRequest();
                 request4.setFlightCode("VN004");
                 request4.setPlaneId(4);
                 request4.setDepartureAirportId(1);
@@ -333,7 +333,7 @@ public class DataInitializer implements CommandLineRunner {
                 flightService.createFlight(request4);
 
                 // Flight 5: PQC -> SGN
-                FlightCreateRequest request5 = new FlightCreateRequest();
+                FlightRequest request5 = new FlightRequest();
                 request5.setFlightCode("VN005");
                 request5.setPlaneId(5);
                 request5.setDepartureAirportId(5);

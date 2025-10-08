@@ -52,7 +52,7 @@ public class FlightServiceImpl implements FlightService {
     }
 
     @Override
-    public FlightDto createFlight(FlightCreateRequest request) {
+    public FlightDto createFlight(FlightRequest request) {
         validateFlightData(request);
 
         Flight flight = flightMapper.toEntityFromCreateRequest(request);
@@ -62,13 +62,14 @@ public class FlightServiceImpl implements FlightService {
     }
     
     @Override
-    public FlightDto updateFlight(Integer id, FlightDto flightDto) {
+    public FlightDto updateFlight(Integer id, FlightRequest updateRequest) {
+        validateFlightData(updateRequest);
         Flight existingFlight = flightRepository.findActiveById(id)
             .orElseThrow(() -> new RuntimeException("Flight not found with id: " + id));
         
-        existingFlight.setFlightCode(flightDto.getFlightCode());
-        existingFlight.setDepartureTime(flightDto.getDepartureTime());
-        existingFlight.setArrivalTime(flightDto.getArrivalTime());
+        existingFlight.setFlightCode(updateRequest.getFlightCode());
+        existingFlight.setDepartureTime(updateRequest.getDepartureTime());
+        existingFlight.setArrivalTime(updateRequest.getArrivalTime());
         
         Flight updatedFlight = flightRepository.save(existingFlight);
         return flightMapper.toDto(updatedFlight);
@@ -148,7 +149,7 @@ public class FlightServiceImpl implements FlightService {
         }
     }
     
-    private void validateFlightData(FlightCreateRequest request) {
+    private void validateFlightData(FlightRequest request) {
         if (flightRepository.existsByFlightCode(request.getFlightCode())) {
             throw new IllegalArgumentException("Flight code already exists: " + request.getFlightCode());
         }

@@ -1,13 +1,12 @@
 package com.flightmanagement.mapper;
 
-import com.flightmanagement.dto.FlightCreateRequest;
+import com.flightmanagement.dto.FlightRequest;
 import com.flightmanagement.dto.FlightDto;
 import com.flightmanagement.entity.Airport;
 import com.flightmanagement.entity.Flight;
 import com.flightmanagement.entity.Plane;
 import com.flightmanagement.repository.AirportRepository;
 import com.flightmanagement.repository.PlaneRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -99,7 +98,7 @@ public class FlightMapper implements BaseMapper<Flight, FlightDto> {
         return dtoList.stream().map(this::toEntity).collect(Collectors.toList());
     }
 
-    public Flight toEntityFromCreateRequest(FlightCreateRequest request) {
+    public Flight toEntityFromCreateRequest(FlightRequest request) {
         if (request == null) return null;
 
         Flight entity = new Flight();

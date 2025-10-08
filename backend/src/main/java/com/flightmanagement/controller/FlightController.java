@@ -1,6 +1,6 @@
 package com.flightmanagement.controller;
 
-import com.flightmanagement.dto.FlightCreateRequest;
+import com.flightmanagement.dto.FlightRequest;
 import com.flightmanagement.dto.FlightDto;
 import com.flightmanagement.dto.FlightSearchCriteria;
 import com.flightmanagement.service.FlightService;
@@ -49,7 +49,7 @@ public class FlightController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<FlightDto>> createFlight(@Valid @RequestBody FlightCreateRequest request) {
+    public ResponseEntity<ApiResponse<FlightDto>> createFlight(@Valid @RequestBody FlightRequest request) {
         FlightDto createdFlight = flightService.createFlight(request);
         ApiResponse<FlightDto> apiResponse = new ApiResponse<>(
                 HttpStatus.CREATED,
@@ -61,8 +61,8 @@ public class FlightController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<FlightDto>> updateFlight(@PathVariable Integer id, @RequestBody FlightDto flightDto) {
-        FlightDto updatedFlight = flightService.updateFlight(id, flightDto);
+    public ResponseEntity<ApiResponse<FlightDto>> updateFlight(@PathVariable Integer id, @RequestBody FlightRequest updateRequest) {
+        FlightDto updatedFlight = flightService.updateFlight(id, updateRequest);
         ApiResponse<FlightDto> apiResponse = new ApiResponse<>(
                 HttpStatus.OK,
                 "Flight updated successfully",

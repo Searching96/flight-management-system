@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FlightCreateRequest {
+public class FlightRequest {
 
     @NotBlank(message = "Flight code is required")
     private String flightCode;
