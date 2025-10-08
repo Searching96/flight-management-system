@@ -1,9 +1,10 @@
+// ...existing code...
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.FlightDto;
 import com.flightmanagement.dto.FlightSearchCriteria;
 import com.flightmanagement.service.FlightService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.flightmanagement.entity.ApiResponse;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,44 +24,80 @@ public class FlightController {
     }
 
     @GetMapping
-    public ResponseEntity<List<FlightDto>> getAllFlights() {
+    public ResponseEntity<ApiResponse<List<FlightDto>>> getAllFlights() {
         List<FlightDto> flights = flightService.getAllFlights();
-        return ResponseEntity.ok(flights);
+        ApiResponse<List<FlightDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Flights retrieved successfully",
+                flights,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<FlightDto> getFlightById(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<FlightDto>> getFlightById(@PathVariable Integer id) {
         FlightDto flight = flightService.getFlightById(id);
-        return ResponseEntity.ok(flight);
+        ApiResponse<FlightDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Flight retrieved successfully",
+                flight,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 
     @PostMapping
-    public ResponseEntity<FlightDto> createFlight(@RequestBody FlightDto flightDto) {
+    public ResponseEntity<ApiResponse<FlightDto>> createFlight(@RequestBody FlightDto flightDto) {
         FlightDto createdFlight = flightService.createFlight(flightDto);
-        return new ResponseEntity<>(createdFlight, HttpStatus.CREATED);
+        ApiResponse<FlightDto> apiResponse = new ApiResponse<>(
+                HttpStatus.CREATED,
+                "Flight created successfully",
+                createdFlight,
+                null
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<FlightDto> updateFlight(@PathVariable Integer id, @RequestBody FlightDto flightDto) {
+    public ResponseEntity<ApiResponse<FlightDto>> updateFlight(@PathVariable Integer id, @RequestBody FlightDto flightDto) {
         FlightDto updatedFlight = flightService.updateFlight(id, flightDto);
-        return ResponseEntity.ok(updatedFlight);
+        ApiResponse<FlightDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Flight updated successfully",
+                updatedFlight,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteFlight(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Void>> deleteFlight(@PathVariable Integer id) {
         flightService.deleteFlight(id);
-        return ResponseEntity.noContent().build();
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                HttpStatus.NO_CONTENT,
+                "Flight deleted successfully",
+                null,
+                null
+        );
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
 
     @GetMapping("/code/{code}")
-    public ResponseEntity<FlightDto> getFlightByCode(@PathVariable String code) {
+    public ResponseEntity<ApiResponse<FlightDto>> getFlightByCode(@PathVariable String code) {
         FlightDto flight = flightService.getFlightByCode(code);
-        return ResponseEntity.ok(flight);
+        ApiResponse<FlightDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Flight retrieved by code successfully",
+                flight,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 
     // Change from POST to GET and use @RequestParam instead of @RequestBody
     @GetMapping("/search")
-    public ResponseEntity<List<FlightDto>> searchFlights(
+    public ResponseEntity<ApiResponse<List<FlightDto>>> searchFlights(
             @RequestParam Integer departureAirportId,
             @RequestParam Integer arrivalAirportId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime departureDate,
@@ -69,15 +106,6 @@ public class FlightController {
             @RequestParam(required = false) Integer ticketClassId) {
         
         try {
-            // Log the search request for debugging
-            System.out.println("Flight search request received:");
-            System.out.println("Departure Airport ID: " + departureAirportId);
-            System.out.println("Arrival Airport ID: " + arrivalAirportId);
-            System.out.println("Departure Date: " + departureDate);
-            System.out.println("Return Date: " + returnDate);
-            System.out.println("Passenger Count: " + passengerCount);
-            System.out.println("Ticket Class ID: " + ticketClassId);
-            
             // Create search criteria
             FlightSearchCriteria criteria = new FlightSearchCriteria();
             criteria.setDepartureAirportId(departureAirportId);
@@ -88,43 +116,83 @@ public class FlightController {
             criteria.setTicketClassId(ticketClassId);
             
             List<FlightDto> flights = flightService.searchFlights(criteria);
-            System.out.println("Found " + flights.size() + " flights");
-            
-            return ResponseEntity.ok(flights);
+
+            ApiResponse<List<FlightDto>> apiResponse = new ApiResponse<>(
+                    HttpStatus.OK,
+                    "Flight search completed",
+                    flights,
+                    null
+            );
+            return ResponseEntity.ok(apiResponse);
         } catch (Exception e) {
-            System.err.println("Error in flight search: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Flight search failed: " + e.getMessage(), e);
+            ApiResponse<List<FlightDto>> apiResponse = new ApiResponse<>(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Flight search failed: " + e.getMessage(),
+                    null,
+                    "INTERNAL_SERVER_ERROR"
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
         }
     }
 
     @GetMapping("/route")
-    public ResponseEntity<List<FlightDto>> getFlightsByRoute(
+    public ResponseEntity<ApiResponse<List<FlightDto>>> getFlightsByRoute(
             @RequestParam Integer departureAirportId,
             @RequestParam Integer arrivalAirportId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime departureDate) {
         List<FlightDto> flights = flightService.getFlightsByRoute(departureAirportId, arrivalAirportId, departureDate);
-        return ResponseEntity.ok(flights);
+        ApiResponse<List<FlightDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Flights retrieved by route successfully",
+                flights,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 
     @GetMapping("/date-range")
-    public ResponseEntity<List<FlightDto>> getFlightsByDateRange(
+    public ResponseEntity<ApiResponse<List<FlightDto>>> getFlightsByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
         List<FlightDto> flights = flightService.getFlightsByDateRange(startDate, endDate);
-        return ResponseEntity.ok(flights);
+        ApiResponse<List<FlightDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Flights retrieved by date range successfully",
+                flights,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 
     @GetMapping("/search/date")
-    public ResponseEntity<List<FlightDto>> searchFlightsByDate(@RequestParam String departureDate) {
+    public ResponseEntity<ApiResponse<List<FlightDto>>> searchFlightsByDate(@RequestParam String departureDate) {
         try {
             if (departureDate == null || departureDate.trim().isEmpty()) {
-                return ResponseEntity.badRequest().build();
+                ApiResponse<List<FlightDto>> apiResponse = new ApiResponse<>(
+                        HttpStatus.BAD_REQUEST,
+                        "departureDate is required",
+                        null,
+                        "BAD_REQUEST"
+                );
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
             }
             List<FlightDto> flights = flightService.searchFlightsByDate(departureDate);
-            return ResponseEntity.ok(flights);
+            ApiResponse<List<FlightDto>> apiResponse = new ApiResponse<>(
+                    HttpStatus.OK,
+                    "Flights retrieved for date successfully",
+                    flights,
+                    null
+            );
+            return ResponseEntity.ok(apiResponse);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            ApiResponse<List<FlightDto>> apiResponse = new ApiResponse<>(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to search flights by date: " + e.getMessage(),
+                    null,
+                    "INTERNAL_SERVER_ERROR"
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
         }
     }
+    // ...existing code...
 }

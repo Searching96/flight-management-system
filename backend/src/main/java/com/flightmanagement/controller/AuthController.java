@@ -1,17 +1,17 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.*;
+import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.AuthService;
 import jakarta.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
 
-// AuthController.java
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -23,44 +23,98 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequestDto request) {
-        return ResponseEntity.ok(authService.authenticate(request));
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequestDto request) {
+        AuthResponse authResponse = authService.authenticate(request);
+        ApiResponse<AuthResponse> response = new ApiResponse<>(
+                HttpStatus.OK,
+                "Login successful",
+                authResponse,
+                null
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> registerCustomer(@Valid @RequestBody RegisterDto request) {
-        request.setEmployeeType(null);
-        request.setAccountType(1); // Default to customer account type
-        return ResponseEntity.ok(authService.register(request));
+    public ResponseEntity<ApiResponse<AuthResponse>> registerCustomer(@Valid @RequestBody RegisterDto request) {
+        request.setEmployeeType(null); // Ensure employeeType is null for customers
+        request.setAccountType(1); // Set account type to customer
+
+        AuthResponse authResponse = authService.register(request);
+        ApiResponse<AuthResponse> response = new ApiResponse<>(
+                HttpStatus.CREATED,
+                "Registration successful",
+                authResponse,
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/create-employee")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
-    public ResponseEntity<AuthResponse> registerEmployee(@Valid @RequestBody RegisterDto request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> registerEmployee(@Valid @RequestBody RegisterDto request) {
         request.setAccountType(2); // Set account type to employee
-        return ResponseEntity.ok(authService.register(request));
+        AuthResponse authResponse = authService.register(request);
+
+        ApiResponse<AuthResponse> response = new ApiResponse<>(
+                HttpStatus.CREATED,
+                "Employee account created successfully",
+                authResponse,
+                null
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/forget-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody PasswordForgetRequest request) {
-        if (!authService.validateEmail(request.getEmail()))
-            return ResponseEntity.badRequest().body("Cannot find account with this email");
+    @PostMapping("/forget-password") // Yet to assign role
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody PasswordForgetRequest request) {
         authService.processForgotPassword(request.getEmail());
-        return ResponseEntity.ok("Password reset email sent");
+
+        ApiResponse<Void> response = new ApiResponse<>(
+                HttpStatus.OK,
+                "Password reset email sent",
+                null,
+                null
+        );
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<AuthResponse> resetPassword(@RequestBody PasswordResetRequest request) {
-        return ResponseEntity.ok(authService.processPasswordReset(request.getToken(), request.getNewPassword()));
+    public ResponseEntity<ApiResponse<AuthResponse>> resetPassword(@RequestBody PasswordResetRequest request) {
+        AuthResponse authResponse = authService.processPasswordReset(request.getToken(), request.getNewPassword());
+        ApiResponse<AuthResponse> response = new ApiResponse<>(
+                HttpStatus.OK,
+                "Password has been reset successfully",
+                authResponse,
+                null
+        );
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refreshToken(@RequestBody TokenRequest request) throws AccessDeniedException {
-        return ResponseEntity.ok(authService.refreshToken(request.getToken()));
+    public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(@RequestBody TokenRequest request) throws AccessDeniedException {
+        AuthResponse authResponse = authService.refreshToken(request.getToken());
+        if (authResponse == null) {
+            throw new AccessDeniedException("Invalid or expired token");
+        }
+        ApiResponse<AuthResponse> response = new ApiResponse<>(
+                HttpStatus.OK,
+                "Token refreshed successfully",
+                authResponse,
+                null
+        );
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/validate")
-    public ResponseEntity<Boolean> validatePasswordResetToken(@RequestBody TokenRequest request) {
-        return ResponseEntity.ok(authService.validatePasswordResetToken(request.getToken()));
+    public ResponseEntity<ApiResponse<Boolean>> validatePasswordResetToken(@RequestBody TokenRequest request) {
+        Boolean isValid = authService.validatePasswordResetToken(request.getToken());
+        ApiResponse<Boolean> response = new ApiResponse<>(
+                HttpStatus.OK,
+                "Token validation completed",
+                isValid,
+                null
+        );
+        return ResponseEntity.ok(response);
     }
 }

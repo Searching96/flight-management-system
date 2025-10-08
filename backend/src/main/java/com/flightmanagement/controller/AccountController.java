@@ -1,9 +1,10 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.AccountDto;
+import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.AccountService;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.List;
 
-// AccountController.java - Secured account management
 @RestController
 @RequestMapping("/api/accounts")
 public class AccountController {
@@ -24,29 +24,58 @@ public class AccountController {
 
     @GetMapping
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR')")
-    public ResponseEntity<List<AccountDto>> getAllAccounts() {
-        return ResponseEntity.ok(accountService.getAllAccounts());
+    public ResponseEntity<ApiResponse<List<AccountDto>>> getAllAccounts() {
+        List<AccountDto> accountDtoList = accountService.getAllAccounts();
+
+        ApiResponse<List<AccountDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Accounts retrieved successfully",
+                accountDtoList,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or #id == principal.id")
+    public ResponseEntity<ApiResponse<AccountDto>> getAccountById(@PathVariable Integer id) {
+        AccountDto accountDto = accountService.getAccountById(id);
 
-    public ResponseEntity<AccountDto> getAccountById(@PathVariable Integer id) {
-        return ResponseEntity.ok(accountService.getAccountById(id));
+        ApiResponse<AccountDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Account retrieved successfully",
+                accountDto,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAccount(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(@PathVariable Integer id) {
         accountService.deleteAccount(id);
-        return ResponseEntity.noContent().build();
+
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                HttpStatus.NO_CONTENT,
+                "Account deleted successfully",
+                null,
+                null
+        );
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or #id == principal.id")
-    public ResponseEntity<AccountDto> updateAccount(
+    public ResponseEntity<ApiResponse<AccountDto>> updateAccount(
             @PathVariable Integer id, @RequestBody AccountDto accountDto) {
         try {
-            return ResponseEntity.ok(accountService.updateAccount(id, accountDto));
+            AccountDto updatedAccountDto = accountService.updateAccount(id, accountDto);
+            ApiResponse<AccountDto> apiResponse = new ApiResponse<>(
+                    HttpStatus.OK,
+                    "Account updated successfully",
+                    updatedAccountDto,
+                    null
+            );
+            return ResponseEntity.ok(apiResponse);
         } catch (Exception e) {
             // Log the error for debugging
             System.err.println("Error updating account " + id + ": " + e.getMessage());
@@ -57,30 +86,47 @@ public class AccountController {
 
     @PostMapping("/{id}/verify-password")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or #id == principal.id")
-    public ResponseEntity<Boolean> verifyCurrentPassword(
+    public ResponseEntity<ApiResponse<Boolean>> verifyCurrentPassword(
             @PathVariable Integer id, 
             @RequestBody Map<String, String> request) {
         try {
             String currentPassword = request.get("currentPassword");
-            boolean isValid = accountService.verifyCurrentPassword(id, currentPassword);
-            return ResponseEntity.ok(isValid);
+            Boolean isValid = accountService.verifyCurrentPassword(id, currentPassword);
+            ApiResponse<Boolean> apiResponse = new ApiResponse<>(
+                    HttpStatus.OK,
+                    "Password verification completed",
+                    isValid,
+                    null
+            );
+            return ResponseEntity.ok(apiResponse);
         } catch (Exception e) {
             System.err.println("Error verifying password for account " + id + ": " + e.getMessage());
-            return ResponseEntity.ok(false);
+            ApiResponse<Boolean> apiResponse = new ApiResponse<>(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error verifying password",
+                    false,
+                    "INTERNAL_SERVER_ERROR"
+            );
+            return ResponseEntity.ok(apiResponse);
         }
     }
 
     @PostMapping("/{id}/reset-password")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or #id == principal.id")
-    public ResponseEntity<Void> resetPassword(
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
             @PathVariable Integer id,
             @RequestBody Map<String, String> request) {
         try {
             String currentPassword = request.get("currentPassword");
             String newPassword = request.get("newPassword");
-            
             accountService.resetPassword(id, currentPassword, newPassword);
-            return ResponseEntity.ok().build();
+            ApiResponse<Void> apiResponse = new ApiResponse<>(
+                    HttpStatus.OK,
+                    "Password reset successfully",
+                    null,
+                    null
+            );
+            return ResponseEntity.ok(apiResponse);
         } catch (Exception e) {
             System.err.println("Error resetting password for account " + id + ": " + e.getMessage());
             throw e;

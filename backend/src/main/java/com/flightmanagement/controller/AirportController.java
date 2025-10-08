@@ -1,8 +1,8 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.AirportDto;
+import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.AirportService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,109 +21,105 @@ public class AirportController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AirportDto>> getAllAirports() {
-        try {
-            List<AirportDto> airports = airportService.getAllAirports();
-            return ResponseEntity.ok(airports);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<ApiResponse<List<AirportDto>>> getAllAirports() {
+        List<AirportDto> airports = airportService.getAllAirports();
+        ApiResponse<List<AirportDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Fetched all airports",
+                airports,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<AirportDto> getAirportById(@PathVariable Integer id) {
-        try {
-            if (id == null || id <= 0) {
-                return ResponseEntity.badRequest().build();
-            }
-            AirportDto airport = airportService.getAirportById(id);
-            return ResponseEntity.ok(airport);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<ApiResponse<AirportDto>> getAirportById(@PathVariable Integer id) {
+        AirportDto airport = airportService.getAirportById(id);
+
+        ApiResponse<AirportDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Fetched airport with id: " + id,
+                airport,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @PostMapping
-    public ResponseEntity<AirportDto> createAirport(@Valid @RequestBody AirportDto airportDto) {
-        try {
-            if (airportDto == null) {
-                return ResponseEntity.badRequest().build();
-            }
-            AirportDto createdAirport = airportService.createAirport(airportDto);
-            return new ResponseEntity<>(createdAirport, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<ApiResponse<AirportDto>> createAirport(@Valid @RequestBody AirportDto airportDto) {
+        AirportDto airport = airportService.createAirport(airportDto);
+        ApiResponse<AirportDto> apiResponse = new ApiResponse<>(
+                HttpStatus.CREATED,
+                "Airport created successfully",
+                airport,
+                null
+        );
+
+        return ResponseEntity.ok(apiResponse);
     }
     
     @PutMapping("/{id}")
-    public ResponseEntity<AirportDto> updateAirport(@PathVariable Integer id, @Valid @RequestBody AirportDto airportDto) {
-        try {
-            if (id == null || id <= 0 || airportDto == null) {
-                return ResponseEntity.badRequest().build();
-            }
-            AirportDto updatedAirport = airportService.updateAirport(id, airportDto);
-            return ResponseEntity.ok(updatedAirport);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<ApiResponse<AirportDto>> updateAirport(@PathVariable Integer id, @Valid @RequestBody AirportDto airportDto) {
+        AirportDto updatedAirport = airportService.updateAirport(id, airportDto);
+
+        ApiResponse<AirportDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Airport updated successfully",
+                updatedAirport,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAirport(@PathVariable Integer id) {
-        try {
-            if (id == null || id <= 0) {
-                return ResponseEntity.badRequest().build();
-            }
-            airportService.deleteAirport(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<ApiResponse<Void>> deleteAirport(@PathVariable Integer id) {
+        airportService.deleteAirport(id);
+
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                HttpStatus.NO_CONTENT,
+                "Airport deleted successfully",
+                null,
+                null
+        );
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
     
     @GetMapping("/city/{cityName}")
-    public ResponseEntity<List<AirportDto>> getAirportsByCity(@PathVariable String cityName) {
-        try {
-            if (cityName == null || cityName.trim().isEmpty()) {
-                return ResponseEntity.badRequest().build();
-            }
-            List<AirportDto> airports = airportService.getAirportsByCity(cityName);
-            return ResponseEntity.ok(airports);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<ApiResponse<List<AirportDto>>> getAirportsByCity(@PathVariable String cityName) {
+        List<AirportDto> airports = airportService.getAirportsByCity(cityName);
+
+        ApiResponse<List<AirportDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Fetched airports in city: " + cityName,
+                airports,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @GetMapping("/country/{countryName}")
-    public ResponseEntity<List<AirportDto>> getAirportsByCountry(@PathVariable String countryName) {
-        try {
-            if (countryName == null || countryName.trim().isEmpty()) {
-                return ResponseEntity.badRequest().build();
-            }
-            List<AirportDto> airports = airportService.getAirportsByCountry(countryName);
-            return ResponseEntity.ok(airports);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<ApiResponse<List<AirportDto>>> getAirportsByCountry(@PathVariable String countryName) {
+        List<AirportDto> airports = airportService.getAirportsByCountry(countryName);
+
+        ApiResponse<List<AirportDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Fetched airports in country: " + countryName,
+                airports,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @GetMapping("/search/{name}")
-    public ResponseEntity<List<AirportDto>> searchAirportsByName(@PathVariable String name) {
-        try {
-            if (name == null || name.trim().isEmpty()) {
-                return ResponseEntity.badRequest().build();
-            }
-            List<AirportDto> airports = airportService.searchAirportsByName(name);
-            return ResponseEntity.ok(airports);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<ApiResponse<List<AirportDto>>> searchAirportsByName(@PathVariable String name) {
+        List<AirportDto> airports = airportService.searchAirportsByName(name);
+
+        ApiResponse<List<AirportDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Searched airports by name: " + name,
+                airports,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 }

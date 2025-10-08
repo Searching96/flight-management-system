@@ -15,11 +15,14 @@ import java.util.stream.Collectors;
 @Component
 public class FlightMapper implements BaseMapper<Flight, FlightDto> {
     
-    @Autowired
-    private PlaneRepository planeRepository;
+    private final PlaneRepository planeRepository;
     
-    @Autowired
-    private AirportRepository airportRepository;
+    private final AirportRepository airportRepository;
+
+    public FlightMapper(PlaneRepository planeRepository, AirportRepository airportRepository) {
+        this.planeRepository = planeRepository;
+        this.airportRepository = airportRepository;
+    }
     
     @Override
     public FlightDto toDto(Flight entity) {
@@ -50,7 +53,8 @@ public class FlightMapper implements BaseMapper<Flight, FlightDto> {
         
         return dto;
     }
-      @Override
+
+    @Override
     public Flight toEntity(FlightDto dto) {
         if (dto == null) return null;
         
