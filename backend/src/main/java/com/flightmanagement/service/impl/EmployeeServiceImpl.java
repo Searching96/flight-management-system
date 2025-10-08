@@ -33,9 +33,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public EmployeeDto getCurrentEmployee(String username) {
-        System.out.println("Finding current employee for username: " + username + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
+        System.out.println("Finding current employee for username: " + username);
 
-        Account account = accountRepository.findByAccountName(username)
+        Account account = accountRepository.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException("Account not found with username: " + username));
 
         Employee employee = employeeRepository.findByAccountId(account.getAccountId())
@@ -46,7 +46,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public EmployeeDto getEmployeeById(Integer id) {
-        System.out.println("Finding employee by ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
+        System.out.println("Finding employee by ID: " + id);
         return employeeMapper.toDto(
                 employeeRepository.findActiveById(id)
                         .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id))
@@ -55,7 +55,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public List<EmployeeDto> getAllEmployees() {
-        System.out.println("Getting all active employees at 2025-06-11 07:43:20 UTC by thinh0704hcm");
+        System.out.println("Getting all active employees");
         return employeeRepository.findAll()
                 .stream()
                 .map(employeeMapper::toDto)
@@ -66,7 +66,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public EmployeeDto updateEmployee(Integer id, EmployeeDto updateRequest) {
-        System.out.println("Updating employee ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
+        System.out.println("Updating employee ID: " + id);
 
         Employee existingEmployee = employeeRepository.findActiveById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
@@ -98,7 +98,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public void deleteEmployee(Integer id) {
-        System.out.println("Soft deleting employee ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
+        System.out.println("Soft deleting employee ID: " + id);
 
         Employee employee = employeeRepository.findActiveById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
@@ -110,7 +110,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public EmployeeDto activateEmployee(Integer id) {
-        System.out.println("Activating employee ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
+        System.out.println("Activating employee ID: " + id);
 
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
@@ -128,7 +128,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public EmployeeDto deactivateEmployee(Integer id) {
-        System.out.println("Deactivating employee ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
+        System.out.println("Deactivating employee ID: " + id);
 
         Employee employee = employeeRepository.findActiveById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
@@ -146,7 +146,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public boolean isEmployeeActive(Integer employeeId) {
-        System.out.println("Checking if employee ID: " + employeeId + " is active at 2025-06-11 07:43:20 UTC by thinh0704hcm");
+        System.out.println("Checking if employee ID: " + employeeId + " is active");
 
         Employee employee = employeeRepository.findActiveById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found with id: " + employeeId));
@@ -157,7 +157,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public EmployeeDto updateRole(Integer id, Integer newRole) {
-        System.out.println("Updating role for employee ID: " + id + " to role: " + newRole + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
+        System.out.println("Updating role for employee ID: " + id + " to role: " + newRole);
 
         Employee employee = employeeRepository.findActiveById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
