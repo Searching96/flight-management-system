@@ -1,10 +1,11 @@
-// ...existing code...
 package com.flightmanagement.controller;
 
+import com.flightmanagement.dto.FlightCreateRequest;
 import com.flightmanagement.dto.FlightDto;
 import com.flightmanagement.dto.FlightSearchCriteria;
 import com.flightmanagement.service.FlightService;
 import com.flightmanagement.entity.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,8 +49,8 @@ public class FlightController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<FlightDto>> createFlight(@RequestBody FlightDto flightDto) {
-        FlightDto createdFlight = flightService.createFlight(flightDto);
+    public ResponseEntity<ApiResponse<FlightDto>> createFlight(@Valid @RequestBody FlightCreateRequest request) {
+        FlightDto createdFlight = flightService.createFlight(request);
         ApiResponse<FlightDto> apiResponse = new ApiResponse<>(
                 HttpStatus.CREATED,
                 "Flight created successfully",

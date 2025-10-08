@@ -1,5 +1,6 @@
 package com.flightmanagement.mapper;
 
+import com.flightmanagement.dto.FlightCreateRequest;
 import com.flightmanagement.dto.FlightDto;
 import com.flightmanagement.entity.Airport;
 import com.flightmanagement.entity.Flight;
@@ -96,5 +97,37 @@ public class FlightMapper implements BaseMapper<Flight, FlightDto> {
     @Override
     public List<Flight> toEntityList(List<FlightDto> dtoList) {
         return dtoList.stream().map(this::toEntity).collect(Collectors.toList());
+    }
+
+    public Flight toEntityFromCreateRequest(FlightCreateRequest request) {
+        if (request == null) return null;
+
+        Flight entity = new Flight();
+        entity.setFlightCode(request.getFlightCode());
+        entity.setDepartureTime(request.getDepartureTime());
+        entity.setArrivalTime(request.getArrivalTime());
+
+        // Set plane from plane id
+        if (request.getPlaneId() != null) {
+            Plane plane = planeRepository.findById(request.getPlaneId())
+                .orElseThrow(() -> new RuntimeException("Plane not found with id: " + request.getPlaneId()));
+            entity.setPlane(plane);
+        }
+
+        // Set departure airport from departure airport id
+        if (request.getDepartureAirportId() != null) {
+            Airport departureAirport = airportRepository.findById(request.getDepartureAirportId())
+                .orElseThrow(() -> new RuntimeException("Departure Airport not found with id: " + request.getDepartureAirportId()));
+            entity.setDepartureAirport(departureAirport);
+        }
+
+        // Set arrival airport from arrival airport id
+        if (request.getArrivalAirportId() != null) {
+            Airport arrivalAirport = airportRepository.findById(request.getArrivalAirportId())
+                .orElseThrow(() -> new RuntimeException("Arrival Airport not found with id: " + request.getArrivalAirportId()));
+            entity.setArrivalAirport(arrivalAirport);
+        }
+
+        return entity;
     }
 }
