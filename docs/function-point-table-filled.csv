@@ -1,0 +1,74 @@
+Tên dự án:,Flight Management System,,,,,,,,,,,,,
+Người thực hiện,,Nguyễn Phúc Thịnh,Trần Xuân Thịnh,Trần Đức Thịnh,,,,,,,,,,
+,,,,,,,,,,,,,,
+Stt,Tên chức năng chính,Tên chức năng con,Môi trường triển khai,,DANH SÁCH ĐỘ ĐO,,,,,,,,,
+,,,Web,Mobile,C1,W1,C2,W2,C3,W3,C4,W4,C5,W5
+1,System Administration,Manage user accounts,,x,4,5,3,4,2,4,2,5,1,3
+2,,Manage user roles,,x,2,3,2,3,1,2,1,3,1,2
+3,,Manage employee accounts,,x,4,5,3,4,2,4,2,5,1,3
+4,,Configure security policies,,x,3,4,2,3,2,3,2,4,1,3
+5,,Monitor system performance,,x,2,3,1,2,1,2,1,3,1,2
+6,,View system analytics,,x,3,4,2,3,2,3,1,3,1,2
+7,,Track system usage,,x,2,3,2,3,1,2,1,3,1,2
+8,Booking & Ticketing,Search flights,x,x,5,6,4,5,3,5,3,6,2,4
+9,,View flight details,x,x,3,4,2,3,2,3,2,4,1,2
+10,,Book tickets,x,x,6,7,5,6,4,6,4,7,3,5
+11,,Enter passenger details,x,x,4,5,3,4,2,4,2,5,2,3
+12,,Select seats,x,x,4,5,3,4,3,5,2,5,2,4
+13,,Manage seat assignments,x,x,3,4,2,3,2,3,2,4,1,3
+14,,Manage bookings,x,x,5,6,4,5,3,5,3,6,2,4
+15,,Look up booking,x,x,3,4,2,3,2,3,2,4,1,3
+16,,Handle ticket modifications,x,x,4,5,3,4,3,5,2,5,2,4
+17,,Process ticket booking,x,x,5,6,4,5,3,5,3,6,2,4
+18,,Ask for refund,x,x,4,5,3,4,2,4,2,5,2,4
+19,,Search customer bookings,x,x,4,5,3,4,2,4,2,5,1,3
+20,Financial Management,View financial reports,,x,4,5,3,4,3,5,2,5,2,4
+21,,Generate statistics,,x,4,5,3,4,3,5,2,5,2,4
+22,,Track booking revenue,,x,3,4,2,3,2,3,2,4,1,3
+23,,View revenue analytics,,x,4,5,3,4,3,5,2,5,2,4
+24,Customer Support & Communication,Contact customer support via chat,,x,5,6,4,5,4,6,3,6,2,4
+25,,Handle customer inquiries,,x,4,5,3,4,3,5,2,5,2,4
+26,,Assist with bookings,,x,3,4,2,3,2,3,2,4,1,3
+27,,Escalate complex issues,,x,3,4,2,3,2,3,2,4,1,3
+28,,Access business policies,,x,2,3,1,2,1,2,1,3,1,2
+29,Authentication & Access,Register,x,x,4,5,3,4,2,4,2,5,2,4
+30,,Log in,x,x,3,4,2,3,2,3,2,4,2,3
+31,,Reset password,x,x,3,4,2,3,2,3,2,4,1,3
+32,Flight Operations,Manage aircraft database,,x,4,5,3,4,2,4,2,5,1,3
+33,,Manage airport database,,x,4,5,3,4,2,4,2,5,1,3
+34,,Manage ticket classes,,x,3,4,2,3,2,3,2,4,1,3
+35,,Configure business rules,,x,4,5,3,4,3,5,2,5,2,4
+36,,Manage flight information,,x,5,6,4,5,3,5,3,6,2,4
+37,,Create flight schedules,,x,5,6,4,5,3,5,3,6,2,4
+38,,Update flight schedules,,x,4,5,3,4,3,5,2,5,2,4
+39,,Monitor and adjust flight operations,,x,4,5,3,4,3,5,2,5,2,4
+40,Payment Processing,Make payment,x,x,5,6,4,5,3,5,3,6,2,4
+41,,Process payment,,x,4,5,3,4,3,5,2,5,2,4
+42,,Process refunds,,x,4,5,3,4,3,5,2,5,2,4
+43,,Handle payment gateway,,x,5,6,4,5,4,6,3,6,2,4
+,Tổng,,,,,206,,127,,112,,178,,83
+,,,,,,,,,,,,,,,
+"Giải thích các cột độ đo (C1-C5, W1-W5):",,,,,,,,,,,,,,,
+"C1: Data Communications - Truyền thông dữ liệu (Mức độ giao tiếp với hệ thống khác)",,,,,,,,,,,,,,,
+"W1: Trọng số của C1 (1-7)",,,,,,,,,,,,,,,
+"C2: Distributed Processing - Xử lý phân tán (Mức độ xử lý dữ liệu phân tán)",,,,,,,,,,,,,,,
+"W2: Trọng số của C2 (1-5)",,,,,,,,,,,,,,,
+"C3: Performance - Hiệu năng (Yêu cầu về hiệu suất thực thi)",,,,,,,,,,,,,,,
+"W3: Trọng số của C3 (1-6)",,,,,,,,,,,,,,,
+"C4: Heavily Used Configuration - Cấu hình sử dụng nhiều (Mức độ tải hệ thống)",,,,,,,,,,,,,,,
+"W4: Trọng số của C4 (1-7)",,,,,,,,,,,,,,,
+"C5: Transaction Rate - Tỷ lệ giao dịch (Tần suất thực hiện chức năng)",,,,,,,,,,,,,,,
+"W5: Trọng số của C5 (1-5)",,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+"Phương pháp tính:",,,,,,,,,,,,,,,
+"- C1-C5 được đánh giá từ 0-5 dựa trên độ phức tạp thực tế trong code",,,,,,,,,,,,,,,
+"- W1-W5 là trọng số tương ứng (W1: 1-7, W2: 1-5, W3: 1-6, W4: 1-7, W5: 1-5)",,,,,,,,,,,,,,,
+"- Mỗi chức năng được đánh giá riêng biệt, không trùng lặp implement",,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+"Phân tích codebase:",,,,,,,,,,,,,,,
+"Backend: 16 Controllers, 15+ Services, 15 Entities, 15+ Repositories",,,,,,,,,,,,,,,
+"Frontend: 30+ Components (Admin, Auth, Booking, Chat, Dashboard, Flight, Ticket)",,,,,,,,,,,,,,,
+"Services: 22+ Frontend Services (API integration, WebSocket, State management)",,,,,,,,,,,,,,,
+"Database: 15 Tables với relationships phức tạp",,,,,,,,,,,,,,,
+"Authentication: JWT-based security với role-based access control",,,,,,,,,,,,,,,
+"Real-time: WebSocket cho chat support",,,,,,,,,,,,,,,
