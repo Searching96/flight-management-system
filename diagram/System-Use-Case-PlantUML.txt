@@ -1,0 +1,80 @@
+@startuml
+left to right direction
+
+actor "Customer" as C
+actor "Flight Scheduling Employee" as FSE
+actor "Ticketing Employee" as TE
+actor "Customer Support Employee" as CSE
+actor "Flight Operating Employee" as FOE
+actor "Human Resources Employee" as HRE
+actor "Accounting Employee" as AE
+actor "System Administrator" as SA
+
+rectangle "Flight Management System" {
+  (Log in) as LogIn
+  (Search flight) as SearchFlight
+  (Book ticket) as BookTicket
+  (Look up ticket reservation) as SearchReservation
+  (Make payment) as MakePayment
+  (Chat) as Chat
+  (Manage flight schedule) as ManageFlightSchedule
+  (Assign ticket to customer) as AssignTicket
+  (Modify assigned ticket) as ModifyTicket
+  (Process payment) as ProcessPayment
+  (Manage aircraft) as ManageAircraft
+  (Manage airport) as ManageAirport
+  (Manage ticket class) as ManageClass
+  (Manage term and privacy) as ManageRule
+  (Manage employee account) as ManageEmployee
+  (View financial report and revenue) as ViewFinance
+  (Track booking revenue and refund process) as TrackBookingAndRefund
+  (Manage user account) as ManageUser
+  (View system analytics and performance metrics) as ViewSystemMetric
+  (Configure system-wise setting and policy) as ConfigureSystem
+}
+
+C --> SearchFlight
+C --> BookTicket
+C --> SearchReservation
+C --> MakePayment
+C --> Chat
+
+FSE --> ManageFlightSchedule
+
+TE --> SearchFlight
+TE --> AssignTicket
+TE --> ModifyTicket
+TE --> ProcessPayment
+
+CSE --> Chat
+
+FOE --> ManageAircraft
+FOE --> ManageAirport
+FOE --> ManageClass
+FOE --> ManageRule
+
+HRE --> ManageEmployee
+
+AE --> ViewFinance
+AE --> TrackBookingAndRefund
+
+SA --> ManageUser
+SA --> ViewSystemMetric
+SA --> ConfigureSystem
+
+Chat ..> LogIn : <<include>>
+AssignTicket ..> LogIn : <<include>>
+ModifyTicket ..> LogIn : <<include>>
+ProcessPayment ..> LogIn : <<include>>
+ManageAircraft ..> LogIn : <<include>>
+ManageAirport ..> LogIn : <<include>>
+ManageClass ..> LogIn : <<include>>
+ManageRule ..> LogIn : <<include>>
+ManageEmployee ..> LogIn : <<include>>
+ViewFinance ..> LogIn : <<include>>
+TrackBookingAndRefund ..> LogIn : <<include>>
+ManageUser ..> LogIn : <<include>>
+ViewSystemMetric ..> LogIn : <<include>>
+ConfigureSystem ..> LogIn : <<include>>
+
+@enduml

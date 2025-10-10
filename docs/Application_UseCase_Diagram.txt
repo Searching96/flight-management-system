@@ -1,0 +1,161 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "Guest" as Guest
+actor "Customer" as Customer
+actor "Operation Administrator" as OpAdmin
+actor "Ticketing Employee" as TicketingEmp
+actor "Accounting Employee" as AccountingEmp
+actor "System Administrator" as SysAdmin
+actor "VNPay Gateway" as VNPay
+
+rectangle "Flight Management System" {
+
+  package "Authentication & Access" {
+    (Register Account) as UC_Register
+    (Login to System) as UC_Login
+    (Password Reset) as UC_PasswordReset
+    (Manage User Roles) as UC_ManageRoles
+    (Access Control) as UC_AccessControl
+  }
+
+  package "Flight Operations" {
+    (Search Flights) as UC_SearchFlights
+    (View Flight Details) as UC_ViewFlightDetails
+    (Create Flight Schedule) as UC_CreateFlight
+    (Update Flight Schedule) as UC_UpdateFlight
+    (Monitor Flight Operations) as UC_MonitorFlights
+    (Manage Flight Information) as UC_ManageFlightInfo
+    (Manage Aircraft Database) as UC_ManageAircraft
+    (Manage Airport Database) as UC_ManageAirports
+    (Configure System Parameters) as UC_ConfigureParams
+  }
+
+  package "Booking & Ticketing" {
+    (Book Flight Tickets) as UC_BookTickets
+    (Enter Passenger Details) as UC_EnterPassengers
+    (Select Seats) as UC_SelectSeats
+    (Lookup Booking) as UC_LookupBooking
+    (Manage Bookings) as UC_ManageBookings
+    (Search Customer Bookings) as UC_SearchBookings
+    (Process Ticket Booking) as UC_ProcessBooking
+    (Manage Seat Assignments) as UC_ManageSeatAssign
+    (Handle Ticket Modifications) as UC_HandleTicketMods
+    (Manage Ticket Classes) as UC_ManageTicketClasses
+  }
+
+  package "Payment Processing" {
+    (Process Payment) as UC_ProcessPayment
+    (Handle Payment Gateway) as UC_HandlePaymentGW
+    (Process Refunds) as UC_ProcessRefunds
+    (Payment Confirmation) as UC_PaymentConfirm
+  }
+
+  package "Customer Support & Communication" {
+    (Real-time Chat) as UC_RealtimeChat
+    (Handle Customer Inquiries) as UC_HandleInquiries
+    (Escalate Complex Issues) as UC_EscalateIssues
+    (Access Business Policies) as UC_AccessPolicies
+    (Assist with Bookings) as UC_AssistBookings
+  }
+
+  package "Financial Management" {
+    (View Financial Reports) as UC_ViewFinancialReports
+    (Track Booking Revenue) as UC_TrackRevenue
+    (Process Refund Requests) as UC_ProcessRefundReq
+    (Generate Statistics) as UC_GenerateStats
+    (Revenue Analytics) as UC_RevenueAnalytics
+  }
+
+  package "System Administration" {
+    (Manage User Accounts) as UC_ManageUserAccounts
+    (Track System Usage) as UC_TrackUsage
+    (System Analytics) as UC_SystemAnalytics
+    (Configure Security Policies) as UC_ConfigureSecurity
+    (Manage Employee Accounts) as UC_ManageEmployees
+    (System Performance Monitoring) as UC_SystemMonitoring
+  }
+
+  package "Notifications & Updates" {
+    (Real-time Notifications) as UC_Notifications
+    (System Performance) as UC_SystemPerformance
+    (Multi-language Support) as UC_LanguageSupport
+    (Responsive Interface) as UC_ResponsiveUI
+  }
+}
+
+Guest --> UC_SearchFlights
+Guest --> UC_ViewFlightDetails
+Guest --> UC_Register
+Guest --> UC_Login
+
+Customer --> UC_SearchFlights
+Customer --> UC_ViewFlightDetails
+Customer --> UC_BookTickets
+Customer --> UC_SelectSeats
+Customer --> UC_LookupBooking
+Customer --> UC_ManageBookings
+Customer --> UC_ProcessPayment
+Customer --> UC_RealtimeChat
+Customer --> UC_Login
+
+OpAdmin --> UC_Login
+OpAdmin --> UC_CreateFlight
+OpAdmin --> UC_UpdateFlight
+OpAdmin --> UC_MonitorFlights
+OpAdmin --> UC_ManageFlightInfo
+OpAdmin --> UC_ManageAircraft
+OpAdmin --> UC_ManageAirports
+OpAdmin --> UC_ManageTicketClasses
+OpAdmin --> UC_ConfigureParams
+
+TicketingEmp --> UC_Login
+TicketingEmp --> UC_SearchFlights
+TicketingEmp --> UC_ProcessBooking
+TicketingEmp --> UC_SearchBookings
+TicketingEmp --> UC_ManageSeatAssign
+TicketingEmp --> UC_HandleTicketMods
+TicketingEmp --> UC_ProcessPayment
+TicketingEmp --> UC_RealtimeChat
+TicketingEmp --> UC_HandleInquiries
+TicketingEmp --> UC_EscalateIssues
+TicketingEmp --> UC_AccessPolicies
+TicketingEmp --> UC_AssistBookings
+
+AccountingEmp --> UC_Login
+AccountingEmp --> UC_ViewFinancialReports
+AccountingEmp --> UC_TrackRevenue
+AccountingEmp --> UC_ProcessRefundReq
+AccountingEmp --> UC_GenerateStats
+AccountingEmp --> UC_RevenueAnalytics
+
+SysAdmin --> UC_Login
+SysAdmin --> UC_ManageUserAccounts
+SysAdmin --> UC_TrackUsage
+SysAdmin --> UC_SystemAnalytics
+SysAdmin --> UC_ConfigureSecurity
+SysAdmin --> UC_ManageEmployees
+SysAdmin --> UC_SystemMonitoring
+SysAdmin --> UC_ManageRoles
+SysAdmin --> UC_AccessControl
+
+UC_ProcessPayment --> VNPay
+VNPay --> UC_HandlePaymentGW
+VNPay --> UC_PaymentConfirm
+
+UC_BookTickets ..> UC_EnterPassengers : <<include>>
+UC_BookTickets ..> UC_ProcessPayment : <<include>>
+UC_BookTickets <.. UC_SelectSeats : <<extend>>
+UC_ManageBookings <.. UC_ProcessRefunds : <<extend>>
+UC_Login ..> UC_AccessControl : <<include>>
+UC_Register ..> UC_Login : <<extend>>
+UC_RealtimeChat <.. UC_EscalateIssues : <<extend>>
+UC_HandleInquiries ..> UC_AccessPolicies : <<include>>
+UC_ProcessBooking ..> UC_ManageSeatAssign : <<include>>
+UC_CreateFlight ..> UC_ConfigureParams : <<include>>
+UC_ViewFinancialReports ..> UC_GenerateStats : <<include>>
+UC_ManageUserAccounts ..> UC_ManageRoles : <<include>>
+
+@enduml

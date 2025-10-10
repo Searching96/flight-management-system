@@ -1,0 +1,239 @@
+@startuml Flight Management System - Use Case Diagram
+
+' ====================
+' STANDARD UML USE CASE DIAGRAM
+' ====================
+!theme plain
+scale 0.8
+top to bottom direction
+
+title Flight Management System - Use Case Diagram
+
+skinparam {
+    dpi 300
+    shadowing false
+    packageStyle rectangle
+}
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 11
+}
+
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 10
+}
+
+skinparam package {
+    BackgroundColor LightYellow
+    BorderColor Black
+    FontSize 12
+}
+
+' ====================
+' ACTORS
+' ====================
+actor Guest
+actor Customer
+actor "Flight Scheduler" as FlightScheduler
+actor "Ticketing Employee" as TicketingEmp
+actor "Support Employee" as SupportEmp
+actor "Accounting Employee" as AccountingEmp
+actor "Flight Operations" as FlightOpsEmp
+actor "HR Employee" as HREmp
+actor Administrator as Admin
+actor "VNPay Gateway" as VNPay
+
+' ====================
+' USE CASES
+' ====================
+usecase "Register Account" as UC_Register
+usecase "Login" as UC_Login
+usecase "Logout" as UC_Logout
+usecase "Forget Password" as UC_ForgetPassword
+usecase "Reset Password" as UC_ResetPassword
+
+usecase "Search Flights" as UC_SearchFlights
+usecase "View Flight Details" as UC_ViewFlightDetails
+usecase "Browse Airports" as UC_BrowseAirports
+
+usecase "Book Tickets" as UC_BookTickets
+usecase "Enter Passenger Details" as UC_EnterPassengers
+usecase "Make Payment" as UC_MakePayment
+usecase "View My Bookings" as UC_ViewMyBookings
+usecase "Cancel Booking" as UC_CancelBooking
+usecase "Lookup Booking" as UC_LookupBooking
+usecase "View Booking Details" as UC_ViewBookingDetails
+
+usecase "Start Chat" as UC_StartChat
+usecase "Send Message" as UC_SendMessage
+usecase "View Chat History" as UC_ViewChatHistory
+
+usecase "Create Flight" as UC_CreateFlight
+usecase "Update Flight" as UC_UpdateFlight
+usecase "Delete Flight" as UC_DeleteFlight
+usecase "View All Flights" as UC_ViewAllFlights
+usecase "Manage Flight Details" as UC_ManageFlightDetails
+usecase "Set Flight Classes" as UC_SetFlightClasses
+
+usecase "Process Booking" as UC_ProcessBooking
+usecase "Search Customer Bookings" as UC_SearchBookings
+usecase "View Ticket Details" as UC_ViewTicketDetails
+usecase "Manage Ticket Status" as UC_ManageTicketStatus
+usecase "Generate Booking Report" as UC_GenerateBookingReport
+
+usecase "View Customer Chats" as UC_ViewChats
+usecase "Respond to Customer" as UC_RespondToCustomer
+usecase "Handle Customer Inquiries" as UC_HandleInquiries
+usecase "Assist with Booking" as UC_AssistBooking
+
+usecase "View Yearly Stats" as UC_ViewYearlyStats
+usecase "View Monthly Stats" as UC_ViewMonthlyStats
+usecase "Generate Revenue Report" as UC_GenerateRevenue
+usecase "View Flight Statistics" as UC_ViewFlightStats
+usecase "Export Reports" as UC_ExportReports
+
+usecase "Manage Airports" as UC_ManageAirports
+usecase "Manage Planes" as UC_ManagePlanes
+usecase "Manage Ticket Classes" as UC_ManageTicketClasses
+usecase "Configure System" as UC_ConfigureSystem
+
+usecase "Create Employee" as UC_CreateEmployee
+usecase "Update Employee" as UC_UpdateEmployee
+usecase "Manage Employee Roles" as UC_ManageRoles
+usecase "View All Employees" as UC_ViewEmployees
+usecase "Import Employee Data" as UC_ImportEmployees
+
+usecase "Process Payment" as UC_ProcessPayment
+usecase "Validate Payment" as UC_ValidatePayment
+usecase "Handle Payment Response" as UC_HandlePaymentResponse
+usecase "Process Refund" as UC_ProcessRefund
+
+' ====================
+' ASSOCIATIONS
+' ====================
+' Guest associations
+Guest --> UC_SearchFlights
+Guest --> UC_ViewFlightDetails
+Guest --> UC_BrowseAirports
+Guest --> UC_Register
+Guest --> UC_Login
+
+' Customer associations (inherits from Guest)
+Customer --> UC_BookTickets
+Customer --> UC_EnterPassengers
+Customer --> UC_MakePayment
+Customer --> UC_ViewMyBookings
+Customer --> UC_CancelBooking
+Customer --> UC_LookupBooking
+Customer --> UC_ViewBookingDetails
+Customer --> UC_StartChat
+Customer --> UC_SendMessage
+Customer --> UC_ViewChatHistory
+Customer --> UC_Logout
+Customer --> UC_ForgetPassword
+Customer --> UC_ResetPassword
+
+' Flight Scheduler associations
+FlightScheduler --> UC_Login
+FlightScheduler --> UC_CreateFlight
+FlightScheduler --> UC_UpdateFlight
+FlightScheduler --> UC_DeleteFlight
+FlightScheduler --> UC_ViewAllFlights
+FlightScheduler --> UC_ManageFlightDetails
+FlightScheduler --> UC_SetFlightClasses
+FlightScheduler --> UC_Logout
+
+' Ticketing Employee associations
+TicketingEmp --> UC_Login
+TicketingEmp --> UC_ProcessBooking
+TicketingEmp --> UC_SearchBookings
+TicketingEmp --> UC_ViewTicketDetails
+TicketingEmp --> UC_ManageTicketStatus
+TicketingEmp --> UC_GenerateBookingReport
+TicketingEmp --> UC_SearchFlights
+TicketingEmp --> UC_Logout
+
+' Support Employee associations
+SupportEmp --> UC_Login
+SupportEmp --> UC_ViewChats
+SupportEmp --> UC_RespondToCustomer
+SupportEmp --> UC_HandleInquiries
+SupportEmp --> UC_AssistBooking
+SupportEmp --> UC_SearchBookings
+SupportEmp --> UC_Logout
+
+' Accounting Employee associations
+AccountingEmp --> UC_Login
+AccountingEmp --> UC_ViewYearlyStats
+AccountingEmp --> UC_ViewMonthlyStats
+AccountingEmp --> UC_GenerateRevenue
+AccountingEmp --> UC_ViewFlightStats
+AccountingEmp --> UC_ExportReports
+AccountingEmp --> UC_Logout
+
+' Flight Operations associations
+FlightOpsEmp --> UC_Login
+FlightOpsEmp --> UC_ManageAirports
+FlightOpsEmp --> UC_ManagePlanes
+FlightOpsEmp --> UC_ManageTicketClasses
+FlightOpsEmp --> UC_ConfigureSystem
+FlightOpsEmp --> UC_ViewAllFlights
+FlightOpsEmp --> UC_Logout
+
+' HR Employee associations
+HREmp --> UC_Login
+HREmp --> UC_CreateEmployee
+HREmp --> UC_UpdateEmployee
+HREmp --> UC_ManageRoles
+HREmp --> UC_ViewEmployees
+HREmp --> UC_ImportEmployees
+HREmp --> UC_Logout
+
+' Administrator associations
+Admin --> UC_Login
+Admin --> UC_CreateFlight
+Admin --> UC_UpdateFlight
+Admin --> UC_DeleteFlight
+Admin --> UC_ViewChats
+Admin --> UC_RespondToCustomer
+Admin --> UC_ViewYearlyStats
+Admin --> UC_GenerateRevenue
+Admin --> UC_ManageAirports
+Admin --> UC_ManagePlanes
+Admin --> UC_CreateEmployee
+Admin --> UC_ConfigureSystem
+Admin --> UC_Logout
+
+' VNPay Gateway associations
+UC_MakePayment --> VNPay
+VNPay --> UC_ProcessPayment
+VNPay --> UC_ValidatePayment
+VNPay --> UC_HandlePaymentResponse
+VNPay --> UC_ProcessRefund
+
+' ====================
+' INHERITANCE
+' ====================
+Customer --|> Guest
+
+' ====================
+' INCLUDES
+' ====================
+UC_BookTickets .> UC_EnterPassengers : <<include>>
+UC_BookTickets .> UC_MakePayment : <<include>>
+UC_CancelBooking .> UC_ProcessRefund : <<include>>
+UC_GenerateRevenue .> UC_ViewYearlyStats : <<include>>
+UC_GenerateRevenue .> UC_ViewMonthlyStats : <<include>>
+
+' ====================
+' EXTENDS
+' ====================
+UC_LookupBooking .> UC_ViewBookingDetails : <<extend>>
+UC_Register .> UC_Login : <<extend>>
+UC_ForgetPassword .> UC_ResetPassword : <<extend>>
+
+@enduml
