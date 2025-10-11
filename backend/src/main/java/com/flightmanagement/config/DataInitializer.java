@@ -2,7 +2,6 @@ package com.flightmanagement.config;
 
 import com.flightmanagement.dto.*;
 import com.flightmanagement.service.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -12,32 +11,39 @@ import java.time.LocalDateTime;
 @Component
 public class DataInitializer implements CommandLineRunner {
 
-    @Autowired
-    private ParameterService parameterService;
+    private final ParameterService parameterService;
 
-    @Autowired
-    private TicketClassService ticketClassService;
+    private final TicketClassService ticketClassService;
 
-    @Autowired
-    private AirportService airportService;
+    private final AirportService airportService;
 
-    @Autowired
-    private PlaneService planeService;
+    private final PlaneService planeService;
 
-    @Autowired
-    private AccountService accountService;
+    private final AccountService accountService;
 
-    @Autowired
-    private PassengerService passengerService;
+    private final PassengerService passengerService;
 
-    @Autowired
-    private FlightService flightService;
+    private final FlightService flightService;
 
-    @Autowired
-    private FlightDetailService flightDetailService;
+    private final FlightDetailService flightDetailService;
 
-    @Autowired
-    private FlightTicketClassService flightTicketClassService;
+    private final FlightTicketClassService flightTicketClassService;
+
+    public DataInitializer(ParameterService parameterService, TicketClassService ticketClassService,
+                           AirportService airportService, PlaneService planeService,
+                           AccountService accountService, PassengerService passengerService,
+                           FlightService flightService, FlightDetailService flightDetailService,
+                           FlightTicketClassService flightTicketClassService) {
+        this.parameterService = parameterService;
+        this.ticketClassService = ticketClassService;
+        this.airportService = airportService;
+        this.planeService = planeService;
+        this.accountService = accountService;
+        this.passengerService = passengerService;
+        this.flightService = flightService;
+        this.flightDetailService = flightDetailService;
+        this.flightTicketClassService = flightTicketClassService;
+    }
 
     @Override
     public void run(String... args) {
@@ -287,54 +293,54 @@ public class DataInitializer implements CommandLineRunner {
                 LocalDateTime dayAfter = LocalDateTime.now().plusDays(3);
 
                 // Flight 1: SGN -> HAN
-                FlightDto flight1 = new FlightDto();
-                flight1.setFlightCode("VN001");
-                flight1.setPlaneId(1);
-                flight1.setDepartureAirportId(1);
-                flight1.setArrivalAirportId(2);
-                flight1.setDepartureTime(tomorrow.withHour(8).withMinute(0));
-                flight1.setArrivalTime(tomorrow.withHour(10).withMinute(30));
-                flightService.createFlight(flight1);
+                FlightRequest request1 = new FlightRequest();
+                request1.setFlightCode("VN001");
+                request1.setPlaneId(1);
+                request1.setDepartureAirportId(1);
+                request1.setArrivalAirportId(2);
+                request1.setDepartureTime(tomorrow.withHour(8).withMinute(0));
+                request1.setArrivalTime(tomorrow.withHour(10).withMinute(30));
+                flightService.createFlight(request1);
 
                 // Flight 2: HAN -> DAD
-                FlightDto flight2 = new FlightDto();
-                flight2.setFlightCode("VN002");
-                flight2.setPlaneId(2);
-                flight2.setDepartureAirportId(2);
-                flight2.setArrivalAirportId(3);
-                flight2.setDepartureTime(tomorrow.withHour(14).withMinute(0));
-                flight2.setArrivalTime(tomorrow.withHour(15).withMinute(45));
-                flightService.createFlight(flight2);
+                FlightRequest request2 = new FlightRequest();
+                request2.setFlightCode("VN002");
+                request2.setPlaneId(2);
+                request2.setDepartureAirportId(2);
+                request2.setArrivalAirportId(3);
+                request2.setDepartureTime(tomorrow.withHour(14).withMinute(0));
+                request2.setArrivalTime(tomorrow.withHour(15).withMinute(45));
+                flightService.createFlight(request2);
 
                 // Flight 3: DAD -> CXR
-                FlightDto flight3 = new FlightDto();
-                flight3.setFlightCode("VN003");
-                flight3.setPlaneId(3);
-                flight3.setDepartureAirportId(3);
-                flight3.setArrivalAirportId(4);
-                flight3.setDepartureTime(tomorrow.withHour(16).withMinute(30));
-                flight3.setArrivalTime(tomorrow.withHour(17).withMinute(45));
-                flightService.createFlight(flight3);
+                FlightRequest request3 = new FlightRequest();
+                request3.setFlightCode("VN003");
+                request3.setPlaneId(3);
+                request3.setDepartureAirportId(3);
+                request3.setArrivalAirportId(4);
+                request3.setDepartureTime(tomorrow.withHour(16).withMinute(30));
+                request3.setArrivalTime(tomorrow.withHour(17).withMinute(45));
+                flightService.createFlight(request3);
 
                 // Flight 4: SGN -> PQC
-                FlightDto flight4 = new FlightDto();
-                flight4.setFlightCode("VN004");
-                flight4.setPlaneId(4);
-                flight4.setDepartureAirportId(1);
-                flight4.setArrivalAirportId(5);
-                flight4.setDepartureTime(dayAfter.withHour(9).withMinute(0));
-                flight4.setArrivalTime(dayAfter.withHour(10).withMinute(15));
-                flightService.createFlight(flight4);
+                FlightRequest request4 = new FlightRequest();
+                request4.setFlightCode("VN004");
+                request4.setPlaneId(4);
+                request4.setDepartureAirportId(1);
+                request4.setArrivalAirportId(5);
+                request4.setDepartureTime(dayAfter.withHour(9).withMinute(0));
+                request4.setArrivalTime(dayAfter.withHour(10).withMinute(15));
+                flightService.createFlight(request4);
 
                 // Flight 5: PQC -> SGN
-                FlightDto flight5 = new FlightDto();
-                flight5.setFlightCode("VN005");
-                flight5.setPlaneId(5);
-                flight5.setDepartureAirportId(5);
-                flight5.setArrivalAirportId(1);
-                flight5.setDepartureTime(dayAfter.withHour(18).withMinute(0));
-                flight5.setArrivalTime(dayAfter.withHour(19).withMinute(15));
-                flightService.createFlight(flight5);
+                FlightRequest request5 = new FlightRequest();
+                request5.setFlightCode("VN005");
+                request5.setPlaneId(5);
+                request5.setDepartureAirportId(5);
+                request5.setArrivalAirportId(1);
+                request5.setDepartureTime(dayAfter.withHour(18).withMinute(0));
+                request5.setArrivalTime(dayAfter.withHour(19).withMinute(15));
+                flightService.createFlight(request5);
 
                 initializeAllFlightTicketClasses();
                 System.out.println("✓ Demo flights and ticket classes created");

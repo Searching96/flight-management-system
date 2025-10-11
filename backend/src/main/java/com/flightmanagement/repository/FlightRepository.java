@@ -56,6 +56,8 @@ public interface FlightRepository extends JpaRepository<Flight, Integer> {
         @Param("departureAirportId") Integer departureAirportId, 
         @Param("arrivalAirportId") Integer arrivalAirportId
     );
+
+    Boolean existsByFlightCode(String flightCode);
     
     @Query("SELECT f FROM Flight f WHERE f.departureAirport.airportId = ?1 AND f.arrivalAirport.airportId = ?2 AND f.departureTime BETWEEN ?3 AND ?4 AND f.deletedAt IS NULL")
     List<Flight> findFlightsByRouteAndDate(Integer departureAirportId, Integer arrivalAirportId, LocalDateTime startDate, LocalDateTime endDate);

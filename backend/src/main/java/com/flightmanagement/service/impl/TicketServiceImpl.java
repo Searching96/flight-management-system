@@ -5,8 +5,6 @@ import com.flightmanagement.entity.*;
 import com.flightmanagement.mapper.TicketMapper;
 import com.flightmanagement.repository.*;
 import com.flightmanagement.service.*;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,35 +17,47 @@ import java.util.List;
 @Transactional
 public class TicketServiceImpl implements TicketService {
 
-    @Autowired
-    private TicketRepository ticketRepository;
+    private final TicketRepository ticketRepository;
 
-    @Autowired
-    private TicketMapper ticketMapper;
+    private final TicketMapper ticketMapper;
 
-    @Autowired
-    private FlightTicketClassService flightTicketClassService;
+    private final FlightTicketClassService flightTicketClassService;
 
-    @Autowired
-    private PassengerService passengerService;
+    private final PassengerService passengerService;
 
-    @Autowired
-    private FlightRepository flightRepository;
+    private final FlightRepository flightRepository;
 
-    @Autowired
-    private TicketClassRepository ticketClassRepository;
+    private final TicketClassRepository ticketClassRepository;
 
-    @Autowired
-    private CustomerRepository customerRepository;
+    private final CustomerRepository customerRepository;
 
-    @Autowired
-    private PassengerRepository passengerRepository;
+    private final PassengerRepository passengerRepository;
 
-    @Autowired
-    private EmailService emailService;
+    private final EmailService emailService;
 
-    @Autowired
-    private AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
+
+    public TicketServiceImpl(TicketRepository ticketRepository,
+                             TicketMapper ticketMapper,
+                             FlightTicketClassService flightTicketClassService,
+                             PassengerService passengerService,
+                             FlightRepository flightRepository,
+                             TicketClassRepository ticketClassRepository,
+                             CustomerRepository customerRepository,
+                             PassengerRepository passengerRepository,
+                             EmailService emailService,
+                             AccountRepository accountRepository) {
+        this.ticketRepository = ticketRepository;
+        this.ticketMapper = ticketMapper;
+        this.flightTicketClassService = flightTicketClassService;
+        this.passengerService = passengerService;
+        this.flightRepository = flightRepository;
+        this.ticketClassRepository = ticketClassRepository;
+        this.customerRepository = customerRepository;
+        this.passengerRepository = passengerRepository;
+        this.emailService = emailService;
+        this.accountRepository = accountRepository;
+    }
 
     @Override
     public List<TicketDto> getAllTickets() {

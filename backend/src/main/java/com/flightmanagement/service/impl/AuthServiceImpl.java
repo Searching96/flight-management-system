@@ -6,6 +6,7 @@ import com.flightmanagement.dto.RegisterDto;
 import com.flightmanagement.entity.Account;
 import com.flightmanagement.entity.Customer;
 import com.flightmanagement.entity.Employee;
+import com.flightmanagement.exception.ResourceNotFoundException;
 import com.flightmanagement.mapper.AuthMapper;
 import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.repository.CustomerRepository;
@@ -15,7 +16,6 @@ import com.flightmanagement.security.JwtService;
 import com.flightmanagement.service.AuthService;
 
 import com.flightmanagement.service.EmailService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,27 +29,40 @@ import java.util.Random;
 
 @Service
 public class AuthServiceImpl implements AuthService {
-    @Autowired
-    private AuthMapper authMapper;
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private JwtService jwtService;
 
-    @Autowired
-    private AccountRepository accountRepo;
+    private final AuthMapper authMapper;
 
-    @Autowired
-    private CustomerRepository customerRepository;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    private EmployeeRepository employeeRepository;
+    private final JwtService jwtService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final AccountRepository accountRepo;
 
-    @Autowired
-    private EmailService emailService;
+    private final CustomerRepository customerRepository;
+
+    private final EmployeeRepository employeeRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
+    private final EmailService emailService;
+
+    public AuthServiceImpl(AuthMapper authMapper,
+                           AuthenticationManager authenticationManager,
+                           JwtService jwtService,
+                           AccountRepository accountRepo,
+                           CustomerRepository customerRepository,
+                           EmployeeRepository employeeRepository,
+                           PasswordEncoder passwordEncoder,
+                           EmailService emailService) {
+        this.authMapper = authMapper;
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
+        this.accountRepo = accountRepo;
+        this.customerRepository = customerRepository;
+        this.employeeRepository = employeeRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
+    }
 
     @Override
     public AuthResponse authenticate(LoginRequestDto request) {
@@ -88,11 +101,11 @@ public class AuthServiceImpl implements AuthService {
             customer.setAccount(savedAccount);
             customerRepository.save(customer);
             savedAccount.setCustomer(customer);
-            emailService.sendCustomerWelcomeEmail(savedAccount.getEmail(), savedAccount.getAccountName());
+            // emailService.sendCustomerWelcomeEmail(savedAccount.getEmail(), savedAccount.getAccountName());
         } else if (request.getAccountType() == 2) {
             // Generate random password for employee
             String randomPassword = generateRandomPassword();
-
+            System.out.println(randomPassword);
             Employee employee = new Employee();
             employee.setAccount(savedAccount);
             employee.setEmployeeType(request.getEmployeeType());
@@ -102,26 +115,27 @@ public class AuthServiceImpl implements AuthService {
             savedAccount.setEmployee(savedEmployee);
             savedAccount.setPassword(passwordEncoder.encode(randomPassword));
             accountRepo.save(savedAccount);
+        }
 
             // Get employee type name for email
-            String employeeTypeName = getEmployeeTypeName(request.getEmployeeType());
+//            String employeeTypeName = getEmployeeTypeName(request.getEmployeeType());
 
             // Send credentials email to employee
-            try {
-                emailService.sendEmployeeCredentialsEmail(
-                        savedAccount.getEmail(),
-                        savedAccount.getAccountName(),
-                        savedAccount.getAccountName(),
-                        employeeTypeName,
-                        randomPassword  // Pass the generated password
-                );
-                System.out.println("Employee credentials email sent to: " + savedAccount.getEmail() + " at 2025-06-11 07:20:15 UTC by thinh0704hcm");
-                System.out.println("Generated password: " + randomPassword);
-            } catch (Exception e) {
-                System.err.println("Failed to send employee credentials email: " + e.getMessage());
-                // Log but don't fail the registration
-            }
-        }
+//            try {
+//                emailService.sendEmployeeCredentialsEmail(
+//                        savedAccount.getEmail(),
+//                        savedAccount.getAccountName(),
+//                        savedAccount.getAccountName(),
+//                        employeeTypeName,
+//                        randomPassword  // Pass the generated password
+//                );
+//                System.out.println("Employee credentials email sent to: " + savedAccount.getEmail() + " at 2025-06-11 07:20:15 UTC by thinh0704hcm");
+//                System.out.println("Generated password: " + randomPassword);
+//            } catch (Exception e) {
+//                System.err.println("Failed to send employee credentials email: " + e.getMessage());
+//                // Log but don't fail the registration
+//            }
+
         return createAuthResponse(CustomUserDetails.create(savedAccount));
     }
 
@@ -168,14 +182,18 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void processForgotPassword(String email) {
         Account account = accountRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Account not found with email: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found with email: " + email));
 
         String resetToken = jwtService.generatePasswordResetToken(email);
         account.setPasswordResetToken(resetToken);
         account.setPasswordResetExpiry(Instant.now().plus(15, ChronoUnit.MINUTES));
+
+        // I implement a simple reset password. After re-activating mail server, use that way to process.
+        String password = "password-after-forgot";
+        account.setPassword(passwordEncoder.encode(password));
         accountRepo.save(account);
 
-        emailService.sendPasswordResetEmail(email, resetToken);
+        // emailService.sendPasswordResetEmail(email, resetToken);
     }
 
     @Override

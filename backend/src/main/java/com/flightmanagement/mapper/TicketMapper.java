@@ -56,10 +56,6 @@ public class TicketMapper implements BaseMapper<Ticket, TicketDto> {
         entity.setFare(dto.getFare());
         entity.setConfirmationCode(dto.getConfirmationCode());
 
-        // Set entity relationships based on IDs (these will be populated by the service
-        // layer)
-        // The service layer should handle setting the actual entity references
-
         return entity;
     }
 

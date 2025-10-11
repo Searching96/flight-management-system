@@ -1,8 +1,8 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.FlightDetailDto;
+import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.FlightDetailService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,40 +20,76 @@ public class FlightDetailController {
     }
     
     @GetMapping
-    public ResponseEntity<List<FlightDetailDto>> getAllFlightDetails() {
+    public ResponseEntity<ApiResponse<List<FlightDetailDto>>> getAllFlightDetails() {
         List<FlightDetailDto> flightDetails = flightDetailService.getAllFlightDetails();
-        return ResponseEntity.ok(flightDetails);
+        ApiResponse<List<FlightDetailDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Flight details retrieved successfully",
+                flightDetails,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @PostMapping("/")
-    public ResponseEntity<FlightDetailDto> createFlightDetail(@RequestBody FlightDetailDto flightDetailDto) {
+    public ResponseEntity<ApiResponse<FlightDetailDto>> createFlightDetail(@RequestBody FlightDetailDto flightDetailDto) {
         FlightDetailDto createdFlightDetail = flightDetailService.createFlightDetail(flightDetailDto);
-        return new ResponseEntity<>(createdFlightDetail, HttpStatus.CREATED);
+        ApiResponse<FlightDetailDto> apiResponse = new ApiResponse<>(
+                HttpStatus.CREATED,
+                "Flight detail created successfully",
+                createdFlightDetail,
+                null
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
     
     @PutMapping("/{flightId}/{mediumAirportId}")
-    public ResponseEntity<FlightDetailDto> updateFlightDetail(@PathVariable Integer flightId, 
-                                                             @PathVariable Integer mediumAirportId, 
-                                                             @RequestBody FlightDetailDto flightDetailDto) {
+    public ResponseEntity<ApiResponse<FlightDetailDto>> updateFlightDetail(@PathVariable Integer flightId,
+                                                                           @PathVariable Integer mediumAirportId,
+                                                                           @RequestBody FlightDetailDto flightDetailDto) {
         FlightDetailDto updatedFlightDetail = flightDetailService.updateFlightDetail(flightId, mediumAirportId, flightDetailDto);
-        return ResponseEntity.ok(updatedFlightDetail);
+        ApiResponse<FlightDetailDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Flight detail updated successfully",
+                updatedFlightDetail,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @DeleteMapping("/{flightId}/{mediumAirportId}")
-    public ResponseEntity<Void> deleteFlightDetail(@PathVariable Integer flightId, @PathVariable Integer mediumAirportId) {
+    public ResponseEntity<ApiResponse<Void>> deleteFlightDetail(@PathVariable Integer flightId, @PathVariable Integer mediumAirportId) {
         flightDetailService.deleteFlightDetail(flightId, mediumAirportId);
-        return ResponseEntity.noContent().build();
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                HttpStatus.NO_CONTENT,
+                "Flight detail deleted successfully",
+                null,
+                null
+        );
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
     
     @GetMapping("/flight/{flightId}")
-    public ResponseEntity<List<FlightDetailDto>> getFlightDetailsByFlightId(@PathVariable Integer flightId) {
+    public ResponseEntity<ApiResponse<List<FlightDetailDto>>> getFlightDetailsByFlightId(@PathVariable Integer flightId) {
         List<FlightDetailDto> flightDetails = flightDetailService.getFlightDetailsByFlightId(flightId);
-        return ResponseEntity.ok(flightDetails);
+        ApiResponse<List<FlightDetailDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Flight details for flight retrieved successfully",
+                flightDetails,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @GetMapping("/airport/{airportId}")
-    public ResponseEntity<List<FlightDetailDto>> getFlightDetailsByAirportId(@PathVariable Integer airportId) {
+    public ResponseEntity<ApiResponse<List<FlightDetailDto>>> getFlightDetailsByAirportId(@PathVariable Integer airportId) {
         List<FlightDetailDto> flightDetails = flightDetailService.getFlightDetailsByAirportId(airportId);
-        return ResponseEntity.ok(flightDetails);
+        ApiResponse<List<FlightDetailDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Flight details for airport retrieved successfully",
+                flightDetails,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 }

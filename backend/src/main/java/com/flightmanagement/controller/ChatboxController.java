@@ -1,8 +1,8 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.ChatboxDto;
+import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.ChatboxService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,37 +20,73 @@ public class ChatboxController {
     }
     
     @GetMapping
-    public ResponseEntity<List<ChatboxDto>> getAllChatboxes() {
+    public ResponseEntity<ApiResponse<List<ChatboxDto>>> getAllChatboxes() {
         List<ChatboxDto> chatboxes = chatboxService.getAllChatboxes();
-        return ResponseEntity.ok(chatboxes);
+
+        ApiResponse<List<ChatboxDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Chatboxes retrieved successfully",
+                chatboxes,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @GetMapping("/sorted-by-customer-time")
-    public ResponseEntity<List<ChatboxDto>> getAllChatboxesSortedByCustomerMessageTime() {
+    public ResponseEntity<ApiResponse<List<ChatboxDto>>> getAllChatboxesSortedByCustomerMessageTime() {
         List<ChatboxDto> chatboxes = chatboxService.getAllChatboxesSortedByCustomerMessageTime();
-        return ResponseEntity.ok(chatboxes);
+
+        ApiResponse<List<ChatboxDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Chatboxes sorted by customer message time retrieved successfully",
+                chatboxes,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<ChatboxDto> getChatboxById(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<ChatboxDto>> getChatboxById(@PathVariable Integer id) {
         ChatboxDto chatbox = chatboxService.getChatboxById(id);
-        return ResponseEntity.ok(chatbox);
+
+        ApiResponse<ChatboxDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Chatbox retrieved successfully",
+                chatbox,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @PostMapping
-    public ResponseEntity<ChatboxDto> createChatbox(@RequestBody ChatboxDto chatboxDto) {
+    public ResponseEntity<ApiResponse<ChatboxDto>> createChatbox(@RequestBody ChatboxDto chatboxDto) {
         ChatboxDto createdChatbox = chatboxService.createChatbox(chatboxDto);
-        return new ResponseEntity<>(createdChatbox, HttpStatus.CREATED);
+
+        ApiResponse<ChatboxDto> apiResponse = new ApiResponse<>(
+                HttpStatus.CREATED,
+                "Chatbox created successfully",
+                createdChatbox,
+                null
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
     
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteChatbox(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Void>> deleteChatbox(@PathVariable Integer id) {
         chatboxService.deleteChatbox(id);
-        return ResponseEntity.noContent().build();
+
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                HttpStatus.NO_CONTENT,
+                "Chatbox deleted successfully",
+                null,
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
     
     @GetMapping("/customer/{customerId}/chatbox")
-    public ResponseEntity<ChatboxDto> getChatboxByCustomerId(@PathVariable Integer customerId) {
+    public ResponseEntity<ApiResponse<ChatboxDto>> getChatboxByCustomerId(@PathVariable Integer customerId) {
         System.out.println("=== ChatboxController.getChatboxByCustomerId START ===");
         System.out.println("Endpoint /customer/{customerId}/chatbox was called");
         System.out.println("Getting chatbox for customer ID: " + customerId);
@@ -65,9 +101,16 @@ public class ChatboxController {
         try {
             System.out.println("Calling chatboxService.getChatboxByCustomerId...");
             ChatboxDto chatbox = chatboxService.getChatboxByCustomerId(customerId);
+
+            ApiResponse<ChatboxDto> apiResponse = new ApiResponse<>(
+                    HttpStatus.OK,
+                    "Chatbox retrieved successfully",
+                    chatbox,
+                    null
+            );
             System.out.println("Successfully retrieved chatbox: " + (chatbox != null ? chatbox.getChatboxId() : "null"));
             System.out.println("=== ChatboxController.getChatboxByCustomerId END (Success) ===");
-            return ResponseEntity.ok(chatbox);
+            return ResponseEntity.ok(apiResponse);
         } catch (Exception e) {
             System.err.println("=== ERROR in ChatboxController.getChatboxByCustomerId ===");
             System.err.println("Error getting chatbox for customer " + customerId + ": " + e.getMessage());
@@ -79,12 +122,18 @@ public class ChatboxController {
     }
     
     @GetMapping("/sorted-by-employee-support")
-    public ResponseEntity<List<ChatboxDto>> getAllChatboxesSortedByEmployeeSupportCount() {
+    public ResponseEntity<ApiResponse<List<ChatboxDto>>> getAllChatboxesSortedByEmployeeSupportCount() {
         System.out.println("=== ChatboxController.getAllChatboxesSortedByEmployeeSupportCount START ===");
         try {
             List<ChatboxDto> chatboxes = chatboxService.getAllChatboxesSortedByEmployeeSupportCount();
+            ApiResponse<List<ChatboxDto>> apiResponse = new ApiResponse<>(
+                    HttpStatus.OK,
+                    "Chatboxes sorted by employee support count retrieved successfully",
+                    chatboxes,
+                    null
+            );
             System.out.println("Successfully retrieved " + chatboxes.size() + " chatboxes sorted by employee support count");
-            return ResponseEntity.ok(chatboxes);
+            return ResponseEntity.ok(apiResponse);
         } catch (Exception e) {
             System.err.println("Error in getAllChatboxesSortedByEmployeeSupportCount: " + e.getMessage());
             e.printStackTrace();
@@ -93,12 +142,19 @@ public class ChatboxController {
     }
     
     @GetMapping("/sorted-by-recent-activity")
-    public ResponseEntity<List<ChatboxDto>> getAllChatboxesSortedByRecentActivity() {
+    public ResponseEntity<ApiResponse<List<ChatboxDto>>> getAllChatboxesSortedByRecentActivity() {
         System.out.println("=== ChatboxController.getAllChatboxesSortedByRecentActivity START ===");
         try {
             List<ChatboxDto> chatboxes = chatboxService.getAllChatboxesSortedByRecentActivity();
+
+            ApiResponse<List<ChatboxDto>> apiResponse = new ApiResponse<>(
+                    HttpStatus.OK,
+                    "Chatboxes sorted by recent activity retrieved successfully",
+                    chatboxes,
+                    null
+            );
             System.out.println("Successfully retrieved " + chatboxes.size() + " chatboxes sorted by recent activity");
-            return ResponseEntity.ok(chatboxes);
+            return ResponseEntity.ok(apiResponse);
         } catch (Exception e) {
             System.err.println("Error in getAllChatboxesSortedByRecentActivity: " + e.getMessage());
             e.printStackTrace();

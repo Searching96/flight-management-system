@@ -1,18 +1,15 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.CustomerDto;
+import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.CustomerService;
-import lombok.RequiredArgsConstructor;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// CustomerController.java - Role-specific customer management
-// CustomerController.java
 @RestController
 @RequestMapping("/api/customers")
 public class CustomerController {
@@ -25,30 +22,68 @@ public class CustomerController {
 
     @GetMapping
     @PreAuthorize("hasRole('EMPLOYEE')")
-    public ResponseEntity<List<CustomerDto>> getAllCustomers() {
-        return ResponseEntity.ok(customerService.getAllCustomers());
+    public ResponseEntity<ApiResponse<List<CustomerDto>>> getAllCustomers() {
+        List<CustomerDto> customers = customerService.getAllCustomers();
+        ApiResponse<List<CustomerDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Customers retrieved successfully",
+                customers,
+                null
+        );
+
+        return ResponseEntity.ok(apiResponse);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('CUSTOMER') or hasRole('EMPLOYEE_SUPPORT')")
-    public ResponseEntity<CustomerDto> getCustomerById(@PathVariable Integer id) {
-        return ResponseEntity.ok(customerService.getCustomerById(id));
+    public ResponseEntity<ApiResponse<CustomerDto>> getCustomerById(@PathVariable Integer id) {
+        CustomerDto customerDto = customerService.getCustomerById(id);
+        ApiResponse<CustomerDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Customer retrieved successfully",
+                customerDto,
+                null
+        );
+
+        return ResponseEntity.ok(apiResponse);
     }
 
     @GetMapping("/email")
-    public ResponseEntity<CustomerDto> getCustomerByEmail(@RequestParam String email) {
-        return ResponseEntity.ok(customerService.getCustomerByEmail(email));
+    public ResponseEntity<ApiResponse<CustomerDto>> getCustomerByEmail(@RequestParam String email) {
+        CustomerDto customerDto = customerService.getCustomerByEmail(email);
+
+        ApiResponse<CustomerDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Customer retrieved successfully",
+                customerDto,
+                null
+        );
+
+        return ResponseEntity.ok(apiResponse);
     }
 
     @PutMapping("/{id}/score/{score}")
-    public ResponseEntity<CustomerDto> updateScore(@PathVariable Integer id, @PathVariable Integer score) {
+    public ResponseEntity<ApiResponse<CustomerDto>> updateScore(@PathVariable Integer id, @PathVariable Integer score) {
         CustomerDto customer = customerService.updateCustomerScore(id, score);
-        return ResponseEntity.ok(customer);
+
+        ApiResponse<CustomerDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Customer score updated successfully",
+                customer,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 
     @GetMapping("/{id}/score")
-    public ResponseEntity<Integer> getCustomerScore(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Integer>> getCustomerScore(@PathVariable Integer id) {
         Integer score = customerService.getCustomerScore(id);
-        return ResponseEntity.ok(score);
+        ApiResponse<Integer> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Customer score retrieved successfully",
+                score,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 }

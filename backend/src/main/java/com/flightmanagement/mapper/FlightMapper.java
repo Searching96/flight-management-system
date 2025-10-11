@@ -1,12 +1,12 @@
 package com.flightmanagement.mapper;
 
+import com.flightmanagement.dto.FlightRequest;
 import com.flightmanagement.dto.FlightDto;
 import com.flightmanagement.entity.Airport;
 import com.flightmanagement.entity.Flight;
 import com.flightmanagement.entity.Plane;
 import com.flightmanagement.repository.AirportRepository;
 import com.flightmanagement.repository.PlaneRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,11 +15,14 @@ import java.util.stream.Collectors;
 @Component
 public class FlightMapper implements BaseMapper<Flight, FlightDto> {
     
-    @Autowired
-    private PlaneRepository planeRepository;
+    private final PlaneRepository planeRepository;
     
-    @Autowired
-    private AirportRepository airportRepository;
+    private final AirportRepository airportRepository;
+
+    public FlightMapper(PlaneRepository planeRepository, AirportRepository airportRepository) {
+        this.planeRepository = planeRepository;
+        this.airportRepository = airportRepository;
+    }
     
     @Override
     public FlightDto toDto(Flight entity) {
@@ -50,7 +53,8 @@ public class FlightMapper implements BaseMapper<Flight, FlightDto> {
         
         return dto;
     }
-      @Override
+
+    @Override
     public Flight toEntity(FlightDto dto) {
         if (dto == null) return null;
         
@@ -92,5 +96,37 @@ public class FlightMapper implements BaseMapper<Flight, FlightDto> {
     @Override
     public List<Flight> toEntityList(List<FlightDto> dtoList) {
         return dtoList.stream().map(this::toEntity).collect(Collectors.toList());
+    }
+
+    public Flight toEntityFromCreateRequest(FlightRequest request) {
+        if (request == null) return null;
+
+        Flight entity = new Flight();
+        entity.setFlightCode(request.getFlightCode());
+        entity.setDepartureTime(request.getDepartureTime());
+        entity.setArrivalTime(request.getArrivalTime());
+
+        // Set plane from plane id
+        if (request.getPlaneId() != null) {
+            Plane plane = planeRepository.findById(request.getPlaneId())
+                .orElseThrow(() -> new RuntimeException("Plane not found with id: " + request.getPlaneId()));
+            entity.setPlane(plane);
+        }
+
+        // Set departure airport from departure airport id
+        if (request.getDepartureAirportId() != null) {
+            Airport departureAirport = airportRepository.findById(request.getDepartureAirportId())
+                .orElseThrow(() -> new RuntimeException("Departure Airport not found with id: " + request.getDepartureAirportId()));
+            entity.setDepartureAirport(departureAirport);
+        }
+
+        // Set arrival airport from arrival airport id
+        if (request.getArrivalAirportId() != null) {
+            Airport arrivalAirport = airportRepository.findById(request.getArrivalAirportId())
+                .orElseThrow(() -> new RuntimeException("Arrival Airport not found with id: " + request.getArrivalAirportId()));
+            entity.setArrivalAirport(arrivalAirport);
+        }
+
+        return entity;
     }
 }

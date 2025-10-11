@@ -5,17 +5,19 @@ import com.flightmanagement.entity.Parameter;
 import com.flightmanagement.mapper.ParameterMapper;
 import com.flightmanagement.repository.ParameterRepository;
 import com.flightmanagement.service.ParameterService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ParameterServiceImpl implements ParameterService {
     
-    @Autowired
-    private ParameterRepository parameterRepository;
+    private final ParameterRepository parameterRepository;
     
-    @Autowired
-    private ParameterMapper parameterMapper;
+    private final ParameterMapper parameterMapper;
+
+    public ParameterServiceImpl(ParameterRepository parameterRepository, ParameterMapper parameterMapper) {
+        this.parameterRepository = parameterRepository;
+        this.parameterMapper = parameterMapper;
+    }
     
     @Override
     public ParameterDto getParameterSet() {

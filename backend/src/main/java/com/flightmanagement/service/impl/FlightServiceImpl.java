@@ -1,19 +1,16 @@
 package com.flightmanagement.service.impl;
 
-import com.flightmanagement.dto.FlightDto;
-import com.flightmanagement.dto.FlightSearchCriteria;
-import com.flightmanagement.dto.FlightTicketClassDto;
-import com.flightmanagement.dto.ParameterDto;
+import com.flightmanagement.dto.*;
 import com.flightmanagement.entity.Flight;
 import com.flightmanagement.mapper.FlightMapper;
 import com.flightmanagement.repository.FlightRepository;
 import com.flightmanagement.service.FlightService;
 import com.flightmanagement.service.FlightTicketClassService;
 import com.flightmanagement.service.ParameterService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -23,17 +20,23 @@ import java.util.List;
 @Transactional
 public class FlightServiceImpl implements FlightService {
     
-    @Autowired
-    private FlightRepository flightRepository;
+    private final FlightRepository flightRepository;
 
-    @Autowired
-    private FlightTicketClassService flightTicketClassService;
+    private final FlightTicketClassService flightTicketClassService;
     
-    @Autowired
-    private FlightMapper flightMapper;
+    private final FlightMapper flightMapper;
     
-    @Autowired
-    private ParameterService parameterService;
+    private final ParameterService parameterService;
+
+    public FlightServiceImpl(FlightRepository flightRepository,
+                             FlightMapper flightMapper,
+                             ParameterService parameterService,
+                             FlightTicketClassService flightTicketClassService) {
+        this.flightRepository = flightRepository;
+        this.flightMapper = flightMapper;
+        this.parameterService = parameterService;
+        this.flightTicketClassService = flightTicketClassService;
+    }
     
     @Override
     public List<FlightDto> getAllFlights() {
@@ -47,25 +50,26 @@ public class FlightServiceImpl implements FlightService {
             .orElseThrow(() -> new RuntimeException("Flight not found with id: " + id));
         return flightMapper.toDto(flight);
     }
-    
+
     @Override
-    public FlightDto createFlight(FlightDto flightDto) {
-        validateFlightData(flightDto);
-        validateFlightRoute(flightDto);
-        Flight flight = flightMapper.toEntity(flightDto);
+    public FlightDto createFlight(FlightRequest request) {
+        validateFlightData(request);
+
+        Flight flight = flightMapper.toEntityFromCreateRequest(request);
         flight.setDeletedAt(null);
         Flight savedFlight = flightRepository.save(flight);
         return flightMapper.toDto(savedFlight);
     }
     
     @Override
-    public FlightDto updateFlight(Integer id, FlightDto flightDto) {
+    public FlightDto updateFlight(Integer id, FlightRequest updateRequest) {
+        validateFlightData(updateRequest);
         Flight existingFlight = flightRepository.findActiveById(id)
             .orElseThrow(() -> new RuntimeException("Flight not found with id: " + id));
         
-        existingFlight.setFlightCode(flightDto.getFlightCode());
-        existingFlight.setDepartureTime(flightDto.getDepartureTime());
-        existingFlight.setArrivalTime(flightDto.getArrivalTime());
+        existingFlight.setFlightCode(updateRequest.getFlightCode());
+        existingFlight.setDepartureTime(updateRequest.getDepartureTime());
+        existingFlight.setArrivalTime(updateRequest.getArrivalTime());
         
         Flight updatedFlight = flightRepository.save(existingFlight);
         return flightMapper.toDto(updatedFlight);
@@ -145,35 +149,25 @@ public class FlightServiceImpl implements FlightService {
         }
     }
     
-    private void validateFlightData(FlightDto flightDto) {
-        if (flightDto.getDepartureTime() == null || flightDto.getArrivalTime() == null) {
-            throw new IllegalArgumentException("Departure and arrival times are required");
+    private void validateFlightData(FlightRequest request) {
+        if (flightRepository.existsByFlightCode(request.getFlightCode())) {
+            throw new IllegalArgumentException("Flight code already exists: " + request.getFlightCode());
         }
-        
-        if (flightDto.getArrivalTime().isBefore(flightDto.getDepartureTime())) {
+
+        if (request.getArrivalTime().isBefore(request.getDepartureTime())) {
             throw new IllegalArgumentException("Arrival time must be after departure time");
         }
         
-        if (flightDto.getDepartureAirportId().equals(flightDto.getArrivalAirportId())) {
+        if (request.getDepartureAirportId().equals(request.getArrivalAirportId())) {
             throw new IllegalArgumentException("Departure and arrival airports cannot be the same");
         }
         
         // Check minimum flight duration from parameters
         ParameterDto parameters = parameterService.getParameterSet();
-        long durationMinutes = java.time.Duration.between(flightDto.getDepartureTime(), flightDto.getArrivalTime()).toMinutes();
+        long durationMinutes = Duration.between(request.getDepartureTime(), request.getArrivalTime()).toMinutes();
         
         if (durationMinutes < parameters.getMinFlightDuration()) {
             throw new IllegalArgumentException("Flight duration must be at least " + parameters.getMinFlightDuration() + " minutes");
-        }
-    }
-    
-    private void validateFlightRoute(FlightDto flightDto) {
-        // Check if flight code is unique
-        try {
-            getFlightByCode(flightDto.getFlightCode());
-            throw new IllegalArgumentException("Flight code already exists: " + flightDto.getFlightCode());
-        } catch (RuntimeException e) {
-            // Flight code doesn't exist, which is good
         }
     }
     

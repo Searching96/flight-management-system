@@ -1,14 +1,17 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.EmployeeDto;
+import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -22,88 +25,128 @@ public class EmployeeController {
         this.employeeService = employeeService;
     }
 
-    /**
-     * Get current logged-in employee information
-     */
     @GetMapping("/current")
-    public ResponseEntity<EmployeeDto> getCurrentEmployee() {
+    public ResponseEntity<ApiResponse<EmployeeDto>> getCurrentEmployee() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = authentication.getName();
+        String currentEmployeeEmail = authentication.getName(); // get email
 
-        System.out.println("Getting current employee info for: " + currentUsername + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
+        System.out.println("Getting current employee info for: " + currentEmployeeEmail);
 
-        EmployeeDto employee = employeeService.getCurrentEmployee(currentUsername);
-        return ResponseEntity.ok(employee);
+        EmployeeDto employee = employeeService.getCurrentEmployee(currentEmployeeEmail);
+
+        ApiResponse<EmployeeDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Current employee retrieved successfully",
+                employee,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 
-    /**
-     * Get all employees (Admin only)
-     */
     @GetMapping
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
-    public ResponseEntity<List<EmployeeDto>> getAllEmployees() {
-        System.out.println("Getting all employees at 2025-06-11 07:43:20 UTC by thinh0704hcm");
-        return ResponseEntity.ok(employeeService.getAllEmployees());
+    public ResponseEntity<ApiResponse<List<EmployeeDto>>> getAllEmployees() {
+        List<EmployeeDto> employees = employeeService.getAllEmployees();
+
+        ApiResponse<List<EmployeeDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Employees retrieved successfully",
+                employees,
+                null
+        );
+
+        System.out.println("Getting all employees at " + LocalDateTime.now());
+        return ResponseEntity.ok(apiResponse);
     }
 
-    /**
-     * Get employee by ID (Admin only)
-     */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
-    public ResponseEntity<EmployeeDto> getEmployeeById(@PathVariable Integer id) {
-        System.out.println("Getting employee by ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
-        return ResponseEntity.ok(employeeService.getEmployeeById(id));
+    public ResponseEntity<ApiResponse<EmployeeDto>> getEmployeeById(@PathVariable Integer id) {
+        EmployeeDto employee = employeeService.getEmployeeById(id);
+        ApiResponse<EmployeeDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Employee retrieved successfully",
+                employee,
+                null
+        );
+
+        System.out.println("Getting employee by ID: " + id + " at " + LocalDateTime.now());
+        return ResponseEntity.ok(apiResponse);
     }
 
-    /**
-     * Update employee (Admin only)
-     */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
-    public ResponseEntity<EmployeeDto> updateEmployee(@PathVariable Integer id, @RequestBody EmployeeDto updateRequest) {
-        System.out.println("Updating employee ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
-        return ResponseEntity.ok(employeeService.updateEmployee(id, updateRequest));
+    public ResponseEntity<ApiResponse<EmployeeDto>> updateEmployee(@PathVariable Integer id,
+                                                                   @RequestBody EmployeeDto updateRequest) {
+        EmployeeDto employee = employeeService.updateEmployee(id, updateRequest);
+        ApiResponse<EmployeeDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Employee updated successfully",
+                employee,
+                null
+        );
+
+        System.out.println("Updating employee ID: " + id + " at " + LocalDateTime.now());
+        return ResponseEntity.ok(apiResponse);
     }
 
-    /**
-     * Delete employee (Admin only)
-     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
-    public ResponseEntity<Void> deleteEmployee(@PathVariable Integer id) {
-        System.out.println("Deleting employee ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
+    public ResponseEntity<ApiResponse<Void>> deleteEmployee(@PathVariable Integer id) {
         employeeService.deleteEmployee(id);
-        return ResponseEntity.ok().build();
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                HttpStatus.NO_CONTENT,
+                "Employee deleted successfully",
+                null,
+                null
+        );
+
+        System.out.println("Deleting employee ID: " + id + " at " + LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
 
-    /**
-     * Activate employee (Admin only)
-     */
     @PatchMapping("/{id}/activate")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
-    public ResponseEntity<EmployeeDto> activateEmployee(@PathVariable Integer id) {
-        System.out.println("Activating employee ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
-        return ResponseEntity.ok(employeeService.activateEmployee(id));
+    public ResponseEntity<ApiResponse<EmployeeDto>> activateEmployee(@PathVariable Integer id) {
+        EmployeeDto employee = employeeService.activateEmployee(id);
+        ApiResponse<EmployeeDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Employee activated successfully",
+                employee,
+                null
+        );
+
+        System.out.println("Activating employee ID: " + id + " at " + LocalDateTime.now());
+        return ResponseEntity.ok(apiResponse);
     }
 
-    /**
-     * Deactivate employee (Admin only)
-     */
     @PatchMapping("/{id}/deactivate")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
-    public ResponseEntity<EmployeeDto> deactivateEmployee(@PathVariable Integer id) {
-        System.out.println("Deactivating employee ID: " + id + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
-        return ResponseEntity.ok(employeeService.deactivateEmployee(id));
+    public ResponseEntity<ApiResponse<EmployeeDto>> deactivateEmployee(@PathVariable Integer id) {
+        EmployeeDto employee = employeeService.deactivateEmployee(id);
+        ApiResponse<EmployeeDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Employee deactivated successfully",
+                employee,
+                null
+        );
+
+        System.out.println("Deactivating employee ID: " + id + " at " + LocalDateTime.now());
+        return ResponseEntity.ok(apiResponse);
     }
 
-    /**
-     * Update employee role (Admin only)
-     */
     @PutMapping("/{id}/role")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
-    public ResponseEntity<EmployeeDto> updateRole(@PathVariable Integer id, @RequestParam Integer newRole) {
-        System.out.println("Updating role for employee ID: " + id + " to role: " + newRole + " at 2025-06-11 07:43:20 UTC by thinh0704hcm");
-        return ResponseEntity.ok(employeeService.updateRole(id, newRole));
+    public ResponseEntity<ApiResponse<EmployeeDto>> updateRole(@PathVariable Integer id, @RequestParam Integer newRole) {
+        EmployeeDto employee = employeeService.updateRole(id, newRole);
+        ApiResponse<EmployeeDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Employee role updated successfully",
+                employee,
+                null
+        );
+
+        System.out.println("Updating role for employee ID: " + id + " to role: " + newRole + " at " + LocalDateTime.now());
+        return ResponseEntity.ok(apiResponse);
     }
 }

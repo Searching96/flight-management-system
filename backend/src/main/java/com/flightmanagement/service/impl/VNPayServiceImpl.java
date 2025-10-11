@@ -8,7 +8,6 @@ import com.flightmanagement.dto.TicketDto;
 import com.flightmanagement.service.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,16 +36,21 @@ import java.util.regex.Pattern;
 @Service
 public class VNPayServiceImpl implements PaymentService {
 
-    @Autowired
-    private TicketService ticketService;
+    private final TicketService ticketService;
 
-    @Autowired
-    private PassengerService passengerService;
+    private final PassengerService passengerService;
 
-    @Autowired
-    private FlightService flightService;
-    @Autowired
-    private EmailService emailService;
+    private final FlightService flightService;
+
+    private final EmailService emailService;
+
+    public VNPayServiceImpl(TicketService ticketService, PassengerService passengerService,
+                         FlightService flightService, EmailService emailService) {
+        this.ticketService = ticketService;
+        this.passengerService = passengerService;
+        this.flightService = flightService;
+        this.emailService = emailService;
+    }
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final String VERSION = "2.1.0";

@@ -1,6 +1,7 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.PlaneDto;
+import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.PlaneService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,44 +21,86 @@ public class PlaneController {
     }
     
     @GetMapping
-    public ResponseEntity<List<PlaneDto>> getAllPlanes() {
+    public ResponseEntity<ApiResponse<List<PlaneDto>>> getAllPlanes() {
         List<PlaneDto> planes = planeService.getAllPlanes();
-        return ResponseEntity.ok(planes);
+        ApiResponse<List<PlaneDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Planes retrieved successfully",
+                planes,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<PlaneDto> getPlaneById(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<PlaneDto>> getPlaneById(@PathVariable Integer id) {
         PlaneDto plane = planeService.getPlaneById(id);
-        return ResponseEntity.ok(plane);
+        ApiResponse<PlaneDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Plane retrieved successfully",
+                plane,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @PostMapping
-    public ResponseEntity<PlaneDto> createPlane(@RequestBody PlaneDto planeDto) {
+    public ResponseEntity<ApiResponse<PlaneDto>> createPlane(@RequestBody PlaneDto planeDto) {
         PlaneDto createdPlane = planeService.createPlane(planeDto);
-        return new ResponseEntity<>(createdPlane, HttpStatus.CREATED);
+        ApiResponse<PlaneDto> apiResponse = new ApiResponse<>(
+                HttpStatus.CREATED,
+                "Plane created successfully",
+                createdPlane,
+                null
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
     
     @PutMapping("/{id}")
-    public ResponseEntity<PlaneDto> updatePlane(@PathVariable Integer id, @RequestBody PlaneDto planeDto) {
+    public ResponseEntity<ApiResponse<PlaneDto>> updatePlane(@PathVariable Integer id, @RequestBody PlaneDto planeDto) {
         PlaneDto updatedPlane = planeService.updatePlane(id, planeDto);
-        return ResponseEntity.ok(updatedPlane);
+        ApiResponse<PlaneDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Plane updated successfully",
+                updatedPlane,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePlane(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Void>> deletePlane(@PathVariable Integer id) {
         planeService.deletePlane(id);
-        return ResponseEntity.noContent().build();
+        ApiResponse<Void> apiResponse = new ApiResponse<>(
+                HttpStatus.NO_CONTENT,
+                "Plane deleted successfully",
+                null,
+                null
+        );
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
     
     @GetMapping("/code/{code}")
-    public ResponseEntity<PlaneDto> getPlaneByCode(@PathVariable String code) {
+    public ResponseEntity<ApiResponse<PlaneDto>> getPlaneByCode(@PathVariable String code) {
         PlaneDto plane = planeService.getPlaneByCode(code);
-        return ResponseEntity.ok(plane);
+        ApiResponse<PlaneDto> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Plane retrieved by code successfully",
+                plane,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @GetMapping("/type/{type}")
-    public ResponseEntity<List<PlaneDto>> getPlanesByType(@PathVariable String type) {
+    public ResponseEntity<ApiResponse<List<PlaneDto>>> getPlanesByType(@PathVariable String type) {
         List<PlaneDto> planes = planeService.getPlanesByType(type);
-        return ResponseEntity.ok(planes);
+        ApiResponse<List<PlaneDto>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Planes retrieved by type successfully",
+                planes,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 }

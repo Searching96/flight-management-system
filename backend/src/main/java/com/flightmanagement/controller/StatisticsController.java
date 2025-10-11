@@ -2,8 +2,10 @@ package com.flightmanagement.controller;
 
 import com.flightmanagement.dto.MonthlyStatisticsDto;
 import com.flightmanagement.dto.YearlyStatisticsDto;
+import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.StatisticsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,10 +23,16 @@ public class StatisticsController {
     }
 
     @GetMapping("/yearly")
-    public ResponseEntity<List<YearlyStatisticsDto>> getYearlyStatistics() {
+    public ResponseEntity<ApiResponse<List<YearlyStatisticsDto>>> getYearlyStatistics() {
         try {
             List<YearlyStatisticsDto> statistics = statisticsService.getYearlyStatistics();
-            return ResponseEntity.ok(statistics);
+            ApiResponse<List<YearlyStatisticsDto>> apiResponse = new ApiResponse<>(
+                    HttpStatus.OK,
+                    "Yearly statistics retrieved successfully",
+                    statistics,
+                    null
+            );
+            return ResponseEntity.ok(apiResponse);
         } catch (Exception e) {
             System.err.println("Error in getYearlyStatistics: " + e.getMessage());
             e.printStackTrace();
@@ -33,10 +41,16 @@ public class StatisticsController {
     }
 
     @GetMapping("/monthly/{year}")
-    public ResponseEntity<List<MonthlyStatisticsDto>> getMonthlyStatistics(@PathVariable Integer year) {
+    public ResponseEntity<ApiResponse<List<MonthlyStatisticsDto>>> getMonthlyStatistics(@PathVariable Integer year) {
         try {
             List<MonthlyStatisticsDto> statistics = statisticsService.getMonthlyStatistics(year);
-            return ResponseEntity.ok(statistics);
+            ApiResponse<List<MonthlyStatisticsDto>> apiResponse = new ApiResponse<>(
+                    HttpStatus.OK,
+                    "Monthly statistics for year " + year + " retrieved successfully",
+                    statistics,
+                    null
+            );
+            return ResponseEntity.ok(apiResponse);
         } catch (Exception e) {
             System.err.println("Error in getMonthlyStatistics for year " + year + ": " + e.getMessage());
             e.printStackTrace();

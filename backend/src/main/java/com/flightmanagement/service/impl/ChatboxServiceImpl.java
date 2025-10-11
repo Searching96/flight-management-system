@@ -18,20 +18,25 @@ import java.util.stream.Collectors;
 @Service
 public class ChatboxServiceImpl implements ChatboxService {
 
-    @Autowired
-    private ChatboxRepository chatboxRepository;
+    private final ChatboxRepository chatboxRepository;
 
-    @Autowired
-    private ChatboxMapper chatboxMapper;
+    private final ChatboxMapper chatboxMapper;
 
-    @Autowired
-    private MessageRepository messageRepository;
+    private final MessageRepository messageRepository;
 
-    @Autowired
-    private AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
 
-    @Autowired
-    private CustomerRepository customerRepository;
+    private final CustomerRepository customerRepository;
+
+    public ChatboxServiceImpl(ChatboxRepository chatboxRepository, ChatboxMapper chatboxMapper,
+                              MessageRepository messageRepository, AccountRepository accountRepository,
+                              CustomerRepository customerRepository) {
+        this.chatboxRepository = chatboxRepository;
+        this.chatboxMapper = chatboxMapper;
+        this.messageRepository = messageRepository;
+        this.accountRepository = accountRepository;
+        this.customerRepository = customerRepository;
+    }
 
     @Override
     public List<ChatboxDto> getAllChatboxes() {

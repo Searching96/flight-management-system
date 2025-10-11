@@ -12,7 +12,6 @@ import com.flightmanagement.service.AccountService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,12 +22,17 @@ import java.util.List;
 @Service
 public class AccountServiceImpl implements AccountService {
 
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private AccountMapper accountMapper;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final AccountRepository accountRepository;
+
+    private final AccountMapper accountMapper;
+
+    private final PasswordEncoder passwordEncoder;
+
+    public AccountServiceImpl(AccountRepository accountRepository, AccountMapper accountMapper, PasswordEncoder passwordEncoder) {
+        this.accountRepository = accountRepository;
+        this.accountMapper = accountMapper;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     @Transactional

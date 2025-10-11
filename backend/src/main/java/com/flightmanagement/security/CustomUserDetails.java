@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-// CustomUserDetails.java
 @Data
 @Getter
 @Setter

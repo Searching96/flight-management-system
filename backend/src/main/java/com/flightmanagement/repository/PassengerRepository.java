@@ -26,7 +26,4 @@ public interface PassengerRepository extends JpaRepository<Passenger, Integer> {
     
     @Query("SELECT p FROM Passenger p WHERE LOWER(p.passengerName) LIKE LOWER(CONCAT('%', :name, '%')) AND p.deletedAt IS NULL")
     List<Passenger> findByPassengerNameContainingIgnoreCase(@Param("name") String name);
-    
-    @Query("SELECT p FROM Passenger p WHERE p.phoneNumber = :phoneNumber AND p.deletedAt IS NULL")
-    List<Passenger> findByPhoneNumber(@Param("phoneNumber") String phoneNumber);
 }

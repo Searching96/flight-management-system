@@ -5,7 +5,6 @@ import com.flightmanagement.entity.FlightDetail;
 import com.flightmanagement.mapper.FlightDetailMapper;
 import com.flightmanagement.repository.FlightDetailRepository;
 import com.flightmanagement.service.FlightDetailService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,11 +13,14 @@ import java.util.List;
 @Service
 public class FlightDetailServiceImpl implements FlightDetailService {
     
-    @Autowired
-    private FlightDetailRepository flightDetailRepository;
+    private final FlightDetailRepository flightDetailRepository;
     
-    @Autowired
-    private FlightDetailMapper flightDetailMapper;
+    private final FlightDetailMapper flightDetailMapper;
+
+    public FlightDetailServiceImpl(FlightDetailRepository flightDetailRepository, FlightDetailMapper flightDetailMapper) {
+        this.flightDetailRepository = flightDetailRepository;
+        this.flightDetailMapper = flightDetailMapper;
+    }
     
     @Override
     public List<FlightDetailDto> getAllFlightDetails() {

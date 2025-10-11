@@ -1,5 +1,6 @@
 package com.flightmanagement.service;
 
+import com.flightmanagement.dto.FlightRequest;
 import com.flightmanagement.dto.FlightDto;
 import com.flightmanagement.dto.FlightSearchCriteria;
 import com.flightmanagement.dto.FlightTicketClassDto;
@@ -12,11 +13,11 @@ public interface FlightService {
     List<FlightDto> getAllFlights();
     
     FlightDto getFlightById(Integer id);
+
+    FlightDto createFlight(FlightRequest request);
     
-    FlightDto createFlight(FlightDto flightDto);
-    
-    FlightDto updateFlight(Integer id, FlightDto flightDto);
-    
+    FlightDto updateFlight(Integer id, FlightRequest request);
+
     void deleteFlight(Integer id);
     
     FlightDto getFlightByCode(String flightCode);

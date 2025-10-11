@@ -9,7 +9,6 @@ import com.flightmanagement.repository.AccountChatboxRepository;
 import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.repository.ChatboxRepository;
 import com.flightmanagement.service.AccountChatboxService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,17 +23,23 @@ import java.util.stream.Collectors;
 @Transactional
 public class AccountChatboxServiceImpl implements AccountChatboxService {
     
-    @Autowired
-    private AccountChatboxRepository accountChatboxRepository;
+    private final AccountChatboxRepository accountChatboxRepository;
     
-    @Autowired
-    private AccountChatboxMapper accountChatboxMapper;
+    private final AccountChatboxMapper accountChatboxMapper;
     
-    @Autowired
-    private AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
     
-    @Autowired
-    private ChatboxRepository chatboxRepository;
+    private final ChatboxRepository chatboxRepository;
+
+    public AccountChatboxServiceImpl(AccountChatboxRepository accountChatboxRepository,
+                                     AccountChatboxMapper accountChatboxMapper,
+                                     AccountRepository accountRepository,
+                                     ChatboxRepository chatboxRepository) {
+        this.accountChatboxRepository = accountChatboxRepository;
+        this.accountChatboxMapper = accountChatboxMapper;
+        this.accountRepository = accountRepository;
+        this.chatboxRepository = chatboxRepository;
+    }
     
     @Override
     public List<AccountChatboxDto> getAllAccountChatboxes() {
