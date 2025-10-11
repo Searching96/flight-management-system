@@ -102,7 +102,6 @@ public class FlightController {
             @RequestParam Integer departureAirportId,
             @RequestParam Integer arrivalAirportId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime departureDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime returnDate,
             @RequestParam Integer passengerCount,
             @RequestParam(required = false) Integer ticketClassId) {
         
@@ -112,10 +111,9 @@ public class FlightController {
             criteria.setDepartureAirportId(departureAirportId);
             criteria.setArrivalAirportId(arrivalAirportId);
             criteria.setDepartureDate(departureDate);
-            criteria.setReturnDate(returnDate);
             criteria.setPassengerCount(passengerCount);
             criteria.setTicketClassId(ticketClassId);
-            
+
             List<FlightDto> flights = flightService.searchFlights(criteria);
 
             ApiResponse<List<FlightDto>> apiResponse = new ApiResponse<>(
@@ -195,5 +193,4 @@ public class FlightController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
         }
     }
-    // ...existing code...
 }
