@@ -41,6 +41,7 @@ class AuthService {
       );
 
       console.log(response);
+
       if (!response.data.userDetails) {
         throw new Error("Phản hồi không hợp lệ từ máy chủ");
       } else {
@@ -53,34 +54,50 @@ class AuthService {
     }
   }
 
-  async createEmployee(userData: RegisterRequest): Promise<void> {
+  async createEmployee(
+    userData: RegisterRequest
+  ): Promise<ApiResponse<AuthResponse>> {
     try {
-      const response = await apiClient.post<AuthResponse>(
+      const response = await apiClient.post<ApiResponse<AuthResponse>>(
         "/auth/create-employee",
         userData
       );
-      if (!response.userDetails) {
+
+      console.log(response);
+
+      if (!response.data.userDetails) {
         throw new Error("Phản hồi không hợp lệ từ máy chủ");
+      } else {
+        // this.setAuthData(response.data); // Do not log in the user upon employee creation
+        return response;
       }
     } catch (error) {
-      // console.error('Employee creation failed:', error);
+      console.error("Employee creation failed:", error);
       throw new Error("Tạo nhân viên thất bại. Email có thể đã được sử dụng.");
     }
   }
 
   // Refresh access token
-  async refreshToken(): Promise<void> {
+  async refreshToken(): Promise<ApiResponse<AuthResponse>> {
     const refreshToken = localStorage.getItem("refreshToken");
     if (!refreshToken) throw new Error("Không có refresh token");
 
     try {
-      // Send as { refreshToken: refreshToken } if backend expects it
-      const response = await apiClient.post<AuthResponse>("/auth/refresh", {
-        token: refreshToken,
-      });
-      if (!response.userDetails) {
+      const response = await apiClient.post<ApiResponse<AuthResponse>>(
+        "/auth/refresh",
+        {
+          token: refreshToken,
+        }
+      );
+
+      console.log(response);
+
+      if (!response.data.refreshToken) {
         throw new Error("Phản hồi không hợp lệ từ máy chủ");
-      } else this.setAuthData(response);
+      } else {
+        this.setAuthData(response.data);
+        return response;
+      }
     } catch (error) {
       this.clearAuthData();
       console.error("Token refresh failed:", error);
@@ -122,7 +139,7 @@ class AuthService {
 
       return response;
     } catch (error) {
-      // console.error('Token validation failed:', error);
+      console.error("Token validation failed:", error);
       return false;
     }
   }
@@ -134,20 +151,26 @@ class AuthService {
         // console.log('Password reset email sent successfully');
       })
       .catch((error) => {
-        // console.error('Error sending password reset email:', error);
+        console.error("Error sending password reset email:", error);
         throw error;
       });
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<void> {
+  async resetPassword(
+    token: string,
+    newPassword: string
+  ): Promise<ApiResponse<AuthResponse>> {
     try {
-      const response = await apiClient.post<AuthResponse>(
+      const response = await apiClient.post<ApiResponse<AuthResponse>>(
         "/auth/reset-password",
         { token, newPassword }
       );
-      if (!response.userDetails) {
+      if (!response.data.userDetails) {
         throw new Error("Phản hồi không hợp lệ từ máy chủ");
-      } else this.setAuthData(response); // Only if the backend returns auth data
+      } else {
+        this.clearAuthData();
+        return response;
+      }
     } catch (error) {
       console.error("Password reset failed:", error);
       throw new Error(

@@ -1,23 +1,26 @@
-import { apiClient } from './api';
-import { API_URL } from './config';
-import { Flight, FlightSearchCriteria, FlightRequest } from '../models';
+import { apiClient } from "./api";
+import { API_URL } from "./config";
+import { Flight, FlightSearchCriteria, FlightRequest } from "../models";
+import type { ApiResponse } from "../models/ApiResponse";
 
 export class FlightService {
   private readonly baseUrl = API_URL.FLIGHTS;
 
-  async getAllFlights(): Promise<Flight[]> {
+  async getAllFlights(): Promise<ApiResponse<Flight[]>> {
     return apiClient.get(this.baseUrl);
   }
 
-  async getFlightById(id: number): Promise<Flight> {
+  async getFlightById(id: number): Promise<ApiResponse<Flight>> {
     return apiClient.get(`${this.baseUrl}/${id}`);
   }
 
-  async getFlightByCode(flightCode: string): Promise<Flight> {
+  async getFlightByCode(flightCode: string): Promise<ApiResponse<Flight>> {
     return apiClient.get(`${this.baseUrl}/code/${flightCode}`);
   }
-  
-  async searchFlights(criteria: FlightSearchCriteria): Promise<Flight[]> {
+
+  async searchFlights(
+    criteria: FlightSearchCriteria
+  ): Promise<ApiResponse<Flight[]>> {
     const params: any = {
       departureAirportId: criteria.departureAirportId,
       arrivalAirportId: criteria.arrivalAirportId,
@@ -42,50 +45,53 @@ export class FlightService {
   async getFlightsByRoute(
     departureAirportId: number,
     arrivalAirportId: number
-  ): Promise<Flight[]> {
+  ): Promise<ApiResponse<Flight[]>> {
     return apiClient.get(`${this.baseUrl}/route`, {
-      params: { departureAirportId, arrivalAirportId }
+      params: { departureAirportId, arrivalAirportId },
     });
   }
 
-  async createFlight(flightData: FlightRequest): Promise<Flight> {
+  async createFlight(flightData: FlightRequest): Promise<ApiResponse<Flight>> {
     return apiClient.post(this.baseUrl, flightData);
   }
 
-  async updateFlight(id: number, flightData: Partial<FlightRequest>): Promise<Flight> {
+  async updateFlight(
+    id: number,
+    flightData: Partial<FlightRequest>
+  ): Promise<ApiResponse<Flight>> {
     return apiClient.put(`${this.baseUrl}/${id}`, flightData);
   }
 
-  async deleteFlight(id: number): Promise<void> {
+  async deleteFlight(id: number): Promise<ApiResponse<void>> {
     return apiClient.delete(`${this.baseUrl}/${id}`);
   }
 
-  async getFlightsByAirport(airportId: number): Promise<Flight[]> {
+  async getFlightsByAirport(airportId: number): Promise<ApiResponse<Flight[]>> {
     return apiClient.get(`${this.baseUrl}/airport/${airportId}`);
   }
 
-  async getFlightsByPlane(planeId: number): Promise<Flight[]> {
+  async getFlightsByPlane(planeId: number): Promise<ApiResponse<Flight[]>> {
     return apiClient.get(`${this.baseUrl}/plane/${planeId}`);
   }
 
-  async getFlightsByDateRange(startDate: string, endDate: string): Promise<Flight[]> {
+  async getFlightsByDateRange(
+    startDate: string,
+    endDate: string
+  ): Promise<ApiResponse<Flight[]>> {
     return apiClient.get(`${this.baseUrl}/date-range`, {
-      params: { startDate, endDate }
+      params: { startDate, endDate },
     });
   }
-  async getFlightTicketClassesByFlightId(flightId: number): Promise<any[]> {
-    return apiClient.get(API_URL.FLIGHT_TICKET_CLASS + `/flight/${flightId}`);
-  }
 
-  async checkFlightAvailability(flightId: number): Promise<any> {
-    return apiClient.get(API_URL.FLIGHT_TICKET_CLASS + `/flight/${flightId}`);
-  }
-
-  async cancelFlight(id: number): Promise<Flight> {
+  async cancelFlight(id: number): Promise<ApiResponse<Flight>> {
     return apiClient.patch(`${this.baseUrl}/${id}/cancel`);
   }
 
-  async delayFlight(id: number, newDepartureTime: string, newArrivalTime: string): Promise<Flight> {
+  async delayFlight(
+    id: number,
+    newDepartureTime: string,
+    newArrivalTime: string
+  ): Promise<ApiResponse<Flight>> {
     return apiClient.patch(`${this.baseUrl}/${id}/delay`, {
       newDepartureTime,
       newArrivalTime,

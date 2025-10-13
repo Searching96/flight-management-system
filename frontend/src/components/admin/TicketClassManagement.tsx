@@ -1,9 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Modal } from 'react-bootstrap';
-import { ticketClassService } from '../../services';
-import { TicketClass } from '../../models';
-import { usePermissions } from '../../hooks/useAuth';
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Form,
+  Alert,
+  Spinner,
+  Badge,
+  Modal,
+} from "react-bootstrap";
+import { ticketClassService } from "../../services";
+import { TicketClass } from "../../models";
+import { usePermissions } from "../../hooks/useAuth";
 
 interface TicketClassFormData {
   ticketClassName: string;
@@ -15,6 +26,31 @@ const TicketClassManagement: React.FC<{
   onCloseAddModal?: () => void;
 }> = ({ showAddModal = false, onCloseAddModal }) => {
   const { canViewAdmin } = usePermissions();
+
+  const [ticketClasses, setTicketClasses] = useState<TicketClass[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editingClass, setEditingClass] = useState<TicketClass | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<TicketClassFormData>();
+
+  useEffect(() => {
+    loadTicketClasses();
+  }, []);
+
+  // Effect to handle external modal trigger
+  useEffect(() => {
+    if (showAddModal) {
+      setShowForm(true);
+    }
+  }, [showAddModal]);
+
   if (!canViewAdmin) {
     return (
       <Container className="py-5">
@@ -30,37 +66,14 @@ const TicketClassManagement: React.FC<{
     );
   }
 
-  const [ticketClasses, setTicketClasses] = useState<TicketClass[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [editingClass, setEditingClass] = useState<TicketClass | null>(null);
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors }
-  } = useForm<TicketClassFormData>();
-
-  useEffect(() => {
-    loadTicketClasses();
-  }, []);
-
-  // Effect to handle external modal trigger
-  useEffect(() => {
-    if (showAddModal) {
-      setShowForm(true);
-    }
-  }, [showAddModal]);
-
   const loadTicketClasses = async () => {
     try {
       setLoading(true);
       const data = await ticketClassService.getAllTicketClasses();
       setTicketClasses(data);
-    } catch (err: any) {
-      setError('Failed to load ticket classes');
+    } catch (error) {
+      console.error("Error loading ticket classes:", error);
+      setError("Failed to load ticket classes");
     } finally {
       setLoading(false);
     }
@@ -69,7 +82,10 @@ const TicketClassManagement: React.FC<{
   const onSubmit = async (data: TicketClassFormData) => {
     try {
       if (editingClass) {
-        await ticketClassService.updateTicketClass(editingClass.ticketClassId!, data);
+        await ticketClassService.updateTicketClass(
+          editingClass.ticketClassId!,
+          data
+        );
       } else {
         await ticketClassService.createTicketClass(data);
       }
@@ -77,7 +93,7 @@ const TicketClassManagement: React.FC<{
       loadTicketClasses();
       handleCancel();
     } catch (err: any) {
-      setError(err.message || 'Failed to save ticket class');
+      setError(err.message || "Failed to save ticket class");
     }
   };
 
@@ -85,7 +101,7 @@ const TicketClassManagement: React.FC<{
     setEditingClass(ticketClass);
     reset({
       ticketClassName: ticketClass.ticketClassName,
-      color: ticketClass.color
+      color: ticketClass.color,
     });
     setShowForm(true);
   };
@@ -105,7 +121,7 @@ const TicketClassManagement: React.FC<{
     setShowForm(false);
     setEditingClass(null);
     reset();
-    setError('');
+    setError("");
 
     // Call the external close handler if provided
     if (onCloseAddModal) {
@@ -130,10 +146,7 @@ const TicketClassManagement: React.FC<{
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <Card.Title className="mb-0">🎫 Quản lý hạng vé</Card.Title>
-              <Button
-                variant="primary"
-                onClick={() => setShowForm(true)}
-              >
+              <Button variant="primary" onClick={() => setShowForm(true)}>
                 Thêm hạng vé mới
               </Button>
             </Card.Header>
@@ -145,7 +158,7 @@ const TicketClassManagement: React.FC<{
       {error && (
         <Row className="mb-4">
           <Col>
-            <Alert variant="danger" onClose={() => setError('')} dismissible>
+            <Alert variant="danger" onClose={() => setError("")} dismissible>
               {error}
             </Alert>
           </Col>
@@ -156,7 +169,7 @@ const TicketClassManagement: React.FC<{
       <Modal show={showForm} onHide={handleCancel} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>
-            {editingClass ? 'Chỉnh sửa hạng vé' : 'Thêm hạng vé mới'}
+            {editingClass ? "Chỉnh sửa hạng vé" : "Thêm hạng vé mới"}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -167,8 +180,8 @@ const TicketClassManagement: React.FC<{
                   <Form.Label>Tên hạng</Form.Label>
                   <Form.Control
                     type="text"
-                    {...register('ticketClassName', {
-                      required: 'Tên hạng là bắt buộc'
+                    {...register("ticketClassName", {
+                      required: "Tên hạng là bắt buộc",
                     })}
                     isInvalid={!!errors.ticketClassName}
                     placeholder="ví dụ: Phổ thông, Thương gia, Hạng nhất"
@@ -183,8 +196,8 @@ const TicketClassManagement: React.FC<{
                   <Form.Label>Màu sắc</Form.Label>
                   <Form.Control
                     type="color"
-                    {...register('color', {
-                      required: 'Màu sắc là bắt buộc'
+                    {...register("color", {
+                      required: "Màu sắc là bắt buộc",
                     })}
                     isInvalid={!!errors.color}
                   />
@@ -201,7 +214,7 @@ const TicketClassManagement: React.FC<{
             Hủy
           </Button>
           <Button variant="primary" onClick={handleSubmit(onSubmit)}>
-            {editingClass ? 'Cập nhật hạng' : 'Tạo hạng'}
+            {editingClass ? "Cập nhật hạng" : "Tạo hạng"}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -209,12 +222,15 @@ const TicketClassManagement: React.FC<{
       {/* Ticket Classes Grid */}
       {ticketClasses.length > 0 ? (
         <Row>
-          {ticketClasses.map(ticketClass => (
+          {ticketClasses.map((ticketClass) => (
             <Col lg={4} md={6} key={ticketClass.ticketClassId} className="mb-4">
               <Card className="h-100">
                 <Card.Header className="d-flex justify-content-between align-items-center">
                   <Badge
-                    style={{ backgroundColor: ticketClass.color, color: '#fff' }}
+                    style={{
+                      backgroundColor: ticketClass.color,
+                      color: "#fff",
+                    }}
                     className="px-3 py-2 fs-6"
                   >
                     {ticketClass.ticketClassName}
@@ -239,23 +255,29 @@ const TicketClassManagement: React.FC<{
                 </Card.Header>
                 <Card.Body>
                   <Row className="mb-2">
-                    <Col xs={4} className="text-muted">ID:</Col>
+                    <Col xs={4} className="text-muted">
+                      ID:
+                    </Col>
                     <Col xs={8}>{ticketClass.ticketClassId}</Col>
                   </Row>
                   <Row className="mb-2">
-                    <Col xs={4} className="text-muted">Tên:</Col>
+                    <Col xs={4} className="text-muted">
+                      Tên:
+                    </Col>
                     <Col xs={8}>{ticketClass.ticketClassName}</Col>
                   </Row>
                   <Row className="mb-2">
-                    <Col xs={4} className="text-muted">Màu:</Col>
+                    <Col xs={4} className="text-muted">
+                      Màu:
+                    </Col>
                     <Col xs={8} className="d-flex align-items-center">
                       <div
                         className="me-2 rounded"
                         style={{
                           backgroundColor: ticketClass.color,
-                          width: '20px',
-                          height: '20px',
-                          border: '1px solid #dee2e6'
+                          width: "20px",
+                          height: "20px",
+                          border: "1px solid #dee2e6",
                         }}
                       ></div>
                       <span>{ticketClass.color}</span>

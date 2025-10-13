@@ -1,11 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
-import { flightService, airportService, ticketClassService, parameterService } from '../../services';
-import { Flight, Airport, TicketClass, FlightSearchCriteria } from '../../models';
-import TypeAhead from '../common/TypeAhead';
-import FlightCard from '../flights/FlightCard';
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Alert,
+  Spinner,
+} from "react-bootstrap";
+import {
+  flightService,
+  airportService,
+  ticketClassService,
+  parameterService,
+  flightTicketClassService,
+} from "../../services";
+import {
+  Flight,
+  Airport,
+  TicketClass,
+  FlightSearchCriteria,
+} from "../../models";
+import TypeAhead from "../common/TypeAhead";
+import FlightCard from "../flights/FlightCard";
 
 const FlightSearch: React.FC = () => {
   const navigate = useNavigate();
@@ -13,22 +33,28 @@ const FlightSearch: React.FC = () => {
   const [airports, setAirports] = useState<Airport[]>([]);
   const [ticketClasses, setTicketClasses] = useState<TicketClass[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [selectedDepartureAirport, setSelectedDepartureAirport] = useState<number | ''>('');
-  const [selectedArrivalAirport, setSelectedArrivalAirport] = useState<number | ''>('');
-  const [selectedTicketClass, setSelectedTicketClass] = useState<number | 'all'>('all'); // Changed to support 'all'
-  const [minBookingDate, setMinBookingDate] = useState<string>('');
+  const [error, setError] = useState("");
+  const [selectedDepartureAirport, setSelectedDepartureAirport] = useState<
+    number | ""
+  >("");
+  const [selectedArrivalAirport, setSelectedArrivalAirport] = useState<
+    number | ""
+  >("");
+  const [selectedTicketClass, setSelectedTicketClass] = useState<
+    number | "all"
+  >("all"); // Changed to support 'all'
+  const [minBookingDate, setMinBookingDate] = useState<string>("");
 
   const {
     register,
     handleSubmit,
     watch,
     setValue,
-    formState: { errors }
+    formState: { errors },
   } = useForm<FlightSearchCriteria>({
     defaultValues: {
-      passengerCount: 1
-    }
+      passengerCount: 1,
+    },
   });
 
   useEffect(() => {
@@ -40,49 +66,49 @@ const FlightSearch: React.FC = () => {
       const [airportData, ticketClassData, parameterData] = await Promise.all([
         airportService.getAllAirports(),
         ticketClassService.getAllTicketClasses(),
-        parameterService.getAllParameters()
+        parameterService.getAllParameters(),
       ]);
       setAirports(airportData);
       setTicketClasses(ticketClassData);
-      console.log('Parameters:', parameterData);
+      console.log("Parameters:", parameterData);
       // Set default ticket class to 'all'
       // Calculate minimum booking date
       const minAdvanceDuration = parameterData.minBookingInAdvanceDuration;
-      console.log('Minimum booking in advance duration:', minAdvanceDuration);
+      console.log("Minimum booking in advance duration:", minAdvanceDuration);
       const minDate = new Date();
       minDate.setDate(minDate.getDate() + minAdvanceDuration + 1);
-      setMinBookingDate(minDate.toISOString().split('T')[0]);
+      setMinBookingDate(minDate.toISOString().split("T")[0]);
     } catch (err: any) {
-      console.error('Error loading airports and ticket classes:', err);
-      setError('Failed to load airports and ticket classes');
+      console.error("Error loading airports and ticket classes:", err);
+      setError("Failed to load airports and ticket classes");
       // Fallback to today's date if parameter fetch fails
-      setMinBookingDate(new Date().toISOString().split('T')[0]);
+      setMinBookingDate(new Date().toISOString().split("T")[0]);
     }
   };
 
   // Transform airports for TypeAhead
-  const airportOptions = airports.map(airport => ({
+  const airportOptions = airports.map((airport) => ({
     value: airport.airportId!,
     label: `${airport.cityName} - ${airport.airportName}`,
     city: airport.cityName,
     name: airport.airportName,
-    country: airport.countryName
+    country: airport.countryName,
   }));
 
   const onSubmit = async (data: FlightSearchCriteria) => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
       // Validate airport selection
       if (!selectedDepartureAirport || !selectedArrivalAirport) {
-        setError('Vui lòng chọn cả sân bay khởi hành và sân bay đến');
+        setError("Vui lòng chọn cả sân bay khởi hành và sân bay đến");
         setLoading(false);
         return;
       }
 
       if (selectedDepartureAirport === selectedArrivalAirport) {
-        setError('Sân bay khởi hành và sân bay đến phải khác nhau');
+        setError("Sân bay khởi hành và sân bay đến phải khác nhau");
         setLoading(false);
         return;
       }
@@ -90,22 +116,29 @@ const FlightSearch: React.FC = () => {
       const searchCriteria = {
         departureAirportId: selectedDepartureAirport as number,
         arrivalAirportId: selectedArrivalAirport as number,
-        departureDate: data.departureDate + 'T00:00:00',
+        departureDate: data.departureDate + "T00:00:00",
         passengerCount: data.passengerCount,
         // Send 0 for "all classes" or the specific class ID
-        ticketClassId: selectedTicketClass === 'all' ? 0 : (selectedTicketClass as number)
+        ticketClassId:
+          selectedTicketClass === "all" ? 0 : (selectedTicketClass as number),
       };
 
-      console.log('Sending search criteria:', searchCriteria);
+      console.log("Sending search criteria:", searchCriteria);
       const results = await flightService.searchFlights(searchCriteria);
       // Get availability for all ticket classes of each flight
       const flightsWithAvailability = await Promise.all(
         results.map(async (flight) => {
           try {
-            const flightTicketClasses = await flightService.checkFlightAvailability(flight.flightId!);
+            const flightTicketClasses =
+              await flightTicketClassService.checkFlightAvailability(
+                flight.flightId!
+              );
             return { ...flight, flightTicketClasses };
           } catch (err) {
-            console.error(`Could not check availability for flight ${flight.flightCode}:`, err);
+            console.error(
+              `Could not check availability for flight ${flight.flightCode}:`,
+              err
+            );
             // Return flight without availability data rather than failing completely
             return { ...flight, flightTicketClasses: [] };
           }
@@ -114,16 +147,22 @@ const FlightSearch: React.FC = () => {
 
       setFlights(flightsWithAvailability);
     } catch (err: any) {
-      console.error('Flight search error:', err);
+      console.error("Flight search error:", err);
       // Provide more specific error messages
       if (err.response?.status === 400) {
-        setError('Tiêu chí tìm kiếm không hợp lệ. Vui lòng kiểm tra thông tin và thử lại.');
+        setError(
+          "Tiêu chí tìm kiếm không hợp lệ. Vui lòng kiểm tra thông tin và thử lại."
+        );
       } else if (err.response?.status === 500) {
-        setError('Lỗi máy chủ. Vui lòng thử lại sau một lúc.');
+        setError("Lỗi máy chủ. Vui lòng thử lại sau một lúc.");
       } else if (!navigator.onLine) {
-        setError('Không có kết nối internet. Vui lòng kiểm tra kết nối và thử lại.');
+        setError(
+          "Không có kết nối internet. Vui lòng kiểm tra kết nối và thử lại."
+        );
       } else {
-        setError('Không thể tìm kiếm chuyến bay. Vui lòng kiểm tra kết nối và thử lại.');
+        setError(
+          "Không thể tìm kiếm chuyến bay. Vui lòng kiểm tra kết nối và thử lại."
+        );
       }
     } finally {
       setLoading(false);
@@ -141,23 +180,29 @@ const FlightSearch: React.FC = () => {
     const searchContext = {
       departureAirportId: selectedDepartureAirport,
       arrivalAirportId: selectedArrivalAirport,
-      departureDate: watch('departureDate'),
-      passengerCount: watch('passengerCount'),
-      ticketClassId: ticketClassId
+      departureDate: watch("departureDate"),
+      passengerCount: watch("passengerCount"),
+      ticketClassId: ticketClassId,
     };
 
     // Store in sessionStorage for booking form to access
-    sessionStorage.setItem('flightSearchContext', JSON.stringify(searchContext));
+    sessionStorage.setItem(
+      "flightSearchContext",
+      JSON.stringify(searchContext)
+    );
 
     // Store booking data in sessionStorage instead of URL parameters
-    sessionStorage.setItem('bookingData', JSON.stringify({
-      flightId,
-      passengerCount: watch('passengerCount'),
-      class: ticketClassId
-    }));
+    sessionStorage.setItem(
+      "bookingData",
+      JSON.stringify({
+        flightId,
+        passengerCount: watch("passengerCount"),
+        class: ticketClassId,
+      })
+    );
 
     // Navigate to booking page without query parameters
-    navigate('/booking');
+    navigate("/booking");
   };
 
   return (
@@ -185,20 +230,24 @@ const FlightSearch: React.FC = () => {
                         options={airportOptions}
                         value={selectedDepartureAirport}
                         onChange={(option) => {
-                          const airportId = option?.value as number || '';
+                          const airportId = (option?.value as number) || "";
                           setSelectedDepartureAirport(airportId);
-                          setValue('departureAirportId', Number(airportId) || 0);
+                          setValue(
+                            "departureAirportId",
+                            Number(airportId) || 0
+                          );
                         }}
                         placeholder="Thành phố hoặc sân bay khởi hành..."
                         error={!!errors.departureAirportId}
                       />
                       <Form.Control
                         type="hidden"
-                        {...register('departureAirportId', {
-                          required: 'Sân bay khởi hành là bắt buộc',
-                          validate: (value) => value > 0 || 'Vui lòng chọn sân bay khởi hành'
+                        {...register("departureAirportId", {
+                          required: "Sân bay khởi hành là bắt buộc",
+                          validate: (value) =>
+                            value > 0 || "Vui lòng chọn sân bay khởi hành",
                         })}
-                        value={selectedDepartureAirport || ''}
+                        value={selectedDepartureAirport || ""}
                       />
                       {errors.departureAirportId && (
                         <Form.Text className="text-danger">
@@ -213,7 +262,7 @@ const FlightSearch: React.FC = () => {
                       variant="outline-secondary"
                       onClick={swapAirports}
                       title="Đổi sân bay"
-                      style={{ height: '38px' }}
+                      style={{ height: "38px" }}
                     >
                       <i className="bi bi-arrow-left-right"></i>
                     </Button>
@@ -229,20 +278,21 @@ const FlightSearch: React.FC = () => {
                         options={airportOptions}
                         value={selectedArrivalAirport}
                         onChange={(option) => {
-                          const airportId = option?.value as number || '';
+                          const airportId = (option?.value as number) || "";
                           setSelectedArrivalAirport(airportId);
-                          setValue('arrivalAirportId', Number(airportId) || 0);
+                          setValue("arrivalAirportId", Number(airportId) || 0);
                         }}
                         placeholder="Thành phố hoặc sân bay đến..."
                         error={!!errors.arrivalAirportId}
                       />
                       <Form.Control
                         type="hidden"
-                        {...register('arrivalAirportId', {
-                          required: 'Sân bay đến là bắt buộc',
-                          validate: (value) => value > 0 || 'Vui lòng chọn sân bay đến'
+                        {...register("arrivalAirportId", {
+                          required: "Sân bay đến là bắt buộc",
+                          validate: (value) =>
+                            value > 0 || "Vui lòng chọn sân bay đến",
                         })}
-                        value={selectedArrivalAirport || ''}
+                        value={selectedArrivalAirport || ""}
                       />
                       {errors.arrivalAirportId && (
                         <Form.Text className="text-danger">
@@ -264,8 +314,13 @@ const FlightSearch: React.FC = () => {
                       <Form.Control
                         id="departureDate"
                         type="date"
-                        min={minBookingDate || new Date().toISOString().split('T')[0]}
-                        {...register('departureDate', { required: 'Ngày khởi hành là bắt buộc' })}
+                        min={
+                          minBookingDate ||
+                          new Date().toISOString().split("T")[0]
+                        }
+                        {...register("departureDate", {
+                          required: "Ngày khởi hành là bắt buộc",
+                        })}
                         isInvalid={!!errors.departureDate}
                       />
                     </Form.Group>
@@ -279,7 +334,10 @@ const FlightSearch: React.FC = () => {
                       </Form.Label>
                       <Form.Select
                         id="passengerCount"
-                        {...register('passengerCount', { required: 'Số lượng hành khách là bắt buộc', valueAsNumber: true })}
+                        {...register("passengerCount", {
+                          required: "Số lượng hành khách là bắt buộc",
+                          valueAsNumber: true,
+                        })}
                         isInvalid={!!errors.passengerCount}
                       >
                         {[...Array(9)].map((_, i) => (
@@ -343,9 +401,16 @@ const FlightSearch: React.FC = () => {
           <Col>
             <Card className="text-center">
               <Card.Body className="py-5">
-                <Spinner animation="border" variant="primary" className="mb-3" />
+                <Spinner
+                  animation="border"
+                  variant="primary"
+                  className="mb-3"
+                />
                 <h5>Đang tìm kiếm chuyến bay...</h5>
-                <p className="text-muted">Vui lòng đợi trong khi chúng tôi tìm những lựa chọn tốt nhất cho bạn.</p>
+                <p className="text-muted">
+                  Vui lòng đợi trong khi chúng tôi tìm những lựa chọn tốt nhất
+                  cho bạn.
+                </p>
               </Card.Body>
             </Card>
           </Col>
@@ -364,15 +429,19 @@ const FlightSearch: React.FC = () => {
                 </h3>
               </Card.Header>
               <Card.Body className="p-0">
-                {flights.map(flight => (
+                {flights.map((flight) => (
                   <FlightCard
                     key={flight.flightId}
                     flight={flight}
-                    onBookFlight={handleBookFlight} searchContext={{
-                      passengerCount: watch('passengerCount'),
+                    onBookFlight={handleBookFlight}
+                    searchContext={{
+                      passengerCount: watch("passengerCount"),
                       allTicketClasses: ticketClasses,
-                      selectedTicketClass: selectedTicketClass === 'all' ? null : (selectedTicketClass as number),
-                      searchedForAllClasses: selectedTicketClass === 'all'
+                      selectedTicketClass:
+                        selectedTicketClass === "all"
+                          ? null
+                          : (selectedTicketClass as number),
+                      searchedForAllClasses: selectedTicketClass === "all",
                     }}
                   />
                 ))}
@@ -383,14 +452,19 @@ const FlightSearch: React.FC = () => {
       )}
 
       {/* No Results */}
-      {flights.length === 0 && !loading && error === '' && (
+      {flights.length === 0 && !loading && error === "" && (
         <Row className="mt-4">
           <Col>
             <Card className="text-center">
               <Card.Body className="py-5">
-                <i className="bi bi-search text-muted mb-3" style={{ fontSize: '3rem' }}></i>
+                <i
+                  className="bi bi-search text-muted mb-3"
+                  style={{ fontSize: "3rem" }}
+                ></i>
                 <h5>Không tìm thấy chuyến bay</h5>
-                <p className="text-muted">Hãy thử điều chỉnh tiêu chí tìm kiếm và tìm kiếm lại.</p>
+                <p className="text-muted">
+                  Hãy thử điều chỉnh tiêu chí tìm kiếm và tìm kiếm lại.
+                </p>
               </Card.Body>
             </Card>
           </Col>

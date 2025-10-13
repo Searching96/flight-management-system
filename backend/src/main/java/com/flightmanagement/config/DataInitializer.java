@@ -84,15 +84,11 @@ public class DataInitializer implements CommandLineRunner {
     private void initializeAirports() {
         try {
             if (airportService.getAllAirports().isEmpty()) {
-                airportService.createAirport(
-                        new AirportDto(null, "Tan Son Nhat International Airport", "Ho Chi Minh City", "Vietnam"));
+                airportService.createAirport(new AirportDto(null, "Tan Son Nhat International Airport", "Ho Chi Minh City", "Vietnam"));
                 airportService.createAirport(new AirportDto(null, "Noi Bai International Airport", "Hanoi", "Vietnam"));
-                airportService
-                        .createAirport(new AirportDto(null, "Da Nang International Airport", "Da Nang", "Vietnam"));
-                airportService
-                        .createAirport(new AirportDto(null, "Cam Ranh International Airport", "Nha Trang", "Vietnam"));
-                airportService
-                        .createAirport(new AirportDto(null, "Phu Quoc International Airport", "Phu Quoc", "Vietnam"));
+                airportService.createAirport(new AirportDto(null, "Da Nang International Airport", "Da Nang", "Vietnam"));
+                airportService.createAirport(new AirportDto(null, "Cam Ranh International Airport", "Nha Trang", "Vietnam"));
+                airportService.createAirport(new AirportDto(null, "Phu Quoc International Airport", "Phu Quoc", "Vietnam"));
                 System.out.println("✓ Default airports initialized");
             }
         } catch (Exception e) {

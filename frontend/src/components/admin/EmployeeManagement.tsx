@@ -1,10 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Modal } from 'react-bootstrap';
-import { authService, employeeService } from '../../services';
-import { usePermissions } from '../../hooks/useAuth';
-import { Employee, RegisterRequest, UpdateEmployeeRequest } from '../../models';
-import * as XLSX from 'xlsx';
+import React, { useState, useEffect, useRef } from "react";
+import { useForm } from "react-hook-form";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Form,
+  Alert,
+  Spinner,
+  Badge,
+  Modal,
+} from "react-bootstrap";
+import { authService, employeeService } from "../../services";
+import { usePermissions } from "../../hooks/useAuth";
+import { Employee, RegisterRequest, UpdateEmployeeRequest } from "../../models";
+import * as XLSX from "xlsx";
 
 interface EmployeeFormData {
   accountName: string;
@@ -20,37 +31,22 @@ const EmployeeManagement: React.FC<{
 }> = ({ showAddModal = false, onCloseAddModal }) => {
   const { canViewAdmin } = usePermissions();
 
-  if (!canViewAdmin) {
-    return (
-      <Container className="py-5">
-        <Row className="justify-content-center">
-          <Col md={8}>
-            <Alert variant="danger" className="text-center">
-              <Alert.Heading>Từ chối truy cập</Alert.Heading>
-              <p>Bạn không có quyền truy cập quản lý nhân viên.</p>
-              <p className="text-muted small">
-                Cập nhật lúc: 2025-06-11 06:58:25 UTC bởi thinh0704hcm
-              </p>
-            </Alert>
-          </Col>
-        </Row>
-      </Container>
-    );
-  }
-
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [toggleLoading, setToggleLoading] = useState<Set<number>>(new Set());
   const [showToggleModal, setShowToggleModal] = useState(false);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
-  const [employeeToToggle, setEmployeeToToggle] = useState<Employee | null>(null);
-  const [employeeToResetPassword, setEmployeeToResetPassword] = useState<Employee | null>(null);
+  const [employeeToToggle, setEmployeeToToggle] = useState<Employee | null>(
+    null
+  );
+  const [employeeToResetPassword, setEmployeeToResetPassword] =
+    useState<Employee | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importData, setImportData] = useState<EmployeeFormData[]>([]);
@@ -62,27 +58,18 @@ const EmployeeManagement: React.FC<{
     errorCount: number;
     results: string[];
   } | null>(null);
-  const [showPasswordResetConfirmModal, setShowPasswordResetConfirmModal] = useState(false);
-  const [passwordResetEmployee, setPasswordResetEmployee] = useState<Employee | null>(null);
+  const [showPasswordResetConfirmModal, setShowPasswordResetConfirmModal] =
+    useState(false);
+  const [passwordResetEmployee, setPasswordResetEmployee] =
+    useState<Employee | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors }
+    formState: { errors },
   } = useForm<EmployeeFormData>();
-
-  // Employee type options
-const employeeTypeOptions = [
-  { value: 1, label: "Lập lịch chuyến bay", color: "warning", description: "Quản lý lịch trình bay" },
-  { value: 2, label: "Bán vé", color: "success", description: "Hỗ trợ khách hàng đặt vé" },
-  { value: 3, label: "Hỗ trợ khách hàng", color: "info", description: "Giải quyết thắc mắc khách hàng" },
-  { value: 4, label: "Kế toán", color: "secondary", description: "Quản lý tài chính và kế toán" },
-  { value: 5, label: "Vận hành chuyến bay", color: "primary", description: "Quản lý vận hành máy bay" },
-  { value: 6, label: "Nhân sự", color: "dark", description: "Quản lý nhân lực và tuyển dụng" },
-  { value: 7, label: "Quản trị viên", color: "danger", description: "Toàn quyền hệ thống" }
-];
 
   useEffect(() => {
     loadEmployees();
@@ -95,16 +82,79 @@ const employeeTypeOptions = [
     }
   }, [showAddModal]);
 
+  if (!canViewAdmin) {
+    return (
+      <Container className="py-5">
+        <Row className="justify-content-center">
+          <Col md={8}>
+            <Alert variant="danger" className="text-center">
+              <Alert.Heading>Từ chối truy cập</Alert.Heading>
+              <p>Bạn không có quyền truy cập quản lý nhân viên.</p>
+            </Alert>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
+
+  // Employee type options
+  const employeeTypeOptions = [
+    {
+      value: 1,
+      label: "Lập lịch chuyến bay",
+      color: "warning",
+      description: "Quản lý lịch trình bay",
+    },
+    {
+      value: 2,
+      label: "Bán vé",
+      color: "success",
+      description: "Hỗ trợ khách hàng đặt vé",
+    },
+    {
+      value: 3,
+      label: "Hỗ trợ khách hàng",
+      color: "info",
+      description: "Giải quyết thắc mắc khách hàng",
+    },
+    {
+      value: 4,
+      label: "Kế toán",
+      color: "secondary",
+      description: "Quản lý tài chính và kế toán",
+    },
+    {
+      value: 5,
+      label: "Vận hành chuyến bay",
+      color: "primary",
+      description: "Quản lý vận hành máy bay",
+    },
+    {
+      value: 6,
+      label: "Nhân sự",
+      color: "dark",
+      description: "Quản lý nhân lực và tuyển dụng",
+    },
+    {
+      value: 7,
+      label: "Quản trị viên",
+      color: "danger",
+      description: "Toàn quyền hệ thống",
+    },
+  ];
+
   const loadEmployees = async () => {
     try {
       setLoading(true);
-      setError('');
-      console.log('Loading employees at 2025-06-11 06:58:25 UTC by thinh0704hcm');
+      setError("");
       const response = await employeeService.getAllEmployees();
-      setEmployees(response);
+      setEmployees(response.data);
     } catch (err: any) {
-      console.error('Load employees error:', err);
-      setError('Không thể tải danh sách nhân viên: ' + (err.message || 'Lỗi không xác định'));
+      console.error("Load employees error:", err);
+      setError(
+        "Không thể tải danh sách nhân viên: " +
+          (err.message || "Lỗi không xác định")
+      );
     } finally {
       setLoading(false);
     }
@@ -113,7 +163,7 @@ const employeeTypeOptions = [
   const onSubmit = async (data: EmployeeFormData) => {
     try {
       setSubmitting(true);
-      setError('');
+      setError("");
 
       if (editingEmployee) {
         // Update existing employee
@@ -121,32 +171,38 @@ const employeeTypeOptions = [
           accountName: data.accountName,
           email: data.email,
           phoneNumber: data.phoneNumber,
-          employeeType: data.employeeType
+          employeeType: data.employeeType,
         };
 
-        console.log('Updating employee:', editingEmployee.employeeId, 'at 2025-06-11 06:58:25 UTC by thinh0704hcm');
-        await employeeService.updateEmployee(editingEmployee.employeeId!, updateData);
+        console.log(
+          "Updating employee:",
+          editingEmployee.employeeId,
+          "at 2025-06-11 06:58:25 UTC by thinh0704hcm"
+        );
+        await employeeService.updateEmployee(
+          editingEmployee.employeeId!,
+          updateData
+        );
       } else {
         // Create new employee - password will be generated in backend
         const registerData: RegisterRequest = {
           accountName: data.accountName,
-          password: 'temp', // Temporary password, backend will generate actual password
+          password: "temp", // Temporary password, backend will generate actual password
           email: data.email,
           citizenId: data.citizenId,
           phoneNumber: data.phoneNumber,
           accountType: 2, // Employee account type
-          employeeType: data.employeeType
+          employeeType: data.employeeType,
         };
 
-        console.log('Creating new employee at 2025-06-11 06:58:25 UTC by thinh0704hcm');
         await authService.createEmployee(registerData);
       }
 
       await loadEmployees();
       handleCancel();
     } catch (err: any) {
-      console.error('Save employee error:', err);
-      setError(err.message || 'Không thể lưu thông tin nhân viên');
+      console.error("Save employee error:", err);
+      setError(err.message || "Không thể lưu thông tin nhân viên");
     } finally {
       setSubmitting(false);
     }
@@ -155,11 +211,11 @@ const employeeTypeOptions = [
   const handleEdit = (employee: Employee) => {
     setEditingEmployee(employee);
     reset({
-      accountName: employee.accountName || '',
-      email: employee.email || '',
-      citizenId: employee.citizenId || '',
-      phoneNumber: employee.phoneNumber || '',
-      employeeType: employee.employeeType
+      accountName: employee.accountName || "",
+      email: employee.email || "",
+      citizenId: employee.citizenId || "",
+      phoneNumber: employee.phoneNumber || "",
+      employeeType: employee.employeeType,
     });
     setShowForm(true);
   };
@@ -171,30 +227,41 @@ const employeeTypeOptions = [
 
   const handleConfirmToggle = async () => {
     if (!employeeToToggle) return;
-    
+
     const employeeId = getEmployeeId(employeeToToggle);
     const isActive = employeeToToggle.deletedAt === null;
 
     try {
-      setError('');
-      setToggleLoading(prev => new Set(prev).add(employeeId));
-      
+      setError("");
+      setToggleLoading((prev) => new Set(prev).add(employeeId));
+
       if (isActive) {
-        console.log('Deactivating employee:', employeeId, 'at 2025-06-11 06:58:25 UTC by thinh0704hcm');
+        console.log(
+          "Deactivating employee:",
+          employeeId
+        );
         await employeeService.deactivateEmployee(employeeId);
       } else {
-        console.log('Activating employee:', employeeId, 'at 2025-06-11 06:58:25 UTC by thinh0704hcm');
+        console.log(
+          "Activating employee:",
+          employeeId
+        );
         await employeeService.activateEmployee(employeeId);
       }
-      
+
       await loadEmployees();
       setShowToggleModal(false);
       setEmployeeToToggle(null);
     } catch (err: any) {
-      console.error('Toggle employee status error:', err);
-      setError(err.message || (isActive ? 'Không thể vô hiệu hóa nhân viên' : 'Không thể kích hoạt nhân viên'));
+      console.error("Toggle employee status error:", err);
+      setError(
+        err.message ||
+          (isActive
+            ? "Không thể vô hiệu hóa nhân viên"
+            : "Không thể kích hoạt nhân viên")
+      );
     } finally {
-      setToggleLoading(prev => {
+      setToggleLoading((prev) => {
         const newSet = new Set(prev);
         newSet.delete(employeeId);
         return newSet;
@@ -211,19 +278,27 @@ const employeeTypeOptions = [
     if (!employeeToResetPassword) return;
 
     try {
-      setError('');
+      setError("");
       const employeeId = getEmployeeId(employeeToResetPassword);
-      console.log('Resetting password for employee:', employeeId, 'at 2025-06-11 06:58:25 UTC by thinh0704hcm');
-      await authService.forgetPassword((await employeeService.getEmployeeById(employeeId)).email!);
-      
+      console.log(
+        "Resetting password for employee:",
+        employeeId,
+        "at 2025-06-11 06:58:25 UTC by thinh0704hcm"
+      );
+      await authService.forgetPassword(
+        (
+          await employeeService.getEmployeeById(employeeId)
+        ).email!
+      );
+
       // Show success modal instead of alert
       setPasswordResetEmployee(employeeToResetPassword);
       setShowResetPasswordModal(false);
       setEmployeeToResetPassword(null);
       setShowPasswordResetConfirmModal(true);
     } catch (err: any) {
-      console.error('Reset password error:', err);
-      setError(err.message || 'Không thể đặt lại mật khẩu');
+      console.error("Reset password error:", err);
+      setError(err.message || "Không thể đặt lại mật khẩu");
     }
   };
 
@@ -231,7 +306,7 @@ const employeeTypeOptions = [
     setShowForm(false);
     setEditingEmployee(null);
     reset();
-    setError('');
+    setError("");
 
     // Call the external close handler if provided
     if (onCloseAddModal) {
@@ -239,20 +314,33 @@ const employeeTypeOptions = [
     }
   };
 
+  console.log(employees);
+
   // Filter employees based on search term and type
-  const filteredEmployees = employees.filter(employee => {
-    const matchesSearch = (employee.accountName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (employee.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (employee.citizenId || '').includes(searchTerm) ||
-      (employee.phoneNumber || '').includes(searchTerm);
-    const matchesType = !filterType || employee.employeeType.toString() === filterType;
+  const filteredEmployees = employees.filter((employee) => {
+    const matchesSearch =
+      (employee.accountName?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      ) ||
+      (employee.email?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      ) ||
+      (employee.citizenId || "").includes(searchTerm) ||
+      (employee.phoneNumber || "").includes(searchTerm);
+    const matchesType =
+      !filterType || employee.employeeType.toString() === filterType;
     return matchesSearch && matchesType;
   });
 
   // Get employee type info
   const getEmployeeTypeInfo = (employeeType: number) => {
-    return employeeTypeOptions.find(option => option.value === employeeType) ||
-      { label: "Không xác định", color: "secondary", description: "" };
+    return (
+      employeeTypeOptions.find((option) => option.value === employeeType) || {
+        label: "Không xác định",
+        color: "secondary",
+        description: "",
+      }
+    );
   };
 
   // Check if employee has ID property (for compatibility)
@@ -263,15 +351,15 @@ const employeeTypeOptions = [
   const exportToExcel = () => {
     try {
       // Prepare data for export
-      const exportData = employees.map(employee => ({
-        accountName: employee.accountName || '',
-        email: employee.email || '',
-        citizenId: employee.citizenId || '',
-        phoneNumber: employee.phoneNumber || '',
+      const exportData = employees.map((employee) => ({
+        accountName: employee.accountName || "",
+        email: employee.email || "",
+        citizenId: employee.citizenId || "",
+        phoneNumber: employee.phoneNumber || "",
         employeeType: employee.employeeType,
         employeeTypeName: getEmployeeTypeInfo(employee.employeeType).label,
-        status: employee.deletedAt === null ? 'Hoạt động' : 'Tạm dừng',
-        id: getEmployeeId(employee)
+        status: employee.deletedAt === null ? "Hoạt động" : "Tạm dừng",
+        id: getEmployeeId(employee),
       }));
 
       // Create workbook and worksheet
@@ -287,22 +375,22 @@ const employeeTypeOptions = [
         { wch: 10 }, // employeeType
         { wch: 25 }, // employeeTypeName
         { wch: 12 }, // status
-        { wch: 8 }   // id
+        { wch: 8 }, // id
       ];
-      ws['!cols'] = colWidths;
+      ws["!cols"] = colWidths;
 
       // Add worksheet to workbook
-      XLSX.utils.book_append_sheet(wb, ws, 'Employees');
+      XLSX.utils.book_append_sheet(wb, ws, "Employees");
 
       // Generate filename with current date
-      const date = new Date().toISOString().split('T')[0];
+      const date = new Date().toISOString().split("T")[0];
       const filename = `employees_${date}.xlsx`;
 
       // Save file
       XLSX.writeFile(wb, filename);
     } catch (error) {
-      console.error('Export error:', error);
-      setError('Không thể xuất file Excel. Vui lòng thử lại.');
+      console.error("Export error:", error);
+      setError("Không thể xuất file Excel. Vui lòng thử lại.");
     }
   };
 
@@ -311,13 +399,13 @@ const employeeTypeOptions = [
       // Create template data with sample row - no password field
       const templateData = [
         {
-          accountName: 'Nguyễn Văn A',
-          email: 'nguyen.van.a@company.com',
-          citizenId: '123456789012',
-          phoneNumber: '0901234567',
+          accountName: "Nguyễn Văn A",
+          email: "nguyen.van.a@company.com",
+          citizenId: "123456789012",
+          phoneNumber: "0901234567",
           employeeType: 2,
-          employeeTypeName: 'Bán vé (chỉ tham khảo - sẽ tự động tính)'
-        }
+          employeeTypeName: "Bán vé (chỉ tham khảo - sẽ tự động tính)",
+        },
       ];
 
       const wb = XLSX.utils.book_new();
@@ -330,15 +418,15 @@ const employeeTypeOptions = [
         { wch: 15 }, // citizenId
         { wch: 15 }, // phoneNumber
         { wch: 15 }, // employeeType
-        { wch: 35 }  // employeeTypeName
+        { wch: 35 }, // employeeTypeName
       ];
-      ws['!cols'] = colWidths;
+      ws["!cols"] = colWidths;
 
-      XLSX.utils.book_append_sheet(wb, ws, 'Template');
-      XLSX.writeFile(wb, 'employee_import_template.xlsx');
+      XLSX.utils.book_append_sheet(wb, ws, "Template");
+      XLSX.writeFile(wb, "employee_import_template.xlsx");
     } catch (error) {
-      console.error('Template download error:', error);
-      setError('Không thể tải template. Vui lòng thử lại.');
+      console.error("Template download error:", error);
+      setError("Không thể tải template. Vui lòng thử lại.");
     }
   };
 
@@ -359,7 +447,7 @@ const employeeTypeOptions = [
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
+          const workbook = XLSX.read(data, { type: "array" });
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
@@ -372,42 +460,66 @@ const employeeTypeOptions = [
             const employeeData: Partial<EmployeeFormData> = {};
 
             // Validate and parse each field
-            if (!row.accountName || typeof row.accountName !== 'string') {
+            if (!row.accountName || typeof row.accountName !== "string") {
               errors.push(`Dòng ${rowNumber}: Họ và tên không hợp lệ`);
             } else if (!/^[\p{L}\p{M}\s'.-]+$/u.test(row.accountName)) {
-              errors.push(`Dòng ${rowNumber}: Họ và tên chỉ được chứa chữ cái, khoảng trắng, dấu nháy đơn, gạch ngang và dấu chấm`);
+              errors.push(
+                `Dòng ${rowNumber}: Họ và tên chỉ được chứa chữ cái, khoảng trắng, dấu nháy đơn, gạch ngang và dấu chấm`
+              );
             } else {
               employeeData.accountName = row.accountName.trim();
             }
 
-            if (!row.email || typeof row.email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) {
+            if (
+              !row.email ||
+              typeof row.email !== "string" ||
+              !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)
+            ) {
               errors.push(`Dòng ${rowNumber}: Email không hợp lệ`);
             } else {
               employeeData.email = row.email.trim();
             }
 
-            if (!row.citizenId || !/^[0-9]{9,12}$/.test(row.citizenId.toString())) {
+            if (
+              !row.citizenId ||
+              !/^[0-9]{9,12}$/.test(row.citizenId.toString())
+            ) {
               errors.push(`Dòng ${rowNumber}: CCCD/CMND phải có 9-12 chữ số`);
             } else {
               employeeData.citizenId = row.citizenId.toString();
             }
 
-            if (!row.phoneNumber || !/^[0-9]{10,11}$/.test(row.phoneNumber.toString())) {
-              errors.push(`Dòng ${rowNumber}: Số điện thoại phải có 10-11 chữ số`);
+            if (
+              !row.phoneNumber ||
+              !/^[0-9]{10,11}$/.test(row.phoneNumber.toString())
+            ) {
+              errors.push(
+                `Dòng ${rowNumber}: Số điện thoại phải có 10-11 chữ số`
+              );
             } else {
               employeeData.phoneNumber = row.phoneNumber.toString();
             }
 
             const employeeType = parseInt(row.employeeType);
-            if (!employeeType || !employeeTypeOptions.find(opt => opt.value === employeeType)) {
-              errors.push(`Dòng ${rowNumber}: Loại nhân viên không hợp lệ (1-7)`);
+            if (
+              !employeeType ||
+              !employeeTypeOptions.find((opt) => opt.value === employeeType)
+            ) {
+              errors.push(
+                `Dòng ${rowNumber}: Loại nhân viên không hợp lệ (1-7)`
+              );
             } else {
               employeeData.employeeType = employeeType;
             }
 
             // Only add to valid data if all required fields are present (no password needed)
-            if (employeeData.accountName && employeeData.email && 
-                employeeData.citizenId && employeeData.phoneNumber && employeeData.employeeType) {
+            if (
+              employeeData.accountName &&
+              employeeData.email &&
+              employeeData.citizenId &&
+              employeeData.phoneNumber &&
+              employeeData.employeeType
+            ) {
               validData.push(employeeData as EmployeeFormData);
             }
           });
@@ -415,14 +527,16 @@ const employeeTypeOptions = [
           setImportData(validData);
           setImportErrors(errors);
         } catch (error) {
-          console.error('Parse error:', error);
-          setImportErrors(['Không thể đọc file Excel. Vui lòng kiểm tra định dạng file.']);
+          console.error("Parse error:", error);
+          setImportErrors([
+            "Không thể đọc file Excel. Vui lòng kiểm tra định dạng file.",
+          ]);
         }
       };
       reader.readAsArrayBuffer(importFile);
     } catch (error) {
-      console.error('File read error:', error);
-      setImportErrors(['Không thể đọc file. Vui lòng thử lại.']);
+      console.error("File read error:", error);
+      setImportErrors(["Không thể đọc file. Vui lòng thử lại."]);
     }
   };
 
@@ -439,20 +553,26 @@ const employeeTypeOptions = [
         try {
           const registerData: RegisterRequest = {
             accountName: employeeData.accountName,
-            password: 'temp', // Temporary password, backend will generate actual password
+            password: "temp", // Temporary password, backend will generate actual password
             email: employeeData.email,
             citizenId: employeeData.citizenId,
             phoneNumber: employeeData.phoneNumber,
             accountType: 2, // Employee account type
-            employeeType: employeeData.employeeType
+            employeeType: employeeData.employeeType,
           };
 
           await authService.createEmployee(registerData);
           successCount++;
-          importResults.push(`✓ ${employeeData.accountName} - ${employeeData.email}`);
+          importResults.push(
+            `✓ ${employeeData.accountName} - ${employeeData.email}`
+          );
         } catch (error: any) {
           errorCount++;
-          importResults.push(`✗ ${employeeData.accountName} - ${error.message || 'Lỗi không xác định'}`);
+          importResults.push(
+            `✗ ${employeeData.accountName} - ${
+              error.message || "Lỗi không xác định"
+            }`
+          );
         }
       }
 
@@ -466,12 +586,12 @@ const employeeTypeOptions = [
       setImportResults({
         successCount,
         errorCount,
-        results: importResults
+        results: importResults,
       });
       setShowImportResultModal(true);
     } catch (error) {
-      console.error('Import error:', error);
-      setError('Có lỗi xảy ra trong quá trình import. Vui lòng thử lại.');
+      console.error("Import error:", error);
+      setError("Có lỗi xảy ra trong quá trình import. Vui lòng thử lại.");
     } finally {
       setImporting(false);
     }
@@ -537,7 +657,12 @@ const employeeTypeOptions = [
       {error && (
         <Row className="mb-4">
           <Col>
-            <Alert variant="danger" className="text-center" dismissible onClose={() => setError('')}>
+            <Alert
+              variant="danger"
+              className="text-center"
+              dismissible
+              onClose={() => setError("")}
+            >
               <i className="bi bi-exclamation-triangle me-2"></i>
               {error}
             </Alert>
@@ -576,7 +701,7 @@ const employeeTypeOptions = [
                       onChange={(e) => setFilterType(e.target.value)}
                     >
                       <option value="">Tất cả loại</option>
-                      {employeeTypeOptions.map(type => (
+                      {employeeTypeOptions.map((type) => (
                         <option key={type.value} value={type.value.toString()}>
                           {type.label}
                         </option>
@@ -595,7 +720,8 @@ const employeeTypeOptions = [
                     <Col>
                       <Badge bg="success" className="p-2">
                         <i className="bi bi-person-check me-1"></i>
-                        Đang hiển thị: <strong>{filteredEmployees.length}</strong>
+                        Đang hiển thị:{" "}
+                        <strong>{filteredEmployees.length}</strong>
                       </Badge>
                     </Col>
                   </Row>
@@ -610,8 +736,12 @@ const employeeTypeOptions = [
       <Modal show={showForm} onHide={handleCancel} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>
-            <i className={`bi ${editingEmployee ? 'bi-person-gear' : 'bi-person-plus'} me-2`}></i>
-            {editingEmployee ? 'Chỉnh sửa nhân viên' : 'Thêm nhân viên mới'}
+            <i
+              className={`bi ${
+                editingEmployee ? "bi-person-gear" : "bi-person-plus"
+              } me-2`}
+            ></i>
+            {editingEmployee ? "Chỉnh sửa nhân viên" : "Thêm nhân viên mới"}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -625,16 +755,17 @@ const employeeTypeOptions = [
                   </Form.Label>
                   <Form.Control
                     type="text"
-                    {...register('accountName', {
-                      required: 'Họ và tên là bắt buộc',
+                    {...register("accountName", {
+                      required: "Họ và tên là bắt buộc",
                       minLength: {
                         value: 2,
-                        message: 'Họ và tên phải có ít nhất 2 ký tự'
+                        message: "Họ và tên phải có ít nhất 2 ký tự",
                       },
                       pattern: {
                         value: /^[\p{L}\p{M}\s'.-]+$/u,
-                        message: 'Họ và tên chỉ được chứa chữ cái, khoảng trắng, dấu nháy đơn, gạch ngang và dấu chấm'
-                      }
+                        message:
+                          "Họ và tên chỉ được chứa chữ cái, khoảng trắng, dấu nháy đơn, gạch ngang và dấu chấm",
+                      },
                     })}
                     isInvalid={!!errors.accountName}
                     placeholder="ví dụ: Nguyễn Văn A"
@@ -651,7 +782,8 @@ const employeeTypeOptions = [
                     <i className="bi bi-info-circle text-info me-2"></i>
                     <div>
                       <small className="text-muted">
-                        <strong>Mật khẩu tự động:</strong><br />
+                        <strong>Mật khẩu tự động:</strong>
+                        <br />
                         Mật khẩu sẽ được tự động tạo và gửi qua email
                       </small>
                     </div>
@@ -669,12 +801,12 @@ const employeeTypeOptions = [
                   </Form.Label>
                   <Form.Control
                     type="email"
-                    {...register('email', {
-                      required: 'Email là bắt buộc',
+                    {...register("email", {
+                      required: "Email là bắt buộc",
                       pattern: {
                         value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                        message: 'Email không hợp lệ'
-                      }
+                        message: "Email không hợp lệ",
+                      },
                     })}
                     isInvalid={!!errors.email}
                     placeholder="ví dụ: nguyen.van.a@thinhuit.id.vn"
@@ -693,12 +825,12 @@ const employeeTypeOptions = [
                   </Form.Label>
                   <Form.Control
                     type="tel"
-                    {...register('phoneNumber', {
-                      required: 'Số điện thoại là bắt buộc',
+                    {...register("phoneNumber", {
+                      required: "Số điện thoại là bắt buộc",
                       pattern: {
                         value: /^[0-9]{10,11}$/,
-                        message: 'Số điện thoại phải có 10-11 chữ số'
-                      }
+                        message: "Số điện thoại phải có 10-11 chữ số",
+                      },
                     })}
                     isInvalid={!!errors.phoneNumber}
                     placeholder="ví dụ: 0901234567"
@@ -721,12 +853,12 @@ const employeeTypeOptions = [
                     </Form.Label>
                     <Form.Control
                       type="text"
-                      {...register('citizenId', {
-                        required: 'Số CCCD/CMND là bắt buộc',
+                      {...register("citizenId", {
+                        required: "Số CCCD/CMND là bắt buộc",
                         pattern: {
                           value: /^[0-9]{9,12}$/,
-                          message: 'CCCD/CMND phải có 9-12 chữ số'
-                        }
+                          message: "CCCD/CMND phải có 9-12 chữ số",
+                        },
                       })}
                       isInvalid={!!errors.citizenId}
                       placeholder="ví dụ: 123456789012"
@@ -744,15 +876,15 @@ const employeeTypeOptions = [
                       Loại nhân viên
                     </Form.Label>
                     <Form.Select
-                      {...register('employeeType', {
-                        required: 'Loại nhân viên là bắt buộc',
-                        valueAsNumber: true
+                      {...register("employeeType", {
+                        required: "Loại nhân viên là bắt buộc",
+                        valueAsNumber: true,
                       })}
                       isInvalid={!!errors.employeeType}
                       disabled={submitting}
                     >
                       <option value="">Chọn loại nhân viên...</option>
-                      {employeeTypeOptions.map(type => (
+                      {employeeTypeOptions.map((type) => (
                         <option key={type.value} value={type.value}>
                           {type.label} - {type.description}
                         </option>
@@ -775,15 +907,15 @@ const employeeTypeOptions = [
                       Loại nhân viên
                     </Form.Label>
                     <Form.Select
-                      {...register('employeeType', {
-                        required: 'Loại nhân viên là bắt buộc',
-                        valueAsNumber: true
+                      {...register("employeeType", {
+                        required: "Loại nhân viên là bắt buộc",
+                        valueAsNumber: true,
                       })}
                       isInvalid={!!errors.employeeType}
                       disabled={submitting}
                     >
                       <option value="">Chọn loại nhân viên...</option>
-                      {employeeTypeOptions.map(type => (
+                      {employeeTypeOptions.map((type) => (
                         <option key={type.value} value={type.value}>
                           {type.label} - {type.description}
                         </option>
@@ -805,19 +937,28 @@ const employeeTypeOptions = [
                   Thông tin mật khẩu
                 </Alert.Heading>
                 <p className="mb-0">
-                  Mật khẩu tạm thời sẽ được tự động tạo bởi hệ thống và gửi đến email của nhân viên. 
-                  Nhân viên có thể đổi mật khẩu sau khi đăng nhập lần đầu.
+                  Mật khẩu tạm thời sẽ được tự động tạo bởi hệ thống và gửi đến
+                  email của nhân viên. Nhân viên có thể đổi mật khẩu sau khi
+                  đăng nhập lần đầu.
                 </p>
               </Alert>
             )}
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleCancel} disabled={submitting}>
+          <Button
+            variant="secondary"
+            onClick={handleCancel}
+            disabled={submitting}
+          >
             <i className="bi bi-x-circle me-2"></i>
             Hủy
           </Button>
-          <Button variant="primary" onClick={handleSubmit(onSubmit)} disabled={submitting}>
+          <Button
+            variant="primary"
+            onClick={handleSubmit(onSubmit)}
+            disabled={submitting}
+          >
             {submitting ? (
               <>
                 <Spinner animation="border" size="sm" className="me-2" />
@@ -825,8 +966,12 @@ const employeeTypeOptions = [
               </>
             ) : (
               <>
-                <i className={`bi ${editingEmployee ? 'bi-check-circle' : 'bi-plus-circle'} me-2`}></i>
-                {editingEmployee ? 'Cập nhật nhân viên' : 'Thêm nhân viên'}
+                <i
+                  className={`bi ${
+                    editingEmployee ? "bi-check-circle" : "bi-plus-circle"
+                  } me-2`}
+                ></i>
+                {editingEmployee ? "Cập nhật nhân viên" : "Thêm nhân viên"}
               </>
             )}
           </Button>
@@ -834,7 +979,11 @@ const employeeTypeOptions = [
       </Modal>
 
       {/* Employee Status Toggle Modal */}
-      <Modal show={showToggleModal} onHide={() => setShowToggleModal(false)} centered>
+      <Modal
+        show={showToggleModal}
+        onHide={() => setShowToggleModal(false)}
+        centered
+      >
         <Modal.Header closeButton className="bg-warning text-dark">
           <Modal.Title>
             <i className="bi bi-toggle-on me-2"></i>
@@ -843,50 +992,61 @@ const employeeTypeOptions = [
         </Modal.Header>
         <Modal.Body className="p-4">
           <div className="text-center mb-3">
-            <i className="bi bi-person-gear text-warning" style={{ fontSize: '3rem' }}></i>
+            <i
+              className="bi bi-person-gear text-warning"
+              style={{ fontSize: "3rem" }}
+            ></i>
           </div>
           {employeeToToggle && (
             <>
               <h5 className="text-center mb-3">
-                {employeeToToggle.deletedAt === null 
+                {employeeToToggle.deletedAt === null
                   ? `Vô hiệu hóa nhân viên ${employeeToToggle.accountName}?`
-                  : `Kích hoạt nhân viên ${employeeToToggle.accountName}?`
-                }
+                  : `Kích hoạt nhân viên ${employeeToToggle.accountName}?`}
               </h5>
               <div className="p-3 bg-light rounded mb-3">
                 <div className="text-center">
-                  <strong>{employeeToToggle.accountName}</strong><br />
+                  <strong>{employeeToToggle.accountName}</strong>
+                  <br />
                   <span className="text-muted">{employeeToToggle.email}</span>
                 </div>
               </div>
               <p className="text-center text-muted mb-0">
-                {employeeToToggle.deletedAt === null 
-                  ? 'Nhân viên sẽ không thể đăng nhập vào hệ thống sau khi bị vô hiệu hóa.'
-                  : 'Nhân viên sẽ có thể đăng nhập trở lại sau khi được kích hoạt.'
-                }
+                {employeeToToggle.deletedAt === null
+                  ? "Nhân viên sẽ không thể đăng nhập vào hệ thống sau khi bị vô hiệu hóa."
+                  : "Nhân viên sẽ có thể đăng nhập trở lại sau khi được kích hoạt."}
               </p>
             </>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={() => setShowToggleModal(false)}
-          >
+          <Button variant="secondary" onClick={() => setShowToggleModal(false)}>
             Hủy
           </Button>
           <Button
-            variant={employeeToToggle?.deletedAt === null ? "danger" : "success"}
+            variant={
+              employeeToToggle?.deletedAt === null ? "danger" : "success"
+            }
             onClick={handleConfirmToggle}
           >
-            <i className={`bi ${employeeToToggle?.deletedAt === null ? 'bi-pause-circle' : 'bi-play-circle'} me-2`}></i>
-            {employeeToToggle?.deletedAt === null ? 'Vô hiệu hóa' : 'Kích hoạt'}
+            <i
+              className={`bi ${
+                employeeToToggle?.deletedAt === null
+                  ? "bi-pause-circle"
+                  : "bi-play-circle"
+              } me-2`}
+            ></i>
+            {employeeToToggle?.deletedAt === null ? "Vô hiệu hóa" : "Kích hoạt"}
           </Button>
         </Modal.Footer>
       </Modal>
 
       {/* Reset Password Modal */}
-      <Modal show={showResetPasswordModal} onHide={() => setShowResetPasswordModal(false)} centered>
+      <Modal
+        show={showResetPasswordModal}
+        onHide={() => setShowResetPasswordModal(false)}
+        centered
+      >
         <Modal.Header closeButton className="bg-info text-white">
           <Modal.Title>
             <i className="bi bi-key me-2"></i>
@@ -895,7 +1055,10 @@ const employeeTypeOptions = [
         </Modal.Header>
         <Modal.Body className="p-4">
           <div className="text-center mb-3">
-            <i className="bi bi-shield-lock text-info" style={{ fontSize: '3rem' }}></i>
+            <i
+              className="bi bi-shield-lock text-info"
+              style={{ fontSize: "3rem" }}
+            ></i>
           </div>
           {employeeToResetPassword && (
             <>
@@ -904,8 +1067,11 @@ const employeeTypeOptions = [
               </h5>
               <div className="p-3 bg-light rounded mb-3">
                 <div className="text-center">
-                  <strong>{employeeToResetPassword.accountName}</strong><br />
-                  <span className="text-muted">{employeeToResetPassword.email}</span>
+                  <strong>{employeeToResetPassword.accountName}</strong>
+                  <br />
+                  <span className="text-muted">
+                    {employeeToResetPassword.email}
+                  </span>
                 </div>
               </div>
               <p className="text-center text-muted mb-0">
@@ -921,10 +1087,7 @@ const employeeTypeOptions = [
           >
             Hủy
           </Button>
-          <Button
-            variant="info"
-            onClick={handleConfirmResetPassword}
-          >
+          <Button variant="info" onClick={handleConfirmResetPassword}>
             <i className="bi bi-envelope me-2"></i>
             Gửi mật khẩu mới
           </Button>
@@ -932,7 +1095,11 @@ const employeeTypeOptions = [
       </Modal>
 
       {/* Excel Import Modal */}
-      <Modal show={showImportModal} onHide={() => setShowImportModal(false)} size="xl">
+      <Modal
+        show={showImportModal}
+        onHide={() => setShowImportModal(false)}
+        size="xl"
+      >
         <Modal.Header closeButton>
           <Modal.Title>
             <i className="bi bi-upload me-2"></i>
@@ -1004,7 +1171,9 @@ const employeeTypeOptions = [
               <Card.Body>
                 {importErrors.length > 0 && (
                   <Alert variant="danger" className="mb-3">
-                    <Alert.Heading className="h6">Lỗi trong dữ liệu:</Alert.Heading>
+                    <Alert.Heading className="h6">
+                      Lỗi trong dữ liệu:
+                    </Alert.Heading>
                     <ul className="mb-0">
                       {importErrors.map((error, index) => (
                         <li key={index}>{error}</li>
@@ -1019,8 +1188,11 @@ const employeeTypeOptions = [
                       <i className="bi bi-check-circle me-2"></i>
                       Tìm thấy {importData.length} nhân viên hợp lệ để import
                     </Alert>
-                    
-                    <div className="table-responsive" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+
+                    <div
+                      className="table-responsive"
+                      style={{ maxHeight: "300px", overflowY: "auto" }}
+                    >
                       <table className="table table-sm table-striped">
                         <thead className="table-dark sticky-top">
                           <tr>
@@ -1039,7 +1211,11 @@ const employeeTypeOptions = [
                               <td>{emp.citizenId}</td>
                               <td>{emp.phoneNumber}</td>
                               <td>
-                                <Badge bg={getEmployeeTypeInfo(emp.employeeType).color}>
+                                <Badge
+                                  bg={
+                                    getEmployeeTypeInfo(emp.employeeType).color
+                                  }
+                                >
                                   {getEmployeeTypeInfo(emp.employeeType).label}
                                 </Badge>
                               </td>
@@ -1083,7 +1259,11 @@ const employeeTypeOptions = [
       </Modal>
 
       {/* Password Reset Success Modal */}
-      <Modal show={showPasswordResetConfirmModal} onHide={() => setShowPasswordResetConfirmModal(false)} centered>
+      <Modal
+        show={showPasswordResetConfirmModal}
+        onHide={() => setShowPasswordResetConfirmModal(false)}
+        centered
+      >
         <Modal.Header closeButton className="bg-success text-white">
           <Modal.Title>
             <i className="bi bi-check-circle me-2"></i>
@@ -1092,14 +1272,22 @@ const employeeTypeOptions = [
         </Modal.Header>
         <Modal.Body className="p-4">
           <div className="text-center mb-3">
-            <i className="bi bi-envelope-check text-success" style={{ fontSize: '3rem' }}></i>
+            <i
+              className="bi bi-envelope-check text-success"
+              style={{ fontSize: "3rem" }}
+            ></i>
           </div>
-          <h5 className="text-center mb-3">Mật khẩu đã được đặt lại thành công!</h5>
+          <h5 className="text-center mb-3">
+            Mật khẩu đã được đặt lại thành công!
+          </h5>
           {passwordResetEmployee && (
             <div className="p-3 bg-light rounded mb-3">
               <div className="text-center">
-                <strong>{passwordResetEmployee.accountName}</strong><br />
-                <span className="text-muted">{passwordResetEmployee.email}</span>
+                <strong>{passwordResetEmployee.accountName}</strong>
+                <br />
+                <span className="text-muted">
+                  {passwordResetEmployee.email}
+                </span>
               </div>
             </div>
           )}
@@ -1109,8 +1297,9 @@ const employeeTypeOptions = [
               Thông báo quan trọng
             </Alert.Heading>
             <p className="mb-0">
-              Mật khẩu tạm thời mới đã được gửi đến email của nhân viên. 
-              Vui lòng thông báo cho nhân viên kiểm tra email và đăng nhập bằng mật khẩu mới.
+              Mật khẩu tạm thời mới đã được gửi đến email của nhân viên. Vui
+              lòng thông báo cho nhân viên kiểm tra email và đăng nhập bằng mật
+              khẩu mới.
             </p>
           </Alert>
         </Modal.Body>
@@ -1126,7 +1315,12 @@ const employeeTypeOptions = [
       </Modal>
 
       {/* Import Results Modal */}
-      <Modal show={showImportResultModal} onHide={() => setShowImportResultModal(false)} size="lg" centered>
+      <Modal
+        show={showImportResultModal}
+        onHide={() => setShowImportResultModal(false)}
+        size="lg"
+        centered
+      >
         <Modal.Header closeButton className="bg-primary text-white">
           <Modal.Title>
             <i className="bi bi-file-earmark-check me-2"></i>
@@ -1140,7 +1334,9 @@ const employeeTypeOptions = [
                 <div className="row g-3">
                   <div className="col-6">
                     <div className="p-3 bg-success text-white rounded">
-                      <div className="h3 mb-1">{importResults.successCount}</div>
+                      <div className="h3 mb-1">
+                        {importResults.successCount}
+                      </div>
                       <small>Thành công</small>
                     </div>
                   </div>
@@ -1160,7 +1356,8 @@ const employeeTypeOptions = [
                     Thông tin mật khẩu
                   </Alert.Heading>
                   <p className="mb-0">
-                    Mật khẩu sẽ được tự động tạo và gửi qua email cho từng nhân viên thành công.
+                    Mật khẩu sẽ được tự động tạo và gửi qua email cho từng nhân
+                    viên thành công.
                   </p>
                 </Alert>
               )}
@@ -1169,11 +1366,15 @@ const employeeTypeOptions = [
                 <Card.Header>
                   <h6 className="mb-0">Chi tiết kết quả</h6>
                 </Card.Header>
-                <Card.Body style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                <Card.Body style={{ maxHeight: "300px", overflowY: "auto" }}>
                   {importResults.results.map((result, index) => (
-                    <div 
-                      key={index} 
-                      className={`p-2 mb-2 rounded ${result.startsWith('✓') ? 'bg-light text-success' : 'bg-light text-danger'}`}
+                    <div
+                      key={index}
+                      className={`p-2 mb-2 rounded ${
+                        result.startsWith("✓")
+                          ? "bg-light text-success"
+                          : "bg-light text-danger"
+                      }`}
                     >
                       <small className="font-monospace">{result}</small>
                     </div>
@@ -1202,21 +1403,20 @@ const employeeTypeOptions = [
               <Card.Body className="text-center py-5">
                 <i className="bi bi-people fs-1 text-muted mb-3"></i>
                 <p className="text-muted mb-0">
-                  {searchTerm || filterType ?
-                    'Không tìm thấy nhân viên phù hợp với tiêu chí tìm kiếm.' :
-                    'Chưa có nhân viên nào trong hệ thống. Thêm nhân viên đầu tiên để bắt đầu.'
-                  }
+                  {searchTerm || filterType
+                    ? "Không tìm thấy nhân viên phù hợp với tiêu chí tìm kiếm."
+                    : "Chưa có nhân viên nào trong hệ thống. Thêm nhân viên đầu tiên để bắt đầu."}
                 </p>
               </Card.Body>
             </Card>
           </Col>
         ) : (
-          filteredEmployees.map(employee => {
+          filteredEmployees.map((employee) => {
             const typeInfo = getEmployeeTypeInfo(employee.employeeType);
             const employeeId = getEmployeeId(employee);
             const isToggling = toggleLoading.has(employeeId);
             const isActive = employee.deletedAt === null;
-            
+
             return (
               <Col key={employeeId} md={6} lg={4} className="mb-4">
                 <Card className="h-100">
@@ -1249,7 +1449,7 @@ const employeeTypeOptions = [
                       </Button>
                     </div>
                   </Card.Header>
-                  
+
                   <Card.Body>
                     <Card.Title className="text-center mb-3">
                       <i className="bi bi-person-circle me-2"></i>
@@ -1324,19 +1524,23 @@ const employeeTypeOptions = [
                   {/* Employee Status Toggle Footer */}
                   <Card.Footer className="d-flex justify-content-between align-items-center">
                     <div className="d-flex align-items-center">
-                      <small className="text-muted me-2">Trạng thái tài khoản:</small>
-                      <Badge 
-                        bg={isActive ? "success" : "secondary"} 
+                      <small className="text-muted me-2">
+                        Trạng thái tài khoản:
+                      </small>
+                      <Badge
+                        bg={isActive ? "success" : "secondary"}
                         className="small"
                       >
-                        <i 
-                          className={`bi ${isActive ? 'bi-circle-fill' : 'bi-pause-circle-fill'} me-1`} 
-                          style={{ fontSize: '0.5rem' }}
+                        <i
+                          className={`bi ${
+                            isActive ? "bi-circle-fill" : "bi-pause-circle-fill"
+                          } me-1`}
+                          style={{ fontSize: "0.5rem" }}
                         ></i>
-                        {isActive ? 'Hoạt động' : 'Tạm dừng'}
+                        {isActive ? "Hoạt động" : "Tạm dừng"}
                       </Badge>
                     </div>
-                    
+
                     <Button
                       size="sm"
                       variant={isActive ? "outline-danger" : "outline-success"}
@@ -1346,13 +1550,21 @@ const employeeTypeOptions = [
                     >
                       {isToggling ? (
                         <>
-                          <Spinner animation="border" size="sm" className="me-1" />
+                          <Spinner
+                            animation="border"
+                            size="sm"
+                            className="me-1"
+                          />
                           <small>Đang xử lý...</small>
                         </>
                       ) : (
                         <>
-                          <i className={`bi ${isActive ? 'bi-pause-circle' : 'bi-play-circle'} me-1`}></i>
-                          <small>{isActive ? 'Tạm dừng' : 'Kích hoạt'}</small>
+                          <i
+                            className={`bi ${
+                              isActive ? "bi-pause-circle" : "bi-play-circle"
+                            } me-1`}
+                          ></i>
+                          <small>{isActive ? "Tạm dừng" : "Kích hoạt"}</small>
                         </>
                       )}
                     </Button>
