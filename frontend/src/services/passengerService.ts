@@ -54,14 +54,7 @@ class PassengerService {
   async findExistingPassenger(
     citizenId: string
   ): Promise<ApiResponse<Passenger> | null> {
-    return await this.getPassengerByCitizenId(citizenId)
-      .then((response) => response)
-      .catch((error) => {
-        if (error?.response?.status === 404) {
-          return null; // Passenger not found
-        }
-        throw error; // Rethrow other errors
-      });
+    return apiClient.get(`/passengers/citizen-id/${citizenId}`);
   }
 
   /**
@@ -82,7 +75,10 @@ class PassengerService {
         email: passengerData.email,
         phoneNumber: passengerData.phoneNumber,
       };
-      return this.updatePassenger(existingPassenger.data.passengerId!, updateData);
+      return this.updatePassenger(
+        existingPassenger.data.passengerId!,
+        updateData
+      );
     } else {
       // Create new passenger
       return this.createPassenger(passengerData);

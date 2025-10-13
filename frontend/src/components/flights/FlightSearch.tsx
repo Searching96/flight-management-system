@@ -70,6 +70,8 @@ const FlightSearch: React.FC = () => {
       ]);
       setAirports(airportData.data);
       setTicketClasses(ticketClassData.data);
+      console.log("Airports:", airportData);
+      console.log("Ticket Classes:", ticketClassData);
       console.log("Parameters:", parameterData);
       // Set default ticket class to 'all'
       // Calculate minimum booking date

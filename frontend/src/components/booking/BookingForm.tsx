@@ -310,75 +310,49 @@ const BookingForm: React.FC = () => {
       for (let i = 0; i < data.passengers.length; i++) {
         const passenger = data.passengers[i];
         if (passenger.citizenId) {
-          try {
-            const existing = await passengerService.findExistingPassenger(
-              passenger.citizenId
-            );
-            if (existing) {
-              try {
-                const created = await passengerService.transformPassengerData(
-                  passenger
-                );
-                await passengerService.updatePassenger(
-                  existing.data.passengerId!,
-                  created
-                );
-              } catch (updateErr: any) {
-                setError(
-                  "Lỗi cập nhật thông tin hành khách: " +
-                    (updateErr.message || "Lỗi không xác định")
-                );
-                return;
-              }
-              // Set passengerId if found
-              data.passengers[i] = {
-                ...data.passengers[i],
-                ...existing,
-                passengerId: existing.data.passengerId ?? 0,
-              };
-            } else {
-              // If not found, create new passenger
+          const existing = await passengerService.findExistingPassenger(
+            passenger.citizenId
+          );
+
+          console.log("Existing passenger check:", existing);
+
+          if (existing?.data) {
+            try {
               const created = await passengerService.transformPassengerData(
                 passenger
               );
-              const createdPassenger = await passengerService.createPassenger(
+
+              // Update existing passenger with new info (MAYBE REMOVE THIS)
+              await passengerService.updatePassenger(
+                existing.data.passengerId!,
                 created
               );
-              data.passengers[i] = {
-                ...data.passengers[i],
-                ...createdPassenger,
-                passengerId: createdPassenger.data.passengerId ?? 0,
-              };
-            }
-          } catch (err: any) {
-            // If not found (404), create new passenger
-            if (err?.response?.status === 404) {
-              try {
-                const created = await passengerService.transformPassengerData(
-                  passenger
-                );
-                const createdPassenger = await passengerService.createPassenger(
-                  created
-                );
-                data.passengers[i] = {
-                  ...data.passengers[i],
-                  ...createdPassenger,
-                  passengerId: createdPassenger.data.passengerId ?? 0,
-                };
-              } catch (createErr: any) {
-                setError(
-                  "Lỗi tạo hành khách: " +
-                    (createErr.message || "Lỗi không xác định")
-                );
-                return;
-              }
-            } else {
+            } catch (updateErr: any) {
               setError(
-                "Lỗi kiểm tra hành khách hiện có: " +
-                  (err.message || "Lỗi không xác định")
+                "Lỗi cập nhật thông tin hành khách: " +
+                  (updateErr.message || "Lỗi không xác định")
               );
               return;
             }
+            // Set passengerId if found
+            data.passengers[i] = {
+              ...data.passengers[i],
+              ...existing,
+              passengerId: existing.data.passengerId ?? 0,
+            };
+          } else {
+            // If not found, create new passenger
+            const created = await passengerService.transformPassengerData(
+              passenger
+            );
+            const createdPassenger = await passengerService.createPassenger(
+              created
+            );
+            data.passengers[i] = {
+              ...data.passengers[i],
+              ...createdPassenger,
+              passengerId: createdPassenger.data.passengerId ?? 0,
+            };
           }
         }
       }
