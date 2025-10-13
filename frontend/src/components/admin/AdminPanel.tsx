@@ -1,20 +1,36 @@
-// components/admin/AdminPanel.tsx
-import React, { useState } from 'react';
-import { Container, Row, Col, Card, Nav, Alert, Button, Modal } from 'react-bootstrap';
-import FlightManagement from './FlightManagement';
-import AirportManagement from './AirportManagement';
-import ParameterSettings from './ParameterSettings';
-import PlaneManagement from './PlaneManagement';
-import TicketClassManagement from './TicketClassManagement';
-import EmployeeManagement from './EmployeeManagement';
-import { usePermissions } from '../../hooks/useAuth';
-import Statistics from '../Statistics/Statistics';
+import React, { useState } from "react";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Nav,
+  Alert,
+  Button,
+  Modal,
+} from "react-bootstrap";
+import FlightManagement from "./FlightManagement";
+import AirportManagement from "./AirportManagement";
+import ParameterSettings from "./ParameterSettings";
+import PlaneManagement from "./PlaneManagement";
+import TicketClassManagement from "./TicketClassManagement";
+import EmployeeManagement from "./EmployeeManagement";
+import { usePermissions } from "../../hooks/useAuth";
+import Statistics from "../Statistics/Statistics";
 
-type AdminTab = 'overview' | 'flights' | 'airports' | 'planes' | 'ticket-classes' | 'parameters' | 'employees' | 'reports';
+type AdminTab =
+  | "overview"
+  | "flights"
+  | "airports"
+  | "planes"
+  | "ticket-classes"
+  | "parameters"
+  | "employees"
+  | "reports";
 
 export const AdminPanel: React.FC = () => {
   const permissions = usePermissions();
-  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
   const [showFeatureModal, setShowFeatureModal] = useState(false);
 
   // Add state for managing quick action modals
@@ -23,7 +39,7 @@ export const AdminPanel: React.FC = () => {
     showAirportModal: false,
     showTicketClassModal: false,
     showPlaneModal: false,
-    showTicketModal: false
+    showTicketModal: false,
   });
 
   // Redirect if user doesn't have admin permissions
@@ -35,7 +51,9 @@ export const AdminPanel: React.FC = () => {
             <Alert variant="danger" className="text-center">
               <Alert.Heading>Truy cập bị từ chối</Alert.Heading>
               <p>Bạn không có quyền truy cập trang quản trị.</p>
-              <p className="text-muted">Phần này chỉ dành cho Quản trị viên hệ thống.</p>
+              <p className="text-muted">
+                Phần này chỉ dành cho Quản trị viên hệ thống.
+              </p>
             </Alert>
           </Col>
         </Row>
@@ -45,87 +63,138 @@ export const AdminPanel: React.FC = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'flights':
+      case "flights":
         return permissions.canViewFlightManagement() ? (
           <FlightManagement
             showAddModal={quickActionModals.showFlightModal}
-            onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showFlightModal: false }))}
+            onCloseAddModal={() =>
+              setQuickActionModals((prev) => ({
+                ...prev,
+                showFlightModal: false,
+              }))
+            }
           />
-        ) : <AccessDeniedAlert section="Quản lý chuyến bay" />;
+        ) : (
+          <AccessDeniedAlert section="Quản lý chuyến bay" />
+        );
 
-      case 'airports':
+      case "airports":
         return permissions.canViewAirportManagement() ? (
           <AirportManagement
             showAddModal={quickActionModals.showAirportModal}
-            onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showAirportModal: false }))}
+            onCloseAddModal={() =>
+              setQuickActionModals((prev) => ({
+                ...prev,
+                showAirportModal: false,
+              }))
+            }
           />
-        ) : <AccessDeniedAlert section="Quản lý sân bay" />;
+        ) : (
+          <AccessDeniedAlert section="Quản lý sân bay" />
+        );
 
-      case 'planes':
+      case "planes":
         return permissions.canViewPlaneManagement() ? (
           <PlaneManagement
             showAddModal={quickActionModals.showPlaneModal}
-            onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showPlaneModal: false }))}
+            onCloseAddModal={() =>
+              setQuickActionModals((prev) => ({
+                ...prev,
+                showPlaneModal: false,
+              }))
+            }
           />
-        ) : <AccessDeniedAlert section="Quản lý đội máy bay" />;
+        ) : (
+          <AccessDeniedAlert section="Quản lý đội máy bay" />
+        );
 
-      case 'ticket-classes':
+      case "ticket-classes":
         return permissions.canViewTicketClassManagement() ? (
           <TicketClassManagement
             showAddModal={quickActionModals.showTicketClassModal}
-            onCloseAddModal={() => setQuickActionModals(prev => ({ ...prev, showTicketClassModal: false }))}
+            onCloseAddModal={() =>
+              setQuickActionModals((prev) => ({
+                ...prev,
+                showTicketClassModal: false,
+              }))
+            }
           />
-        ) : <AccessDeniedAlert section="Quản lý hạng vé" />;
+        ) : (
+          <AccessDeniedAlert section="Quản lý hạng vé" />
+        );
 
-      case 'parameters':
+      case "parameters":
         return permissions.canViewParameterSettings() ? (
           <ParameterSettings />
-        ) : <AccessDeniedAlert section="Tham số hệ thống" />;
+        ) : (
+          <AccessDeniedAlert section="Tham số hệ thống" />
+        );
 
-      case 'employees':
+      case "employees":
         return permissions.canViewEmployeeManagement() ? (
           <EmployeeManagement />
-        ) : <AccessDeniedAlert section="Quản lý nhân viên" />;
+        ) : (
+          <AccessDeniedAlert section="Quản lý nhân viên" />
+        );
 
-      case 'reports':
+      case "reports":
         return permissions.canViewReports() ? (
           <Statistics />
-        ) : <AccessDeniedAlert section="Báo cáo" />;
+        ) : (
+          <AccessDeniedAlert section="Báo cáo" />
+        );
 
       default:
-      case 'overview':
-        return <AdminOverview onNavigate={handleQuickAction} permissions={permissions} onShowFeatureModal={() => setShowFeatureModal(true)} />;
+      case "overview":
+        return (
+          <AdminOverview
+            onNavigate={handleQuickAction}
+            permissions={permissions}
+            onShowFeatureModal={() => setShowFeatureModal(true)}
+          />
+        );
     }
   };
 
-  const handleQuickAction = (action: AdminTab | 'add-flight' | 'add-airport' | 'add-plane' | 'add-ticket-class' | 'add-ticket') => {
+  const handleQuickAction = (
+    action:
+      | AdminTab
+      | "add-flight"
+      | "add-airport"
+      | "add-plane"
+      | "add-ticket-class"
+      | "add-ticket"
+  ) => {
     switch (action) {
-      case 'add-flight':
+      case "add-flight":
         if (permissions.canViewFlightManagement()) {
-          setActiveTab('flights');
-          setQuickActionModals(prev => ({ ...prev, showFlightModal: true }));
+          setActiveTab("flights");
+          setQuickActionModals((prev) => ({ ...prev, showFlightModal: true }));
         }
         break;
-      case 'add-airport':
+      case "add-airport":
         if (permissions.canViewAirportManagement()) {
-          setActiveTab('airports');
-          setQuickActionModals(prev => ({ ...prev, showAirportModal: true }));
+          setActiveTab("airports");
+          setQuickActionModals((prev) => ({ ...prev, showAirportModal: true }));
         }
         break;
-      case 'add-plane':
+      case "add-plane":
         if (permissions.canViewPlaneManagement()) {
-          setActiveTab('planes');
-          setQuickActionModals(prev => ({ ...prev, showPlaneModal: true }));
+          setActiveTab("planes");
+          setQuickActionModals((prev) => ({ ...prev, showPlaneModal: true }));
         }
         break;
-      case 'add-ticket-class':
+      case "add-ticket-class":
         if (permissions.canViewTicketClassManagement()) {
-          setActiveTab('ticket-classes');
-          setQuickActionModals(prev => ({ ...prev, showTicketClassModal: true }));
+          setActiveTab("ticket-classes");
+          setQuickActionModals((prev) => ({
+            ...prev,
+            showTicketClassModal: true,
+          }));
         }
         break;
-      case 'add-ticket':
-        setQuickActionModals(prev => ({ ...prev, showTicketModal: true }));
+      case "add-ticket":
+        setQuickActionModals((prev) => ({ ...prev, showTicketModal: true }));
         break;
       default:
         setActiveTab(action);
@@ -139,14 +208,19 @@ export const AdminPanel: React.FC = () => {
         <Col>
           <div className="text-center mb-4">
             <h1 className="mb-2">Trang quản trị</h1>
-            <p className="text-muted">Quản lý chuyến bay, sân bay và cài đặt hệ thống</p>
+            <p className="text-muted">
+              Quản lý chuyến bay, sân bay và cài đặt hệ thống
+            </p>
           </div>
 
-          <Nav variant="pills" className="justify-content-center mb-4 flex-wrap">
+          <Nav
+            variant="pills"
+            className="justify-content-center mb-4 flex-wrap"
+          >
             <Nav.Item>
               <Nav.Link
-                active={activeTab === 'overview'}
-                onClick={() => setActiveTab('overview')}
+                active={activeTab === "overview"}
+                onClick={() => setActiveTab("overview")}
               >
                 📊 Tổng quan
               </Nav.Link>
@@ -155,8 +229,8 @@ export const AdminPanel: React.FC = () => {
             {permissions.canViewFlightManagement() && (
               <Nav.Item>
                 <Nav.Link
-                  active={activeTab === 'flights'}
-                  onClick={() => setActiveTab('flights')}
+                  active={activeTab === "flights"}
+                  onClick={() => setActiveTab("flights")}
                 >
                   ✈️ Chuyến bay
                 </Nav.Link>
@@ -166,8 +240,8 @@ export const AdminPanel: React.FC = () => {
             {permissions.canViewAirportManagement() && (
               <Nav.Item>
                 <Nav.Link
-                  active={activeTab === 'airports'}
-                  onClick={() => setActiveTab('airports')}
+                  active={activeTab === "airports"}
+                  onClick={() => setActiveTab("airports")}
                 >
                   🏢 Sân bay
                 </Nav.Link>
@@ -177,8 +251,8 @@ export const AdminPanel: React.FC = () => {
             {permissions.canViewPlaneManagement() && (
               <Nav.Item>
                 <Nav.Link
-                  active={activeTab === 'planes'}
-                  onClick={() => setActiveTab('planes')}
+                  active={activeTab === "planes"}
+                  onClick={() => setActiveTab("planes")}
                 >
                   🛩️ Đội máy bay
                 </Nav.Link>
@@ -188,8 +262,8 @@ export const AdminPanel: React.FC = () => {
             {permissions.canViewTicketClassManagement() && (
               <Nav.Item>
                 <Nav.Link
-                  active={activeTab === 'ticket-classes'}
-                  onClick={() => setActiveTab('ticket-classes')}
+                  active={activeTab === "ticket-classes"}
+                  onClick={() => setActiveTab("ticket-classes")}
                 >
                   🎟️ Hạng vé
                 </Nav.Link>
@@ -199,8 +273,8 @@ export const AdminPanel: React.FC = () => {
             {permissions.canViewEmployeeManagement() && (
               <Nav.Item>
                 <Nav.Link
-                  active={activeTab === 'employees'}
-                  onClick={() => setActiveTab('employees')}
+                  active={activeTab === "employees"}
+                  onClick={() => setActiveTab("employees")}
                 >
                   👥 Nhân viên
                 </Nav.Link>
@@ -210,8 +284,8 @@ export const AdminPanel: React.FC = () => {
             {permissions.canViewReports() && (
               <Nav.Item>
                 <Nav.Link
-                  active={activeTab === 'reports'}
-                  onClick={() => setActiveTab('reports')}
+                  active={activeTab === "reports"}
+                  onClick={() => setActiveTab("reports")}
                 >
                   📊 Báo cáo
                 </Nav.Link>
@@ -221,8 +295,8 @@ export const AdminPanel: React.FC = () => {
             {permissions.canViewParameterSettings() && (
               <Nav.Item>
                 <Nav.Link
-                  active={activeTab === 'parameters'}
-                  onClick={() => setActiveTab('parameters')}
+                  active={activeTab === "parameters"}
+                  onClick={() => setActiveTab("parameters")}
                 >
                   ⚙️ Cài đặt
                 </Nav.Link>
@@ -230,14 +304,16 @@ export const AdminPanel: React.FC = () => {
             )}
           </Nav>
 
-          <div>
-            {renderContent()}
-          </div>
+          <div>{renderContent()}</div>
         </Col>
       </Row>
 
       {/* Feature Modal */}
-      <Modal show={showFeatureModal} onHide={() => setShowFeatureModal(false)} centered>
+      <Modal
+        show={showFeatureModal}
+        onHide={() => setShowFeatureModal(false)}
+        centered
+      >
         <Modal.Header closeButton className="bg-info text-white">
           <Modal.Title>
             <i className="bi bi-info-circle me-2"></i>
@@ -246,7 +322,10 @@ export const AdminPanel: React.FC = () => {
         </Modal.Header>
         <Modal.Body className="p-4 text-center">
           <div className="mb-3">
-            <i className="bi bi-clock text-info" style={{ fontSize: '3rem' }}></i>
+            <i
+              className="bi bi-clock text-info"
+              style={{ fontSize: "3rem" }}
+            ></i>
           </div>
           <h5 className="mb-3">Tính năng báo cáo sẽ có sớm!</h5>
           <p className="text-muted mb-0">
@@ -254,10 +333,7 @@ export const AdminPanel: React.FC = () => {
           </p>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="info"
-            onClick={() => setShowFeatureModal(false)}
-          >
+          <Button variant="info" onClick={() => setShowFeatureModal(false)}>
             <i className="bi bi-check me-2"></i>
             Đã hiểu
           </Button>
@@ -271,14 +347,26 @@ export const AdminPanel: React.FC = () => {
 const AccessDeniedAlert: React.FC<{ section: string }> = ({ section }) => (
   <Alert variant="warning" className="text-center">
     <Alert.Heading>Không đủ quyền</Alert.Heading>
-    <p>Bạn không có quyền truy cập <strong>{section}</strong>.</p>
-    <p className="text-muted mb-0">Liên hệ quản trị viên hệ thống nếu bạn cho rằng đây là lỗi.</p>
+    <p>
+      Bạn không có quyền truy cập <strong>{section}</strong>.
+    </p>
+    <p className="text-muted mb-0">
+      Liên hệ quản trị viên hệ thống nếu bạn cho rằng đây là lỗi.
+    </p>
   </Alert>
 );
 
 // Admin Overview Component with Permission-based Quick Actions
 const AdminOverview: React.FC<{
-  onNavigate: (action: AdminTab | 'add-flight' | 'add-airport' | 'add-plane' | 'add-ticket-class' | 'add-ticket') => void;
+  onNavigate: (
+    action:
+      | AdminTab
+      | "add-flight"
+      | "add-airport"
+      | "add-plane"
+      | "add-ticket-class"
+      | "add-ticket"
+  ) => void;
   permissions: ReturnType<typeof usePermissions>;
   onShowFeatureModal: () => void;
 }> = ({ onNavigate, permissions, onShowFeatureModal }) => {
@@ -289,7 +377,9 @@ const AdminOverview: React.FC<{
         <Col lg={3} md={6} className="mb-3">
           <Card className="h-100 text-center">
             <Card.Body>
-              <div className="mb-2" style={{ fontSize: '2rem' }}>✈️</div>
+              <div className="mb-2" style={{ fontSize: "2rem" }}>
+                ✈️
+              </div>
               <Card.Title className="h5 text-muted">Tổng chuyến bay</Card.Title>
               <Card.Text className="h3 mb-0 text-primary">156</Card.Text>
             </Card.Body>
@@ -298,8 +388,12 @@ const AdminOverview: React.FC<{
         <Col lg={3} md={6} className="mb-3">
           <Card className="h-100 text-center">
             <Card.Body>
-              <div className="mb-2" style={{ fontSize: '2rem' }}>🏢</div>
-              <Card.Title className="h5 text-muted">Sân bay hoạt động</Card.Title>
+              <div className="mb-2" style={{ fontSize: "2rem" }}>
+                🏢
+              </div>
+              <Card.Title className="h5 text-muted">
+                Sân bay hoạt động
+              </Card.Title>
               <Card.Text className="h3 mb-0 text-info">23</Card.Text>
             </Card.Body>
           </Card>
@@ -307,7 +401,9 @@ const AdminOverview: React.FC<{
         <Col lg={3} md={6} className="mb-3">
           <Card className="h-100 text-center">
             <Card.Body>
-              <div className="mb-2" style={{ fontSize: '2rem' }}>👥</div>
+              <div className="mb-2" style={{ fontSize: "2rem" }}>
+                👥
+              </div>
               <Card.Title className="h5 text-muted">Tổng hành khách</Card.Title>
               <Card.Text className="h3 mb-0 text-success">8,432</Card.Text>
             </Card.Body>
@@ -316,7 +412,9 @@ const AdminOverview: React.FC<{
         <Col lg={3} md={6} className="mb-3">
           <Card className="h-100 text-center">
             <Card.Body>
-              <div className="mb-2" style={{ fontSize: '2rem' }}>💰</div>
+              <div className="mb-2" style={{ fontSize: "2rem" }}>
+                💰
+              </div>
               <Card.Title className="h5 text-muted">Doanh thu</Card.Title>
               <Card.Text className="h3 mb-0 text-warning">2.1 tỷ VND</Card.Text>
             </Card.Body>
@@ -339,7 +437,7 @@ const AdminOverview: React.FC<{
                       variant="outline-primary"
                       className="w-100 text-start"
                       size="lg"
-                      onClick={() => onNavigate('add-flight')}
+                      onClick={() => onNavigate("add-flight")}
                     >
                       <span className="me-2">➕</span>
                       Thêm chuyến bay mới
@@ -353,7 +451,7 @@ const AdminOverview: React.FC<{
                       variant="outline-info"
                       className="w-100 text-start"
                       size="lg"
-                      onClick={() => onNavigate('add-airport')}
+                      onClick={() => onNavigate("add-airport")}
                     >
                       <span className="me-2">🏢</span>
                       Thêm sân bay mới
@@ -367,7 +465,7 @@ const AdminOverview: React.FC<{
                       variant="outline-warning"
                       className="w-100 text-start"
                       size="lg"
-                      onClick={() => onNavigate('add-plane')}
+                      onClick={() => onNavigate("add-plane")}
                     >
                       <span className="me-2">🛩️</span>
                       Thêm máy bay mới
@@ -381,7 +479,7 @@ const AdminOverview: React.FC<{
                       variant="outline-dark"
                       className="w-100 text-start"
                       size="lg"
-                      onClick={() => onNavigate('add-ticket-class')}
+                      onClick={() => onNavigate("add-ticket-class")}
                     >
                       <span className="me-2">🎟️</span>
                       Thêm hạng vé
@@ -409,7 +507,7 @@ const AdminOverview: React.FC<{
                       variant="outline-secondary"
                       className="w-100 text-start"
                       size="lg"
-                      onClick={() => onNavigate('parameters')}
+                      onClick={() => onNavigate("parameters")}
                     >
                       <span className="me-2">⚙️</span>
                       Cài đặt hệ thống
@@ -429,23 +527,33 @@ const AdminOverview: React.FC<{
             </Card.Header>
             <Card.Body>
               <div className="d-flex align-items-center mb-3 pb-3 border-bottom">
-                <div className="me-3" style={{ fontSize: '1.5rem' }}>✈️</div>
+                <div className="me-3" style={{ fontSize: "1.5rem" }}>
+                  ✈️
+                </div>
                 <div className="flex-grow-1">
-                  <div className="fw-medium">Chuyến bay mới FL001 đã được thêm</div>
+                  <div className="fw-medium">
+                    Chuyến bay mới FL001 đã được thêm
+                  </div>
                   <small className="text-muted">2 giờ trước</small>
                 </div>
               </div>
               <div className="d-flex align-items-center mb-3 pb-3 border-bottom">
-                <div className="me-3" style={{ fontSize: '1.5rem' }}>🏢</div>
+                <div className="me-3" style={{ fontSize: "1.5rem" }}>
+                  🏢
+                </div>
                 <div className="flex-grow-1">
                   <div className="fw-medium">Sân bay LAX đã được cập nhật</div>
                   <small className="text-muted">4 giờ trước</small>
                 </div>
               </div>
               <div className="d-flex align-items-center">
-                <div className="me-3" style={{ fontSize: '1.5rem' }}>⚙️</div>
+                <div className="me-3" style={{ fontSize: "1.5rem" }}>
+                  ⚙️
+                </div>
                 <div className="flex-grow-1">
-                  <div className="fw-medium">Tham số hệ thống đã được cập nhật</div>
+                  <div className="fw-medium">
+                    Tham số hệ thống đã được cập nhật
+                  </div>
                   <small className="text-muted">1 ngày trước</small>
                 </div>
               </div>
