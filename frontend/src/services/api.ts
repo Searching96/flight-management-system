@@ -1,12 +1,10 @@
-import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { AuthResponse } from '../models';
-import { DOMAIN_URL_DEFAULT } from './config';
+import axios, { AxiosInstance } from "axios";
+import { AuthResponse } from "../models";
+import { DOMAIN_URL_DEFAULT } from "./config";
 
 class ApiClient {
   private baseUrl = `${DOMAIN_URL_DEFAULT}/api`;
   private client: AxiosInstance;
-  private isRefreshing = false;
-  private refreshSubscribers: ((token: string) => void)[] = [];
 
   constructor() {
     this.client = axios.create({
@@ -18,15 +16,15 @@ class ApiClient {
   }
 
   private setAuthData(data: AuthResponse) {
-    localStorage.setItem('accessToken', data.accessToken);
-    localStorage.setItem('refreshToken', data.refreshToken);
-    localStorage.setItem('user', JSON.stringify(data.userDetails));
+    localStorage.setItem("accessToken", data.accessToken);
+    localStorage.setItem("refreshToken", data.refreshToken);
+    localStorage.setItem("user", JSON.stringify(data.userDetails));
   }
 
   private clearAuth() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
   }
 
   // Update response interceptor
@@ -34,7 +32,7 @@ class ApiClient {
     // Request interceptor
     this.client.interceptors.request.use(
       (config) => {
-        const accessToken = localStorage.getItem('accessToken');
+        const accessToken = localStorage.getItem("accessToken");
         if (accessToken) {
           config.headers.Authorization = `Bearer ${accessToken}`;
         }
@@ -57,7 +55,7 @@ class ApiClient {
             return this.client(originalRequest);
           } catch (refreshError) {
             this.clearAuth();
-            window.location.href = '/login';
+            window.location.href = "/login";
             return Promise.reject(refreshError);
           }
         }
@@ -69,11 +67,12 @@ class ApiClient {
 
   private async handleTokenRefresh() {
     try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) throw new Error('No refresh token available');
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) throw new Error("No refresh token available");
 
       const response = await axios.post<AuthResponse>(
-        `${this.baseUrl}/auth/refresh`, refreshToken
+        `${this.baseUrl}/auth/refresh`,
+        refreshToken
       );
 
       this.setAuthData(response.data);
