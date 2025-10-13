@@ -3,6 +3,8 @@ package com.flightmanagement.controller;
 import com.flightmanagement.dto.*;
 import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -14,6 +16,7 @@ import java.nio.file.AccessDeniedException;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication", description = "Operations related to authentication")
 public class AuthController {
 
     private final AuthService authService;
@@ -22,6 +25,7 @@ public class AuthController {
         this.authService = authService;
     }
 
+    @Operation(summary = "Login to the system")
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequestDto request) {
         AuthResponse authResponse = authService.authenticate(request);
@@ -35,6 +39,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Register a new customer")
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> registerCustomer(@Valid @RequestBody RegisterDto request) {
         request.setEmployeeType(null); // Ensure employeeType is null for customers
@@ -51,6 +56,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Operation(summary = "Create a new employee account")
     @PostMapping("/create-employee")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<ApiResponse<AuthResponse>> registerEmployee(@Valid @RequestBody RegisterDto request) {
@@ -66,6 +72,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Operation(summary = "Send password reset email")
     @PostMapping("/forget-password") // Yet to assign role
     public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody PasswordForgetRequest request) {
         authService.processForgotPassword(request.getEmail());
@@ -79,6 +86,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Reset password")
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<AuthResponse>> resetPassword(@RequestBody PasswordResetRequest request) {
         AuthResponse authResponse = authService.processPasswordReset(request.getToken(), request.getNewPassword());
@@ -91,6 +99,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Refresh authentication token")
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(@RequestBody TokenRequest request) throws AccessDeniedException {
         AuthResponse authResponse = authService.refreshToken(request.getToken());
@@ -106,6 +115,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Validate password reset token")
     @PostMapping("/validate")
     public ResponseEntity<ApiResponse<Boolean>> validatePasswordResetToken(@RequestBody TokenRequest request) {
         Boolean isValid = authService.validatePasswordResetToken(request.getToken());

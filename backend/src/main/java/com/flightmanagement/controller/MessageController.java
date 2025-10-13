@@ -3,6 +3,8 @@ package com.flightmanagement.controller;
 import com.flightmanagement.dto.MessageDto;
 import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.MessageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/messages")
+@Tag(name = "Message", description = "Operations related to messages")
 public class MessageController {
     
     private final MessageService messageService;
@@ -20,6 +23,7 @@ public class MessageController {
         this.messageService = messageService;
     }
     
+    @Operation(summary = "Get messages by chatbox ID")
     @GetMapping("/chatbox/{chatboxId}")
     public ResponseEntity<ApiResponse<List<MessageDto>>> getMessagesByChatboxId(@PathVariable Integer chatboxId) {
         List<MessageDto> messages = messageService.getMessagesByChatboxId(chatboxId);
@@ -32,6 +36,7 @@ public class MessageController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Create a message from an employee")
     @PostMapping("/employee")
     public ResponseEntity<ApiResponse<MessageDto>> createEmployeeMessage(@RequestBody Map<String, Object> requestBody) {
         Integer chatboxId = (Integer) requestBody.get("chatboxId");
@@ -48,6 +53,7 @@ public class MessageController {
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
     
+    @Operation(summary = "Create a message from a customer")
     @PostMapping("/customer")
     public ResponseEntity<ApiResponse<MessageDto>> createCustomerMessage(@RequestBody Map<String, Object> requestBody) {
         Integer chatboxId = (Integer) requestBody.get("chatboxId");

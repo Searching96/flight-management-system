@@ -3,6 +3,8 @@ package com.flightmanagement.controller;
 import com.flightmanagement.dto.CustomerDto;
 import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.CustomerService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/customers")
+@Tag(name = "Customer", description = "Operations related to customers")
 public class CustomerController {
 
     private final CustomerService customerService;
@@ -20,6 +23,7 @@ public class CustomerController {
         this.customerService = customerService;
     }
 
+    @Operation(summary = "Get all customers")
     @GetMapping
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<ApiResponse<List<CustomerDto>>> getAllCustomers() {
@@ -34,6 +38,7 @@ public class CustomerController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Get customer by ID")
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('CUSTOMER') or hasRole('EMPLOYEE_SUPPORT')")
     public ResponseEntity<ApiResponse<CustomerDto>> getCustomerById(@PathVariable Integer id) {
@@ -48,6 +53,7 @@ public class CustomerController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Get customer by email")
     @GetMapping("/email")
     public ResponseEntity<ApiResponse<CustomerDto>> getCustomerByEmail(@RequestParam String email) {
         CustomerDto customerDto = customerService.getCustomerByEmail(email);
@@ -62,6 +68,7 @@ public class CustomerController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Update customer score")
     @PutMapping("/{id}/score/{score}")
     public ResponseEntity<ApiResponse<CustomerDto>> updateScore(@PathVariable Integer id, @PathVariable Integer score) {
         CustomerDto customer = customerService.updateCustomerScore(id, score);
@@ -75,6 +82,7 @@ public class CustomerController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Get customer score")
     @GetMapping("/{id}/score")
     public ResponseEntity<ApiResponse<Integer>> getCustomerScore(@PathVariable Integer id) {
         Integer score = customerService.getCustomerScore(id);

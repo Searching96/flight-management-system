@@ -3,6 +3,8 @@ package com.flightmanagement.controller;
 import com.flightmanagement.dto.AirportDto;
 import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.AirportService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/airports")
+@Tag(name = "Airport", description = "Operations related to airports")
 public class AirportController {
     
     private final AirportService airportService;
@@ -20,6 +23,7 @@ public class AirportController {
         this.airportService = airportService;
     }
 
+    @Operation(summary = "Get all airports")
     @GetMapping
     public ResponseEntity<ApiResponse<List<AirportDto>>> getAllAirports() {
         List<AirportDto> airports = airportService.getAllAirports();
@@ -32,6 +36,7 @@ public class AirportController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Get airport by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<AirportDto>> getAirportById(@PathVariable Integer id) {
         AirportDto airport = airportService.getAirportById(id);
@@ -45,6 +50,7 @@ public class AirportController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Create a new airport")
     @PostMapping
     public ResponseEntity<ApiResponse<AirportDto>> createAirport(@Valid @RequestBody AirportDto airportDto) {
         AirportDto airport = airportService.createAirport(airportDto);
@@ -58,6 +64,7 @@ public class AirportController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Update an existing airport")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<AirportDto>> updateAirport(@PathVariable Integer id, @Valid @RequestBody AirportDto airportDto) {
         AirportDto updatedAirport = airportService.updateAirport(id, airportDto);
@@ -71,6 +78,7 @@ public class AirportController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Delete an airport")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteAirport(@PathVariable Integer id) {
         airportService.deleteAirport(id);
@@ -84,6 +92,7 @@ public class AirportController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
     
+    @Operation(summary = "Get airports by city")
     @GetMapping("/city/{cityName}")
     public ResponseEntity<ApiResponse<List<AirportDto>>> getAirportsByCity(@PathVariable String cityName) {
         List<AirportDto> airports = airportService.getAirportsByCity(cityName);
@@ -97,6 +106,7 @@ public class AirportController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Get airports by country")
     @GetMapping("/country/{countryName}")
     public ResponseEntity<ApiResponse<List<AirportDto>>> getAirportsByCountry(@PathVariable String countryName) {
         List<AirportDto> airports = airportService.getAirportsByCountry(countryName);
@@ -110,6 +120,7 @@ public class AirportController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Search airports by name")
     @GetMapping("/search/{name}")
     public ResponseEntity<ApiResponse<List<AirportDto>>> searchAirportsByName(@PathVariable String name) {
         List<AirportDto> airports = airportService.searchAirportsByName(name);

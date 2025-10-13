@@ -9,11 +9,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.Map;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/accounts")
+@Tag(name = "Account", description = "Operations related to accounts")
 public class AccountController {
 
     private final AccountService accountService;
@@ -22,6 +26,7 @@ public class AccountController {
         this.accountService = accountService;
     }
 
+    @Operation(summary = "Get all accounts")
     @GetMapping
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR')")
     public ResponseEntity<ApiResponse<List<AccountDto>>> getAllAccounts() {
@@ -36,6 +41,7 @@ public class AccountController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Get account by ID")
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or #id == principal.id")
     public ResponseEntity<ApiResponse<AccountDto>> getAccountById(@PathVariable Integer id) {
@@ -50,6 +56,7 @@ public class AccountController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Delete account")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteAccount(@PathVariable Integer id) {
         accountService.deleteAccount(id);
@@ -63,6 +70,7 @@ public class AccountController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
 
+    @Operation(summary = "Update account")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or #id == principal.id")
     public ResponseEntity<ApiResponse<AccountDto>> updateAccount(
@@ -84,6 +92,7 @@ public class AccountController {
         }
     }
 
+    @Operation(summary = "Verify current password")
     @PostMapping("/{id}/verify-password")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or #id == principal.id")
     public ResponseEntity<ApiResponse<Boolean>> verifyCurrentPassword(
@@ -111,6 +120,7 @@ public class AccountController {
         }
     }
 
+    @Operation(summary = "Reset password")
     @PostMapping("/{id}/reset-password")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or #id == principal.id")
     public ResponseEntity<ApiResponse<Void>> resetPassword(

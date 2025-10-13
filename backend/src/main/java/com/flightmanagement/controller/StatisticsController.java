@@ -4,6 +4,8 @@ import com.flightmanagement.dto.MonthlyStatisticsDto;
 import com.flightmanagement.dto.YearlyStatisticsDto;
 import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.StatisticsService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/statistics")
+@Tag(name = "Statistics", description = "Operations related to statistics")
 public class StatisticsController {
 
     private final StatisticsService statisticsService;
@@ -21,6 +24,7 @@ public class StatisticsController {
         this.statisticsService = statisticsService;
     }
 
+    @Operation(summary = "Get yearly statistics")
     @GetMapping("/yearly")
     public ResponseEntity<ApiResponse<List<YearlyStatisticsDto>>> getYearlyStatistics() {
         try {
@@ -39,6 +43,7 @@ public class StatisticsController {
         }
     }
 
+    @Operation(summary = "Get monthly statistics for a specific year")
     @GetMapping("/monthly/{year}")
     public ResponseEntity<ApiResponse<List<MonthlyStatisticsDto>>> getMonthlyStatistics(@PathVariable Integer year) {
         try {

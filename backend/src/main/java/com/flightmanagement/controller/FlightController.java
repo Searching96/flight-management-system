@@ -11,11 +11,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/flights")
+@Tag(name = "Flight", description = "Operations related to flights")
 public class FlightController {
 
     private final FlightService flightService;
@@ -24,6 +28,7 @@ public class FlightController {
         this.flightService = flightService;
     }
 
+    @Operation(summary = "Get all flights")
     @GetMapping
     public ResponseEntity<ApiResponse<List<FlightDto>>> getAllFlights() {
         List<FlightDto> flights = flightService.getAllFlights();
@@ -36,6 +41,7 @@ public class FlightController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Get flight by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<FlightDto>> getFlightById(@PathVariable Integer id) {
         FlightDto flight = flightService.getFlightById(id);
@@ -48,6 +54,7 @@ public class FlightController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Create a new flight")
     @PostMapping
     public ResponseEntity<ApiResponse<FlightDto>> createFlight(@Valid @RequestBody FlightRequest request) {
         FlightDto createdFlight = flightService.createFlight(request);
@@ -60,6 +67,7 @@ public class FlightController {
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
 
+    @Operation(summary = "Update an existing flight")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<FlightDto>> updateFlight(@PathVariable Integer id, @RequestBody FlightRequest updateRequest) {
         FlightDto updatedFlight = flightService.updateFlight(id, updateRequest);
@@ -72,6 +80,7 @@ public class FlightController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Delete a flight")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteFlight(@PathVariable Integer id) {
         flightService.deleteFlight(id);
@@ -84,6 +93,7 @@ public class FlightController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
 
+    @Operation(summary = "Get flight by code")
     @GetMapping("/code/{code}")
     public ResponseEntity<ApiResponse<FlightDto>> getFlightByCode(@PathVariable String code) {
         FlightDto flight = flightService.getFlightByCode(code);
@@ -96,7 +106,7 @@ public class FlightController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    // Change from POST to GET and use @RequestParam instead of @RequestBody
+    @Operation(summary = "Search flights")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<FlightDto>>> searchFlights(
             @RequestParam Integer departureAirportId,
@@ -134,6 +144,7 @@ public class FlightController {
         }
     }
 
+    @Operation(summary = "Get flights by route")
     @GetMapping("/route")
     public ResponseEntity<ApiResponse<List<FlightDto>>> getFlightsByRoute(
             @RequestParam Integer departureAirportId,
@@ -149,6 +160,7 @@ public class FlightController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Get flights by date range")
     @GetMapping("/date-range")
     public ResponseEntity<ApiResponse<List<FlightDto>>> getFlightsByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
@@ -163,6 +175,7 @@ public class FlightController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Search flights by date")
     @GetMapping("/search/date")
     public ResponseEntity<ApiResponse<List<FlightDto>>> searchFlightsByDate(@RequestParam String departureDate) {
         try {

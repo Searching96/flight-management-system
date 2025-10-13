@@ -3,6 +3,8 @@ package com.flightmanagement.controller;
 import com.flightmanagement.dto.FlightDetailDto;
 import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.FlightDetailService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/flight-details")
+@Tag(name = "FlightDetail", description = "Operations related to flight details")
 public class FlightDetailController {
     
     private final FlightDetailService flightDetailService;
@@ -19,6 +22,7 @@ public class FlightDetailController {
         this.flightDetailService = flightDetailService;
     }
     
+    @Operation(summary = "Get all flight details")
     @GetMapping
     public ResponseEntity<ApiResponse<List<FlightDetailDto>>> getAllFlightDetails() {
         List<FlightDetailDto> flightDetails = flightDetailService.getAllFlightDetails();
@@ -31,6 +35,7 @@ public class FlightDetailController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Create a new flight detail")
     @PostMapping("/")
     public ResponseEntity<ApiResponse<FlightDetailDto>> createFlightDetail(@RequestBody FlightDetailDto flightDetailDto) {
         FlightDetailDto createdFlightDetail = flightDetailService.createFlightDetail(flightDetailDto);
@@ -43,6 +48,7 @@ public class FlightDetailController {
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
     
+    @Operation(summary = "Update a flight detail")
     @PutMapping("/{flightId}/{mediumAirportId}")
     public ResponseEntity<ApiResponse<FlightDetailDto>> updateFlightDetail(@PathVariable Integer flightId,
                                                                            @PathVariable Integer mediumAirportId,
@@ -57,6 +63,7 @@ public class FlightDetailController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Delete a flight detail")
     @DeleteMapping("/{flightId}/{mediumAirportId}")
     public ResponseEntity<ApiResponse<Void>> deleteFlightDetail(@PathVariable Integer flightId, @PathVariable Integer mediumAirportId) {
         flightDetailService.deleteFlightDetail(flightId, mediumAirportId);
@@ -69,6 +76,7 @@ public class FlightDetailController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
     
+    @Operation(summary = "Get flight details by flight ID")
     @GetMapping("/flight/{flightId}")
     public ResponseEntity<ApiResponse<List<FlightDetailDto>>> getFlightDetailsByFlightId(@PathVariable Integer flightId) {
         List<FlightDetailDto> flightDetails = flightDetailService.getFlightDetailsByFlightId(flightId);
@@ -81,6 +89,7 @@ public class FlightDetailController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Get flight details by airport ID")
     @GetMapping("/airport/{airportId}")
     public ResponseEntity<ApiResponse<List<FlightDetailDto>>> getFlightDetailsByAirportId(@PathVariable Integer airportId) {
         List<FlightDetailDto> flightDetails = flightDetailService.getFlightDetailsByAirportId(airportId);

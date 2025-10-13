@@ -3,6 +3,8 @@ package com.flightmanagement.controller;
 import com.flightmanagement.dto.PassengerDto;
 import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.PassengerService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/passengers")
+@Tag(name = "Passenger", description = "Operations related to passengers")
 public class PassengerController {
 
     private final PassengerService passengerService;
@@ -19,6 +22,7 @@ public class PassengerController {
         this.passengerService = passengerService;
     }
 
+    @Operation(summary = "Get all passengers")
     @GetMapping
     public ResponseEntity<ApiResponse<List<PassengerDto>>> getAllPassengers() {
         List<PassengerDto> passengers = passengerService.getAllPassengers();
@@ -31,6 +35,7 @@ public class PassengerController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Get passenger by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PassengerDto>> getPassengerById(@PathVariable Integer id) {
         PassengerDto passenger = passengerService.getPassengerById(id);
@@ -43,6 +48,7 @@ public class PassengerController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Create a new passenger")
     @PostMapping
     public ResponseEntity<ApiResponse<PassengerDto>> createPassenger(@RequestBody PassengerDto passengerDto) {
         PassengerDto createdPassenger = passengerService.createPassenger(passengerDto);
@@ -55,6 +61,7 @@ public class PassengerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
 
+    @Operation(summary = "Update an existing passenger")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PassengerDto>> updatePassenger(@PathVariable Integer id, @RequestBody PassengerDto passengerDto) {
         PassengerDto updatedPassenger = passengerService.updatePassenger(id, passengerDto);
@@ -67,6 +74,7 @@ public class PassengerController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Delete a passenger")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deletePassenger(@PathVariable Integer id) {
         passengerService.deletePassenger(id);
@@ -79,6 +87,7 @@ public class PassengerController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
 
+    @Operation(summary = "Get passenger by citizen ID")
     @GetMapping("/citizen-id/{citizenId}")
     public ResponseEntity<ApiResponse<PassengerDto>> getPassengerByCitizenId(@PathVariable String citizenId) {
         PassengerDto passenger = passengerService.getPassengerByCitizenId(citizenId);
@@ -91,6 +100,7 @@ public class PassengerController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Get passengers by email")
     @GetMapping("/email/{email}")
     public ResponseEntity<ApiResponse<List<PassengerDto>>> getPassengersByEmail(@PathVariable String email) {
         List<PassengerDto> passengers = passengerService.getPassengersByEmail(email);
@@ -103,6 +113,7 @@ public class PassengerController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Search passengers by name")
     @GetMapping("/search/{name}")
     public ResponseEntity<ApiResponse<List<PassengerDto>>> searchPassengersByName(@PathVariable String name) {
         List<PassengerDto> passengers = passengerService.searchPassengersByName(name);
@@ -114,5 +125,4 @@ public class PassengerController {
         );
         return ResponseEntity.ok(apiResponse);
     }
-    // ...existing code...
 }

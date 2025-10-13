@@ -1,6 +1,8 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.service.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/demo")
+@Tag(name = "Demo", description = "Demo operations for testing and development")
 public class DemoController {
 
     private final ParameterService parameterService;
@@ -42,11 +45,13 @@ public class DemoController {
     
     private FlightTicketClassService flightTicketClassService;
 
+    @Operation(summary = "Health check for demo API")
     @GetMapping("/health")
     public String healthCheck() {
         return "Demo API is running!";
     }
     
+    @Operation(summary = "Get demo information")
     @GetMapping("/info")
     public Map<String, Object> getDemoInfo() {
         Map<String, Object> response = new HashMap<>();

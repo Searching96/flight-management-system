@@ -3,6 +3,8 @@ package com.flightmanagement.controller;
 import com.flightmanagement.dto.PlaneDto;
 import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.PlaneService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/planes")
+@Tag(name = "Plane", description = "Operations related to planes")
 public class PlaneController {
     
     private final PlaneService planeService;
@@ -20,6 +23,7 @@ public class PlaneController {
         this.planeService = planeService;
     }
     
+    @Operation(summary = "Get all planes")
     @GetMapping
     public ResponseEntity<ApiResponse<List<PlaneDto>>> getAllPlanes() {
         List<PlaneDto> planes = planeService.getAllPlanes();
@@ -32,6 +36,7 @@ public class PlaneController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Get plane by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PlaneDto>> getPlaneById(@PathVariable Integer id) {
         PlaneDto plane = planeService.getPlaneById(id);
@@ -44,6 +49,7 @@ public class PlaneController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Create a new plane")
     @PostMapping
     public ResponseEntity<ApiResponse<PlaneDto>> createPlane(@RequestBody PlaneDto planeDto) {
         PlaneDto createdPlane = planeService.createPlane(planeDto);
@@ -56,6 +62,7 @@ public class PlaneController {
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
     
+    @Operation(summary = "Update a plane")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PlaneDto>> updatePlane(@PathVariable Integer id, @RequestBody PlaneDto planeDto) {
         PlaneDto updatedPlane = planeService.updatePlane(id, planeDto);
@@ -68,6 +75,7 @@ public class PlaneController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Delete a plane")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deletePlane(@PathVariable Integer id) {
         planeService.deletePlane(id);
@@ -80,6 +88,7 @@ public class PlaneController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
     
+    @Operation(summary = "Get plane by code")
     @GetMapping("/code/{code}")
     public ResponseEntity<ApiResponse<PlaneDto>> getPlaneByCode(@PathVariable String code) {
         PlaneDto plane = planeService.getPlaneByCode(code);
@@ -92,6 +101,7 @@ public class PlaneController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Get planes by type")
     @GetMapping("/type/{type}")
     public ResponseEntity<ApiResponse<List<PlaneDto>>> getPlanesByType(@PathVariable String type) {
         List<PlaneDto> planes = planeService.getPlanesByType(type);

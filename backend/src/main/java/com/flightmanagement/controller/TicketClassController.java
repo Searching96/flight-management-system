@@ -3,6 +3,8 @@ package com.flightmanagement.controller;
 import com.flightmanagement.dto.TicketClassDto;
 import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.TicketClassService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/ticket-classes")
+@Tag(name = "TicketClass", description = "Operations related to ticket classes")
 public class TicketClassController {
     
     private final TicketClassService ticketClassService;
@@ -20,6 +23,7 @@ public class TicketClassController {
         this.ticketClassService = ticketClassService;
     }
     
+    @Operation(summary = "Get all ticket classes")
     @GetMapping
     public ResponseEntity<ApiResponse<List<TicketClassDto>>> getAllTicketClasses() {
         List<TicketClassDto> ticketClasses = ticketClassService.getAllTicketClasses();
@@ -32,6 +36,7 @@ public class TicketClassController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Get ticket class by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<TicketClassDto>> getTicketClassById(@PathVariable Integer id) {
         TicketClassDto ticketClass = ticketClassService.getTicketClassById(id);
@@ -44,6 +49,7 @@ public class TicketClassController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Create a new ticket class")
     @PostMapping
     public ResponseEntity<ApiResponse<TicketClassDto>> createTicketClass(@RequestBody TicketClassDto ticketClassDto) {
         TicketClassDto createdTicketClass = ticketClassService.createTicketClass(ticketClassDto);
@@ -56,6 +62,7 @@ public class TicketClassController {
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
     
+    @Operation(summary = "Update an existing ticket class")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<TicketClassDto>> updateTicketClass(@PathVariable Integer id, @RequestBody TicketClassDto ticketClassDto) {
         TicketClassDto updatedTicketClass = ticketClassService.updateTicketClass(id, ticketClassDto);
@@ -68,6 +75,7 @@ public class TicketClassController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Delete a ticket class")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteTicketClass(@PathVariable Integer id) {
         ticketClassService.deleteTicketClass(id);
@@ -80,6 +88,7 @@ public class TicketClassController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
     
+    @Operation(summary = "Get ticket class by name")
     @GetMapping("/name/{name}")
     public ResponseEntity<ApiResponse<TicketClassDto>> getTicketClassByName(@PathVariable String name) {
         TicketClassDto ticketClass = ticketClassService.getTicketClassByName(name);

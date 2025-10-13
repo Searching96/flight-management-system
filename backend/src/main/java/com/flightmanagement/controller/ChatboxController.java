@@ -3,6 +3,8 @@ package com.flightmanagement.controller;
 import com.flightmanagement.dto.ChatboxDto;
 import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.ChatboxService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/chatboxes")
+@Tag(name = "Chatbox", description = "Operations related to chatboxes")
 public class ChatboxController {
     
     private final ChatboxService chatboxService;
@@ -19,6 +22,7 @@ public class ChatboxController {
         this.chatboxService = chatboxService;
     }
     
+    @Operation(summary = "Get all chatboxes")
     @GetMapping
     public ResponseEntity<ApiResponse<List<ChatboxDto>>> getAllChatboxes() {
         List<ChatboxDto> chatboxes = chatboxService.getAllChatboxes();
@@ -32,6 +36,7 @@ public class ChatboxController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Get all chatboxes sorted by customer message time")
     @GetMapping("/sorted-by-customer-time")
     public ResponseEntity<ApiResponse<List<ChatboxDto>>> getAllChatboxesSortedByCustomerMessageTime() {
         List<ChatboxDto> chatboxes = chatboxService.getAllChatboxesSortedByCustomerMessageTime();
@@ -45,6 +50,7 @@ public class ChatboxController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Get chatbox by ID")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ChatboxDto>> getChatboxById(@PathVariable Integer id) {
         ChatboxDto chatbox = chatboxService.getChatboxById(id);
@@ -58,6 +64,7 @@ public class ChatboxController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Create a new chatbox")
     @PostMapping
     public ResponseEntity<ApiResponse<ChatboxDto>> createChatbox(@RequestBody ChatboxDto chatboxDto) {
         ChatboxDto createdChatbox = chatboxService.createChatbox(chatboxDto);
@@ -71,6 +78,7 @@ public class ChatboxController {
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
     
+    @Operation(summary = "Delete a chatbox by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteChatbox(@PathVariable Integer id) {
         chatboxService.deleteChatbox(id);
@@ -85,6 +93,7 @@ public class ChatboxController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
     
+    @Operation(summary = "Get chatbox by customer ID")
     @GetMapping("/customer/{customerId}/chatbox")
     public ResponseEntity<ApiResponse<ChatboxDto>> getChatboxByCustomerId(@PathVariable Integer customerId) {
         System.out.println("=== ChatboxController.getChatboxByCustomerId START ===");
@@ -121,6 +130,7 @@ public class ChatboxController {
         }
     }
     
+    @Operation(summary = "Get all chatboxes sorted by employee support count")
     @GetMapping("/sorted-by-employee-support")
     public ResponseEntity<ApiResponse<List<ChatboxDto>>> getAllChatboxesSortedByEmployeeSupportCount() {
         System.out.println("=== ChatboxController.getAllChatboxesSortedByEmployeeSupportCount START ===");
@@ -141,6 +151,7 @@ public class ChatboxController {
         }
     }
     
+    @Operation(summary = "Get all chatboxes sorted by recent activity")
     @GetMapping("/sorted-by-recent-activity")
     public ResponseEntity<ApiResponse<List<ChatboxDto>>> getAllChatboxesSortedByRecentActivity() {
         System.out.println("=== ChatboxController.getAllChatboxesSortedByRecentActivity START ===");

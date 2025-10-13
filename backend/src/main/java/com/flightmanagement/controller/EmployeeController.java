@@ -3,6 +3,8 @@ package com.flightmanagement.controller;
 import com.flightmanagement.dto.EmployeeDto;
 import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.EmployeeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/employees")
-@PreAuthorize("hasRole('EMPLOYEE')")
+@Tag(name = "Employee", description = "Operations related to employees")
 public class EmployeeController {
 
     private final EmployeeService employeeService;
@@ -25,6 +27,7 @@ public class EmployeeController {
         this.employeeService = employeeService;
     }
 
+    @Operation(summary = "Get current employee details")
     @GetMapping("/current")
     public ResponseEntity<ApiResponse<EmployeeDto>> getCurrentEmployee() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -43,6 +46,7 @@ public class EmployeeController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Get all employees")
     @GetMapping
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<ApiResponse<List<EmployeeDto>>> getAllEmployees() {
@@ -59,6 +63,7 @@ public class EmployeeController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Get employee by ID")
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<ApiResponse<EmployeeDto>> getEmployeeById(@PathVariable Integer id) {
@@ -74,6 +79,7 @@ public class EmployeeController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Update employee details")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<ApiResponse<EmployeeDto>> updateEmployee(@PathVariable Integer id,
@@ -90,6 +96,7 @@ public class EmployeeController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Delete employee")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<ApiResponse<Void>> deleteEmployee(@PathVariable Integer id) {
@@ -105,6 +112,7 @@ public class EmployeeController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
 
+    @Operation(summary = "Activate employee")
     @PatchMapping("/{id}/activate")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<ApiResponse<EmployeeDto>> activateEmployee(@PathVariable Integer id) {
@@ -120,6 +128,7 @@ public class EmployeeController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Deactivate employee")
     @PatchMapping("/{id}/deactivate")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<ApiResponse<EmployeeDto>> deactivateEmployee(@PathVariable Integer id) {
@@ -135,6 +144,7 @@ public class EmployeeController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Update employee role")
     @PutMapping("/{id}/role")
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
     public ResponseEntity<ApiResponse<EmployeeDto>> updateRole(@PathVariable Integer id, @RequestParam Integer newRole) {

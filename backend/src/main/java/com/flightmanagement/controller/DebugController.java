@@ -3,6 +3,9 @@ package com.flightmanagement.controller;
 import com.flightmanagement.dto.AuthResponse;
 import com.flightmanagement.service.AuthService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/debug")
+@Tag(name = "Debug", description = "Debugging operations for development purposes")
 public class DebugController {
 
     private final AuthService authService;
@@ -18,6 +22,7 @@ public class DebugController {
         this.authService = authService;
     }
 
+    @Operation(summary = "Debug login by account name")
     @GetMapping("/login-by-name/{accountName}")
     public ResponseEntity<AuthResponse> debugLoginByName(@PathVariable String accountName) {
         System.out.println("=== Debug Login by Name START ===");

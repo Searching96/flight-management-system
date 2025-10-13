@@ -1,6 +1,8 @@
 package com.flightmanagement.controller;
 
 import com.flightmanagement.service.PaymentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -13,6 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/payment")
+@Tag(name = "Payment", description = "Operations related to payments")
 @Validated
 public class PaymentController {
 
@@ -22,6 +25,7 @@ public class PaymentController {
         this.paymentService = paymentService;
     }
 
+    @Operation(summary = "Create a payment")
     @PostMapping("/create")
     public ResponseEntity<Map<String, Object>> createPayment(
             @RequestParam("confirmationCode") @NotBlank(message = "Confirmation code is required")
@@ -39,14 +43,14 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
 
-    // Both IPN and return endpoints process the payment callback from VNPay
+    @Operation(summary = "Process IPN callback")
     @GetMapping("/IPN")
     public ResponseEntity<Map<String, String>> ipn(HttpServletRequest request) {
         Map<String, String> response = paymentService.processIPN(request);
         return ResponseEntity.ok(response);
     }
 
-
+    @Operation(summary = "Process return callback")
     @GetMapping("/return")
     public ResponseEntity<Map<String, Object>> processReturn(HttpServletRequest request) {
         Map<String, Object> response = paymentService.processPaymentReturn(request);

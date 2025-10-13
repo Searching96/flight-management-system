@@ -3,6 +3,8 @@ package com.flightmanagement.controller;
 import com.flightmanagement.dto.FlightTicketClassDto;
 import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.FlightTicketClassService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/flight-ticket-classes")
+@Tag(name = "FlightTicketClass", description = "Operations related to flight ticket classes")
 public class FlightTicketClassController {
     
     private final FlightTicketClassService flightTicketClassService;
@@ -20,6 +23,7 @@ public class FlightTicketClassController {
         this.flightTicketClassService = flightTicketClassService;
     }
     
+    @Operation(summary = "Get all flight ticket classes")
     @GetMapping
     public ResponseEntity<ApiResponse<List<FlightTicketClassDto>>> getAllFlightTicketClasses() {
         List<FlightTicketClassDto> flightTicketClasses = flightTicketClassService.getAllFlightTicketClasses();
@@ -32,6 +36,7 @@ public class FlightTicketClassController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Get flight ticket class by ID")
     @GetMapping("/{flightId}/{ticketClassId}")
     public ResponseEntity<ApiResponse<FlightTicketClassDto>> getFlightTicketClassById(
             @PathVariable Integer flightId, 
@@ -46,6 +51,7 @@ public class FlightTicketClassController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Get flight ticket classes by flight ID")
     @GetMapping("/flight/{flightId}")
     public ResponseEntity<ApiResponse<List<FlightTicketClassDto>>> getFlightTicketClassesByFlightId(@PathVariable Integer flightId) {
         List<FlightTicketClassDto> flightTicketClasses = flightTicketClassService.getFlightTicketClassesByFlightId(flightId);
@@ -58,6 +64,7 @@ public class FlightTicketClassController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Create a new flight ticket class")
     @PostMapping
     public ResponseEntity<ApiResponse<FlightTicketClassDto>> createFlightTicketClass(@RequestBody FlightTicketClassDto flightTicketClassDto) {
         FlightTicketClassDto createdFlightTicketClass = flightTicketClassService.createFlightTicketClass(flightTicketClassDto);
@@ -70,6 +77,7 @@ public class FlightTicketClassController {
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
     
+    @Operation(summary = "Update an existing flight ticket class")
     @PutMapping("/{flightId}/{ticketClassId}")
     public ResponseEntity<ApiResponse<FlightTicketClassDto>> updateFlightTicketClass(
             @PathVariable Integer flightId,
@@ -85,6 +93,7 @@ public class FlightTicketClassController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Delete a flight ticket class")
     @DeleteMapping("/{flightId}/{ticketClassId}")
     public ResponseEntity<ApiResponse<Void>> deleteFlightTicketClass(@PathVariable Integer flightId, @PathVariable Integer ticketClassId) {
         flightTicketClassService.deleteFlightTicketClass(flightId, ticketClassId);
@@ -97,6 +106,7 @@ public class FlightTicketClassController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(apiResponse);
     }
     
+    @Operation(summary = "Get available flight ticket classes")
     @GetMapping("/available")
     public ResponseEntity<ApiResponse<List<FlightTicketClassDto>>> getAvailableFlightTicketClasses() {
         List<FlightTicketClassDto> availableFlightTicketClasses = flightTicketClassService.getAvailableFlightTicketClasses();
@@ -109,6 +119,7 @@ public class FlightTicketClassController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @Operation(summary = "Calculate occupied seats by flight ID and ticket class ID")
     @GetMapping("/occupied-seats/{flightId}/{ticketClassId}")
     public ResponseEntity<ApiResponse<Integer>> calculateOccupiedSeatsByFlightIdAndTicketClassId(
             @PathVariable Integer flightId,
@@ -124,6 +135,7 @@ public class FlightTicketClassController {
         return ResponseEntity.ok(apiResponse);
     }
     
+    @Operation(summary = "Update remaining tickets for a flight ticket class")
     @PutMapping("/{flightId}/{ticketClassId}/update-remaining")
     public ResponseEntity<ApiResponse<Void>> updateRemainingTickets(
             @PathVariable Integer flightId,
