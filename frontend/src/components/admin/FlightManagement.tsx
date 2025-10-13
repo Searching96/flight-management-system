@@ -159,10 +159,10 @@ const FlightManagement: React.FC<{
           parameterService.getAllParameters(),
         ]);
 
-      setAirports(airportData);
-      setPlanes(planeData);
-      setTicketClasses(ticketClassData);
-      setParameters(parameterData); // Assuming first item contains all parameters
+      setAirports(airportData.data);
+      setPlanes(planeData.data);
+      setTicketClasses(ticketClassData.data);
+      setParameters(parameterData.data); // Assuming first item contains all parameters
 
       await loadFlights();
     } catch (error) {
@@ -274,7 +274,7 @@ const FlightManagement: React.FC<{
         await flightTicketClassService.getFlightTicketClassesByFlightId(
           flightId
         );
-      setFlightTicketClasses(data);
+      setFlightTicketClasses(data.data);
     } catch (error) {
       setError("Failed to load flight ticket classes");
       console.log("Error loading flight ticket classes:", error);

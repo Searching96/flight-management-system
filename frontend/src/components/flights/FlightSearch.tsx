@@ -68,12 +68,12 @@ const FlightSearch: React.FC = () => {
         ticketClassService.getAllTicketClasses(),
         parameterService.getAllParameters(),
       ]);
-      setAirports(airportData);
-      setTicketClasses(ticketClassData);
+      setAirports(airportData.data);
+      setTicketClasses(ticketClassData.data);
       console.log("Parameters:", parameterData);
       // Set default ticket class to 'all'
       // Calculate minimum booking date
-      const minAdvanceDuration = parameterData.minBookingInAdvanceDuration;
+      const minAdvanceDuration = parameterData.data.minBookingInAdvanceDuration;
       console.log("Minimum booking in advance duration:", minAdvanceDuration);
       const minDate = new Date();
       minDate.setDate(minDate.getDate() + minAdvanceDuration + 1);
@@ -127,13 +127,16 @@ const FlightSearch: React.FC = () => {
       const results = await flightService.searchFlights(searchCriteria);
       // Get availability for all ticket classes of each flight
       const flightsWithAvailability = await Promise.all(
-        results.map(async (flight) => {
+        results.data.map(async (flight) => {
           try {
-            const flightTicketClasses =
+            const flightTicketClassesResponse =
               await flightTicketClassService.checkFlightAvailability(
                 flight.flightId!
               );
-            return { ...flight, flightTicketClasses };
+            return {
+              ...flight,
+              flightTicketClasses: flightTicketClassesResponse.data,
+            };
           } catch (err) {
             console.error(
               `Could not check availability for flight ${flight.flightCode}:`,

@@ -1,11 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, Table, Modal } from 'react-bootstrap';
-import { useAuth } from '../../hooks/useAuth';
-import { flightService, ticketService, passengerService, bookingConfirmationService, flightTicketClassService, accountService, customerService } from '../../services';
-import { flightDetailService } from '../../services/flightDetailService';
-import { Flight } from '../../models';
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useForm, useFieldArray } from "react-hook-form";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Alert,
+  Spinner,
+  Badge,
+  Table,
+  Modal,
+} from "react-bootstrap";
+import { useAuth } from "../../hooks/useAuth";
+import {
+  flightService,
+  ticketService,
+  passengerService,
+  bookingConfirmationService,
+  flightTicketClassService,
+  accountService,
+  customerService,
+} from "../../services";
+import { flightDetailService } from "../../services/flightDetailService";
+import { Flight } from "../../models";
 
 interface BookingFormData {
   passengers: {
@@ -28,7 +48,7 @@ const BookingForm: React.FC = () => {
 
   // Get booking data from sessionStorage (preferred) or fallback to query parameters
   const getBookingData = () => {
-    const sessionData = sessionStorage.getItem('bookingData');
+    const sessionData = sessionStorage.getItem("bookingData");
 
     if (sessionData) {
       try {
@@ -38,24 +58,26 @@ const BookingForm: React.FC = () => {
         return {
           flightId: parsed.flightId?.toString(),
           queryPassengers: parsed.passengerCount?.toString(),
-          queryClass: parsed.class?.toString()
+          queryClass: parsed.class?.toString(),
         };
       } catch (error) {
-        console.warn('Failed to parse booking data from sessionStorage:', error);
+        console.warn(
+          "Failed to parse booking data from sessionStorage:",
+          error
+        );
       }
     }
 
     // Fallback to query parameters for backward compatibility
     const searchParams = new URLSearchParams(location.search);
     return {
-      flightId: searchParams.get('flightId'),
-      queryPassengers: searchParams.get('passengerCount'),
-      queryClass: searchParams.get('class')
+      flightId: searchParams.get("flightId"),
+      queryPassengers: searchParams.get("passengerCount"),
+      queryClass: searchParams.get("class"),
     };
   };
 
   // write a function to get account from accountId
-
 
   const { flightId, queryPassengers, queryClass } = getBookingData();
 
@@ -63,13 +85,15 @@ const BookingForm: React.FC = () => {
   const [ticketClasses, setTicketClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [flightDetails, setFlightDetails] = useState<any[]>([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [pendingBookingData, setPendingBookingData] = useState<BookingFormData | null>(null);
+  const [pendingBookingData, setPendingBookingData] =
+    useState<BookingFormData | null>(null);
 
   // Get passenger count from query param or location state
-  const passengerCount = parseInt(queryPassengers || '0') || location.state?.passengerCount || 1;
+  const passengerCount =
+    parseInt(queryPassengers || "0") || location.state?.passengerCount || 1;
 
   // Helper to get user info for default values
   const [accountInfo, setAccountInfo] = useState<any>(null);
@@ -79,21 +103,20 @@ const BookingForm: React.FC = () => {
     const logUserInfo = async () => {
       if (user?.accountTypeName === "Customer" && user?.id) {
         const userInfo = await accountService.getAccountById(user.id);
-        console.log('User account info:', userInfo);
+        console.log("User account info:", userInfo);
         setAccountInfo(userInfo);
 
         // Get customer's current score using customerService
         try {
           const customerInfo = await customerService.getCustomerById(user.id);
-          setCustomerScore(customerInfo.score || 0);
+          setCustomerScore(customerInfo.data.score || 0);
         } catch (error) {
-          console.error('Error fetching customer score:', error);
+          console.error("Error fetching customer score:", error);
           setCustomerScore(0);
         }
       }
     };
     logUserInfo();
-    // eslint-disable-next-line
   }, [user]);
 
   const {
@@ -102,42 +125,65 @@ const BookingForm: React.FC = () => {
     formState: { errors },
     watch,
     setValue,
-    control
+    control,
   } = useForm<BookingFormData>({
     defaultValues: {
-      passengers: Array(passengerCount).fill(null).map((_, i) => ({
-        passengerId: undefined,
-        firstName: user?.accountTypeName === "Customer" && i === 0 ? accountInfo?.accountName || '' : '',
-        lastName: user?.accountTypeName === "Customer" && i === 0 ? accountInfo?.accountName || '' : '',
-        dateOfBirth: '',
-        citizenId: user?.accountTypeName === "Customer" && i === 0 ? accountInfo?.citizenId || '' : '',
-        phoneNumber: user?.accountTypeName === "Customer" && i === 0 ? accountInfo?.phoneNumber || '' : '',
-        email: user?.accountTypeName === "Customer" && i === 0 ? user.email || '' : ''
-      })),
-      ticketClassId: parseInt(queryClass || '0') || 0,
-      useFrequentFlyer: false
-    }
+      passengers: Array(passengerCount)
+        .fill(null)
+        .map((_, i) => ({
+          passengerId: undefined,
+          firstName:
+            user?.accountTypeName === "Customer" && i === 0
+              ? accountInfo?.accountName || ""
+              : "",
+          lastName:
+            user?.accountTypeName === "Customer" && i === 0
+              ? accountInfo?.accountName || ""
+              : "",
+          dateOfBirth: "",
+          citizenId:
+            user?.accountTypeName === "Customer" && i === 0
+              ? accountInfo?.citizenId || ""
+              : "",
+          phoneNumber:
+            user?.accountTypeName === "Customer" && i === 0
+              ? accountInfo?.phoneNumber || ""
+              : "",
+          email:
+            user?.accountTypeName === "Customer" && i === 0
+              ? user.email || ""
+              : "",
+        })),
+      ticketClassId: parseInt(queryClass || "0") || 0,
+      useFrequentFlyer: false,
+    },
   });
 
   // Update default values for first passenger when accountInfo is loaded
   useEffect(() => {
     if (user?.accountTypeName === "Customer" && accountInfo?.accountName) {
-      console.log('Thiết lập thông tin hành khách mặc định từ tài khoản:', accountInfo);
-      const nameParts = accountInfo.accountName.trim().split(' ');
-      const firstName = nameParts.slice(0, -1).join(' ') || '';
-      const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0] || '';
-      setValue('passengers.0.firstName', firstName);
-      setValue('passengers.0.lastName', lastName);
-      setValue('passengers.0.citizenId', accountInfo.citizenId || '');
-      setValue('passengers.0.phoneNumber', accountInfo.phoneNumber || '');
-      setValue('passengers.0.email', accountInfo.email || user.email || '');
+      console.log(
+        "Thiết lập thông tin hành khách mặc định từ tài khoản:",
+        accountInfo
+      );
+      const nameParts = accountInfo.accountName.trim().split(" ");
+      const firstName = nameParts.slice(0, -1).join(" ") || "";
+      const lastName =
+        nameParts.length > 1
+          ? nameParts[nameParts.length - 1]
+          : nameParts[0] || "";
+      setValue("passengers.0.firstName", firstName);
+      setValue("passengers.0.lastName", lastName);
+      setValue("passengers.0.citizenId", accountInfo.citizenId || "");
+      setValue("passengers.0.phoneNumber", accountInfo.phoneNumber || "");
+      setValue("passengers.0.email", accountInfo.email || user.email || "");
     }
     // eslint-disable-next-line
   }, [accountInfo]);
 
   const { fields } = useFieldArray({
     control,
-    name: 'passengers'
+    name: "passengers",
   });
 
   useEffect(() => {
@@ -151,9 +197,11 @@ const BookingForm: React.FC = () => {
   useEffect(() => {
     if (queryClass && ticketClasses.length > 0) {
       const classId = parseInt(queryClass);
-      const classExists = ticketClasses.some(tc => tc.ticketClassId === classId);
+      const classExists = ticketClasses.some(
+        (tc) => tc.ticketClassId === classId
+      );
       if (classExists) {
-        setValue('ticketClassId', classId);
+        setValue("ticketClassId", classId);
       }
     }
   }, [queryClass, ticketClasses, setValue]);
@@ -163,13 +211,16 @@ const BookingForm: React.FC = () => {
       setLoading(true);
       const [flightData, ticketClassData] = await Promise.all([
         flightService.getFlightById(Number(flightId)),
-        flightService.getFlightTicketClassesByFlightId(Number(flightId))
+        flightTicketClassService.getFlightTicketClassesByFlightId(
+          Number(flightId)
+        ),
       ]);
 
-      setFlight(flightData);
-      setTicketClasses(ticketClassData);
+      setFlight(flightData.data);
+      setTicketClasses(ticketClassData.data);
     } catch (err: any) {
-      setError('Failed to load booking information');
+      console.error("Error loading booking data:", err);
+      setError("Failed to load booking information");
     } finally {
       setLoading(false);
     }
@@ -178,11 +229,13 @@ const BookingForm: React.FC = () => {
   const fetchFlightDetails = async () => {
     if (flightId) {
       try {
-        const flightDetail = await flightDetailService.getFlightDetailsById(Number(flightId));
-        console.log('Flight Detail:', flightDetail);
-        setFlightDetails(flightDetail || []);
+        const flightDetail = await flightDetailService.getFlightDetailsById(
+          Number(flightId)
+        );
+        console.log("Flight Detail:", flightDetail);
+        setFlightDetails(flightDetail.data || []);
       } catch (error) {
-        console.error('Error fetching flight detail:', error);
+        console.error("Error fetching flight detail:", error);
         setFlightDetails([]);
       }
     }
@@ -208,36 +261,48 @@ const BookingForm: React.FC = () => {
     const discountAmount = (totalStandardPrice * discountPercent) / 100;
     const discountedPrice = totalStandardPrice - discountAmount;
 
-    return { score, discount: discountPercent, discountedPrice, discountAmount };
+    return {
+      score,
+      discount: discountPercent,
+      discountedPrice,
+      discountAmount,
+    };
   };
 
   const onSubmit = async (data: BookingFormData) => {
     try {
       setSubmitting(true);
-      setError('');
+      setError("");
 
       /*
         VALIDATION LOGIC
       */
       // Check for duplicate citizen IDs
-      const citizenIds = data.passengers.map(p => p.citizenId).filter(id => id);
-      const duplicateCitizenIds = citizenIds.filter((id, index) => citizenIds.indexOf(id) !== index);
+      const citizenIds = data.passengers
+        .map((p) => p.citizenId)
+        .filter((id) => id);
+      const duplicateCitizenIds = citizenIds.filter(
+        (id, index) => citizenIds.indexOf(id) !== index
+      );
 
       if (duplicateCitizenIds.length > 0) {
-        setError('Tìm thấy CCCD trùng lặp. Mỗi hành khách phải có CCCD duy nhất.');
+        setError(
+          "Tìm thấy CCCD trùng lặp. Mỗi hành khách phải có CCCD duy nhất."
+        );
         return;
       }
 
       // Validate passenger data using the service
       const validationErrors: string[] = [];
       for (const passenger of data.passengers) {
-        const passengerData = passengerService.transformPassengerData(passenger);
+        const passengerData =
+          passengerService.transformPassengerData(passenger);
         const errors = passengerService.validatePassengerData(passengerData);
         validationErrors.push(...errors);
       }
 
       if (validationErrors.length > 0) {
-        setError('Vui lòng sửa các lỗi sau: ' + validationErrors.join(', '));
+        setError("Vui lòng sửa các lỗi sau: " + validationErrors.join(", "));
         return;
       }
 
@@ -246,60 +311,93 @@ const BookingForm: React.FC = () => {
         const passenger = data.passengers[i];
         if (passenger.citizenId) {
           try {
-            const existing = await passengerService.findExistingPassenger(passenger.citizenId);
+            const existing = await passengerService.findExistingPassenger(
+              passenger.citizenId
+            );
             if (existing) {
               try {
-                const created = await passengerService.transformPassengerData(passenger);
-                await passengerService.updatePassenger(existing.passengerId!, created);
+                const created = await passengerService.transformPassengerData(
+                  passenger
+                );
+                await passengerService.updatePassenger(
+                  existing.data.passengerId!,
+                  created
+                );
               } catch (updateErr: any) {
-                setError('Lỗi cập nhật thông tin hành khách: ' + (updateErr.message || 'Lỗi không xác định'));
+                setError(
+                  "Lỗi cập nhật thông tin hành khách: " +
+                    (updateErr.message || "Lỗi không xác định")
+                );
                 return;
               }
               // Set passengerId if found
               data.passengers[i] = {
                 ...data.passengers[i],
                 ...existing,
-                passengerId: existing.passengerId ?? 0
+                passengerId: existing.data.passengerId ?? 0,
               };
             } else {
               // If not found, create new passenger
-              const created = await passengerService.transformPassengerData(passenger);
-              const createdPassenger = await passengerService.createPassenger(created);
+              const created = await passengerService.transformPassengerData(
+                passenger
+              );
+              const createdPassenger = await passengerService.createPassenger(
+                created
+              );
               data.passengers[i] = {
                 ...data.passengers[i],
                 ...createdPassenger,
-                passengerId: createdPassenger.passengerId ?? 0
+                passengerId: createdPassenger.data.passengerId ?? 0,
               };
             }
           } catch (err: any) {
             // If not found (404), create new passenger
             if (err?.response?.status === 404) {
               try {
-                const created = await passengerService.transformPassengerData(passenger);
-                const createdPassenger = await passengerService.createPassenger(created);
+                const created = await passengerService.transformPassengerData(
+                  passenger
+                );
+                const createdPassenger = await passengerService.createPassenger(
+                  created
+                );
                 data.passengers[i] = {
                   ...data.passengers[i],
                   ...createdPassenger,
-                  passengerId: createdPassenger.passengerId ?? 0
+                  passengerId: createdPassenger.data.passengerId ?? 0,
                 };
               } catch (createErr: any) {
-                setError('Lỗi tạo hành khách: ' + (createErr.message || 'Lỗi không xác định'));
+                setError(
+                  "Lỗi tạo hành khách: " +
+                    (createErr.message || "Lỗi không xác định")
+                );
                 return;
               }
             } else {
-              setError('Lỗi kiểm tra hành khách hiện có: ' + (err.message || 'Lỗi không xác định'));
+              setError(
+                "Lỗi kiểm tra hành khách hiện có: " +
+                  (err.message || "Lỗi không xác định")
+              );
               return;
             }
           }
         }
       }
 
-      const occupiedSeats = await flightTicketClassService.getOccupiedSeats(Number(flightId), Number(data.ticketClassId));
+      const occupiedSeats = await flightTicketClassService.getOccupiedSeats(
+        Number(flightId),
+        Number(data.ticketClassId)
+      );
       const seatNumbers = data.passengers.map((_, index) => {
-        const selectedClass = ticketClasses.find(tc => tc.ticketClassId === data.ticketClassId);
-        const seatPrefix = selectedClass?.ticketClassName === 'Economy' ? 'A' :
-          selectedClass?.ticketClassName === 'Business' ? 'B' : 'C';
-        return `${seatPrefix}${occupiedSeats + index + 1}`;
+        const selectedClass = ticketClasses.find(
+          (tc) => tc.ticketClassId === data.ticketClassId
+        );
+        const seatPrefix =
+          selectedClass?.ticketClassName === "Economy"
+            ? "A"
+            : selectedClass?.ticketClassName === "Business"
+            ? "B"
+            : "C";
+        return `${seatPrefix}${occupiedSeats.data + index + 1}`;
       });
 
       const booking = {
@@ -307,17 +405,18 @@ const BookingForm: React.FC = () => {
         flightId: Number(flightId),
         passengers: data.passengers, // Keep original format for BookingReques
         seatNumbers: seatNumbers,
-        ticketClassId: data.ticketClassId
+        ticketClassId: data.ticketClassId,
       };
 
       // Book the tickets
       console.log("Booking data:", booking);
 
-      let confirmationCode = '';
+      let confirmationCode = "";
       try {
-        confirmationCode = await ticketService.generateConfirmationCode();
+        const response = await ticketService.generateConfirmationCode();
+        confirmationCode = response.data;
       } catch (err: any) {
-        console.error('confirmation code: ', err);
+        console.error("confirmation code: ", err);
         return;
       }
 
@@ -328,13 +427,16 @@ const BookingForm: React.FC = () => {
       const tickets = data.passengers.map((passenger, index) => ({
         flightId: Number(flightId),
         ticketClassId: data.ticketClassId,
-        bookCustomerId: user ? user?.accountTypeName === "Customer" && user?.id != null ? user.id : null : null,
+        bookCustomerId: user
+          ? user?.accountTypeName === "Customer" && user?.id != null
+            ? user.id
+            : null
+          : null,
         passengerId: passenger.passengerId,
         seatNumber: seatNumbers[index],
         fare: pricePerTicket, // Use discounted price per ticket
-        confirmationCode: confirmationCode
+        confirmationCode: confirmationCode,
       }));
-
 
       console.log("Tickets to be confirmed:", tickets);
 
@@ -342,7 +444,11 @@ const BookingForm: React.FC = () => {
         try {
           const newTicket = ticketService.transformTicketData(ticket);
           await ticketService.createTicket(newTicket);
-          await flightTicketClassService.updateRemainingTickets(ticket.flightId, ticket.ticketClassId, 1);
+          await flightTicketClassService.updateRemainingTickets(
+            ticket.flightId,
+            ticket.ticketClassId,
+            1
+          );
           console.log("Ticket created:", newTicket);
         } catch (err: any) {
           console.error("Error creating ticket:", err);
@@ -355,7 +461,9 @@ const BookingForm: React.FC = () => {
         try {
           const updatedScore = customerScore + score;
           await customerService.updateCustomerScore(user.id, updatedScore);
-          console.log(`Score updated: ${customerScore} + ${score} = ${updatedScore}`);
+          console.log(
+            `Score updated: ${customerScore} + ${score} = ${updatedScore}`
+          );
         } catch (err: any) {
           console.error("Error updating customer score:", err);
           // Don't fail the booking if score update fails
@@ -365,23 +473,25 @@ const BookingForm: React.FC = () => {
       const confirmationData = bookingConfirmationService.createConfirmation(
         confirmationCode,
         tickets,
-        data.passengers.map(p => p.firstName + ' ' + p.lastName),
+        data.passengers.map((p) => p.firstName + " " + p.lastName),
         flight!
       );
 
-      bookingConfirmationService.storeGuestBookingConfirmation(confirmationData);
+      bookingConfirmationService.storeGuestBookingConfirmation(
+        confirmationData
+      );
 
       // Navigate to confirmation page for guest bookings
-      navigate('/booking-confirmation', {
+      navigate("/booking-confirmation", {
         state: {
           confirmationCode,
           confirmationData,
-          message: 'Guest booking successful! Please save your confirmation code for future reference.'
-        }
+          message:
+            "Guest booking successful! Please save your confirmation code for future reference.",
+        },
       });
-
     } catch (err: any) {
-      setError(err.message || 'Đặt vé thất bại. Vui lòng thử lại.');
+      setError(err.message || "Đặt vé thất bại. Vui lòng thử lại.");
     } finally {
       setSubmitting(false);
     }
@@ -405,25 +515,27 @@ const BookingForm: React.FC = () => {
     setPendingBookingData(null);
   };
 
-  const selectedTicketClass = watch('ticketClassId');
-  const selectedClass = ticketClasses.find(tc => tc.ticketClassId === selectedTicketClass);
+  const selectedTicketClass = watch("ticketClassId");
+  const selectedClass = ticketClasses.find(
+    (tc) => tc.ticketClassId === selectedTicketClass
+  );
   const calculateTotalPrice = () => {
     const { discountedPrice } = calculateScoreAndDiscount();
     return discountedPrice || 0;
   };
 
   const formatTime = (dateTimeString: string) => {
-    return new Date(dateTimeString).toLocaleTimeString('vi-VN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
+    return new Date(dateTimeString).toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
     });
   };
 
   const formatDate = (dateTimeString: string) => {
-    return new Date(dateTimeString).toLocaleDateString('vi-VN', {
-      month: 'short',
-      day: 'numeric'
+    return new Date(dateTimeString).toLocaleDateString("vi-VN", {
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -437,8 +549,14 @@ const BookingForm: React.FC = () => {
               <Card.Body className="text-center py-5">
                 <Alert variant="danger" className="mb-0">
                   <Alert.Heading>Thiếu thông tin chuyến bay</Alert.Heading>
-                  <p>Không có ID chuyến bay được cung cấp. Vui lòng chọn chuyến bay từ kết quả tìm kiếm.</p>
-                  <Button variant="primary" onClick={() => navigate('/flights')}>
+                  <p>
+                    Không có ID chuyến bay được cung cấp. Vui lòng chọn chuyến
+                    bay từ kết quả tìm kiếm.
+                  </p>
+                  <Button
+                    variant="primary"
+                    onClick={() => navigate("/flights")}
+                  >
                     Quay lại tìm kiếm chuyến bay
                   </Button>
                 </Alert>
@@ -457,7 +575,11 @@ const BookingForm: React.FC = () => {
           <Col md={8}>
             <Card>
               <Card.Body className="text-center py-5">
-                <Spinner animation="border" variant="primary" className="mb-3" />
+                <Spinner
+                  animation="border"
+                  variant="primary"
+                  className="mb-3"
+                />
                 <p className="mb-0">Đang tải biểu mẫu đặt vé...</p>
               </Card.Body>
             </Card>
@@ -474,7 +596,9 @@ const BookingForm: React.FC = () => {
           <Col md={8}>
             <Card>
               <Card.Body className="text-center py-5">
-                <Alert variant="danger" className="mb-0">Không tìm thấy chuyến bay</Alert>
+                <Alert variant="danger" className="mb-0">
+                  Không tìm thấy chuyến bay
+                </Alert>
               </Card.Body>
             </Card>
           </Col>
@@ -485,8 +609,9 @@ const BookingForm: React.FC = () => {
 
   const renderPassengerForm = (index: number) => {
     // Get current values from form state
-    const currentPhone = watch(`passengers.${index}.phoneNumber`) || '';
-    const isAccountPassenger = user?.accountTypeName === "Customer" && index === 0;
+    const currentPhone = watch(`passengers.${index}.phoneNumber`) || "";
+    const isAccountPassenger =
+      user?.accountTypeName === "Customer" && index === 0;
 
     return (
       <Card key={index} className="mb-4">
@@ -501,7 +626,7 @@ const BookingForm: React.FC = () => {
                 <Form.Control
                   type="text"
                   {...register(`passengers.${index}.firstName`, {
-                    required: 'Tên là bắt buộc'
+                    required: "Tên là bắt buộc",
                   })}
                   placeholder="Nhập tên"
                   isInvalid={!!errors.passengers?.[index]?.firstName}
@@ -519,7 +644,7 @@ const BookingForm: React.FC = () => {
                 <Form.Control
                   type="text"
                   {...register(`passengers.${index}.lastName`, {
-                    required: 'Họ là bắt buộc'
+                    required: "Họ là bắt buộc",
                   })}
                   placeholder="Nhập họ"
                   isInvalid={!!errors.passengers?.[index]?.lastName}
@@ -539,11 +664,11 @@ const BookingForm: React.FC = () => {
                 <Form.Control
                   type="email"
                   {...register(`passengers.${index}.email`, {
-                    required: 'Email là bắt buộc',
+                    required: "Email là bắt buộc",
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Địa chỉ email không hợp lệ'
-                    }
+                      message: "Địa chỉ email không hợp lệ",
+                    },
                   })}
                   placeholder="Nhập địa chỉ email"
                   isInvalid={!!errors.passengers?.[index]?.email}
@@ -562,7 +687,7 @@ const BookingForm: React.FC = () => {
                   <Form.Control
                     type="tel"
                     placeholder="Số điện thoại"
-                    value={currentPhone.replace(/^\+\d+\s*/, '')}
+                    value={currentPhone.replace(/^\+\d+\s*/, "")}
                     onChange={(e) => {
                       const phoneNumber = `${e.target.value}`;
                       setValue(`passengers.${index}.phoneNumber`, phoneNumber);
@@ -585,7 +710,7 @@ const BookingForm: React.FC = () => {
                 <Form.Control
                   type="text"
                   {...register(`passengers.${index}.citizenId`, {
-                    required: 'Căn cước công dân là bắt buộc'
+                    required: "Căn cước công dân là bắt buộc",
                   })}
                   placeholder="Nhập số căn cước công dân"
                   isInvalid={!!errors.passengers?.[index]?.citizenId}
@@ -649,28 +774,53 @@ const BookingForm: React.FC = () => {
                     <Table striped bordered hover size="sm" className="mb-0">
                       <thead className="table-secondary">
                         <tr>
-                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '40%' }}>Sân bay trung gian</th>
-                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Thời gian đến</th>
-                          <th className="text-center py-2 fs-5 fw-bold" style={{ width: '30%' }}>Thời gian dừng</th>
+                          <th
+                            className="text-center py-2 fs-5 fw-bold"
+                            style={{ width: "40%" }}
+                          >
+                            Sân bay trung gian
+                          </th>
+                          <th
+                            className="text-center py-2 fs-5 fw-bold"
+                            style={{ width: "30%" }}
+                          >
+                            Thời gian đến
+                          </th>
+                          <th
+                            className="text-center py-2 fs-5 fw-bold"
+                            style={{ width: "30%" }}
+                          >
+                            Thời gian dừng
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="table-light">
                         {flightDetails.map((detail, index) => (
                           <tr key={index}>
                             <td className="text-center align-middle py-3">
-                              <strong>{detail.mediumAirportName || 'N/A'}</strong>
+                              <strong>
+                                {detail.mediumAirportName || "N/A"}
+                              </strong>
                             </td>
                             <td className="text-center align-middle py-3">
-                              {detail.arrivalTime
-                                ? <span className="badge bg-info">{formatTime(detail.arrivalTime) + ' - ' + formatDate(detail.arrivalTime)}</span>
-                                : <span className="text-muted">N/A</span>
-                              }
+                              {detail.arrivalTime ? (
+                                <span className="badge bg-info">
+                                  {formatTime(detail.arrivalTime) +
+                                    " - " +
+                                    formatDate(detail.arrivalTime)}
+                                </span>
+                              ) : (
+                                <span className="text-muted">N/A</span>
+                              )}
                             </td>
                             <td className="text-center align-middle py-3">
-                              {detail.layoverDuration
-                                ? <span className="badge bg-secondary">{detail.layoverDuration} phút</span>
-                                : <span className="text-muted">N/A</span>
-                              }
+                              {detail.layoverDuration ? (
+                                <span className="badge bg-secondary">
+                                  {detail.layoverDuration} phút
+                                </span>
+                              ) : (
+                                <span className="text-muted">N/A</span>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -711,7 +861,10 @@ const BookingForm: React.FC = () => {
                             <strong>Giá mỗi vé:</strong>
                           </Col>
                           <Col xs={6} className="text-end">
-                            {selectedClass.specifiedFare.toLocaleString('vi-VN')} VND
+                            {selectedClass.specifiedFare.toLocaleString(
+                              "vi-VN"
+                            )}{" "}
+                            VND
                           </Col>
 
                           {user?.accountTypeName === "Customer" && (
@@ -726,19 +879,30 @@ const BookingForm: React.FC = () => {
                               {calculateScoreAndDiscount().discount > 0 && (
                                 <>
                                   <Col xs={6}>
-                                    <strong className="text-success">Giảm giá ({calculateScoreAndDiscount().discount}%):</strong>
+                                    <strong className="text-success">
+                                      Giảm giá (
+                                      {calculateScoreAndDiscount().discount}%):
+                                    </strong>
                                   </Col>
                                   <Col xs={6} className="text-end text-success">
-                                    -{(calculateScoreAndDiscount().discountAmount ?? 0).toLocaleString('vi-VN')} VND
+                                    -
+                                    {(
+                                      calculateScoreAndDiscount()
+                                        .discountAmount ?? 0
+                                    ).toLocaleString("vi-VN")}{" "}
+                                    VND
                                   </Col>
                                 </>
                               )}
 
                               <Col xs={6}>
-                                <strong className="text-info">Điểm sẽ nhận:</strong>
+                                <strong className="text-info">
+                                  Điểm sẽ nhận:
+                                </strong>
                               </Col>
                               <Col xs={6} className="text-end text-info">
-                                +{calculateScoreAndDiscount().score.toLocaleString()}
+                                +
+                                {calculateScoreAndDiscount().score.toLocaleString()}
                               </Col>
                             </>
                           )}
@@ -748,10 +912,15 @@ const BookingForm: React.FC = () => {
                           </Col>
 
                           <Col xs={6}>
-                            <strong className="text-primary fs-5">Tổng cộng:</strong>
+                            <strong className="text-primary fs-5">
+                              Tổng cộng:
+                            </strong>
                           </Col>
                           <Col xs={6} className="text-end">
-                            <strong className="text-primary fs-5">{calculateTotalPrice().toLocaleString('vi-VN')} VND</strong>
+                            <strong className="text-primary fs-5">
+                              {calculateTotalPrice().toLocaleString("vi-VN")}{" "}
+                              VND
+                            </strong>
                           </Col>
                         </>
                       )}
@@ -774,15 +943,21 @@ const BookingForm: React.FC = () => {
                     disabled={submitting || !selectedClass}
                     size="lg"
                     className="flex-fill"
-                    style={{ maxWidth: '300px' }}
+                    style={{ maxWidth: "300px" }}
                   >
                     {submitting ? (
                       <>
-                        <Spinner animation="border" size="sm" className="me-2" />
+                        <Spinner
+                          animation="border"
+                          size="sm"
+                          className="me-2"
+                        />
                         Đang xử lý...
                       </>
                     ) : (
-                      `Đặt vé - ${calculateTotalPrice().toLocaleString('vi-VN')} VND`
+                      `Đặt vé - ${calculateTotalPrice().toLocaleString(
+                        "vi-VN"
+                      )} VND`
                     )}
                   </Button>
                 </div>
@@ -805,8 +980,12 @@ const BookingForm: React.FC = () => {
             </Modal.Header>
             <Modal.Body className="p-4">
               <div className="text-center mb-4">
-                <h5 className="text-primary">Vui lòng xem lại thông tin đặt vé</h5>
-                <p className="text-muted">Sau khi xác nhận, việc đặt vé này không thể hoàn tác</p>
+                <h5 className="text-primary">
+                  Vui lòng xem lại thông tin đặt vé
+                </h5>
+                <p className="text-muted">
+                  Sau khi xác nhận, việc đặt vé này không thể hoàn tác
+                </p>
               </div>
 
               {flight && selectedClass && (
@@ -832,7 +1011,7 @@ const BookingForm: React.FC = () => {
                         <strong>Khởi hành:</strong>
                       </Col>
                       <Col xs={6} className="text-end">
-                        {new Date(flight.departureTime).toLocaleString('vi-VN')}
+                        {new Date(flight.departureTime).toLocaleString("vi-VN")}
                       </Col>
 
                       <Col xs={6}>
@@ -853,14 +1032,19 @@ const BookingForm: React.FC = () => {
                         <strong>Giá mỗi vé:</strong>
                       </Col>
                       <Col xs={6} className="text-end">
-                        {selectedClass.specifiedFare.toLocaleString('vi-VN')} VND
+                        {selectedClass.specifiedFare.toLocaleString("vi-VN")}{" "}
+                        VND
                       </Col>
 
                       <Col xs={6}>
-                        <strong className="text-primary fs-5">Tổng tiền:</strong>
+                        <strong className="text-primary fs-5">
+                          Tổng tiền:
+                        </strong>
                       </Col>
                       <Col xs={6} className="text-end">
-                        <strong className="text-primary fs-4">{calculateTotalPrice().toLocaleString('vi-VN')} VND</strong>
+                        <strong className="text-primary fs-4">
+                          {calculateTotalPrice().toLocaleString("vi-VN")} VND
+                        </strong>
                       </Col>
                     </Row>
                   </Card.Body>
@@ -890,7 +1074,8 @@ const BookingForm: React.FC = () => {
                 ) : (
                   <>
                     <i className="bi bi-check-circle me-2"></i>
-                    Xác nhận đặt vé - {calculateTotalPrice().toLocaleString('vi-VN')} VND
+                    Xác nhận đặt vé -{" "}
+                    {calculateTotalPrice().toLocaleString("vi-VN")} VND
                   </>
                 )}
               </Button>

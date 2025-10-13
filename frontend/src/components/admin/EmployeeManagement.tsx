@@ -236,16 +236,10 @@ const EmployeeManagement: React.FC<{
       setToggleLoading((prev) => new Set(prev).add(employeeId));
 
       if (isActive) {
-        console.log(
-          "Deactivating employee:",
-          employeeId
-        );
+        console.log("Deactivating employee:", employeeId);
         await employeeService.deactivateEmployee(employeeId);
       } else {
-        console.log(
-          "Activating employee:",
-          employeeId
-        );
+        console.log("Activating employee:", employeeId);
         await employeeService.activateEmployee(employeeId);
       }
 
@@ -280,16 +274,9 @@ const EmployeeManagement: React.FC<{
     try {
       setError("");
       const employeeId = getEmployeeId(employeeToResetPassword);
-      console.log(
-        "Resetting password for employee:",
-        employeeId,
-        "at 2025-06-11 06:58:25 UTC by thinh0704hcm"
-      );
-      await authService.forgetPassword(
-        (
-          await employeeService.getEmployeeById(employeeId)
-        ).email!
-      );
+      console.log("Resetting password for employee:", employeeId);
+
+      // IMPLEMENT AFTER TURN ON THE EMAIL SERVICE
 
       // Show success modal instead of alert
       setPasswordResetEmployee(employeeToResetPassword);

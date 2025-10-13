@@ -70,7 +70,7 @@ const TicketClassManagement: React.FC<{
     try {
       setLoading(true);
       const data = await ticketClassService.getAllTicketClasses();
-      setTicketClasses(data);
+      setTicketClasses(data.data);
     } catch (error) {
       console.error("Error loading ticket classes:", error);
       setError("Failed to load ticket classes");

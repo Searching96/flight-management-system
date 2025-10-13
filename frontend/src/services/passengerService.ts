@@ -51,7 +51,9 @@ class PassengerService {
    * Search for existing passenger by citizen ID for guest bookings
    * Returns passenger if found, null if not found (for creating new passenger)
    */
-  async findExistingPassenger(citizenId: string): Promise<Passenger | null> {
+  async findExistingPassenger(
+    citizenId: string
+  ): Promise<ApiResponse<Passenger> | null> {
     return await this.getPassengerByCitizenId(citizenId)
       .then((response) => response)
       .catch((error) => {
@@ -68,7 +70,7 @@ class PassengerService {
    */
   async createOrUpdatePassenger(
     passengerData: CreatePassengerRequest
-  ): Promise<Passenger> {
+  ): Promise<ApiResponse<Passenger>> {
     const existingPassenger = await this.findExistingPassenger(
       passengerData.citizenId
     );
@@ -80,7 +82,7 @@ class PassengerService {
         email: passengerData.email,
         phoneNumber: passengerData.phoneNumber,
       };
-      return this.updatePassenger(existingPassenger.passengerId!, updateData);
+      return this.updatePassenger(existingPassenger.data.passengerId!, updateData);
     } else {
       // Create new passenger
       return this.createPassenger(passengerData);
