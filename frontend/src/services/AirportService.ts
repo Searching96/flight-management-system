@@ -1,38 +1,45 @@
-import { apiClient } from './api';
-import { Airport } from '../models';
+import { apiClient } from "./api";
+import { Airport, ApiResponse } from "../models";
 
 export class AirportService {
-  private readonly baseUrl = '/airports';
+  private readonly baseUrl = "/airports";
 
-  async getAllAirports(): Promise<Airport[]> {
+  async getAllAirports(): Promise<ApiResponse<Airport[]>> {
     return apiClient.get(this.baseUrl);
   }
 
-  async getAirportById(id: number): Promise<Airport> {
+  async getAirportById(id: number): Promise<ApiResponse<Airport>> {
     return apiClient.get(`${this.baseUrl}/${id}`);
   }
 
-  async getAirportsByCity(cityName: string): Promise<Airport[]> {
+  async getAirportsByCity(cityName: string): Promise<ApiResponse<Airport[]>> {
     return apiClient.get(`${this.baseUrl}/city/${cityName}`);
   }
 
-  async getAirportsByCountry(countryName: string): Promise<Airport[]> {
+  async getAirportsByCountry(
+    countryName: string
+  ): Promise<ApiResponse<Airport[]>> {
     return apiClient.get(`${this.baseUrl}/country/${countryName}`);
   }
 
-  async searchAirportsByName(name: string): Promise<Airport[]> {
+  async searchAirportsByName(name: string): Promise<ApiResponse<Airport[]>> {
     return apiClient.get(`${this.baseUrl}/search/${name}`);
   }
 
-  async createAirport(airport: Omit<Airport, 'airportId'>): Promise<Airport> {
+  async createAirport(
+    airport: Omit<Airport, "airportId">
+  ): Promise<ApiResponse<Airport>> {
     return apiClient.post(this.baseUrl, airport);
   }
 
-  async updateAirport(id: number, airport: Partial<Airport>): Promise<Airport> {
+  async updateAirport(
+    id: number,
+    airport: Partial<Airport>
+  ): Promise<ApiResponse<Airport>> {
     return apiClient.put(`${this.baseUrl}/${id}`, airport);
   }
 
-  async deleteAirport(id: number): Promise<void> {
+  async deleteAirport(id: number): Promise<ApiResponse<void>> {
     return apiClient.delete(`${this.baseUrl}/${id}`);
   }
 }

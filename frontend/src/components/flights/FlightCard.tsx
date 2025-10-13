@@ -30,7 +30,7 @@ const FlightCard: React.FC<FlightCardProps> = ({
         try {
           const flightDetail = await flightDetailService.getFlightDetailsById(flight.flightId);
           console.log('Flight Detail:', flightDetail);
-          setFlightDetails(flightDetail || []);
+          setFlightDetails(flightDetail.data || []);
         } catch (error) {
           console.error('Error fetching flight detail:', error);
           setFlightDetails([]);

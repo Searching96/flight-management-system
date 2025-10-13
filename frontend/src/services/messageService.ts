@@ -1,29 +1,29 @@
-import { apiClient } from './api';
-import { Message } from '../models/Chat';
+import { apiClient } from "./api";
+import { Message } from "../models/Chat";
+import type { ApiResponse } from "../models/ApiResponse";
 
 export class MessageService {
-  private readonly baseUrl = '/messages';
+  private readonly baseUrl = "/messages";
 
   // Message CRUD operations
-  async getAllMessages(): Promise<Message[]> {
+  async getAllMessages(): Promise<ApiResponse<Message[]>> {
     return apiClient.get(this.baseUrl);
   }
 
-  async getMessageById(id: number): Promise<Message> {
+  async getMessageById(id: number): Promise<ApiResponse<Message>> {
     return apiClient.get(`${this.baseUrl}/${id}`);
   }
 
-  async getSentMessages(): Promise<Message[]> {
+  async getSentMessages(): Promise<ApiResponse<Message[]>> {
     return apiClient.get(`${this.baseUrl}/sent`);
   }
 
-  async getUnreadMessages(): Promise<Message[]> {
+  async getUnreadMessages(): Promise<ApiResponse<Message[]>> {
     return apiClient.get(`${this.baseUrl}/unread`);
   }
 
-  async getUnreadCount(): Promise<number> {
-    const response = await apiClient.get(`${this.baseUrl}/unread/count`);
-    return response.count;
+  async getUnreadCount(): Promise<ApiResponse<number>> {
+    return apiClient.get(`${this.baseUrl}/unread/count`);
   }
 
   async markAsRead(messageId: number): Promise<void> {
@@ -39,38 +39,51 @@ export class MessageService {
   }
 
   // Notification methods
-  async sendFlightUpdateNotification(flightId: number, updateType: string, message: string): Promise<void> {
+  async sendFlightUpdateNotification(
+    flightId: number,
+    updateType: string,
+    message: string
+  ): Promise<void> {
     return apiClient.post(`${this.baseUrl}/flight-update`, {
       flightId,
       updateType,
       message,
-      messageType: 'FLIGHT_UPDATE',
-      priority: 'HIGH'
+      messageType: "FLIGHT_UPDATE",
+      priority: "HIGH",
     });
   }
 
-  async sendSystemAlert(message: string, priority: 'HIGH' | 'URGENT' = 'HIGH'): Promise<void> {
+  async sendSystemAlert(
+    message: string,
+    priority: "HIGH" | "URGENT" = "HIGH"
+  ): Promise<void> {
     return apiClient.post(`${this.baseUrl}/system-alert`, {
-      receiverType: 'ALL',
-      subject: 'System Alert',
+      receiverType: "ALL",
+      subject: "System Alert",
       content: message,
-      messageType: 'ALERT',
-      priority
+      messageType: "ALERT",
+      priority,
     });
   }
 
-  async sendWelcomeMessage(userId: number, userType: 'EMPLOYEE' | 'PASSENGER'): Promise<void> {
+  async sendWelcomeMessage(
+    userId: number,
+    userType: "EMPLOYEE" | "PASSENGER"
+  ): Promise<void> {
     return apiClient.post(`${this.baseUrl}/welcome`, {
       receiverId: userId,
-      receiverType: userType
+      receiverType: userType,
     });
   }
 
-  async sendBookingConfirmation(passengerId: number, bookingDetails: any): Promise<void> {
+  async sendBookingConfirmation(
+    passengerId: number,
+    bookingDetails: any
+  ): Promise<void> {
     return apiClient.post(`${this.baseUrl}/booking-confirmation`, {
       receiverId: passengerId,
-      receiverType: 'PASSENGER',
-      bookingDetails
+      receiverType: "PASSENGER",
+      bookingDetails,
     });
   }
 
@@ -82,19 +95,30 @@ export class MessageService {
     return apiClient.post(this.baseUrl, messageData);
   }
 
-  async createCustomerMessage(chatboxId: number, content: string): Promise<Message> {
-    return apiClient.post(`${this.baseUrl}/customer`, { 
-      chatboxId, 
-      content 
+  async createCustomerMessage(
+    chatboxId: number,
+    content: string
+  ): Promise<Message> {
+    return apiClient.post(`${this.baseUrl}/customer`, {
+      chatboxId,
+      content,
     });
   }
 
-  async createEmployeeMessage(chatboxId: number, employeeId: number, content: string): Promise<Message> {
-    console.log('Creating employee message:', { chatboxId, employeeId, content });
-    return apiClient.post(`${this.baseUrl}/employee`, { 
-      chatboxId, 
+  async createEmployeeMessage(
+    chatboxId: number,
+    employeeId: number,
+    content: string
+  ): Promise<Message> {
+    console.log("Creating employee message:", {
+      chatboxId,
       employeeId,
-      content 
+      content,
+    });
+    return apiClient.post(`${this.baseUrl}/employee`, {
+      chatboxId,
+      employeeId,
+      content,
     });
   }
 }

@@ -1,10 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Modal, Table } from 'react-bootstrap';
-import { airportService } from '../../services';
-import { Airport } from '../../models';
-import TypeAhead from '../common/TypeAhead';
-import { usePermissions } from '../../hooks/useAuth';
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Form,
+  Alert,
+  Spinner,
+  Badge,
+  Modal,
+  Table,
+} from "react-bootstrap";
+import { airportService } from "../../services";
+import { Airport } from "../../models";
+import TypeAhead from "../common/TypeAhead";
+import { usePermissions } from "../../hooks/useAuth";
 
 interface AirportFormData {
   airportName: string;
@@ -13,32 +25,18 @@ interface AirportFormData {
 }
 
 const AirportManagement: React.FC<{
-    showAddModal?: boolean;
-    onCloseAddModal?: () => void;
-    readOnly?: boolean;
+  showAddModal?: boolean;
+  onCloseAddModal?: () => void;
+  readOnly?: boolean;
 }> = ({ showAddModal = false, onCloseAddModal, readOnly = false }) => {
   const { canViewAdmin } = usePermissions();
-  if (!canViewAdmin) {
-        return (
-            <Container className="py-5">
-                <Row className="justify-content-center">
-                    <Col md={8}>
-                        <Alert variant="danger" className="text-center">
-                            <Alert.Heading>Truy cập bị từ chối</Alert.Heading>
-                            <p>Bạn không có quyền truy cập quản lý sân bay.</p>
-                        </Alert>
-                    </Col>
-                </Row>
-            </Container>
-        );
-  }
 
   const [airports, setAirports] = useState<Airport[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingAirport, setEditingAirport] = useState<Airport | null>(null);
-  const [selectedCountry, setSelectedCountry] = useState<string>('');
+  const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [airportToDelete, setAirportToDelete] = useState<Airport | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -47,27 +45,8 @@ const AirportManagement: React.FC<{
     register,
     handleSubmit,
     reset,
-    formState: { errors }
+    formState: { errors },
   } = useForm<AirportFormData>();
-
-  // Country options for TypeAhead
-  const countryOptions = [
-    { value: 'Vietnam', label: 'Vietnam' },
-    { value: 'United States', label: 'United States' },
-    { value: 'United Kingdom', label: 'United Kingdom' },
-    { value: 'China', label: 'China' },
-    { value: 'Japan', label: 'Japan' },
-    { value: 'South Korea', label: 'South Korea' },
-    { value: 'Singapore', label: 'Singapore' },
-    { value: 'Thailand', label: 'Thailand' },
-    { value: 'Malaysia', label: 'Malaysia' },
-    { value: 'Indonesia', label: 'Indonesia' },
-    { value: 'Philippines', label: 'Philippines' },
-    { value: 'Australia', label: 'Australia' },
-    { value: 'France', label: 'France' },
-    { value: 'Germany', label: 'Germany' },
-    { value: 'Canada', label: 'Canada' }
-  ];
 
   useEffect(() => {
     loadAirports();
@@ -75,17 +54,52 @@ const AirportManagement: React.FC<{
 
   useEffect(() => {
     if (showAddModal && !readOnly) {
-        setShowForm(true);
+      setShowForm(true);
     }
   }, [showAddModal, readOnly]);
+
+  if (!canViewAdmin) {
+    return (
+      <Container className="py-5">
+        <Row className="justify-content-center">
+          <Col md={8}>
+            <Alert variant="danger" className="text-center">
+              <Alert.Heading>Truy cập bị từ chối</Alert.Heading>
+              <p>Bạn không có quyền truy cập quản lý sân bay.</p>
+            </Alert>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
+
+  // Country options for TypeAhead
+  const countryOptions = [
+    { value: "Vietnam", label: "Vietnam" },
+    { value: "United States", label: "United States" },
+    { value: "United Kingdom", label: "United Kingdom" },
+    { value: "China", label: "China" },
+    { value: "Japan", label: "Japan" },
+    { value: "South Korea", label: "South Korea" },
+    { value: "Singapore", label: "Singapore" },
+    { value: "Thailand", label: "Thailand" },
+    { value: "Malaysia", label: "Malaysia" },
+    { value: "Indonesia", label: "Indonesia" },
+    { value: "Philippines", label: "Philippines" },
+    { value: "Australia", label: "Australia" },
+    { value: "France", label: "France" },
+    { value: "Germany", label: "Germany" },
+    { value: "Canada", label: "Canada" },
+  ];
 
   const loadAirports = async () => {
     try {
       setLoading(true);
       const data = await airportService.getAllAirports();
-      setAirports(data);
-    } catch (err: any) {
-      setError('Không thể tải danh sách sân bay');
+      setAirports(data.data);
+    } catch (error) {
+      console.error("Error loading airports:", error);
+      setError("Không thể tải danh sách sân bay");
     } finally {
       setLoading(false);
     }
@@ -98,21 +112,21 @@ const AirportManagement: React.FC<{
       } else {
         await airportService.createAirport(data);
       }
-      
+
       loadAirports();
       handleCancel();
     } catch (err: any) {
-      setError(err.message || 'Không thể lưu sân bay');
+      setError(err.message || "Không thể lưu sân bay");
     }
   };
 
   const handleEdit = (airport: Airport) => {
     setEditingAirport(airport);
-    setSelectedCountry(airport.countryName || '');
+    setSelectedCountry(airport.countryName || "");
     reset({
       airportName: airport.airportName,
       cityName: airport.cityName,
-      countryName: airport.countryName
+      countryName: airport.countryName,
     });
     setShowForm(true);
   };
@@ -124,7 +138,7 @@ const AirportManagement: React.FC<{
 
   const handleConfirmDelete = async () => {
     if (!airportToDelete) return;
-    
+
     try {
       setDeleting(true);
       await airportService.deleteAirport(airportToDelete.airportId!);
@@ -132,7 +146,7 @@ const AirportManagement: React.FC<{
       setShowDeleteModal(false);
       setAirportToDelete(null);
     } catch (err: any) {
-      setError(err.message || 'Không thể xóa sân bay');
+      setError(err.message || "Không thể xóa sân bay");
     } finally {
       setDeleting(false);
     }
@@ -146,278 +160,288 @@ const AirportManagement: React.FC<{
   const handleCancel = () => {
     setShowForm(false);
     setEditingAirport(null);
-    setSelectedCountry('');
+    setSelectedCountry("");
     reset();
-    setError('');
-    
+    setError("");
+
     // Call the external close handler if provided
     if (onCloseAddModal) {
       onCloseAddModal();
     }
   };
 
-    if (loading) {
-        return (
-            <Container className="py-5 text-center">
-                <Spinner animation="border" role="status">
-                    <span className="visually-hidden">Đang tải...</span>
-                </Spinner>
-                <p className="mt-3">Đang tải dữ liệu sân bay...</p>
-            </Container>
-        );
-    }
-
+  if (loading) {
     return (
-        <Container fluid className="py-4">
-            {/* Read-only mode alert */}
-            {readOnly && (
-                <Row className="mb-4">
-                    <Col>
-                        <Alert variant="info" className="text-center">
-                            <Alert.Heading>Chế độ chỉ xem</Alert.Heading>
-                            <p className="mb-0">Bạn đang xem danh sách sân bay. Không thể chỉnh sửa trong chế độ này.</p>
-                        </Alert>
-                    </Col>
-                </Row>
-            )}
-
-            <Row className="mb-4">
-                <Col>
-                    <Card>
-                        <Card.Header className="d-flex justify-content-between align-items-center">
-                            <Card.Title className="mb-0">
-                                🏢 {readOnly ? 'Danh sách sân bay' : 'Quản lý sân bay'}
-                            </Card.Title>
-                            {!readOnly && (
-                                <Button
-                                    variant="primary"
-                                    onClick={() => setShowForm(true)}
-                                >
-                                    Thêm sân bay mới
-                                </Button>
-                            )}
-                        </Card.Header>
-                    </Card>
-                </Col>
-            </Row>
-
-            {error && (
-                <Row className="mb-4">
-                    <Col>
-                        <Alert variant="danger" className="text-center">
-                            {error}
-                        </Alert>
-                    </Col>
-                </Row>
-            )}
-
-            {/* Add/Edit Airport Modal */}
-            <Modal show={showForm && !readOnly} onHide={handleCancel} size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>{editingAirport ? 'Chỉnh sửa sân bay' : 'Thêm sân bay mới'}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form id="airport-form" onSubmit={handleSubmit(onSubmit)}>
-                        <Row className="mb-3">
-                            <Col>
-                                <Form.Group>
-                                    <Form.Label>Tên sân bay</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        {...register('airportName', {
-                                            required: 'Tên sân bay là bắt buộc'
-                                        })}
-                                        isInvalid={!!errors.airportName}
-                                        placeholder="ví dụ: Sân bay quốc tế Tân Sơn Nhất"
-                                    />
-                                    <Form.Control.Feedback type="invalid">
-                                        {errors.airportName?.message}
-                                    </Form.Control.Feedback>
-                                </Form.Group>
-                            </Col>
-                        </Row>
-
-                        <Row className="mb-3">
-                            <Col md={6}>
-                                <Form.Group>
-                                    <Form.Label>Tên thành phố</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        {...register('cityName', {
-                                            required: 'Tên thành phố là bắt buộc'
-                                        })}
-                                        isInvalid={!!errors.cityName}
-                                        placeholder="ví dụ: Hồ Chí Minh"
-                                    />
-                                    <Form.Control.Feedback type="invalid">
-                                        {errors.cityName?.message}
-                                    </Form.Control.Feedback>
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group>
-                                    <Form.Label>Quốc gia</Form.Label>
-                                    <TypeAhead
-                                        options={countryOptions}
-                                        value={selectedCountry}
-                                        onChange={(option) => {
-                                            const country = option?.value || '';
-                                            setSelectedCountry(String(country));
-                                        }}
-                                        placeholder="Tìm kiếm quốc gia..."
-                                        error={!!errors.countryName}
-                                    />
-                                    <input
-                                        type="hidden"
-                                        {...register('countryName', {
-                                            required: 'Quốc gia là bắt buộc'
-                                        })}
-                                        value={selectedCountry}
-                                    />
-                                    {errors.countryName && (
-                                        <div className="text-danger small mt-1">{errors.countryName.message}</div>
-                                    )}
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                    </Form>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCancel}>
-                        Hủy
-                    </Button>
-                    <Button variant="primary" onClick={handleSubmit(onSubmit)}>
-                        {editingAirport ? 'Cập nhật sân bay' : 'Tạo sân bay'}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-
-            {/* Delete Confirmation Modal */}
-            {!readOnly && (
-                <Modal show={showDeleteModal} onHide={handleCancelDelete} centered>
-                    <Modal.Header closeButton className="bg-danger text-white">
-                        <Modal.Title>
-                            <i className="bi bi-exclamation-triangle me-2"></i>
-                            Xác nhận xóa sân bay
-                        </Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body className="p-4">
-                        <div className="text-center mb-3">
-                            <i className="bi bi-exclamation-circle text-danger" style={{ fontSize: '3rem' }}></i>
-                        </div>
-                        <h5 className="text-center mb-3">Bạn có chắc chắn muốn xóa sân bay này không?</h5>
-                        {airportToDelete && (
-                            <div className="p-3 bg-light rounded mb-3">
-                                <div className="text-center">
-                                    <strong>{airportToDelete.airportName}</strong><br />
-                                    <span className="text-muted">
-                                        {airportToDelete.cityName}, {airportToDelete.countryName}
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-                        <p className="text-center text-muted mb-0">
-                            Hành động này không thể hoàn tác. Sân bay và tất cả dữ liệu liên quan sẽ bị xóa vĩnh viễn.
-                        </p>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button
-                            variant="secondary"
-                            onClick={handleCancelDelete}
-                            disabled={deleting}
-                        >
-                            Hủy
-                        </Button>
-                        <Button
-                            variant="danger"
-                            onClick={handleConfirmDelete}
-                            disabled={deleting}
-                        >
-                            {deleting ? (
-                                <>
-                                    <Spinner animation="border" size="sm" className="me-2" />
-                                    Đang xóa...
-                                </>
-                            ) : (
-                                <>
-                                    <i className="bi bi-trash me-2"></i>
-                                    Có, xóa sân bay
-                                </>
-                            )}
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
-            )}
-
-            {/* Airport Table */}
-            <Row>
-                <Col>
-                    <Card>
-                        <Card.Header>
-                            <Card.Title className="mb-0">
-                                {readOnly ? 'Danh sách sân bay' : 'Tất cả sân bay'}
-                            </Card.Title>
-                        </Card.Header>
-                        <Card.Body className="p-0">
-                            {airports.length === 0 ? (
-                                <div className="text-center py-5">
-                                    <p className="text-muted mb-0">
-                                        {readOnly 
-                                            ? 'Không tìm thấy sân bay nào.'
-                                            : 'Không tìm thấy sân bay nào. Thêm sân bay đầu tiên để bắt đầu.'
-                                        }
-                                    </p>
-                                </div>
-                            ) : (
-                                <Table responsive striped hover>
-                                    <thead>
-                                        <tr>
-                                            <th>Tên sân bay</th>
-                                            <th>Thành phố</th>
-                                            <th>Quốc gia</th>
-                                            {!readOnly && <th>Thao tác</th>}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {airports.map(airport => (
-                                            <tr key={airport.airportId}>
-                                                <td>{airport.airportName}</td>
-                                                <td>
-                                                    <Badge bg="info">{airport.cityName}</Badge>
-                                                </td>
-                                                <td>{airport.countryName}</td>
-                                                {!readOnly && (
-                                                    <td>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline-secondary"
-                                                            className="me-2"
-                                                            onClick={() => handleEdit(airport)}
-                                                            disabled={deleting}
-                                                        >
-                                                            Sửa
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline-danger"
-                                                            onClick={() => handleDeleteClick(airport)}
-                                                            disabled={deleting}
-                                                        >
-                                                            Xóa
-                                                        </Button>
-                                                    </td>
-                                                )}
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </Table>
-                            )}
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
-        </Container>
+      <Container className="py-5 text-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Đang tải...</span>
+        </Spinner>
+        <p className="mt-3">Đang tải dữ liệu sân bay...</p>
+      </Container>
     );
+  }
+
+  return (
+    <Container fluid className="py-4">
+      {/* Read-only mode alert */}
+      {readOnly && (
+        <Row className="mb-4">
+          <Col>
+            <Alert variant="info" className="text-center">
+              <Alert.Heading>Chế độ chỉ xem</Alert.Heading>
+              <p className="mb-0">
+                Bạn đang xem danh sách sân bay. Không thể chỉnh sửa trong chế độ
+                này.
+              </p>
+            </Alert>
+          </Col>
+        </Row>
+      )}
+
+      <Row className="mb-4">
+        <Col>
+          <Card>
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <Card.Title className="mb-0">
+                🏢 {readOnly ? "Danh sách sân bay" : "Quản lý sân bay"}
+              </Card.Title>
+              {!readOnly && (
+                <Button variant="primary" onClick={() => setShowForm(true)}>
+                  Thêm sân bay mới
+                </Button>
+              )}
+            </Card.Header>
+          </Card>
+        </Col>
+      </Row>
+
+      {error && (
+        <Row className="mb-4">
+          <Col>
+            <Alert variant="danger" className="text-center">
+              {error}
+            </Alert>
+          </Col>
+        </Row>
+      )}
+
+      {/* Add/Edit Airport Modal */}
+      <Modal show={showForm && !readOnly} onHide={handleCancel} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {editingAirport ? "Chỉnh sửa sân bay" : "Thêm sân bay mới"}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form id="airport-form" onSubmit={handleSubmit(onSubmit)}>
+            <Row className="mb-3">
+              <Col>
+                <Form.Group>
+                  <Form.Label>Tên sân bay</Form.Label>
+                  <Form.Control
+                    type="text"
+                    {...register("airportName", {
+                      required: "Tên sân bay là bắt buộc",
+                    })}
+                    isInvalid={!!errors.airportName}
+                    placeholder="ví dụ: Sân bay quốc tế Tân Sơn Nhất"
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.airportName?.message}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Tên thành phố</Form.Label>
+                  <Form.Control
+                    type="text"
+                    {...register("cityName", {
+                      required: "Tên thành phố là bắt buộc",
+                    })}
+                    isInvalid={!!errors.cityName}
+                    placeholder="ví dụ: Hồ Chí Minh"
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.cityName?.message}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Quốc gia</Form.Label>
+                  <TypeAhead
+                    options={countryOptions}
+                    value={selectedCountry}
+                    onChange={(option) => {
+                      const country = option?.value || "";
+                      setSelectedCountry(String(country));
+                    }}
+                    placeholder="Tìm kiếm quốc gia..."
+                    error={!!errors.countryName}
+                  />
+                  <input
+                    type="hidden"
+                    {...register("countryName", {
+                      required: "Quốc gia là bắt buộc",
+                    })}
+                    value={selectedCountry}
+                  />
+                  {errors.countryName && (
+                    <div className="text-danger small mt-1">
+                      {errors.countryName.message}
+                    </div>
+                  )}
+                </Form.Group>
+              </Col>
+            </Row>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCancel}>
+            Hủy
+          </Button>
+          <Button variant="primary" onClick={handleSubmit(onSubmit)}>
+            {editingAirport ? "Cập nhật sân bay" : "Tạo sân bay"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      {!readOnly && (
+        <Modal show={showDeleteModal} onHide={handleCancelDelete} centered>
+          <Modal.Header closeButton className="bg-danger text-white">
+            <Modal.Title>
+              <i className="bi bi-exclamation-triangle me-2"></i>
+              Xác nhận xóa sân bay
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-4">
+            <div className="text-center mb-3">
+              <i
+                className="bi bi-exclamation-circle text-danger"
+                style={{ fontSize: "3rem" }}
+              ></i>
+            </div>
+            <h5 className="text-center mb-3">
+              Bạn có chắc chắn muốn xóa sân bay này không?
+            </h5>
+            {airportToDelete && (
+              <div className="p-3 bg-light rounded mb-3">
+                <div className="text-center">
+                  <strong>{airportToDelete.airportName}</strong>
+                  <br />
+                  <span className="text-muted">
+                    {airportToDelete.cityName}, {airportToDelete.countryName}
+                  </span>
+                </div>
+              </div>
+            )}
+            <p className="text-center text-muted mb-0">
+              Hành động này không thể hoàn tác. Sân bay và tất cả dữ liệu liên
+              quan sẽ bị xóa vĩnh viễn.
+            </p>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={handleCancelDelete}
+              disabled={deleting}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleConfirmDelete}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <Spinner animation="border" size="sm" className="me-2" />
+                  Đang xóa...
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-trash me-2"></i>
+                  Có, xóa sân bay
+                </>
+              )}
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
+      {/* Airport Table */}
+      <Row>
+        <Col>
+          <Card>
+            <Card.Header>
+              <Card.Title className="mb-0">
+                {readOnly ? "Danh sách sân bay" : "Tất cả sân bay"}
+              </Card.Title>
+            </Card.Header>
+            <Card.Body className="p-0">
+              {airports.length === 0 ? (
+                <div className="text-center py-5">
+                  <p className="text-muted mb-0">
+                    {readOnly
+                      ? "Không tìm thấy sân bay nào."
+                      : "Không tìm thấy sân bay nào. Thêm sân bay đầu tiên để bắt đầu."}
+                  </p>
+                </div>
+              ) : (
+                <Table responsive striped hover>
+                  <thead>
+                    <tr>
+                      <th>Tên sân bay</th>
+                      <th>Thành phố</th>
+                      <th>Quốc gia</th>
+                      {!readOnly && <th>Thao tác</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {airports.map((airport) => (
+                      <tr key={airport.airportId}>
+                        <td>{airport.airportName}</td>
+                        <td>
+                          <Badge bg="info">{airport.cityName}</Badge>
+                        </td>
+                        <td>{airport.countryName}</td>
+                        {!readOnly && (
+                          <td>
+                            <Button
+                              size="sm"
+                              variant="outline-secondary"
+                              className="me-2"
+                              onClick={() => handleEdit(airport)}
+                              disabled={deleting}
+                            >
+                              Sửa
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline-danger"
+                              onClick={() => handleDeleteClick(airport)}
+                              disabled={deleting}
+                            >
+                              Xóa
+                            </Button>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
+  );
 };
 
 export default AirportManagement;

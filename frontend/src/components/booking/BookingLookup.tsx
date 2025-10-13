@@ -1,80 +1,109 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, ListGroup, Modal } from 'react-bootstrap';
-import { BookingConfirmation } from '../../services/bookingConfirmationService';
-import { ticketService, flightService, passengerService, flightTicketClassService, paymentService } from '../../services';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Alert,
+  Spinner,
+  Badge,
+  ListGroup,
+  Modal,
+} from "react-bootstrap";
+import { BookingConfirmation } from "../../services/bookingConfirmationService";
+import {
+  ticketService,
+  flightService,
+  passengerService,
+  flightTicketClassService,
+} from "../../services";
 
 const BookingLookup: React.FC = () => {
   const navigate = useNavigate();
   const [searchData, setSearchData] = useState({
-    confirmationCode: '',
+    confirmationCode: "",
   });
   const [booking, setBooking] = useState<BookingConfirmation | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalTitle, setModalTitle] = useState("");
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!searchData.confirmationCode.trim()) {
-      setError('Vui lòng nhập mã xác nhận');
+      setError("Vui lòng nhập mã xác nhận");
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError("");
     setBooking(null);
 
     try {
-      const tickets = await ticketService.getTicketsOnConfirmationCode(searchData.confirmationCode);
+      const tickets = await ticketService.getTicketsOnConfirmationCode(
+        searchData.confirmationCode
+      );
 
-      if (!tickets || tickets.length === 0) {
-        setError('Không tìm thấy đặt chỗ với mã xác nhận này');
+      if (!tickets || tickets.data.length === 0) {
+        setError("Không tìm thấy đặt chỗ với mã xác nhận này");
         return;
       }
 
-      const firstTicket = tickets[0];
+      const firstTicket = tickets.data[0];
       const flight = await flightService.getFlightById(firstTicket.flightId!);
 
       const passengerNames = await Promise.all(
-        tickets.map(async (ticket) => {
+        tickets.data.map(async (ticket) => {
           try {
-            const passenger = await passengerService.getPassengerById(ticket.passengerId!);
-            return passenger.passengerName;
+            const passenger = await passengerService.getPassengerById(
+              ticket.passengerId!
+            );
+            return passenger.data.passengerName;
           } catch (error) {
-            console.error(`Error getting passenger ${ticket.passengerId}:`, error);
+            console.error(
+              `Error getting passenger ${ticket.passengerId}:`,
+              error
+            );
             return `Passenger ${ticket.passengerId}`;
           }
         })
       );
 
-      setIsPaid(tickets.every(ticket => ticket.ticketStatus === 1));
+      setIsPaid(tickets.data.every((ticket) => ticket.ticketStatus === 1));
 
       const bookingData: BookingConfirmation = {
         confirmationCode: searchData.confirmationCode,
         bookingDate: new Date().toISOString(),
-        tickets: tickets,
+        tickets: tickets.data,
         passengers: passengerNames,
-        totalAmount: tickets.reduce((sum, ticket) => sum + (ticket.fare || 0), 0),
+        totalAmount: tickets.data.reduce(
+          (sum, ticket) => sum + (ticket.fare || 0),
+          0
+        ),
         flightInfo: {
-          flightCode: flight.flightCode || '',
-          departureTime: flight.departureTime || '',
-          arrivalTime: flight.arrivalTime || '',
-          departureCity: flight.departureCityName || '',
-          arrivalCity: flight.arrivalCityName || ''
-        }
+          flightCode: flight.data.flightCode || "",
+          departureTime: flight.data.departureTime || "",
+          arrivalTime: flight.data.arrivalTime || "",
+          departureCity: flight.data.departureCityName || "",
+          arrivalCity: flight.data.arrivalCityName || "",
+        },
       };
 
       setBooking(bookingData);
     } catch (err: any) {
-      console.error('Error looking up booking:', err);
-      setError('Không thể tìm thấy đặt chỗ. Vui lòng kiểm tra mã xác nhận và thử lại.');
+      console.error("Error looking up booking:", err);
+      setError(
+        "Không thể tìm thấy đặt chỗ. Vui lòng kiểm tra mã xác nhận và thử lại."
+      );
     } finally {
       setLoading(false);
     }
@@ -101,21 +130,23 @@ const BookingLookup: React.FC = () => {
         }
       }
 
-      setModalTitle('Thành công');
-      setModalMessage('Đặt chỗ và tất cả vé đã được hủy thành công.');
+      setModalTitle("Thành công");
+      setModalMessage("Đặt chỗ và tất cả vé đã được hủy thành công.");
       setShowSuccessModal(true);
       setBooking(null);
-      setSearchData({ confirmationCode: '' });
+      setSearchData({ confirmationCode: "" });
     } catch (err: any) {
-      console.error('Error canceling booking:', err);
-      setModalTitle('Lỗi');
-      setModalMessage('Không thể hủy đặt chỗ: ' + (err.message || 'Lỗi không xác định'));
+      console.error("Error canceling booking:", err);
+      setModalTitle("Lỗi");
+      setModalMessage(
+        "Không thể hủy đặt chỗ: " + (err.message || "Lỗi không xác định")
+      );
       setShowErrorModal(true);
     }
   };
 
   const handlePrintBooking = () => {
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.innerHTML = `
       @media print {
         /* Remove all margins and padding from page */
@@ -239,7 +270,7 @@ const BookingLookup: React.FC = () => {
   const handlePayment = async () => {
     if (!booking) return;
 
-    navigate('/payment/' + booking.confirmationCode);
+    navigate("/payment/" + booking.confirmationCode);
   };
 
   const handleCloseCancelModal = () => {
@@ -253,7 +284,9 @@ const BookingLookup: React.FC = () => {
           {/* Header */}
           <div className="text-center mb-5 no-print">
             <h1 className="mb-3">Quản lý đặt chỗ của bạn</h1>
-            <p className="text-muted">Nhập mã xác nhận đặt chỗ để xem và quản lý việc đặt chỗ của bạn</p>
+            <p className="text-muted">
+              Nhập mã xác nhận đặt chỗ để xem và quản lý việc đặt chỗ của bạn
+            </p>
           </div>
 
           {/* Search Form */}
@@ -266,14 +299,18 @@ const BookingLookup: React.FC = () => {
                 <Row>
                   <Col md={12}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="w-100 text-center fw-bold fs-4">Mã xác nhận *</Form.Label>
+                      <Form.Label className="w-100 text-center fw-bold fs-4">
+                        Mã xác nhận *
+                      </Form.Label>
                       <Form.Control
                         type="text"
                         value={searchData.confirmationCode}
-                        onChange={(e) => setSearchData(prev => ({
-                          ...prev,
-                          confirmationCode: e.target.value.toUpperCase()
-                        }))}
+                        onChange={(e) =>
+                          setSearchData((prev) => ({
+                            ...prev,
+                            confirmationCode: e.target.value.toUpperCase(),
+                          }))
+                        }
                         placeholder="FMS-YYYYMMDD-XXXX"
                         required
                       />
@@ -291,23 +328,23 @@ const BookingLookup: React.FC = () => {
                 )}
 
                 <div className="d-flex gap-3">
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    disabled={loading}
-                  >
+                  <Button type="submit" variant="primary" disabled={loading}>
                     {loading ? (
                       <>
-                        <Spinner animation="border" size="sm" className="me-2" />
+                        <Spinner
+                          animation="border"
+                          size="sm"
+                          className="me-2"
+                        />
                         Đang tìm kiếm...
                       </>
                     ) : (
-                      'Tìm kiếm đặt chỗ'
+                      "Tìm kiếm đặt chỗ"
                     )}
                   </Button>
                   <Button
                     variant="outline-secondary"
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate("/")}
                   >
                     Về trang chủ
                   </Button>
@@ -320,11 +357,16 @@ const BookingLookup: React.FC = () => {
           {booking && (
             <div className="print-area">
               <Card className="mb-4">
-                <Card.Header className={isPaid ? "bg-success text-white" : "bg-warning"}>
+                <Card.Header
+                  className={isPaid ? "bg-success text-white" : "bg-warning"}
+                >
                   <div className="d-flex justify-content-between align-items-center">
                     <h4 className="mb-0">Đã tìm thấy đặt chỗ</h4>
                     <div className="d-flex gap-2 align-items-center">
-                      <Badge bg={isPaid ? "success" : "warning"} className="fs-6 py-2 px-3">
+                      <Badge
+                        bg={isPaid ? "success" : "warning"}
+                        className="fs-6 py-2 px-3"
+                      >
                         {isPaid ? (
                           <>
                             <i className="bi bi-check-circle me-2"></i>
@@ -354,16 +396,27 @@ const BookingLookup: React.FC = () => {
                       </Col>
                       <Col sm={6}>
                         <strong>Tuyến bay:</strong>
-                        <div>{booking.flightInfo.departureCity} → {booking.flightInfo.arrivalCity}</div>
+                        <div>
+                          {booking.flightInfo.departureCity} →{" "}
+                          {booking.flightInfo.arrivalCity}
+                        </div>
                       </Col>
                       <Col sm={6}>
                         <strong>Khởi hành:</strong>
-                        <div>{new Date(booking.flightInfo.departureTime).toLocaleString('vi-VN')}</div>
+                        <div>
+                          {new Date(
+                            booking.flightInfo.departureTime
+                          ).toLocaleString("vi-VN")}
+                        </div>
                       </Col>
                       {booking.flightInfo.arrivalTime && (
                         <Col sm={6}>
                           <strong>Đến:</strong>
-                          <div>{new Date(booking.flightInfo.arrivalTime).toLocaleString('vi-VN')}</div>
+                          <div>
+                            {new Date(
+                              booking.flightInfo.arrivalTime
+                            ).toLocaleString("vi-VN")}
+                          </div>
                         </Col>
                       )}
                     </Row>
@@ -374,20 +427,34 @@ const BookingLookup: React.FC = () => {
                     <h5 className="text-primary mb-3">Thông tin hành khách</h5>
                     <ListGroup>
                       {booking.tickets.map((ticket, index) => (
-                        <ListGroup.Item key={index} className="d-flex justify-content-between align-items-center">
+                        <ListGroup.Item
+                          key={index}
+                          className="d-flex justify-content-between align-items-center"
+                        >
                           <div>
-                            <strong>Hành khách {index + 1}: {booking.passengers[index]}</strong>
+                            <strong>
+                              Hành khách {index + 1}:{" "}
+                              {booking.passengers[index]}
+                            </strong>
                             <div className="text-muted d-flex align-items-center">
                               Ghế: {ticket.seatNumber}
                               <Badge
-                                bg={ticket.ticketStatus === 1 ? "success" : "warning"}
+                                bg={
+                                  ticket.ticketStatus === 1
+                                    ? "success"
+                                    : "warning"
+                                }
                                 className="ms-2"
                               >
-                                {ticket.ticketStatus === 1 ? "Đã thanh toán" : "Chờ thanh toán"}
+                                {ticket.ticketStatus === 1
+                                  ? "Đã thanh toán"
+                                  : "Chờ thanh toán"}
                               </Badge>
                             </div>
                           </div>
-                          <Badge bg="primary" className="fs-6">{ticket.fare?.toLocaleString('vi-VN')} VND</Badge>
+                          <Badge bg="primary" className="fs-6">
+                            {ticket.fare?.toLocaleString("vi-VN")} VND
+                          </Badge>
                         </ListGroup.Item>
                       ))}
                     </ListGroup>
@@ -399,7 +466,11 @@ const BookingLookup: React.FC = () => {
                     <Row className="g-3">
                       <Col sm={6}>
                         <strong>Ngày đặt:</strong>
-                        <div>{new Date(booking.bookingDate).toLocaleDateString('vi-VN')}</div>
+                        <div>
+                          {new Date(booking.bookingDate).toLocaleDateString(
+                            "vi-VN"
+                          )}
+                        </div>
                       </Col>
                       <Col sm={6}>
                         <strong>Tổng số hành khách:</strong>
@@ -418,7 +489,9 @@ const BookingLookup: React.FC = () => {
                           <strong>Cần thanh toán trước:</strong>
                           <div>
                             <Badge bg="danger">
-                              {new Date(booking.flightInfo.departureTime).toLocaleDateString('vi-VN')}
+                              {new Date(
+                                booking.flightInfo.departureTime
+                              ).toLocaleDateString("vi-VN")}
                             </Badge>
                           </div>
                         </Col>
@@ -430,7 +503,10 @@ const BookingLookup: React.FC = () => {
                               <strong className="fs-5">Tổng số tiền:</strong>
                             </Col>
                             <Col className="text-end">
-                              <strong className="fs-4 text-primary">{booking.totalAmount.toLocaleString('vi-VN')} VND</strong>
+                              <strong className="fs-4 text-primary">
+                                {booking.totalAmount.toLocaleString("vi-VN")}{" "}
+                                VND
+                              </strong>
                             </Col>
                           </Row>
                         </div>
@@ -464,11 +540,10 @@ const BookingLookup: React.FC = () => {
                         </Button>
                       </Col>
                     )}
-                    <Col xs={12} md={isPaid? 6 : 4}>
-
+                    <Col xs={12} md={isPaid ? 6 : 4}>
                       <Button
                         variant="outline-primary"
-                        onClick={() => navigate('/')}
+                        onClick={() => navigate("/")}
                         className="w-100 mb-2"
                       >
                         <i className="bi bi-house me-2"></i>
@@ -487,14 +562,14 @@ const BookingLookup: React.FC = () => {
                         </Button>
                       </Col>
                     )} */}
-
                   </Row>
 
                   {!isPaid && (
                     <Alert variant="info" className="mb-0 mt-3">
                       <i className="bi bi-info-circle-fill me-2"></i>
-                      <strong>Quan trọng:</strong> Đặt chỗ này cần thanh toán để được xác nhận.
-                      Các đặt chỗ chưa thanh toán có thể bị hủy tự động 24 giờ trước khi khởi hành.
+                      <strong>Quan trọng:</strong> Đặt chỗ này cần thanh toán để
+                      được xác nhận. Các đặt chỗ chưa thanh toán có thể bị hủy
+                      tự động 24 giờ trước khi khởi hành.
                     </Alert>
                   )}
                 </Card.Footer>
@@ -511,8 +586,14 @@ const BookingLookup: React.FC = () => {
               <ul className="mb-0">
                 <li>Đảm bảo bạn nhập mã xác nhận chính xác như đã hiển thị</li>
                 <li>Định dạng mã xác nhận là: FMS-YYYYMMDD-XXXX</li>
-                <li>Nếu không tìm thấy đặt chỗ của bạn, hãy liên hệ dịch vụ khách hàng</li>
-                <li>Các đặt chỗ khách được lưu trữ cục bộ cho tối đa 10 đặt chỗ gần đây</li>
+                <li>
+                  Nếu không tìm thấy đặt chỗ của bạn, hãy liên hệ dịch vụ khách
+                  hàng
+                </li>
+                <li>
+                  Các đặt chỗ khách được lưu trữ cục bộ cho tối đa 10 đặt chỗ
+                  gần đây
+                </li>
               </ul>
             </Card.Body>
           </Card>
@@ -534,33 +615,40 @@ const BookingLookup: React.FC = () => {
         </Modal.Header>
         <Modal.Body className="p-4">
           <div className="text-center mb-3">
-            <i className="bi bi-exclamation-circle text-danger" style={{ fontSize: '3rem' }}></i>
+            <i
+              className="bi bi-exclamation-circle text-danger"
+              style={{ fontSize: "3rem" }}
+            ></i>
           </div>
-          <h5 className="text-center mb-3">Bạn có chắc chắn muốn hủy đặt chỗ này không?</h5>
+          <h5 className="text-center mb-3">
+            Bạn có chắc chắn muốn hủy đặt chỗ này không?
+          </h5>
           <p className="text-center text-muted mb-0">
-            Hành động này không thể hoàn tác. Tất cả vé cho đặt chỗ này sẽ bị hủy vĩnh viễn.
+            Hành động này không thể hoàn tác. Tất cả vé cho đặt chỗ này sẽ bị
+            hủy vĩnh viễn.
           </p>
           {booking && (
             <div className="mt-3 p-3 bg-light rounded">
               <div className="text-center">
-                <strong>Đặt chỗ: {booking.confirmationCode}</strong><br />
-                <span className="text-muted">{booking.flightInfo.flightCode} - {booking.tickets.length} hành khách</span><br />
-                <span className="text-primary fw-bold">{booking.totalAmount.toLocaleString('vi-VN')} VND</span>
+                <strong>Đặt chỗ: {booking.confirmationCode}</strong>
+                <br />
+                <span className="text-muted">
+                  {booking.flightInfo.flightCode} - {booking.tickets.length}{" "}
+                  hành khách
+                </span>
+                <br />
+                <span className="text-primary fw-bold">
+                  {booking.totalAmount.toLocaleString("vi-VN")} VND
+                </span>
               </div>
             </div>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={handleCloseCancelModal}
-          >
+          <Button variant="secondary" onClick={handleCloseCancelModal}>
             Giữ đặt chỗ
           </Button>
-          <Button
-            variant="danger"
-            onClick={confirmCancelBooking}
-          >
+          <Button variant="danger" onClick={confirmCancelBooking}>
             <i className="bi bi-trash me-2"></i>
             Có, hủy đặt chỗ
           </Button>
@@ -568,7 +656,11 @@ const BookingLookup: React.FC = () => {
       </Modal>
 
       {/* Success Modal */}
-      <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
+      <Modal
+        show={showSuccessModal}
+        onHide={() => setShowSuccessModal(false)}
+        centered
+      >
         <Modal.Header closeButton className="bg-success text-white">
           <Modal.Title>
             <i className="bi bi-check-circle me-2"></i>
@@ -577,15 +669,15 @@ const BookingLookup: React.FC = () => {
         </Modal.Header>
         <Modal.Body className="p-4 text-center">
           <div className="mb-3">
-            <i className="bi bi-check-circle text-success" style={{ fontSize: '3rem' }}></i>
+            <i
+              className="bi bi-check-circle text-success"
+              style={{ fontSize: "3rem" }}
+            ></i>
           </div>
           <p className="mb-0">{modalMessage}</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="success"
-            onClick={() => setShowSuccessModal(false)}
-          >
+          <Button variant="success" onClick={() => setShowSuccessModal(false)}>
             <i className="bi bi-check me-2"></i>
             Đóng
           </Button>
@@ -593,7 +685,11 @@ const BookingLookup: React.FC = () => {
       </Modal>
 
       {/* Error Modal */}
-      <Modal show={showErrorModal} onHide={() => setShowErrorModal(false)} centered>
+      <Modal
+        show={showErrorModal}
+        onHide={() => setShowErrorModal(false)}
+        centered
+      >
         <Modal.Header closeButton className="bg-danger text-white">
           <Modal.Title>
             <i className="bi bi-exclamation-triangle me-2"></i>
@@ -602,15 +698,15 @@ const BookingLookup: React.FC = () => {
         </Modal.Header>
         <Modal.Body className="p-4 text-center">
           <div className="mb-3">
-            <i className="bi bi-x-circle text-danger" style={{ fontSize: '3rem' }}></i>
+            <i
+              className="bi bi-x-circle text-danger"
+              style={{ fontSize: "3rem" }}
+            ></i>
           </div>
           <p className="mb-0">{modalMessage}</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="danger"
-            onClick={() => setShowErrorModal(false)}
-          >
+          <Button variant="danger" onClick={() => setShowErrorModal(false)}>
             <i className="bi bi-x me-2"></i>
             Đóng
           </Button>

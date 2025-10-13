@@ -1,6 +1,13 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { LoginRequest, UserDetails, RegisterRequest } from '../models';
-import { authService } from '../services/authService';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from "react";
+import { LoginRequest, UserDetails, RegisterRequest } from "../models";
+import { authService } from "../services/authService";
 
 // Define the context type
 interface AuthContextType {
@@ -24,7 +31,6 @@ interface AuthProviderProps {
 
 /**
  * AuthProvider Component with Updated Permissions
- * Last updated: 2025-06-11 08:48:38 UTC by thinh0704hcm
  */
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserDetails | null>(() => {
@@ -38,7 +44,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         await authService.refreshToken();
       } catch (error) {
-        console.log('Token refresh failed at 2025-06-11 08:48:38 UTC by thinh0704hcm');
+        console.error("Error refreshing token:", error);
         setUser(null);
       }
     }, 300000); // Refresh every 5 minutes
@@ -62,7 +68,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await authService.login(loginRequest);
       setUser(authService.getCurrentUser());
       setLoading(false);
-      console.log('User login successful at 2025-06-11 08:48:38 UTC by thinh0704hcm');
+      console.log(
+        "User login successful at 2025-06-11 08:48:38 UTC by thinh0704hcm"
+      );
     } catch (err) {
       setLoading(false);
       throw err;
@@ -75,7 +83,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await authService.register(registerRequest);
       setUser(authService.getCurrentUser());
       setLoading(false);
-      console.log('User registration successful at 2025-06-11 08:48:38 UTC by thinh0704hcm');
+      console.log(
+        "User registration successful at 2025-06-11 08:48:38 UTC by thinh0704hcm"
+      );
     } catch (err) {
       setLoading(false);
       throw err;
@@ -85,7 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = useCallback(() => {
     authService.logout();
     setUser(null);
-    console.log('User logout at 2025-06-11 08:48:38 UTC by thinh0704hcm');
+    console.log("User logout at 2025-06-11 08:48:38 UTC by thinh0704hcm");
   }, []);
 
   const refresh = useCallback(async () => {
@@ -112,16 +122,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const resetPassword = useCallback(async (token: string, newPassword: string) => {
-    setLoading(true);
-    try {
-      await authService.resetPassword(token, newPassword);
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-      throw err;
-    }
-  }, []);
+  const resetPassword = useCallback(
+    async (token: string, newPassword: string) => {
+      setLoading(true);
+      try {
+        await authService.resetPassword(token, newPassword);
+        setLoading(false);
+      } catch (err) {
+        setLoading(false);
+        throw err;
+      }
+    },
+    []
+  );
 
   const value = {
     user,
@@ -131,7 +144,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     refresh,
     forgetPassword,
-    resetPassword
+    resetPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -141,7 +154,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -159,37 +172,76 @@ export const usePermissions = () => {
   };
 
   const hasAnyRole = (roles: string[]) => {
-    return roles.some(role => hasRole(role));
+    return roles.some((role) => hasRole(role));
   };
 
   return {
     // Customer permissions
-    canSearchFlights: () => !user || hasRole('CUSTOMER') || user?.accountTypeName === "Employee",
-    canManageBookings: () => !user || hasRole('CUSTOMER') || hasAnyRole(['EMPLOYEE_SUPPORT', 'EMPLOYEE_TICKETING', 'EMPLOYEE_ADMINISTRATOR']),
-    canViewDashboard: () => hasRole('CUSTOMER'),
+    canSearchFlights: () =>
+      !user || hasRole("CUSTOMER") || user?.accountTypeName === "Employee",
+    canManageBookings: () =>
+      !user ||
+      hasRole("CUSTOMER") ||
+      hasAnyRole([
+        "EMPLOYEE_SUPPORT",
+        "EMPLOYEE_TICKETING",
+        "EMPLOYEE_ADMINISTRATOR",
+      ]),
+    canViewDashboard: () => hasRole("CUSTOMER"),
 
     // Updated Employee permissions based on corrected role structure
-    canViewAdmin: () => hasAnyRole(['EMPLOYEE_ADMINISTRATOR', 'EMPLOYEE_SUPPORT']),
-    canViewFlightManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_SCHEDULING', 'EMPLOYEE_ADMINISTRATOR', 'EMPLOYEE_SUPPORT']),
-    canViewAirportManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR', 'EMPLOYEE_SUPPORT']),
-    canViewPlaneManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR', 'EMPLOYEE_SUPPORT']),
-    canViewTicketClassManagement: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR', 'EMPLOYEE_SUPPORT']),
-    canViewEmployeeManagement: () => hasAnyRole(['EMPLOYEE_HUMAN_RESOURCES', 'EMPLOYEE_ADMINISTRATOR']),
-    canViewParameterSettings: () => hasAnyRole(['EMPLOYEE_FLIGHT_OPERATIONS', 'EMPLOYEE_ADMINISTRATOR', 'EMPLOYEE_SUPPORT']),
-    canViewReports: () => hasAnyRole(['EMPLOYEE_ACCOUNTING', 'EMPLOYEE_ADMINISTRATOR']),
+    canViewAdmin: () =>
+      hasAnyRole(["EMPLOYEE_ADMINISTRATOR", "EMPLOYEE_SUPPORT"]),
+    canViewFlightManagement: () =>
+      hasAnyRole([
+        "EMPLOYEE_FLIGHT_SCHEDULING",
+        "EMPLOYEE_ADMINISTRATOR",
+        "EMPLOYEE_SUPPORT",
+      ]),
+    canViewAirportManagement: () =>
+      hasAnyRole([
+        "EMPLOYEE_FLIGHT_OPERATIONS",
+        "EMPLOYEE_ADMINISTRATOR",
+        "EMPLOYEE_SUPPORT",
+      ]),
+    canViewPlaneManagement: () =>
+      hasAnyRole([
+        "EMPLOYEE_FLIGHT_OPERATIONS",
+        "EMPLOYEE_ADMINISTRATOR",
+        "EMPLOYEE_SUPPORT",
+      ]),
+    canViewTicketClassManagement: () =>
+      hasAnyRole([
+        "EMPLOYEE_FLIGHT_OPERATIONS",
+        "EMPLOYEE_ADMINISTRATOR",
+        "EMPLOYEE_SUPPORT",
+      ]),
+    canViewEmployeeManagement: () =>
+      hasAnyRole(["EMPLOYEE_HUMAN_RESOURCES", "EMPLOYEE_ADMINISTRATOR"]),
+    canViewParameterSettings: () =>
+      hasAnyRole([
+        "EMPLOYEE_FLIGHT_OPERATIONS",
+        "EMPLOYEE_ADMINISTRATOR",
+        "EMPLOYEE_SUPPORT",
+      ]),
+    canViewReports: () =>
+      hasAnyRole(["EMPLOYEE_ACCOUNTING", "EMPLOYEE_ADMINISTRATOR"]),
 
     // Department-specific permissions
-    canViewCustomerSupport: () => hasAnyRole(['EMPLOYEE_SUPPORT', 'EMPLOYEE_ADMINISTRATOR']),
-    canViewTicketing: () => hasAnyRole(['EMPLOYEE_TICKETING', 'EMPLOYEE_ADMINISTRATOR']),
-    canViewAccounting: () => hasAnyRole(['EMPLOYEE_ACCOUNTING', 'EMPLOYEE_ADMINISTRATOR']),
+    canViewCustomerSupport: () =>
+      hasAnyRole(["EMPLOYEE_SUPPORT", "EMPLOYEE_ADMINISTRATOR"]),
+    canViewTicketing: () =>
+      hasAnyRole(["EMPLOYEE_TICKETING", "EMPLOYEE_ADMINISTRATOR"]),
+    canViewAccounting: () =>
+      hasAnyRole(["EMPLOYEE_ACCOUNTING", "EMPLOYEE_ADMINISTRATOR"]),
 
     // General checks
-    isCustomer: () => hasRole('CUSTOMER'),
+    isCustomer: () => hasRole("CUSTOMER"),
     isEmployee: () => user?.accountTypeName === "Employee",
-    isAdmin: () => hasRole('EMPLOYEE_ADMINISTRATOR'),
+    isAdmin: () => hasRole("EMPLOYEE_ADMINISTRATOR"),
 
     // Specific role checks
     hasRole,
-    hasAnyRole
+    hasAnyRole,
   };
 };

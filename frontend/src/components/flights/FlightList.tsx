@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Card, Form, Badge } from 'react-bootstrap';
-import { Flight } from '../../models';
-import FlightCard from './FlightCard';
+import React, { useState } from "react";
+import { Container, Row, Col, Card, Form, Badge } from "react-bootstrap";
+import { Flight } from "../../models";
+import FlightCard from "./FlightCard";
 
 interface FlightListProps {
   flights: Flight[];
@@ -9,20 +9,32 @@ interface FlightListProps {
   onBookFlight: (flightId: number, ticketClassId: number) => void;
 }
 
-const FlightList: React.FC<FlightListProps> = ({ flights, passengerCount, onBookFlight }) => {
-  const [sortBy, setSortBy] = useState<'price' | 'departure' | 'duration'>('departure');
-  const [filterBy, setFilterBy] = useState<'all' | 'morning' | 'afternoon' | 'evening'>('all');
+const FlightList: React.FC<FlightListProps> = ({
+  flights,
+  passengerCount,
+  onBookFlight,
+}) => {
+  const [sortBy, setSortBy] = useState<"price" | "departure" | "duration">(
+    "departure"
+  );
+  const [filterBy, setFilterBy] = useState<
+    "all" | "morning" | "afternoon" | "evening"
+  >("all");
 
   const filterFlights = (flights: Flight[]) => {
-    if (filterBy === 'all') return flights;
-    
-    return flights.filter(flight => {
+    if (filterBy === "all") return flights;
+
+    return flights.filter((flight) => {
       const hour = new Date(flight.departureTime).getHours();
       switch (filterBy) {
-        case 'morning': return hour >= 6 && hour < 12;
-        case 'afternoon': return hour >= 12 && hour < 18;
-        case 'evening': return hour >= 18 || hour < 6;
-        default: return true;
+        case "morning":
+          return hour >= 6 && hour < 12;
+        case "afternoon":
+          return hour >= 12 && hour < 18;
+        case "evening":
+          return hour >= 18 || hour < 6;
+        default:
+          return true;
       }
     });
   };
@@ -30,13 +42,21 @@ const FlightList: React.FC<FlightListProps> = ({ flights, passengerCount, onBook
   const sortFlights = (flights: Flight[]) => {
     return [...flights].sort((a, b) => {
       switch (sortBy) {
-        case 'departure':
-          return new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime();
-        case 'duration':
-          const durationA = new Date(a.arrivalTime).getTime() - new Date(a.departureTime).getTime();
-          const durationB = new Date(b.arrivalTime).getTime() - new Date(b.departureTime).getTime();
+        case "departure":
+          return (
+            new Date(a.departureTime).getTime() -
+            new Date(b.departureTime).getTime()
+          );
+        case "duration": {
+          const durationA =
+            new Date(a.arrivalTime).getTime() -
+            new Date(a.departureTime).getTime();
+          const durationB =
+            new Date(b.arrivalTime).getTime() -
+            new Date(b.departureTime).getTime();
           return durationA - durationB;
-        case 'price':
+        }
+        case "price":
           // For now, sort by flight code as price is not available
           return a.flightCode.localeCompare(b.flightCode);
         default:
@@ -60,7 +80,8 @@ const FlightList: React.FC<FlightListProps> = ({ flights, passengerCount, onBook
                   </h2>
                   <p className="mb-0">
                     <i className="bi bi-people me-1"></i>
-                    Cho {passengerCount} {passengerCount === 1 ? 'hành khách' : 'hành khách'}
+                    Cho {passengerCount}{" "}
+                    {passengerCount === 1 ? "hành khách" : "hành khách"}
                   </p>
                 </Col>
                 <Col xs="auto">
@@ -70,7 +91,7 @@ const FlightList: React.FC<FlightListProps> = ({ flights, passengerCount, onBook
                 </Col>
               </Row>
             </Card.Header>
-            
+
             <Card.Body>
               <Row className="g-3">
                 <Col md={6}>
@@ -79,8 +100,8 @@ const FlightList: React.FC<FlightListProps> = ({ flights, passengerCount, onBook
                       <i className="bi bi-funnel me-1"></i>
                       Lọc theo thời gian:
                     </Form.Label>
-                    <Form.Select 
-                      value={filterBy} 
+                    <Form.Select
+                      value={filterBy}
                       onChange={(e) => setFilterBy(e.target.value as any)}
                     >
                       <option value="all">Tất cả thời gian</option>
@@ -90,15 +111,15 @@ const FlightList: React.FC<FlightListProps> = ({ flights, passengerCount, onBook
                     </Form.Select>
                   </Form.Group>
                 </Col>
-                
+
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label className="fw-bold">
                       <i className="bi bi-sort-down me-1"></i>
                       Sắp xếp theo:
                     </Form.Label>
-                    <Form.Select 
-                      value={sortBy} 
+                    <Form.Select
+                      value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as any)}
                     >
                       <option value="departure">Thời gian khởi hành</option>
@@ -118,13 +139,18 @@ const FlightList: React.FC<FlightListProps> = ({ flights, passengerCount, onBook
           {processedFlights.length === 0 ? (
             <Card className="text-center">
               <Card.Body className="py-5">
-                <i className="bi bi-airplane text-muted mb-3" style={{ fontSize: '3rem' }}></i>
+                <i
+                  className="bi bi-airplane text-muted mb-3"
+                  style={{ fontSize: "3rem" }}
+                ></i>
                 <h5>Không có chuyến bay nào phù hợp với bộ lọc</h5>
-                <p className="text-muted">Hãy thử điều chỉnh tiêu chí tìm kiếm hoặc bộ lọc.</p>
+                <p className="text-muted">
+                  Hãy thử điều chỉnh tiêu chí tìm kiếm hoặc bộ lọc.
+                </p>
               </Card.Body>
             </Card>
           ) : (
-            processedFlights.map(flight => (
+            processedFlights.map((flight) => (
               <FlightCard
                 key={flight.flightId}
                 flight={flight}
@@ -132,7 +158,7 @@ const FlightList: React.FC<FlightListProps> = ({ flights, passengerCount, onBook
                 searchContext={{
                   passengerCount: passengerCount,
                   allTicketClasses: [],
-                  searchedForAllClasses: true
+                  searchedForAllClasses: true,
                 }}
               />
             ))
