@@ -1,4 +1,3 @@
-// services/authService.ts
 import { apiClient } from "./api";
 import {
   LoginRequest,
@@ -32,17 +31,24 @@ class AuthService {
     }
   }
 
-  async register(userData: RegisterRequest): Promise<void> {
+  async register(
+    userData: RegisterRequest
+  ): Promise<ApiResponse<AuthResponse>> {
     try {
-      const response = await apiClient.post<AuthResponse>(
+      const response = await apiClient.post<ApiResponse<AuthResponse>>(
         "/auth/register",
         userData
       );
-      if (!response.userDetails) {
+
+      console.log(response);
+      if (!response.data.userDetails) {
         throw new Error("Phản hồi không hợp lệ từ máy chủ");
-      } else this.setAuthData(response);
+      } else {
+        this.setAuthData(response.data);
+        return response;
+      }
     } catch (error) {
-      // console.error('Registration failed:', error);
+      console.error("Registration failed:", error);
       throw new Error("Đăng ký thất bại. Email có thể đã được sử dụng.");
     }
   }
@@ -77,7 +83,7 @@ class AuthService {
       } else this.setAuthData(response);
     } catch (error) {
       this.clearAuthData();
-      // console.error('Token refresh failed:', error);
+      console.error("Token refresh failed:", error);
       throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
     }
   }
