@@ -1,0 +1,107 @@
+@startuml Flight Management System - System Level Use Case Diagram
+
+!theme plain
+scale 1.2
+left to right direction
+
+title Flight Management System - System Level Use Case Diagram
+
+skinparam {
+    dpi 300
+    shadowing false
+    linetype polyline
+    nodesep 50
+    ranksep 80
+}
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 12
+}
+
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 11
+}
+
+skinparam rectangle {
+    BackgroundColor LightBlue
+    BorderColor Black
+    FontStyle bold
+}
+
+' ====================
+' ACTORS (LEFT SIDE)
+' ====================
+left to right direction
+
+actor Guest as G
+actor Customer as C
+actor Employee as E
+actor Administrator as A
+
+' ====================
+' SYSTEM BOUNDARY WITH USE CASES
+' ====================
+rectangle "Flight Management System" {
+    (Register Account) as UC1
+    (Login) as UC2
+    (Search Flights) as UC3
+    (Book Flight) as UC4
+    (Manage Bookings) as UC5
+    (Customer Support) as UC6
+    (Manage Flights) as UC7
+    (Generate Reports) as UC8
+    (System Administration) as UC9
+}
+
+' ====================
+' EXTERNAL ACTOR (RIGHT SIDE)
+' ====================
+actor "Payment Gateway" as PG
+
+' ====================
+' SIMPLE ASSOCIATIONS
+' ====================
+G --> UC1
+G --> UC2
+G --> UC3
+
+C --> UC2
+C --> UC3
+C --> UC4
+C --> UC5
+C --> UC6
+
+E --> UC2
+E --> UC5
+E --> UC6
+E --> UC7
+E --> UC8
+
+A --> UC2
+A --> UC7
+A --> UC8
+A --> UC9
+
+UC4 --> PG
+
+' ====================
+' INHERITANCE (CLEAN)
+' ====================
+C --|> G
+E --|> C
+A --|> E
+
+' ====================
+' MINIMAL INCLUDES/EXTENDS
+' ====================
+UC4 ..> UC2 : <<include>>
+UC5 ..> UC2 : <<include>>
+UC7 ..> UC2 : <<include>>
+UC8 ..> UC2 : <<include>>
+UC9 ..> UC2 : <<include>>
+
+@enduml
