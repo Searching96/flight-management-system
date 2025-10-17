@@ -2,7 +2,6 @@ package com.flightmanagement.service;
 
 import com.flightmanagement.dto.BookingDto;
 import com.flightmanagement.dto.TicketDto;
-import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
