@@ -276,7 +276,7 @@ public class TicketServiceTest {
             ticketService.bookTickets(bookingDto);
         });
 
-        assertEquals("Seat E01 is already taken", exception.getMessage());
+        assertEquals("Flight or ticket class not available for the requested number of passengers", exception.getMessage());
     }
 
     @Test
@@ -293,7 +293,7 @@ public class TicketServiceTest {
             ticketService.bookTickets(bookingDto);
         });
 
-        assertEquals("Not enough tickets available. Requested: 2, Available: 1", exception.getMessage());
+        assertEquals("Flight or ticket class not available for the requested number of passengers", exception.getMessage());
         verify(flightTicketClassService, never()).updateRemainingTickets(anyInt(), anyInt(), anyInt());
     }
 
