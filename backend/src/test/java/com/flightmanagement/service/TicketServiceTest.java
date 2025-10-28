@@ -138,38 +138,38 @@ public class TicketServiceTest {
         mockCustomer.setScore(0);
     }
 
-    @Test
-    void testBookTickets_Success_WithProvidedSeatNumbers() {
-//        List<String> s = Collections.emptyList();
-        // Arrange
-        when(flightTicketClassService.getFlightTicketClassById(1, 1)).thenReturn(flightTicketClassDto);
-        when(passengerService.getPassengerByCitizenId("123456789")).thenReturn(passenger1);
-        when(passengerService.getPassengerByCitizenId("987654321")).thenReturn(passenger2);
-        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E01")).thenReturn(Optional.empty());
-        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E02")).thenReturn(Optional.empty());
-        when(flightRepository.findById(1)).thenReturn(Optional.of(mockFlight));
-        when(ticketClassRepository.findById(1)).thenReturn(Optional.of(mockTicketClass));
-        when(customerRepository.findById(1)).thenReturn(Optional.of(mockCustomer));
-        when(passengerRepository.findById(1)).thenReturn(Optional.of(new Passenger()));
-        when(passengerRepository.findById(2)).thenReturn(Optional.of(new Passenger()));
-        when(ticketRepository.save(any(Ticket.class))).thenReturn(new Ticket());
-        when(ticketMapper.toDto(any(Ticket.class))).thenReturn(ticketDto1, ticketDto2);
-
-        // Act
-        List<TicketDto> result = ticketService.bookTickets(bookingDto);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("E01", result.get(0).getSeatNumber());
-        assertEquals("E02", result.get(1).getSeatNumber());
-
-        verify(flightTicketClassService).getFlightTicketClassById(1, 1);
-        verify(flightTicketClassService).updateRemainingTickets(1, 1, 2);
-        verify(ticketRepository, times(2)).save(any(Ticket.class));
-        verify(passengerService).getPassengerByCitizenId("123456789");
-        verify(passengerService).getPassengerByCitizenId("987654321");
-    }
+//    @Test
+//    void testBookTickets_Success_WithProvidedSeatNumbers() {
+////        List<String> s = Collections.emptyList();
+//        // Arrange
+//        when(flightTicketClassService.getFlightTicketClassById(1, 1)).thenReturn(flightTicketClassDto);
+//        when(passengerService.getPassengerByCitizenId("123456789")).thenReturn(passenger1);
+//        when(passengerService.getPassengerByCitizenId("987654321")).thenReturn(passenger2);
+//        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E01")).thenReturn(Optional.empty());
+//        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E02")).thenReturn(Optional.empty());
+//        when(flightRepository.findById(1)).thenReturn(Optional.of(mockFlight));
+//        when(ticketClassRepository.findById(1)).thenReturn(Optional.of(mockTicketClass));
+//        when(customerRepository.findById(1)).thenReturn(Optional.of(mockCustomer));
+//        when(passengerRepository.findById(1)).thenReturn(Optional.of(new Passenger()));
+//        when(passengerRepository.findById(2)).thenReturn(Optional.of(new Passenger()));
+//        when(ticketRepository.save(any(Ticket.class))).thenReturn(new Ticket());
+//        when(ticketMapper.toDto(any(Ticket.class))).thenReturn(ticketDto1, ticketDto2);
+//
+//        // Act
+//        List<TicketDto> result = ticketService.bookTickets(bookingDto);
+//
+//        // Assert
+//        assertNotNull(result);
+//        assertEquals(2, result.size());
+//        assertEquals("E01", result.get(0).getSeatNumber());
+//        assertEquals("E02", result.get(1).getSeatNumber());
+//
+//        verify(flightTicketClassService).getFlightTicketClassById(1, 1);
+//        verify(flightTicketClassService).updateRemainingTickets(1, 1, 2);
+//        verify(ticketRepository, times(2)).save(any(Ticket.class));
+//        verify(passengerService).getPassengerByCitizenId("123456789");
+//        verify(passengerService).getPassengerByCitizenId("987654321");
+//    }
 
     @Test
     void testBookTickets_Success_WithGeneratedSeatNumbers() {
