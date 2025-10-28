@@ -1496,7 +1496,7 @@ This project was developed by students from the **Faculty of Software Technology
 | Name                  | Student ID | Role      |
 | --------------------- | ---------- | --------- |
 | **Nguyen Phuc Thinh** | 23521503   | Developer |
-| **Tran Duc Thinhh**   | 23521511   | Developer |
+| **Tran Duc Thinh**    | 23521511   | Developer |
 | **Tran Xuan Thinh**   | 23521515   | Developer |
 
 ---
