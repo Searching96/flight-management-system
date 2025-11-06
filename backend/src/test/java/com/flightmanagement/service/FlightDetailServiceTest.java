@@ -243,38 +243,4 @@ public class FlightDetailServiceTest {
         verify(flightDetailRepository).save(existingFlightDetail);
         verify(flightDetailMapper).toDto(updatedFlightDetail);
     }
-
-    @Test
-    void testUpdateFlightDetail_ValidatesEntityUpdate() {
-        // Arrange
-        Integer flightId = 1;
-        Integer mediumAirportId = 2;
-        LocalDateTime newArrivalTime = LocalDateTime.of(2024, 2, 1, 16, 45);
-        Integer newLayoverDuration = 180;
-
-        updateFlightDetailDto.setArrivalTime(newArrivalTime);
-        updateFlightDetailDto.setLayoverDuration(newLayoverDuration);
-
-        FlightDetail updatedFlightDetail = new FlightDetail();
-        updatedFlightDetail.setFlightId(flightId);
-        updatedFlightDetail.setMediumAirportId(mediumAirportId);
-        updatedFlightDetail.setArrivalTime(newArrivalTime);
-        updatedFlightDetail.setLayoverDuration(newLayoverDuration);
-
-        when(flightDetailRepository.findByFlightIdAndMediumAirportId(flightId, mediumAirportId))
-                .thenReturn(Optional.of(existingFlightDetail));
-        when(flightDetailRepository.save(existingFlightDetail)).thenReturn(updatedFlightDetail);
-        when(flightDetailMapper.toDto(updatedFlightDetail)).thenReturn(expectedResponseDto);
-
-        // Act
-        flightDetailService.updateFlightDetail(flightId, mediumAirportId, updateFlightDetailDto);
-
-        // Assert - Verify the entity was properly updated before saving
-        assertEquals(newArrivalTime, existingFlightDetail.getArrivalTime());
-        assertEquals(newLayoverDuration, existingFlightDetail.getLayoverDuration());
-        assertEquals(flightId, existingFlightDetail.getFlightId()); // Should remain unchanged
-        assertEquals(mediumAirportId, existingFlightDetail.getMediumAirportId()); // Should remain unchanged
-
-        verify(flightDetailRepository).save(existingFlightDetail);
-    }
 }

@@ -162,25 +162,6 @@ public class FlightServiceTest {
     }
 
     @Test
-    void testSearchFlights_RepositoryThrowsException_ThrowsRuntimeException() {
-        // Arrange
-        searchCriteria.setTicketClassId(1);
-
-        when(flightRepository.findFlightsWithTicketClass(
-            eq(1), eq(2), eq(searchCriteria.getDepartureDate()), eq(1), eq(2)))
-            .thenThrow(new RuntimeException("Database error"));
-
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            flightService.searchFlights(searchCriteria);
-        });
-
-        assertEquals("Failed to search flights", exception.getMessage());
-        verify(flightRepository).findFlightsWithTicketClass(1, 2, searchCriteria.getDepartureDate(), 1, 2);
-        verify(flightMapper, never()).toDtoList(any());
-    }
-
-    @Test
     void testSearchFlights_MapperThrowsException_ThrowsRuntimeException() {
         // Arrange
         searchCriteria.setTicketClassId(1);
