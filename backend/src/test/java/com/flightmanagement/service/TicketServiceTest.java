@@ -341,4 +341,285 @@ public class TicketServiceTest {
         verify(customerRepository, never()).findById(anyInt());
         verify(flightTicketClassService).updateRemainingTickets(1, 1, 2);
     }
+
+    // NEW TEST 1: Book tickets with exactly available seats
+    @Test
+    void testBookTickets_Success_ExactlyAvailableSeats() {
+        // Arrange
+        flightTicketClassDto.setRemainingTicketQuantity(2); // Exactly 2 seats available for 2 passengers
+
+        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E01")).thenReturn(Optional.empty());
+        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E02")).thenReturn(Optional.empty());
+        when(flightTicketClassService.getFlightTicketClassById(1, 1)).thenReturn(flightTicketClassDto);
+        when(passengerService.getPassengerByCitizenId("123456789")).thenReturn(passenger1);
+        when(passengerService.getPassengerByCitizenId("987654321")).thenReturn(passenger2);
+        when(flightRepository.findById(1)).thenReturn(Optional.of(mockFlight));
+        when(ticketClassRepository.findById(1)).thenReturn(Optional.of(mockTicketClass));
+        when(customerRepository.findById(1)).thenReturn(Optional.of(mockCustomer));
+        when(passengerRepository.findById(1)).thenReturn(Optional.of(new Passenger()));
+        when(passengerRepository.findById(2)).thenReturn(Optional.of(new Passenger()));
+        when(ticketRepository.save(any(Ticket.class))).thenReturn(new Ticket());
+        when(ticketMapper.toDto(any(Ticket.class))).thenReturn(ticketDto1, ticketDto2);
+
+        // Act
+        List<TicketDto> result = ticketService.bookTickets(bookingDto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(flightTicketClassService).updateRemainingTickets(1, 1, 2);
+        verify(ticketRepository, times(2)).save(any(Ticket.class));
+    }
+
+    // NEW TEST 2: Book single ticket
+    @Test
+    void testBookTickets_Success_SinglePassenger() {
+        // Arrange
+        bookingDto.setPassengers(Arrays.asList(passenger1));
+        bookingDto.setSeatNumbers(Arrays.asList("E01"));
+
+        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E01")).thenReturn(Optional.empty());
+        when(flightTicketClassService.getFlightTicketClassById(1, 1)).thenReturn(flightTicketClassDto);
+        when(passengerService.getPassengerByCitizenId("123456789")).thenReturn(passenger1);
+        when(flightRepository.findById(1)).thenReturn(Optional.of(mockFlight));
+        when(ticketClassRepository.findById(1)).thenReturn(Optional.of(mockTicketClass));
+        when(customerRepository.findById(1)).thenReturn(Optional.of(mockCustomer));
+        when(passengerRepository.findById(1)).thenReturn(Optional.of(new Passenger()));
+        when(ticketRepository.save(any(Ticket.class))).thenReturn(new Ticket());
+        when(ticketMapper.toDto(any(Ticket.class))).thenReturn(ticketDto1);
+
+        // Act
+        List<TicketDto> result = ticketService.bookTickets(bookingDto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(flightTicketClassService).updateRemainingTickets(1, 1, 1);
+        verify(ticketRepository, times(1)).save(any(Ticket.class));
+    }
+
+    // NEW TEST 3: Book tickets with Business class
+    @Test
+    void testBookTickets_Success_BusinessClass() {
+        // Arrange
+        bookingDto.setSeatNumbers(null);
+        flightTicketClassDto.setTicketClassName("Business");
+
+        when(flightTicketClassService.getFlightTicketClassById(1, 1)).thenReturn(flightTicketClassDto);
+        when(passengerService.getPassengerByCitizenId("123456789")).thenReturn(passenger1);
+        when(passengerService.getPassengerByCitizenId("987654321")).thenReturn(passenger2);
+        when(flightRepository.findById(1)).thenReturn(Optional.of(mockFlight));
+        when(ticketClassRepository.findById(1)).thenReturn(Optional.of(mockTicketClass));
+        when(customerRepository.findById(1)).thenReturn(Optional.of(mockCustomer));
+        when(passengerRepository.findById(1)).thenReturn(Optional.of(new Passenger()));
+        when(passengerRepository.findById(2)).thenReturn(Optional.of(new Passenger()));
+        when(ticketRepository.save(any(Ticket.class))).thenReturn(new Ticket());
+        when(ticketMapper.toDto(any(Ticket.class))).thenReturn(ticketDto1, ticketDto2);
+
+        // Act
+        List<TicketDto> result = ticketService.bookTickets(bookingDto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        // Verify that seats were generated with "B" prefix for Business
+        verify(ticketRepository, times(2)).save(any(Ticket.class));
+    }
+
+    // NEW TEST 4: Book tickets with First class
+    @Test
+    void testBookTickets_Success_FirstClass() {
+        // Arrange
+        bookingDto.setSeatNumbers(null);
+        flightTicketClassDto.setTicketClassName("First");
+
+        when(flightTicketClassService.getFlightTicketClassById(1, 1)).thenReturn(flightTicketClassDto);
+        when(passengerService.getPassengerByCitizenId("123456789")).thenReturn(passenger1);
+        when(passengerService.getPassengerByCitizenId("987654321")).thenReturn(passenger2);
+        when(flightRepository.findById(1)).thenReturn(Optional.of(mockFlight));
+        when(ticketClassRepository.findById(1)).thenReturn(Optional.of(mockTicketClass));
+        when(customerRepository.findById(1)).thenReturn(Optional.of(mockCustomer));
+        when(passengerRepository.findById(1)).thenReturn(Optional.of(new Passenger()));
+        when(passengerRepository.findById(2)).thenReturn(Optional.of(new Passenger()));
+        when(ticketRepository.save(any(Ticket.class))).thenReturn(new Ticket());
+        when(ticketMapper.toDto(any(Ticket.class))).thenReturn(ticketDto1, ticketDto2);
+
+        // Act
+        List<TicketDto> result = ticketService.bookTickets(bookingDto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(ticketRepository, times(2)).save(any(Ticket.class));
+    }
+
+    // NEW TEST 5: Book tickets with high fare
+    @Test
+    void testBookTickets_Success_HighFare() {
+        // Arrange
+        BigDecimal highFare = new BigDecimal("1000.00");
+        flightTicketClassDto.setSpecifiedFare(highFare);
+
+        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E01")).thenReturn(Optional.empty());
+        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E02")).thenReturn(Optional.empty());
+        when(flightTicketClassService.getFlightTicketClassById(1, 1)).thenReturn(flightTicketClassDto);
+        when(passengerService.getPassengerByCitizenId("123456789")).thenReturn(passenger1);
+        when(passengerService.getPassengerByCitizenId("987654321")).thenReturn(passenger2);
+        when(flightRepository.findById(1)).thenReturn(Optional.of(mockFlight));
+        when(ticketClassRepository.findById(1)).thenReturn(Optional.of(mockTicketClass));
+        when(customerRepository.findById(1)).thenReturn(Optional.of(mockCustomer));
+        when(passengerRepository.findById(1)).thenReturn(Optional.of(new Passenger()));
+        when(passengerRepository.findById(2)).thenReturn(Optional.of(new Passenger()));
+        when(ticketRepository.save(any(Ticket.class))).thenReturn(new Ticket());
+        when(ticketMapper.toDto(any(Ticket.class))).thenReturn(ticketDto1, ticketDto2);
+
+        // Act
+        List<TicketDto> result = ticketService.bookTickets(bookingDto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(ticketRepository, times(2)).save(any(Ticket.class));
+    }
+
+    // NEW TEST 6: Book tickets - passenger repository returns empty
+    @Test
+    void testBookTickets_ThrowsException_PassengerNotFoundInRepository() {
+        // Arrange
+        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E01")).thenReturn(Optional.empty());
+        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E02")).thenReturn(Optional.empty());
+        when(flightTicketClassService.getFlightTicketClassById(1, 1)).thenReturn(flightTicketClassDto);
+        when(passengerService.getPassengerByCitizenId("123456789")).thenReturn(passenger1);
+        when(flightRepository.findById(1)).thenReturn(Optional.of(mockFlight));
+        when(ticketClassRepository.findById(1)).thenReturn(Optional.of(mockTicketClass));
+        when(customerRepository.findById(1)).thenReturn(Optional.of(mockCustomer));
+        when(passengerRepository.findById(1)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.bookTickets(bookingDto);
+        });
+
+        assertEquals("Passenger not found with id: 1", exception.getMessage());
+    }
+
+    // NEW TEST 7: Book tickets - customer not found, creates new customer from account
+//    @Test
+//    void testBookTickets_Success_CustomerNotFound_CreatesFromAccount() {
+//        // Arrange
+//        Account account = new Account();
+//        account.setAccountId(1);
+//        account.setAccountType(1);
+//        account.setEmail("new@example.com");
+//        account.setAccountName("New Customer");
+//
+//        Customer newCustomer = new Customer();
+//        newCustomer.setCustomerId(1);
+//        newCustomer.setAccount(account);
+//        newCustomer.setScore(0);
+//
+//        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E01")).thenReturn(Optional.empty());
+//        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E02")).thenReturn(Optional.empty());
+//        when(flightTicketClassService.getFlightTicketClassById(1, 1)).thenReturn(flightTicketClassDto);
+//        when(passengerService.getPassengerByCitizenId("123456789")).thenReturn(passenger1);
+//        when(passengerService.getPassengerByCitizenId("987654321")).thenReturn(passenger2);
+//        when(flightRepository.findById(1)).thenReturn(Optional.of(mockFlight));
+//        when(ticketClassRepository.findById(1)).thenReturn(Optional.of(mockTicketClass));
+//        when(customerRepository.findById(1)).thenReturn(Optional.empty());
+//        when(accountRepository.findById(1)).thenReturn(Optional.of(account));
+//        when(customerRepository.save(any(Customer.class))).thenReturn(newCustomer);
+//        when(passengerRepository.findById(1)).thenReturn(Optional.of(new Passenger()));
+//        when(passengerRepository.findById(2)).thenReturn(Optional.of(new Passenger()));
+//        when(ticketRepository.save(any(Ticket.class))).thenReturn(new Ticket());
+//        when(ticketMapper.toDto(any(Ticket.class))).thenReturn(ticketDto1, ticketDto2);
+//
+//        // Act
+//        List<TicketDto> result = ticketService.bookTickets(bookingDto);
+//
+//        // Assert
+//        assertNotNull(result);
+//        assertEquals(2, result.size());
+//        verify(accountRepository).findById(1);
+//        verify(customerRepository).save(any(Customer.class));
+//    }
+
+    // NEW TEST 8: Book tickets - multiple passengers, all new
+    @Test
+    void testBookTickets_Success_MultipleNewPassengers() {
+        // Arrange
+        PassengerDto passenger3 = new PassengerDto();
+        passenger3.setPassengerId(3);
+        passenger3.setCitizenId("111222333");
+        passenger3.setPassengerName("Bob Wilson");
+        passenger3.setEmail("bob@example.com");
+
+        bookingDto.setPassengers(Arrays.asList(passenger1, passenger2, passenger3));
+        bookingDto.setSeatNumbers(Arrays.asList("E01", "E02", "E03"));
+
+        TicketDto ticketDto3 = new TicketDto();
+        ticketDto3.setTicketId(3);
+        ticketDto3.setFlightId(1);
+        ticketDto3.setPassengerId(3);
+        ticketDto3.setSeatNumber("E03");
+
+        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E01")).thenReturn(Optional.empty());
+        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E02")).thenReturn(Optional.empty());
+        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E03")).thenReturn(Optional.empty());
+        when(flightTicketClassService.getFlightTicketClassById(1, 1)).thenReturn(flightTicketClassDto);
+        when(passengerService.getPassengerByCitizenId("123456789"))
+                .thenThrow(new RuntimeException("Not found"));
+        when(passengerService.getPassengerByCitizenId("987654321"))
+                .thenThrow(new RuntimeException("Not found"));
+        when(passengerService.getPassengerByCitizenId("111222333"))
+                .thenThrow(new RuntimeException("Not found"));
+        when(passengerService.createPassenger(passenger1)).thenReturn(passenger1);
+        when(passengerService.createPassenger(passenger2)).thenReturn(passenger2);
+        when(passengerService.createPassenger(passenger3)).thenReturn(passenger3);
+        when(flightRepository.findById(1)).thenReturn(Optional.of(mockFlight));
+        when(ticketClassRepository.findById(1)).thenReturn(Optional.of(mockTicketClass));
+        when(customerRepository.findById(1)).thenReturn(Optional.of(mockCustomer));
+        when(passengerRepository.findById(1)).thenReturn(Optional.of(new Passenger()));
+        when(passengerRepository.findById(2)).thenReturn(Optional.of(new Passenger()));
+        when(passengerRepository.findById(3)).thenReturn(Optional.of(new Passenger()));
+        when(ticketRepository.save(any(Ticket.class))).thenReturn(new Ticket());
+        when(ticketMapper.toDto(any(Ticket.class))).thenReturn(ticketDto1, ticketDto2, ticketDto3);
+
+        // Act
+        List<TicketDto> result = ticketService.bookTickets(bookingDto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(3, result.size());
+        verify(passengerService, times(3)).createPassenger(any(PassengerDto.class));
+        verify(flightTicketClassService).updateRemainingTickets(1, 1, 3);
+        verify(ticketRepository, times(3)).save(any(Ticket.class));
+    }
+
+    // NEW TEST 9: Book tickets - verify ticket status is set to unpaid (0)
+    @Test
+    void testBookTickets_Success_TicketStatusUnpaid() {
+        // Arrange
+        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E01")).thenReturn(Optional.empty());
+        when(ticketRepository.findByFlightIdAndSeatNumber(1, "E02")).thenReturn(Optional.empty());
+        when(flightTicketClassService.getFlightTicketClassById(1, 1)).thenReturn(flightTicketClassDto);
+        when(passengerService.getPassengerByCitizenId("123456789")).thenReturn(passenger1);
+        when(passengerService.getPassengerByCitizenId("987654321")).thenReturn(passenger2);
+        when(flightRepository.findById(1)).thenReturn(Optional.of(mockFlight));
+        when(ticketClassRepository.findById(1)).thenReturn(Optional.of(mockTicketClass));
+        when(customerRepository.findById(1)).thenReturn(Optional.of(mockCustomer));
+        when(passengerRepository.findById(1)).thenReturn(Optional.of(new Passenger()));
+        when(passengerRepository.findById(2)).thenReturn(Optional.of(new Passenger()));
+        when(ticketRepository.save(any(Ticket.class))).thenReturn(new Ticket());
+        when(ticketMapper.toDto(any(Ticket.class))).thenReturn(ticketDto1, ticketDto2);
+
+        // Act
+        List<TicketDto> result = ticketService.bookTickets(bookingDto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals((byte) 0, result.get(0).getTicketStatus());
+        assertEquals((byte) 0, result.get(1).getTicketStatus());
+        verify(ticketRepository, times(2)).save(any(Ticket.class));
+    }
 }

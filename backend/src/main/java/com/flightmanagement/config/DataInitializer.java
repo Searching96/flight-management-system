@@ -156,7 +156,7 @@ public class DataInitializer implements CommandLineRunner {
                 RegisterDto accountingEmployee = new RegisterDto();
                 accountingEmployee.setAccountName("Pham Thi D");
                 accountingEmployee.setEmail("accounting@flightms.com");
-                accountingEmployee.setPassword("123Abc");
+                    accountingEmployee.setPassword("123Abc");
                 accountingEmployee.setCitizenId("444444444");
                 accountingEmployee.setPhoneNumber("0123456784");
                 accountingEmployee.setAccountType(2); // Employee
