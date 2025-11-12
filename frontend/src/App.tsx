@@ -36,7 +36,7 @@ import SupportSearch from './components/support/SupportSearch';
 
 /**
  * Main App Component with Role-Based Access Control
- * Last updated: 2025-06-11 08:51:48 UTC by thinh0704hcm
+ * Last updated: 2025-06-11 08:51:48 UTC by user
  * 
  * CORRECTED Employee Role Structure:
  * 1. EMPLOYEE_FLIGHT_SCHEDULING - Nhân viên quản lý lịch bay: "Quản lý lịch bay"
@@ -75,7 +75,7 @@ const App: React.FC = () => {
             {/* Debug Route */}
             <Route path="/debug/log-me-in/:accountName" element={<DebugLogin />} />
 
-            {/* Employee Management Routes - CORRECTED Permissions 2025-06-11 08:51:48 UTC by thinh0704hcm */}
+            {/* Employee Management Routes - CORRECTED Permissions 2025-06-11 08:51:48 UTC by user */}
 
             {/* Flight Management - EMPLOYEE_FLIGHT_SCHEDULING (Type 1) and EMPLOYEE_ADMINISTRATOR (Type 7) */}
             <Route

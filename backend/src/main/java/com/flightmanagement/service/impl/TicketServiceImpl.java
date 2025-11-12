@@ -38,15 +38,15 @@ public class TicketServiceImpl implements TicketService {
     private final AccountRepository accountRepository;
 
     public TicketServiceImpl(TicketRepository ticketRepository,
-                             TicketMapper ticketMapper,
-                             FlightTicketClassService flightTicketClassService,
-                             PassengerService passengerService,
-                             FlightRepository flightRepository,
-                             TicketClassRepository ticketClassRepository,
-                             CustomerRepository customerRepository,
-                             PassengerRepository passengerRepository,
-                             EmailService emailService,
-                             AccountRepository accountRepository) {
+            TicketMapper ticketMapper,
+            FlightTicketClassService flightTicketClassService,
+            PassengerService passengerService,
+            FlightRepository flightRepository,
+            TicketClassRepository ticketClassRepository,
+            CustomerRepository customerRepository,
+            PassengerRepository passengerRepository,
+            EmailService emailService,
+            AccountRepository accountRepository) {
         this.ticketRepository = ticketRepository;
         this.ticketMapper = ticketMapper;
         this.flightTicketClassService = flightTicketClassService;
@@ -111,14 +111,13 @@ public class TicketServiceImpl implements TicketService {
             ticket.setPassenger(passenger);
         }
 
-
         Ticket savedTicket = ticketRepository.save(ticket);
         TicketDto savedTicketDto = ticketMapper.toDto(savedTicket);
 
         // Send single ticket confirmation email after successful ticket creation
         if (savedTicket.getTicketStatus() == 0) {
             System.out.println("Ticket info: " + savedTicketDto +
-                    " at 2025-06-11 07:34:18 UTC by thinh0704hcm");
+                    " at 2025-06-11 07:34:18 UTC by user");
             try {
                 sendSingleTicketConfirmation(savedTicketDto, bookingCustomer, passenger);
             } catch (Exception e) {
@@ -138,7 +137,8 @@ public class TicketServiceImpl implements TicketService {
             if (ticket.getBookCustomerId() != null) {
                 // Customer booking
                 if (customer == null || customer.getAccount() == null) {
-                    System.err.println("Cannot send ticket confirmation: customer or account is null at 2025-06-11 10:47:59 UTC by thinh0704hcm");
+                    System.err.println(
+                            "Cannot send ticket confirmation: customer or account is null at 2025-06-11 10:47:59 UTC by user");
                     return;
                 }
 
@@ -169,12 +169,12 @@ public class TicketServiceImpl implements TicketService {
                         formattedDepartureTime,
                         ticket.getSeatNumber(),
                         ticket.getFare(),
-                        needsPayment
-                );
+                        needsPayment);
             } else {
                 // Guest booking - use passenger information
                 if (passenger == null) {
-                    System.err.println("Cannot send ticket confirmation: passenger is null for guest booking at 2025-06-11 10:47:59 UTC by thinh0704hcm");
+                    System.err.println(
+                            "Cannot send ticket confirmation: passenger is null for guest booking at 2025-06-11 10:47:59 UTC by user");
                     return;
                 }
 
@@ -205,8 +205,7 @@ public class TicketServiceImpl implements TicketService {
                         formattedDepartureTime,
                         ticket.getSeatNumber(),
                         ticket.getFare(),
-                        needsPayment
-                );
+                        needsPayment);
             }
         } catch (Exception e) {
             System.err.println("Error sending single ticket confirmation email: " + e.getMessage());
@@ -402,8 +401,8 @@ public class TicketServiceImpl implements TicketService {
         ticket.setPaymentTime(LocalDateTime.now());
         ticket.setOrderId(orderId);
 
-//        Customer customer = ticket.getBookCustomer();
-//        customer.setScore(customer.getScore() + ticket.getFare());
+        // Customer customer = ticket.getBookCustomer();
+        // customer.setScore(customer.getScore() + ticket.getFare());
 
         Ticket updatedTicket = ticketRepository.save(ticket);
         return ticketMapper.toDto(updatedTicket);

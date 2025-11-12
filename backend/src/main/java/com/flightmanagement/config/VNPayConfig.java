@@ -41,10 +41,10 @@ public class VNPayConfig {
     private String apiUrl;
 
     // Public configuration properties
-    public static String vnp_PayUrl;
-    public static String vnp_ReturnUrl;
-    public static String vnp_TmnCode;
-    public static String vnp_ApiUrl;
+    public static String vnpPayUrl;
+    public static String vnpReturnUrl;
+    public static String vnpTmnCode;
+    public static String vnpApiUrl;
 
     // Private instance reference to avoid static access to sensitive data
     private static VNPayConfig instance;
@@ -57,10 +57,10 @@ public class VNPayConfig {
     // Initialize static fields after Spring has injected the values
     @PostConstruct
     public void init() {
-        vnp_PayUrl = payUrl;
-        vnp_ReturnUrl = returnUrl;
-        vnp_TmnCode = tmnCode;
-        vnp_ApiUrl = apiUrl;
+        vnpPayUrl = payUrl;
+        vnpReturnUrl = returnUrl;
+        vnpTmnCode = tmnCode;
+        vnpApiUrl = apiUrl;
 
         // Store instance for controlled access to sensitive data
         instance = this;

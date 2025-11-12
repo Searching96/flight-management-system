@@ -105,7 +105,7 @@ const Header: React.FC = () => {
               </>
             )}
 
-            {/* Employee links - Role-based navigation - Vietnamese 2025-06-11 09:00:54 UTC by thinh0704hcm */}
+            {/* Employee links - Role-based navigation - Vietnamese 2025-06-11 09:00:54 UTC by user */}
             {user && permissions.isEmployee() && (
               <>
                 {/* ============================================= */}

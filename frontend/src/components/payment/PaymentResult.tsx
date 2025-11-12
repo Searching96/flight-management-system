@@ -42,7 +42,7 @@ const PaymentResult: React.FC = () => {
 
   const handlePayment = async () => {
     try {
-      if (!transactionDetails?.data?.vnp_TxnRef) {
+      if (!transactionDetails?.data?.vnpTxnRef) {
         setModalTitle('Lỗi');
         setModalMessage('Không tìm thấy thông tin giao dịch. Vui lòng thử lại.');
         setShowErrorModal(true);
@@ -50,9 +50,9 @@ const PaymentResult: React.FC = () => {
       }
 
       // Extract confirmation code from the txnRef
-      const confirmationCode = extractConfirmationCode(transactionDetails.data.vnp_TxnRef);
+      const confirmationCode = extractConfirmationCode(transactionDetails.data.vnpTxnRef);
 
-      console.log(`Thử thanh toán lại tại 2025-06-11 05:14:08 UTC bởi thinh0704hcm cho mã: ${confirmationCode}`);
+      console.log(`Thử thanh toán lại tại 2025-06-11 05:14:08 UTC bởi user cho mã: ${confirmationCode}`);
 
       const response = await paymentService.createPayment(confirmationCode);
       if (response && response.data) {
@@ -132,7 +132,7 @@ const PaymentResult: React.FC = () => {
 
         // Extract query parameters
         const queryParams = new URLSearchParams(location.search);
-        const responseCode = queryParams.get('vnp_ResponseCode');
+        const responseCode = queryParams.get('vnpResponseCode');
 
         // Process payment return
         const paymentResult = await paymentService.processPaymentReturn(location.search);
@@ -148,8 +148,8 @@ const PaymentResult: React.FC = () => {
           setPaymentStatus('success');
           
           // Update customer score after successful payment
-          if (paymentResult.data?.vnp_TxnRef) {
-            await updateCustomerScoreAfterPayment(paymentResult.data.vnp_TxnRef);
+          if (paymentResult.data?.vnpTxnRef) {
+            await updateCustomerScoreAfterPayment(paymentResult.data.vnpTxnRef);
           }
           
         } else {
@@ -221,7 +221,7 @@ const PaymentResult: React.FC = () => {
       <Container className="py-5 text-center">
         <Spinner animation="border" variant="primary" />
         <p className="mt-3">Đang xử lý kết quả thanh toán...</p>
-        <p className="text-muted small">Xử lý tại: 2025-06-11 05:14:08 UTC bởi thinh0704hcm</p>
+        <p className="text-muted small">Xử lý tại: 2025-06-11 05:14:08 UTC bởi user</p>
       </Container>
     );
   }
@@ -279,20 +279,20 @@ const PaymentResult: React.FC = () => {
                   <Row className="mb-4 g-3">
                     <Col xs={12} sm={6} className="fw-bold">Mã giao dịch:</Col>
                     <Col xs={12} sm={6} className="font-monospace small text-break">
-                      {(transactionDetails.data.vnp_TxnRef || '')}
+                      {(transactionDetails.data.vnpTxnRef || '')}
                     </Col>
 
                     <Col xs={12} sm={6} className="fw-bold">Mã xác nhận đặt chỗ:</Col>
                     <Col xs={12} sm={6}>
                       <Badge bg="primary" className="fs-6">
-                        {extractConfirmationCode(transactionDetails.data.vnp_TxnRef || '')}
+                        {extractConfirmationCode(transactionDetails.data.vnpTxnRef || '')}
                       </Badge>
                     </Col>
 
                     <Col xs={12} sm={6} className="fw-bold">Số tiền:</Col>
                     <Col xs={12} sm={6} className="fs-5 text-success fw-bold">
-                      {transactionDetails.data.vnp_Amount
-                        ? formatCurrency(Number(transactionDetails.data.vnp_Amount) / 100)
+                      {transactionDetails.data.vnpAmount
+                        ? formatCurrency(Number(transactionDetails.data.vnpAmount) / 100)
                         : 'Chưa có'
                       }
                     </Col>
@@ -300,29 +300,29 @@ const PaymentResult: React.FC = () => {
                     <Col xs={12} sm={6} className="fw-bold">Phương thức thanh toán:</Col>
                     <Col xs={12} sm={6}>
                       <i className="bi bi-credit-card me-1"></i>
-                      {transactionDetails.data.vnp_CardType || 'Chưa có'}
+                      {transactionDetails.data.vnpCardType || 'Chưa có'}
                     </Col>
 
                     <Col xs={12} sm={6} className="fw-bold">Ngân hàng:</Col>
                     <Col xs={12} sm={6}>
                       <i className="bi bi-bank me-1"></i>
-                      {transactionDetails.data.vnp_BankCode || 'Chưa có'}
+                      {transactionDetails.data.vnpBankCode || 'Chưa có'}
                     </Col>
 
                     <Col xs={12} sm={6} className="fw-bold">Thời gian thanh toán:</Col>
                     <Col xs={12} sm={6}>
                       <i className="bi bi-calendar-event me-1"></i>
-                      {formatPaymentDate(transactionDetails.data.vnp_PayDate)}
+                      {formatPaymentDate(transactionDetails.data.vnpPayDate)}
                     </Col>
 
                     <Col xs={12} sm={6} className="fw-bold">Mã giao dịch ngân hàng:</Col>
                     <Col xs={12} sm={6} className="font-monospace small">
-                      {transactionDetails.data.vnp_TransactionNo || 'Chưa có'}
+                      {transactionDetails.data.vnpTransactionNo || 'Chưa có'}
                     </Col>
 
                     <Col xs={12} sm={6} className="fw-bold">Thông tin đơn hàng:</Col>
                     <Col xs={12} sm={6} className="text-break">
-                      {transactionDetails.data.vnp_OrderInfo || 'Chưa có'}
+                      {transactionDetails.data.vnpOrderInfo || 'Chưa có'}
                     </Col>
                   </Row>
                 </div>

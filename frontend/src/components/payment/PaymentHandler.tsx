@@ -89,7 +89,7 @@ const PaymentHandler: React.FC = () => {
       };
 
       setBooking(bookingData);
-      console.log(`Booking loaded at 2025-06-11 05:14:08 UTC by thinh0704hcm for confirmation: ${confirmationCode}`);
+      console.log(`Booking loaded at 2025-06-11 05:14:08 UTC by user for confirmation: ${confirmationCode}`);
     } catch (err: any) {
       console.error('Lỗi khi tải thông tin đặt chỗ:', err);
       setError('Không thể tải thông tin đặt chỗ. Vui lòng thử lại sau.');
@@ -103,7 +103,7 @@ const PaymentHandler: React.FC = () => {
 
     try {
       setProcessingPayment(true);
-      console.log(`Payment initiated at 2025-06-11 05:14:08 UTC by thinh0704hcm for ${booking.confirmationCode}`);
+      console.log(`Payment initiated at 2025-06-11 05:14:08 UTC by user for ${booking.confirmationCode}`);
       
       const response = await paymentService.createPayment(booking.confirmationCode);
       
@@ -155,7 +155,7 @@ const PaymentHandler: React.FC = () => {
           <span className="visually-hidden">Đang tải...</span>
         </Spinner>
         <p className="mt-3">Đang tải thông tin đặt chỗ...</p>
-        <p className="text-muted small">Xử lý tại: 2025-06-11 05:14:08 UTC bởi thinh0704hcm</p>
+        <p className="text-muted small">Xử lý tại: 2025-06-11 05:14:08 UTC bởi user</p>
       </Container>
     );
   }
