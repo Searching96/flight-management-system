@@ -386,8 +386,9 @@ public class DataInitializer implements CommandLineRunner {
                 System.out.println("  - Flight 2 (HAN -> DAD): 2 stopovers at Ho Chi Minh City and Nha Trang");
             }
         } catch (Exception e) {
-            System.err.println("⚠️ Error creating demo flight details: " + e.getMessage());
+//            System.err.println("⚠️ Error creating demo flight details: " + e.getMessage());
             e.printStackTrace();
+            throw new RuntimeException("⚠️ Error creating demo flight details: " + e.getMessage());
         }
     }
 
