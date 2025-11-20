@@ -6,6 +6,7 @@ import com.flightmanagement.mapper.FlightDetailMapper;
 import com.flightmanagement.repository.FlightDetailRepository;
 import com.flightmanagement.service.FlightDetailService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,24 +24,28 @@ public class FlightDetailServiceImpl implements FlightDetailService {
     }
     
     @Override
+    @Transactional(readOnly = true)
     public List<FlightDetailDto> getAllFlightDetails() {
         List<FlightDetail> flightDetails = flightDetailRepository.findAllActive();
         return flightDetailMapper.toDtoList(flightDetails);
     }
     
     @Override
+    @Transactional(readOnly = true)
     public List<FlightDetailDto> getFlightDetailsByFlightId(Integer flightId) {
         List<FlightDetail> flightDetails = flightDetailRepository.findByFlightId(flightId);
         return flightDetailMapper.toDtoList(flightDetails);
     }
     
     @Override
+    @Transactional(readOnly = true)
     public List<FlightDetailDto> getFlightDetailsByAirportId(Integer airportId) {
         List<FlightDetail> flightDetails = flightDetailRepository.findByMediumAirportId(airportId);
         return flightDetailMapper.toDtoList(flightDetails);
     }
     
     @Override
+    @Transactional(readOnly = true)
     public FlightDetailDto createFlightDetail(FlightDetailDto flightDetailDto) {
         FlightDetail flightDetail = flightDetailMapper.toEntity(flightDetailDto);
         flightDetail.setDeletedAt(null);
@@ -49,6 +54,7 @@ public class FlightDetailServiceImpl implements FlightDetailService {
     }
     
     @Override
+    @Transactional(readOnly = true)
     public FlightDetailDto updateFlightDetail(Integer flightId, Integer mediumAirportId, FlightDetailDto flightDetailDto) {
         FlightDetail existingFlightDetail = flightDetailRepository.findByFlightIdAndMediumAirportId(flightId, mediumAirportId)
             .orElseThrow(() -> new RuntimeException("FlightDetail not found for flight: " + flightId + " and airport: " + mediumAirportId));
