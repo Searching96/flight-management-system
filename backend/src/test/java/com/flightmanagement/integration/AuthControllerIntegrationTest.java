@@ -1,19 +1,16 @@
-package com.flightmanagement.controller;
+package com.flightmanagement.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flightmanagement.repository.AccountRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
@@ -23,38 +20,38 @@ import static org.hamcrest.Matchers.containsString;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Testcontainers
-class AuthControllerIT {
+@ActiveProfiles("dev")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class AuthControllerIntegrationTest {
 
-    @Container
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test");
+    @Autowired
+    private MockMvc mockMvc;
 
-    @DynamicPropertySource
-    static void dbProps(DynamicPropertyRegistry r) {
-        r.add("spring.datasource.url", mysql::getJdbcUrl);
-        r.add("spring.datasource.username", mysql::getUsername);
-        r.add("spring.datasource.password", mysql::getPassword);
-        r.add("spring.jpa.hibernate.ddl-auto", () -> "update");
-    }
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    @Autowired MockMvc mockMvc;
-    @Autowired ObjectMapper objectMapper;
-    @Autowired AccountRepository accountRepository;
+    @Autowired
+    private AccountRepository accountRepository;
 
     @BeforeEach
     void cleanup() {
-        // Keep tests independent - clean up the database
-        accountRepository.deleteAll();
+        // Use @Sql or avoid cleanup since we're using dev database
+        // The dev database should be in a clean state for integration tests
+        // Only clean up data created by this specific test if needed
     }
 
     @Test
+    @Order(1)
+    @DisplayName("IT-01: Should register and login successfully")
+    @WithMockUser(roles = "CUSTOMER")
     void registerAndLogin_returnsToken() throws Exception {
+        // Use timestamp to ensure unique email
+        String uniqueEmail = "ituser" + System.currentTimeMillis() + "@example.com";
+        
         // Register a new customer
         Map<String, Object> registerPayload = Map.of(
-                "email", "ituser@example.com",
+                "email", uniqueEmail,
                 "password", "P@ssw0rd123",
                 "accountName", "IT Test User",
                 "citizenId", "123456789",
@@ -68,11 +65,11 @@ class AuthControllerIT {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Registration successful"))
                 .andExpect(jsonPath("$.data.accessToken").exists())
-                .andExpect(jsonPath("$.data.userDetails.email").value("ituser@example.com"));
+                .andExpect(jsonPath("$.data.userDetails.email").value(uniqueEmail));
 
-        // Login with the registered user
+        // Now login with the registered user
         Map<String, Object> loginPayload = Map.of(
-                "email", "ituser@example.com",
+                "email", uniqueEmail,
                 "password", "P@ssw0rd123"
         );
 
@@ -83,10 +80,13 @@ class AuthControllerIT {
                 .andExpect(jsonPath("$.message").value("Login successful"))
                 .andExpect(jsonPath("$.data.accessToken").exists())
                 .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
-                .andExpect(jsonPath("$.data.userDetails.email").value("ituser@example.com"));
+                .andExpect(jsonPath("$.data.userDetails.email").value(uniqueEmail));
     }
 
     @Test
+    @Order(2)
+    @DisplayName("IT-02: Should return error for invalid email during registration")
+    @WithMockUser(roles = "CUSTOMER")
     void register_invalidEmail_returnsInternalServerError() throws Exception {
         Map<String, Object> registerPayload = Map.of(
                 "email", "invalid-email",
@@ -106,6 +106,9 @@ class AuthControllerIT {
     }
 
     @Test
+    @Order(4)
+    @DisplayName("IT-04: Should return error for invalid credentials during login")
+    @WithMockUser(roles = "CUSTOMER")
     void login_invalidCredentials_returnsUnauthorized() throws Exception {
         Map<String, Object> loginPayload = Map.of(
                 "email", "nonexistent@example.com",
@@ -119,6 +122,9 @@ class AuthControllerIT {
     }
 
     @Test
+    @Order(5)
+    @DisplayName("IT-05: Should process forgot password request successfully")
+    @WithMockUser(roles = "CUSTOMER")
     void forgotPassword_validEmail_returnsOk() throws Exception {
         // First register a user
         Map<String, Object> registerPayload = Map.of(

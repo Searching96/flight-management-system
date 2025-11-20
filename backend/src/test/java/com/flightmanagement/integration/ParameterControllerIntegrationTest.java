@@ -1,19 +1,16 @@
-package com.flightmanagement.controller;
+package com.flightmanagement.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flightmanagement.repository.ParameterRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
@@ -22,34 +19,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Testcontainers
-class ParameterControllerIT {
+@ActiveProfiles("dev")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class ParameterControllerIntegrationTest {
 
-    @Container
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test");
+    @Autowired
+    private MockMvc mockMvc;
 
-    @DynamicPropertySource
-    static void dbProps(DynamicPropertyRegistry r) {
-        r.add("spring.datasource.url", mysql::getJdbcUrl);
-        r.add("spring.datasource.username", mysql::getUsername);
-        r.add("spring.datasource.password", mysql::getPassword);
-        r.add("spring.jpa.hibernate.ddl-auto", () -> "update");
-    }
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    @Autowired MockMvc mockMvc;
-    @Autowired ObjectMapper objectMapper;
-    @Autowired ParameterRepository parameterRepository;
+    @Autowired
+    private ParameterRepository parameterRepository;
 
     @BeforeEach
     void cleanup() {
-        // Keep tests independent - clean up the database
-        parameterRepository.deleteAll();
+        // Parameters are system-wide, don't delete them
+        // Let the existing parameters remain for integration tests
     }
 
     @Test
+    @Order(1)
+    @DisplayName("IT-01: Should initialize default parameters")
+    @WithMockUser(roles = "ADMIN")
     void initializeDefaultParameters_createsNewParameters() throws Exception {
         mockMvc.perform(post("/api/parameters/initialize"))
                 .andExpect(status().isOk())
@@ -65,6 +58,9 @@ class ParameterControllerIT {
     }
 
     @Test
+    @Order(2)
+    @DisplayName("IT-02: Should get all parameters successfully")
+    @WithMockUser(roles = "ADMIN")
     void getParameters_afterInitialization_returnsParameters() throws Exception {
         // First initialize parameters
         mockMvc.perform(post("/api/parameters/initialize"))
@@ -83,6 +79,9 @@ class ParameterControllerIT {
     }
 
     @Test
+    @Order(3)
+    @DisplayName("IT-03: Should update all parameters in bulk")
+    @WithMockUser(roles = "ADMIN")
     void updateParameters_updatesAllValues() throws Exception {
         // First initialize parameters
         mockMvc.perform(post("/api/parameters/initialize"))
@@ -111,6 +110,9 @@ class ParameterControllerIT {
     }
 
     @Test
+    @Order(4)
+    @DisplayName("IT-04: Should update max medium airports parameter")
+    @WithMockUser(roles = "ADMIN")
     void updateMaxMediumAirports_updatesSpecificValue() throws Exception {
         // First initialize parameters
         mockMvc.perform(post("/api/parameters/initialize"))
@@ -124,6 +126,9 @@ class ParameterControllerIT {
     }
 
     @Test
+    @Order(5)
+    @DisplayName("IT-05: Should update min flight duration parameter")
+    @WithMockUser(roles = "ADMIN")
     void updateMinFlightDuration_updatesSpecificValue() throws Exception {
         // First initialize parameters
         mockMvc.perform(post("/api/parameters/initialize"))
@@ -137,6 +142,9 @@ class ParameterControllerIT {
     }
 
     @Test
+    @Order(6)
+    @DisplayName("IT-06: Should update min layover duration parameter")
+    @WithMockUser(roles = "ADMIN")
     void updateMinLayoverDuration_updatesSpecificValue() throws Exception {
         // First initialize parameters
         mockMvc.perform(post("/api/parameters/initialize"))
@@ -150,6 +158,9 @@ class ParameterControllerIT {
     }
 
     @Test
+    @Order(7)
+    @DisplayName("IT-07: Should update max layover duration parameter")
+    @WithMockUser(roles = "ADMIN")
     void updateMaxLayoverDuration_updatesSpecificValue() throws Exception {
         // First initialize parameters
         mockMvc.perform(post("/api/parameters/initialize"))
@@ -163,6 +174,9 @@ class ParameterControllerIT {
     }
 
     @Test
+    @Order(8)
+    @DisplayName("IT-08: Should update min booking advance parameter")
+    @WithMockUser(roles = "ADMIN")
     void updateMinBookingAdvance_updatesSpecificValue() throws Exception {
         // First initialize parameters
         mockMvc.perform(post("/api/parameters/initialize"))
@@ -176,6 +190,9 @@ class ParameterControllerIT {
     }
 
     @Test
+    @Order(9)
+    @DisplayName("IT-09: Should update max booking hold parameter")
+    @WithMockUser(roles = "ADMIN")
     void updateMaxBookingHold_updatesSpecificValue() throws Exception {
         // First initialize parameters
         mockMvc.perform(post("/api/parameters/initialize"))

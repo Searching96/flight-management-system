@@ -8,19 +8,16 @@ import com.flightmanagement.entity.FlightTicketClass;
 import com.flightmanagement.entity.Plane;
 import com.flightmanagement.entity.TicketClass;
 import com.flightmanagement.repository.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,40 +29,44 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Testcontainers
+@ActiveProfiles("dev")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Transactional
-class TicketBookingFlowIT {
+public class TicketBookingFlowIntegrationTest {
 
-    @Container
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test");
-
-    @DynamicPropertySource
-    static void dbProps(DynamicPropertyRegistry r) {
-        r.add("spring.datasource.url", mysql::getJdbcUrl);
-        r.add("spring.datasource.username", mysql::getUsername);
-        r.add("spring.datasource.password", mysql::getPassword);
-        r.add("spring.jpa.hibernate.ddl-auto", () -> "update");
-    }
-
-    @Autowired MockMvc mockMvc;
-    @Autowired ObjectMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
 
     // Repositories to assert DB state after cross-service flow
-    @Autowired FlightRepository flightRepository;
-    @Autowired TicketRepository ticketRepository;
-    @Autowired TicketClassRepository ticketClassRepository;
-    @Autowired FlightTicketClassRepository flightTicketClassRepository;
-    @Autowired AirportRepository airportRepository;
-    @Autowired PlaneRepository planeRepository;
-    @Autowired CustomerRepository customerRepository;
-    @Autowired AccountRepository accountRepository;
-    @Autowired PassengerRepository passengerRepository;
-    @Autowired FlightDetailRepository flightDetailRepository;
-    @Autowired MessageRepository messageRepository;
-    @Autowired ChatboxRepository chatboxRepository;
+    @Autowired
+    private FlightRepository flightRepository;
+    @Autowired
+    private TicketRepository ticketRepository;
+    @Autowired
+    private TicketClassRepository ticketClassRepository;
+    @Autowired
+    private FlightTicketClassRepository flightTicketClassRepository;
+    @Autowired
+    private AirportRepository airportRepository;
+    @Autowired
+    private PlaneRepository planeRepository;
+    @Autowired
+    private CustomerRepository customerRepository;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private PassengerRepository passengerRepository;
+    @Autowired
+    private FlightDetailRepository flightDetailRepository;
+    @Autowired
+    private MessageRepository messageRepository;
+    @Autowired
+    private ChatboxRepository chatboxRepository;
 
     private Airport departureAirport;
     private Airport arrivalAirport;
@@ -74,21 +75,8 @@ class TicketBookingFlowIT {
     private Customer testCustomer;
 
     @BeforeEach
-    void setupTestData() {
-        // Keep tests independent - clean up the database in proper order
-        // (foreign key relationships require careful cleanup order)
-        // Clean from most dependent to least dependent
-        messageRepository.deleteAll();
-        chatboxRepository.deleteAll();
-        ticketRepository.deleteAll();
-        passengerRepository.deleteAll();
-        flightTicketClassRepository.deleteAll();
-        flightDetailRepository.deleteAll();
-        customerRepository.deleteAll();
-        accountRepository.deleteAll();
-        flightRepository.deleteAll();
-        planeRepository.deleteAll();
-        airportRepository.deleteAll();
+    void setupTestData() throws Exception {
+        // Use @DirtiesContext instead of manual cleanup
         ticketClassRepository.deleteAll();
         
         // Create test airports
@@ -145,6 +133,9 @@ class TicketBookingFlowIT {
     }
 
     @Test
+    @Order(1)
+    @DisplayName("IT-01: Should complete full ticket booking flow and reserve seats")
+    @WithMockUser(roles = "CUSTOMER")
     void fullTicketBookingFlow_createsTickets_and_reservesSeats() throws Exception {
         // 1) create a flight (POST /api/flights)
         String flightPayload = objectMapper.writeValueAsString(
@@ -212,6 +203,9 @@ class TicketBookingFlowIT {
     }
 
     @Test
+    @Order(2)
+    @DisplayName("IT-02: Should handle multi-passenger ticket booking")
+    @WithMockUser(roles = "CUSTOMER")
     void multiPassengerTicketBooking_createsMultipleTickets() throws Exception {
         // Create flight first
         String flightPayload = objectMapper.writeValueAsString(
@@ -280,7 +274,10 @@ class TicketBookingFlowIT {
                 .containsExactlyInAnyOrder("2A", "2B");
     }
 
-    @Test 
+    @Test
+    @Order(3)
+    @DisplayName("IT-03: Should complete ticket booking and payment flow")
+    @WithMockUser(roles = "CUSTOMER")
     void ticketBookingAndPaymentFlow_updatesTicketStatus() throws Exception {
         // 1) Create flight and book ticket (similar to first test)
         String flightPayload = objectMapper.writeValueAsString(
