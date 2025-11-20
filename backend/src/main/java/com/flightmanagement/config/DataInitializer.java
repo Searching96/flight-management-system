@@ -2,6 +2,7 @@ package com.flightmanagement.config;
 
 import com.flightmanagement.dto.*;
 import com.flightmanagement.service.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,9 @@ import java.time.LocalDateTime;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
+
+    @Value("${app.data-initializer.enabled:true}")
+    private boolean enabled;
 
     private final ParameterService parameterService;
 
@@ -47,6 +51,10 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        if (!enabled) {
+            System.out.println("ℹ️  Data initializer is disabled");
+            return;
+        }
         System.out.println("🚀 Initializing Flight Management System Demo Data...");
         initializeParameters();
         initializeTicketClasses();

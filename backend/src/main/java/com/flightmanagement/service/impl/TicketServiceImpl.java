@@ -305,6 +305,7 @@ public class TicketServiceImpl implements TicketService {
             ticketDto.setSeatNumber(seatNumber);
             ticketDto.setFare(flightTicketClass.getSpecifiedFare());
             ticketDto.setTicketStatus((byte) 0); // 0: unpaid (default)
+            ticketDto.setConfirmationCode(generateConfirmationCode());
 
             TicketDto createdTicket = createTicket(ticketDto);
             bookedTickets.add(createdTicket);
@@ -364,11 +365,15 @@ public class TicketServiceImpl implements TicketService {
     }
 
     private PassengerDto getOrCreatePassenger(PassengerDto passengerDto) {
-        try {
-            return passengerService.getPassengerByCitizenId(passengerDto.getCitizenId());
-        } catch (RuntimeException e) {
+        // Try to find existing passenger
+        PassengerDto existingPassenger = passengerService.getPassengerByCitizenId(passengerDto.getCitizenId());
+        
+        // If not found, create new passenger
+        if (existingPassenger == null) {
             return passengerService.createPassenger(passengerDto);
         }
+        
+        return existingPassenger;
     }
 
     @Override
