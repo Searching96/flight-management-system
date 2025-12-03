@@ -156,7 +156,7 @@ public class DataInitializer implements CommandLineRunner {
                 RegisterDto accountingEmployee = new RegisterDto();
                 accountingEmployee.setAccountName("Pham Thi D");
                 accountingEmployee.setEmail("accounting@flightms.com");
-                accountingEmployee.setPassword("123Abc");
+                    accountingEmployee.setPassword("123Abc");
                 accountingEmployee.setCitizenId("444444444");
                 accountingEmployee.setPhoneNumber("0123456784");
                 accountingEmployee.setAccountType(2); // Employee
@@ -386,8 +386,9 @@ public class DataInitializer implements CommandLineRunner {
                 System.out.println("  - Flight 2 (HAN -> DAD): 2 stopovers at Ho Chi Minh City and Nha Trang");
             }
         } catch (Exception e) {
-            System.err.println("⚠️ Error creating demo flight details: " + e.getMessage());
+//            System.err.println("⚠️ Error creating demo flight details: " + e.getMessage());
             e.printStackTrace();
+            throw new RuntimeException("⚠️ Error creating demo flight details: " + e.getMessage());
         }
     }
 
