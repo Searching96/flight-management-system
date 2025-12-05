@@ -5,49 +5,55 @@ export class CustomerService {
   private readonly customerUrl = "/customers";
 
   // Customer operations
-  async getAllCustomers(): Promise<ApiResponse<Customer[]>> {
-    return apiClient.get(this.customerUrl);
+  async getAllCustomers(): Promise<Customer[]> {
+    const response = await apiClient.get<ApiResponse<Customer[]>>(this.customerUrl);
+    return response.data;
   }
 
-  async getCustomerScore(customerId: number): Promise<ApiResponse<number>> {
-    return apiClient.get(`${this.customerUrl}/${customerId}/score`);
+  async getCustomerScore(customerId: number): Promise<number> {
+    const response = await apiClient.get<ApiResponse<number>>(`${this.customerUrl}/${customerId}/score`);
+    return response.data;
   }
 
-  async getCustomerById(customerId: number): Promise<ApiResponse<Customer>> {
-    return apiClient.get(`${this.customerUrl}/${customerId}`);
+  async getCustomerById(customerId: number): Promise<Customer> {
+    const response = await apiClient.get<ApiResponse<Customer>>(`${this.customerUrl}/${customerId}`);
+    return response.data;
   }
 
-  async getCustomerByEmail(email: string): Promise<ApiResponse<Customer>> {
-    return apiClient.get(`${this.customerUrl}/email/${email}`);
+  async getCustomerByEmail(email: string): Promise<Customer> {
+    const response = await apiClient.get<ApiResponse<Customer>>(`${this.customerUrl}/email/${email}`);
+    return response.data;
   }
 
   async createCustomer(
     customer: Omit<Customer, "customerId">
-  ): Promise<ApiResponse<Customer>> {
-    return apiClient.post(this.customerUrl, customer);
+  ): Promise<Customer> {
+    const response = await apiClient.post<ApiResponse<Customer>>(this.customerUrl, customer);
+    return response.data;
   }
 
   async updateCustomer(
     id: number,
     customer: Partial<Customer>
-  ): Promise<ApiResponse<Customer>> {
-    return apiClient.put(`${this.customerUrl}/${id}`, customer);
+  ): Promise<Customer> {
+    const response = await apiClient.put<ApiResponse<Customer>>(`${this.customerUrl}/${id}`, customer);
+    return response.data;
   }
 
   async updateCustomerScore(
     id: number,
     score: number
-  ): Promise<ApiResponse<void>> {
-    return apiClient.put(`${this.customerUrl}/${id}/score/${score}`);
+  ): Promise<void> {
+    await apiClient.put<ApiResponse<void>>(`${this.customerUrl}/${id}/score/${score}`);
   }
 
-  async deleteCustomer(id: number): Promise<ApiResponse<void>> {
-    return apiClient.delete(`${this.customerUrl}/${id}`);
+  async deleteCustomer(id: number): Promise<void> {
+    await apiClient.delete<ApiResponse<void>>(`${this.customerUrl}/${id}`);
   }
 
-  async searchCustomers(query: string): Promise<ApiResponse<Customer[]>> {
+  async searchCustomers(query: string): Promise<Customer[]> {
     try {
-      const response = await apiClient.get(`${this.customerUrl}/search`, {
+      const response = await apiClient.get<ApiResponse<Customer[]>>(`${this.customerUrl}/search`, {
         params: { q: query },
       });
       return response.data;

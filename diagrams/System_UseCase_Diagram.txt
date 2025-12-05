@@ -45,7 +45,7 @@ actor "Accounting Employee" as AccountingEmp
 actor "Flight Operations" as FlightOpsEmp
 actor "HR Employee" as HREmp
 actor Administrator as Admin
-actor "VNPay Gateway" as VNPay
+actor "MoMo Gateway" as MoMo
 
 ' ====================
 ' USE CASES
@@ -208,12 +208,12 @@ Admin --> UC_CreateEmployee
 Admin --> UC_ConfigureSystem
 Admin --> UC_Logout
 
-' VNPay Gateway associations
-UC_MakePayment --> VNPay
-VNPay --> UC_ProcessPayment
-VNPay --> UC_ValidatePayment
-VNPay --> UC_HandlePaymentResponse
-VNPay --> UC_ProcessRefund
+' MoMo Gateway associations
+UC_MakePayment --> MoMo
+MoMo --> UC_ProcessPayment
+MoMo --> UC_ValidatePayment
+MoMo --> UC_HandlePaymentResponse
+MoMo --> UC_ProcessRefund
 
 ' ====================
 ' INHERITANCE

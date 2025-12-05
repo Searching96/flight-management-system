@@ -3,7 +3,7 @@ package com.flightmanagement.service;
 import com.flightmanagement.dto.ParameterDto;
 
 public interface ParameterService {
-    ParameterDto getParameterSet();
+    ParameterDto getLatestParameter();
     
     ParameterDto updateParameters(ParameterDto parameterDto);
 

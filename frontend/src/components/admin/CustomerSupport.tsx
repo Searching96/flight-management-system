@@ -121,21 +121,14 @@ const CustomerSupport: React.FC = () => {
 
       // Load chatboxes based on sort option
       if (sortOption === "Thời điểm yêu cầu tư vấn") {
-        const response =
-          await chatService.getAllChatboxesSortedByCustomerTime();
-        data = response.data;
+        data = await chatService.getAllChatboxesSortedByCustomerTime();
       } else if (sortOption === "Số lượng nhân viên đã hỗ trợ") {
-        const response =
-          await chatService.getAllChatboxesSortedByEmployeeSupportCount();
-        data = response.data;
+        data = await chatService.getAllChatboxesSortedByEmployeeSupportCount();
       } else if (sortOption === "Hoạt động gần đây") {
-        const response =
-          await chatService.getAllChatboxesSortedByRecentActivity();
-        data = response.data;
+        data = await chatService.getAllChatboxesSortedByRecentActivity();
       } else {
         // For other options, use the default API for now
-        const response = await chatService.getAllChatboxes();
-        data = response.data;
+        data = await chatService.getAllChatboxes();
       }
 
       setChatboxes(data);
@@ -243,21 +236,14 @@ const CustomerSupport: React.FC = () => {
 
         // Use the same sorting logic for polling - make sure all options are covered
         if (sortOption === "Thời điểm yêu cầu tư vấn") {
-          const response =
-            await chatService.getAllChatboxesSortedByCustomerTime();
-          data = response.data;
+          data = await chatService.getAllChatboxesSortedByCustomerTime();
         } else if (sortOption === "Số lượng nhân viên đã hỗ trợ") {
-          const response =
-            await chatService.getAllChatboxesSortedByEmployeeSupportCount();
-          data = response.data;
+          data = await chatService.getAllChatboxesSortedByEmployeeSupportCount();
         } else if (sortOption === "Hoạt động gần đây") {
-          const response =
-            await chatService.getAllChatboxesSortedByRecentActivity();
-          data = response.data;
+          data = await chatService.getAllChatboxesSortedByRecentActivity();
         } else {
           // Default fallback
-          const response = await chatService.getAllChatboxes();
-          data = response.data;
+          data = await chatService.getAllChatboxes();
         }
 
         // Only update if there are actually changes

@@ -1,6 +1,8 @@
 package com.flightmanagement.security;
 
 import com.flightmanagement.entity.Account;
+import com.flightmanagement.enums.AccountType;
+import com.flightmanagement.enums.EmployeeType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -23,8 +25,8 @@ public class CustomUserDetails implements UserDetails {
     private String email;
     private String password;
     private String accountName;
-    private Integer accountType;
-    private Integer employeeType;
+    private AccountType accountType;
+    private EmployeeType employeeType;
     private Integer score;
     private String phoneNumber;
     private String citizenId;
@@ -33,20 +35,13 @@ public class CustomUserDetails implements UserDetails {
     public static CustomUserDetails create(Account account) {
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        if (account.getAccountType() == 1) {
+        if (account.getAccountType() == AccountType.CUSTOMER) {
             authorities.add(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
-        } else if (account.getAccountType() == 2) {
+        } else if (account.getAccountType() == AccountType.EMPLOYEE) {
             authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE"));
-            if (account.getEmployee() != null) {
-                switch (account.getEmployee().getEmployeeType()) {
-                    case 1 -> authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE_FLIGHT_SCHEDULING"));
-                    case 2 -> authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE_TICKETING"));
-                    case 3 -> authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE_SUPPORT"));
-                    case 4 -> authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE_ACCOUNTING"));
-                    case 5 -> authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE_FLIGHT_OPERATIONS"));
-                    case 6 -> authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE_HUMAN_RESOURCES"));
-                    case 7 -> authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE_ADMINISTRATOR"));
-                }
+            if (account.getEmployee() != null && account.getEmployee().getEmployeeType() != null) {
+                // Use the enum's built-in authority method for type safety
+                authorities.add(account.getEmployee().getEmployeeType().getAuthority());
             }
         }
 

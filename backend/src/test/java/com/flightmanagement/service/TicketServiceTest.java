@@ -2,6 +2,7 @@ package com.flightmanagement.service;
 
 import com.flightmanagement.dto.*;
 import com.flightmanagement.entity.*;
+import com.flightmanagement.enums.AccountType;
 import com.flightmanagement.mapper.TicketMapper;
 import com.flightmanagement.repository.*;
 import com.flightmanagement.service.impl.TicketServiceImpl;
@@ -93,7 +94,7 @@ public class TicketServiceTest {
         validAccount.setAccountId(1);
         validAccount.setEmail("customer@test.com");
         validAccount.setAccountName("Test Customer");
-        validAccount.setAccountType(1);
+        validAccount.setAccountType(AccountType.CUSTOMER);
 
         validCustomer = new Customer();
         validCustomer.setCustomerId(1);

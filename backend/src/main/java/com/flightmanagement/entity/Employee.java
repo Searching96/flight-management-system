@@ -1,5 +1,6 @@
 package com.flightmanagement.entity;
 
+import com.flightmanagement.enums.EmployeeType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,9 +25,8 @@ public class Employee {
     @MapsId
     @JoinColumn(name = "employee_id")
     private Account account;
-    
-    @Column(name = "employee_type", nullable = false)
-    private Integer employeeType; // 1: tiep nhan lich bay, 2: ban/dat ve, 3: cskh, 4: ke toan, 5: sa
+
+    private EmployeeType employeeType;
     
     @Column(name = "deletedAt")
     private LocalDateTime deletedAt;

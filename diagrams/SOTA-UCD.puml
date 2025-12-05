@@ -10,7 +10,7 @@ actor "Flight Scheduling Employee" as SchedulingEmp
 actor "Ticketing Employee" as TicketingEmp
 actor "Accounting Employee" as AccountingEmp
 actor "System Administrator" as SysAdmin
-actor "VNPay Gateway" as VNPay
+actor "MoMo Gateway" as MoMo
 
 rectangle "Flight Management System" {
 
@@ -99,7 +99,7 @@ UC_BookTickets ..> UC_EnterPassengers : <<include>>
 UC_BookTickets ..> UC_SelectSeats : <<include>>
 UC_SearchFlights <.. UC_ViewFlightDetails : <<extend>>
 UC_MakePayment ..> UC_HandlePaymentGW : <<include>>
-UC_HandlePaymentGW -- VNPay
+UC_HandlePaymentGW -- MoMo
 
 SchedulingEmp -- UC_CreateFlight
 SchedulingEmp -- UC_ManageFlightInfo

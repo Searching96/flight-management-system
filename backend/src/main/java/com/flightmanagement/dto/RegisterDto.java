@@ -1,5 +1,6 @@
 package com.flightmanagement.dto;
 
+import com.flightmanagement.enums.EmployeeType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,6 @@ public class RegisterDto {
     private String citizenId;
     private String phoneNumber;
     private Integer accountType;
-    private Integer employeeType;
+    private EmployeeType employeeType;
 }
 

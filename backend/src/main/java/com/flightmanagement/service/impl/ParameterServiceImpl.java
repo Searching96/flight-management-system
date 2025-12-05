@@ -20,7 +20,7 @@ public class ParameterServiceImpl implements ParameterService {
     }
     
     @Override
-    public ParameterDto getParameterSet() {
+    public ParameterDto getLatestParameter() {
         Parameter parameter = parameterRepository.findLatestParameter()
             .orElseThrow(() -> new RuntimeException("No parameters found"));
         return parameterMapper.toDto(parameter);
@@ -42,7 +42,7 @@ public class ParameterServiceImpl implements ParameterService {
     @Override
     public void updateMaxMediumAirports(int maxMediumAirports) {
         // Delete all existing parameters and create new one
-        ParameterDto currentParams = getParameterSet();
+        ParameterDto currentParams = getLatestParameter();
         currentParams.setMaxMediumAirport(maxMediumAirports);
         updateParameters(currentParams);
     }
@@ -50,7 +50,7 @@ public class ParameterServiceImpl implements ParameterService {
     @Override
     public void updateMinFlightDuration(int minFlightDuration) {
         // Delete all existing parameters and create new one
-        ParameterDto currentParams = getParameterSet();
+        ParameterDto currentParams = getLatestParameter();
         currentParams.setMinFlightDuration(minFlightDuration);
         updateParameters(currentParams);
     }
@@ -58,7 +58,7 @@ public class ParameterServiceImpl implements ParameterService {
     @Override
     public void updateMaxLayoverDuration(int maxLayoverDuration) {
         // Delete all existing parameters and create new one
-        ParameterDto currentParams = getParameterSet();
+        ParameterDto currentParams = getLatestParameter();
         currentParams.setMaxLayoverDuration(maxLayoverDuration);
         updateParameters(currentParams);
     }
@@ -66,7 +66,7 @@ public class ParameterServiceImpl implements ParameterService {
     @Override
     public void updateMinLayoverDuration(int minLayoverDuration) {
         // Delete all existing parameters and create new one
-        ParameterDto currentParams = getParameterSet();
+        ParameterDto currentParams = getLatestParameter();
         currentParams.setMinLayoverDuration(minLayoverDuration);
         updateParameters(currentParams);
     }
@@ -74,7 +74,7 @@ public class ParameterServiceImpl implements ParameterService {
     @Override
     public void updateMinBookingInAdvanceDuration(int minBookingInAdvanceDuration) {
         // Delete all existing parameters and create new one
-        ParameterDto currentParams = getParameterSet();
+        ParameterDto currentParams = getLatestParameter();
         currentParams.setMinBookingInAdvanceDuration(minBookingInAdvanceDuration);
         updateParameters(currentParams);
     }
@@ -82,7 +82,7 @@ public class ParameterServiceImpl implements ParameterService {
     @Override
     public void updateMaxBookingHoldDuration(int maxBookingHoldDuration) {
         // Delete all existing parameters and create new one
-        ParameterDto currentParams = getParameterSet();
+        ParameterDto currentParams = getLatestParameter();
         currentParams.setMaxBookingHoldDuration(maxBookingHoldDuration);
         updateParameters(currentParams);
     }

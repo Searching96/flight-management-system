@@ -222,7 +222,6 @@ flight-management-system/
 │       │   │           │   ├── DataInitializer.java
 │       │   │           │   ├── JwtConfig.java
 │       │   │           │   ├── OpenAPIConfig.java
-│       │   │           │   ├── VNPayConfig.java
 │       │   │           │   ├── WebConfig.java
 │       │   │           │   └── WebSocketConfig.java
 │       │   │           ├── controller/
@@ -374,8 +373,7 @@ flight-management-system/
 │       │   │           │   │   ├── StatisticsServiceImpl.java
 │       │   │           │   │   ├── TicketClassServiceImpl.java
 │       │   │           │   │   ├── TicketCleanupServiceImpl.java
-│       │   │           │   │   ├── TicketServiceImpl.java
-│       │   │           │   │   └── VNPayServiceImpl.java
+│       │   │           │   │   └── TicketServiceImpl.java
 │       │   │           │   ├── MessageService.java
 │       │   │           │   ├── ParameterService.java
 │       │   │           │   ├── PassengerService.java

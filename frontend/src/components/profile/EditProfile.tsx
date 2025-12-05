@@ -48,7 +48,7 @@ const EditProfile: React.FC = () => {
         if (user.accountTypeName === "Customer") {
           try {
             const customerData = await customerService.getCustomerById(user.id);
-            customerScore = customerData.data.score || 0; // Default to 0 if score is not set
+            customerScore = customerData.score || 0; // Default to 0 if score is not set
             console.log("Fetched customer score:", customerScore);
           } catch (scoreErr) {
             console.warn("Could not fetch customer score:", scoreErr);

@@ -9,7 +9,7 @@ actor "Operation Administrator" as OpAdmin
 actor "Ticketing Employee" as TicketingEmp
 actor "Accounting Employee" as AccountingEmp
 actor "System Administrator" as SysAdmin
-actor "VNPay Gateway" as VNPay
+actor "MoMo Gateway" as MoMo
 
 rectangle "Flight Management System" {
 
@@ -141,9 +141,9 @@ SysAdmin --> UC_SystemMonitoring
 SysAdmin --> UC_ManageRoles
 SysAdmin --> UC_AccessControl
 
-UC_ProcessPayment --> VNPay
-VNPay --> UC_HandlePaymentGW
-VNPay --> UC_PaymentConfirm
+UC_ProcessPayment --> MoMo
+MoMo --> UC_HandlePaymentGW
+MoMo --> UC_PaymentConfirm
 
 UC_BookTickets ..> UC_EnterPassengers : <<include>>
 UC_BookTickets ..> UC_ProcessPayment : <<include>>

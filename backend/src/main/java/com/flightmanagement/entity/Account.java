@@ -1,5 +1,6 @@
 package com.flightmanagement.entity;
 
+import com.flightmanagement.enums.AccountType;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -51,10 +52,8 @@ public class Account {
     @Size(max = 15, message = "Phone number must not exceed 15 characters")
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
-    
-    @NotNull(message = "Account type is required")
-    @Column(name = "account_type", nullable = false)
-    private Integer accountType; // 1: customer, 2: employee
+
+    private AccountType accountType;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;

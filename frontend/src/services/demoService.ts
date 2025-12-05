@@ -1,15 +1,17 @@
 import { apiClient } from "./api";
-import { DemoInfo, HealthStatus } from "../models";
+import { DemoInfo, HealthStatus, ApiResponse } from "../models";
 
 export class DemoService {
   private readonly baseUrl = "/demo";
 
   async getHealth(): Promise<HealthStatus> {
-    return apiClient.get(`${this.baseUrl}/health`);
+    const response = await apiClient.get<ApiResponse<HealthStatus>>(`${this.baseUrl}/health`);
+    return response.data;
   }
 
   async getInfo(): Promise<DemoInfo> {
-    return apiClient.get(`${this.baseUrl}/info`);
+    const response = await apiClient.get<ApiResponse<DemoInfo>>(`${this.baseUrl}/info`);
+    return response.data;
   }
 }
 

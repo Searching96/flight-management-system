@@ -16,7 +16,7 @@ public interface AuthService {
 
     AuthResponse processPasswordReset(String token, String newPassword);
 
-    void processForgotPassword(String email);
+    void processForgotPassword(String email, String phoneNumber);
 
     boolean validatePasswordResetToken(String token);
 

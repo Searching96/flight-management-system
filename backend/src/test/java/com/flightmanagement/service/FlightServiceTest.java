@@ -80,7 +80,7 @@ public class FlightServiceTest {
     @Test
     void createFlight_validRequest_success() {
         when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(false);
-        when(parameterService.getParameterSet()).thenReturn(parameterDto);
+        when(parameterService.getLatestParameter()).thenReturn(parameterDto);
         when(flightMapper.toEntityFromCreateRequest(validRequest)).thenReturn(validFlight);
         when(flightRepository.save(any(Flight.class))).thenReturn(validFlight);
         when(flightMapper.toDto(validFlight)).thenReturn(validFlightDto);
@@ -140,7 +140,7 @@ public class FlightServiceTest {
     void createFlight_flightDurationTooShort_throwsException() {
         validRequest.setArrivalTime(validRequest.getDepartureTime().plusMinutes(15));
         when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(false);
-        when(parameterService.getParameterSet()).thenReturn(parameterDto);
+        when(parameterService.getLatestParameter()).thenReturn(parameterDto);
 
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
@@ -155,7 +155,7 @@ public class FlightServiceTest {
     void createFlight_exactMinimumDuration_success() {
         validRequest.setArrivalTime(validRequest.getDepartureTime().plusMinutes(30));
         when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(false);
-        when(parameterService.getParameterSet()).thenReturn(parameterDto);
+        when(parameterService.getLatestParameter()).thenReturn(parameterDto);
         when(flightMapper.toEntityFromCreateRequest(validRequest)).thenReturn(validFlight);
         when(flightRepository.save(any(Flight.class))).thenReturn(validFlight);
         when(flightMapper.toDto(validFlight)).thenReturn(validFlightDto);
@@ -173,7 +173,7 @@ public class FlightServiceTest {
     void updateFlight_validUpdate_success() {
         when(flightRepository.findActiveById(1)).thenReturn(Optional.of(validFlight));
         when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(false);
-        when(parameterService.getParameterSet()).thenReturn(parameterDto);
+        when(parameterService.getLatestParameter()).thenReturn(parameterDto);
         when(flightRepository.save(any(Flight.class))).thenReturn(validFlight);
         when(flightMapper.toDto(validFlight)).thenReturn(validFlightDto);
 
@@ -242,7 +242,7 @@ public class FlightServiceTest {
     void updateFlight_tooShortDuration_throwsException() {
         validRequest.setArrivalTime(validRequest.getDepartureTime().plusMinutes(15));
         when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(false);
-        when(parameterService.getParameterSet()).thenReturn(parameterDto);
+        when(parameterService.getLatestParameter()).thenReturn(parameterDto);
 
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,

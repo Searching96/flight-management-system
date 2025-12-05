@@ -6,6 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import com.flightmanagement.dto.UserDetailsDto;
+import com.flightmanagement.enums.AccountType;
 import com.flightmanagement.security.CustomUserDetails;
 
 @Component
@@ -23,8 +24,8 @@ public class AuthMapper {
                 .orElse("USER");
     }
 
-    public String getAccountTypeName(Integer accountType) {
-        return accountType == 1 ? "Customer" : "Employee";
+    public String getAccountTypeName(AccountType accountType) {
+        return accountType == AccountType.CUSTOMER ? "Customer" : "Employee";
     }
 
     public UserDetailsDto toUserDetailsDto(CustomUserDetails userDetails) {

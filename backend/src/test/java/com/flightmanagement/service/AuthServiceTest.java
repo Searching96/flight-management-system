@@ -7,6 +7,8 @@ import com.flightmanagement.dto.UserDetailsDto;
 import com.flightmanagement.entity.Account;
 import com.flightmanagement.entity.Customer;
 import com.flightmanagement.entity.Employee;
+import com.flightmanagement.enums.AccountType;
+import com.flightmanagement.enums.EmployeeType;
 import com.flightmanagement.exception.ResourceNotFoundException;
 import com.flightmanagement.mapper.AuthMapper;
 import com.flightmanagement.repository.AccountRepository;
@@ -99,7 +101,7 @@ public class AuthServiceTest {
         testAccount.setAccountName("testuser");
         testAccount.setEmail("test@email.com");
         testAccount.setPassword("encodedPassword");
-        testAccount.setAccountType(1);
+        testAccount.setAccountType(AccountType.CUSTOMER);
         testAccount.setDeletedAt(null);
 
         // Setup test customer
@@ -111,7 +113,7 @@ public class AuthServiceTest {
         // Setup test employee
         testEmployee = new Employee();
         testEmployee.setEmployeeId(1);
-        testEmployee.setEmployeeType(1);
+        testEmployee.setEmployeeType(EmployeeType.FLIGHT_SCHEDULING);
         testEmployee.setAccount(testAccount);
 
         // Setup test login request
@@ -126,7 +128,7 @@ public class AuthServiceTest {
         testRegisterDto.setPassword("password123");
         testRegisterDto.setPhoneNumber("0123456789");
         testRegisterDto.setCitizenId("123456789");
-        testRegisterDto.setAccountType(1);
+        testRegisterDto.setAccountType(AccountType.CUSTOMER.getValue());
 
         // Setup test user details
         testUserDetails = CustomUserDetails.create(testAccount);
@@ -266,12 +268,12 @@ public class AuthServiceTest {
     @Tag("register")
     void testRegister_CustomerSuccess_ReturnsAuthResponse() {
         // Given
-        testRegisterDto.setAccountType(1); // Customer
+        testRegisterDto.setAccountType(AccountType.CUSTOMER.getValue()); // Customer
         Account savedAccount = new Account();
         savedAccount.setAccountId(2);
         savedAccount.setAccountName("newuser");
         savedAccount.setEmail("newuser@email.com");
-        savedAccount.setAccountType(1);
+        savedAccount.setAccountType(AccountType.CUSTOMER);
 
         Customer savedCustomer = new Customer();
         savedCustomer.setCustomerId(2);
@@ -303,17 +305,17 @@ public class AuthServiceTest {
     @Tag("register")
     void testRegister_EmployeeSuccess_ReturnsAuthResponseWithRandomPassword() {
         // Given
-        testRegisterDto.setAccountType(2); // Employee
-        testRegisterDto.setEmployeeType(1);
+        testRegisterDto.setAccountType(AccountType.EMPLOYEE.getValue()); // Employee
+        testRegisterDto.setEmployeeType(EmployeeType.FLIGHT_SCHEDULING);
         
         Account savedAccount = new Account();
         savedAccount.setAccountId(3);
-        savedAccount.setAccountType(2);
+        savedAccount.setAccountType(AccountType.EMPLOYEE);
         savedAccount.setEmail("newuser@email.com"); // Set email to match testRegisterDto
 
         Employee savedEmployee = new Employee();
         savedEmployee.setEmployeeId(3);
-        savedEmployee.setEmployeeType(1);
+        savedEmployee.setEmployeeType(EmployeeType.FLIGHT_SCHEDULING);
         savedEmployee.setAccount(savedAccount);
 
         when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(false);
@@ -357,7 +359,7 @@ public class AuthServiceTest {
         // Given
         testRegisterDto.setAccountType(999); // Invalid type
         Account savedAccount = new Account();
-        savedAccount.setAccountType(999);
+        savedAccount.setAccountType(AccountType.fromValue(999));
         savedAccount.setEmail("newuser@email.com"); // Set email to match DTO
 
         when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(false);
@@ -614,7 +616,7 @@ public class AuthServiceTest {
         when(accountRepository.save(testAccount)).thenReturn(testAccount);
 
         // When
-        authService.processForgotPassword("test@email.com");
+        authService.processForgotPassword("test@email.com", testAccount.getPhoneNumber());
 
         // Then
         verify(accountRepository).findByEmail("test@email.com");
@@ -634,7 +636,7 @@ public class AuthServiceTest {
 
         // When & Then
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, 
-            () -> authService.processForgotPassword("nonexistent@email.com"));
+            () -> authService.processForgotPassword("nonexistent@email.com", "0123456789"));
         assertEquals("Account not found with email: nonexistent@email.com", exception.getMessage());
         verify(accountRepository).findByEmail("nonexistent@email.com");
         verify(jwtService, never()).generatePasswordResetToken(any());
@@ -649,7 +651,7 @@ public class AuthServiceTest {
 
         // When & Then
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, 
-            () -> authService.processForgotPassword(null));
+            () -> authService.processForgotPassword(null, "0123456789"));
         assertTrue(exception.getMessage().contains("Account not found with email: null"));
         verify(accountRepository).findByEmail(null);
     }
@@ -663,7 +665,7 @@ public class AuthServiceTest {
 
         // When & Then
         RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> authService.processForgotPassword("test@email.com"));
+            () -> authService.processForgotPassword("test@email.com", testAccount.getPhoneNumber()));
         assertEquals("JWT generation failed", exception.getMessage());
         verify(jwtService).generatePasswordResetToken("test@email.com");
         verify(accountRepository, never()).save(any());
@@ -679,7 +681,7 @@ public class AuthServiceTest {
 
         // When & Then
         RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> authService.processForgotPassword("test@email.com"));
+            () -> authService.processForgotPassword("test@email.com", testAccount.getPhoneNumber()));
         assertEquals("Encoding failed", exception.getMessage());
         verify(passwordEncoder).encode("password-after-forgot");
         verify(accountRepository, never()).save(any());
@@ -696,7 +698,7 @@ public class AuthServiceTest {
 
         // When & Then
         RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> authService.processForgotPassword("test@email.com"));
+            () -> authService.processForgotPassword("test@email.com", testAccount.getPhoneNumber()));
         assertEquals("Save failed", exception.getMessage());
         verify(accountRepository).save(testAccount);
     }

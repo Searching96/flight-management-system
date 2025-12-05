@@ -6,6 +6,7 @@ import com.flightmanagement.dto.RegisterDto;
 import com.flightmanagement.entity.Account;
 import com.flightmanagement.entity.Customer;
 import com.flightmanagement.entity.Employee;
+import com.flightmanagement.enums.AccountType;
 import com.flightmanagement.exception.ResourceNotFoundException;
 import com.flightmanagement.mapper.AuthMapper;
 import com.flightmanagement.repository.AccountRepository;
@@ -91,18 +92,18 @@ public class AuthServiceImpl implements AuthService {
         newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
         newAccount.setCitizenId(request.getCitizenId());
         newAccount.setPhoneNumber(request.getPhoneNumber());
-        newAccount.setAccountType(request.getAccountType());
+        newAccount.setAccountType(AccountType.fromValue(request.getAccountType()));
 
         Account savedAccount = accountRepo.save(newAccount);
 
         // Handle account type-specific relationships
-        if (request.getAccountType() == 1) {
+        if (request.getAccountType() == AccountType.CUSTOMER.getValue()) {
             Customer customer = new Customer();
             customer.setAccount(savedAccount);
             customerRepository.save(customer);
             savedAccount.setCustomer(customer);
             // emailService.sendCustomerWelcomeEmail(savedAccount.getEmail(), savedAccount.getAccountName());
-        } else if (request.getAccountType() == 2) {
+        } else if (request.getAccountType() == AccountType.EMPLOYEE.getValue()) {
             // Generate random password for employee
             String randomPassword = generateRandomPassword();
             System.out.println(randomPassword);
@@ -180,20 +181,24 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void processForgotPassword(String email) {
+    public void processForgotPassword(String email, String phoneNumber) {
         Account account = accountRepo.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found with email: " + email));
+
+        if (!account.getPhoneNumber().equals(phoneNumber)) {
+            throw new ResourceNotFoundException("Account not found with provided phone number");
+        }
 
         String resetToken = jwtService.generatePasswordResetToken(email);
         account.setPasswordResetToken(resetToken);
         account.setPasswordResetExpiry(Instant.now().plus(15, ChronoUnit.MINUTES));
-
-        // I implement a simple reset password. After re-activating mail server, use that way to process.
-        String password = "password-after-forgot";
-        account.setPassword(passwordEncoder.encode(password));
+//
+//        // I implement a simple reset password. After re-activating mail server, use that way to process.
+//        String password = "password-after-forgot";
+//        account.setPassword(passwordEncoder.encode(password));
         accountRepo.save(account);
 
-        // emailService.sendPasswordResetEmail(email, resetToken);
+        emailService.sendPasswordResetEmail(email, resetToken);
     }
 
     @Override

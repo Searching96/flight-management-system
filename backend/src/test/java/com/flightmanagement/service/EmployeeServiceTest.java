@@ -3,6 +3,7 @@ package com.flightmanagement.service;
 import com.flightmanagement.dto.EmployeeDto;
 import com.flightmanagement.entity.Account;
 import com.flightmanagement.entity.Employee;
+import com.flightmanagement.enums.EmployeeType;
 import com.flightmanagement.mapper.EmployeeMapper;
 import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.repository.EmployeeRepository;
@@ -73,14 +74,14 @@ public class EmployeeServiceTest {
         // Setup test employee entity
         testEmployee = new Employee();
         testEmployee.setEmployeeId(1);
-        testEmployee.setEmployeeType(1);
+        testEmployee.setEmployeeType(EmployeeType.FLIGHT_SCHEDULING);
         testEmployee.setAccount(testAccount);
         testEmployee.setDeletedAt(null);
 
         // Setup test employee DTO
         testEmployeeDto = new EmployeeDto();
         testEmployeeDto.setEmployeeId(1);
-        testEmployeeDto.setEmployeeType(1);
+        testEmployeeDto.setEmployeeType(EmployeeType.FLIGHT_SCHEDULING.getValue());
         testEmployeeDto.setAccountName("employee1");
         testEmployeeDto.setEmail("employee1@email.com");
         testEmployeeDto.setPhoneNumber("0123456789");
@@ -88,12 +89,12 @@ public class EmployeeServiceTest {
         // Setup second test employee
         testEmployee2 = new Employee();
         testEmployee2.setEmployeeId(2);
-        testEmployee2.setEmployeeType(2);
+        testEmployee2.setEmployeeType(EmployeeType.TICKETING);
         testEmployee2.setDeletedAt(null);
 
         testEmployeeDto2 = new EmployeeDto();
         testEmployeeDto2.setEmployeeId(2);
-        testEmployeeDto2.setEmployeeType(2);
+        testEmployeeDto2.setEmployeeType(EmployeeType.TICKETING.getValue());
     }
 
     // ================ GET ALL EMPLOYEES TESTS ================
@@ -284,8 +285,8 @@ public class EmployeeServiceTest {
     @Tag("getEmployeeById")
     void testGetEmployeeById_DifferentEmployeeType_ReturnsCorrectDto() {
         // Given
-        testEmployee.setEmployeeType(5); // Admin role
-        testEmployeeDto.setEmployeeType(5);
+        testEmployee.setEmployeeType(EmployeeType.FLIGHT_OPERATIONS); // Admin role
+        testEmployeeDto.setEmployeeType(EmployeeType.FLIGHT_OPERATIONS.getValue());
         
         when(employeeRepository.findActiveById(1)).thenReturn(Optional.of(testEmployee));
         when(employeeMapper.toDto(testEmployee)).thenReturn(testEmployeeDto);
@@ -398,19 +399,19 @@ public class EmployeeServiceTest {
     void testUpdateEmployee_Success_ReturnsUpdatedEmployeeDto() {
         // Given
         EmployeeDto updateRequest = new EmployeeDto();
-        updateRequest.setEmployeeType(3);
+        updateRequest.setEmployeeType(EmployeeType.SUPPORT.getValue());
         updateRequest.setAccountName("updatedName");
         updateRequest.setEmail("updated@email.com");
         updateRequest.setPhoneNumber("0987654321");
 
         Employee updatedEmployee = new Employee();
         updatedEmployee.setEmployeeId(1);
-        updatedEmployee.setEmployeeType(3);
+        updatedEmployee.setEmployeeType(EmployeeType.SUPPORT);
         updatedEmployee.setAccount(testAccount);
 
         EmployeeDto resultDto = new EmployeeDto();
         resultDto.setEmployeeId(1);
-        resultDto.setEmployeeType(3);
+        resultDto.setEmployeeType(EmployeeType.SUPPORT.getValue());
         resultDto.setAccountName("updatedName");
         resultDto.setEmail("updated@email.com");
         resultDto.setPhoneNumber("0987654321");
@@ -446,7 +447,7 @@ public class EmployeeServiceTest {
     void testUpdateEmployee_PartialUpdate_UpdatesOnlyProvidedFields() {
         // Given
         EmployeeDto partialUpdate = new EmployeeDto();
-        partialUpdate.setEmployeeType(2);
+        partialUpdate.setEmployeeType(EmployeeType.TICKETING.getValue());
         // Other fields are null
 
         when(employeeRepository.findActiveById(1)).thenReturn(Optional.of(testEmployee));
@@ -489,7 +490,7 @@ public class EmployeeServiceTest {
         // Given
         testEmployee.setAccount(null);
         EmployeeDto updateRequest = new EmployeeDto();
-        updateRequest.setEmployeeType(2);
+        updateRequest.setEmployeeType(EmployeeType.TICKETING.getValue());
 
         when(employeeRepository.findActiveById(1)).thenReturn(Optional.of(testEmployee));
         when(employeeRepository.save(testEmployee)).thenReturn(testEmployee);
@@ -639,11 +640,11 @@ public class EmployeeServiceTest {
         // Given
         Employee updatedEmployee = new Employee();
         updatedEmployee.setEmployeeId(1);
-        updatedEmployee.setEmployeeType(5); // New role
+        updatedEmployee.setEmployeeType(EmployeeType.FLIGHT_OPERATIONS); // New role
 
         EmployeeDto resultDto = new EmployeeDto();
         resultDto.setEmployeeId(1);
-        resultDto.setEmployeeType(5);
+        resultDto.setEmployeeType(EmployeeType.FLIGHT_OPERATIONS.getValue());
 
         when(employeeRepository.findActiveById(1)).thenReturn(Optional.of(testEmployee));
         when(employeeRepository.save(testEmployee)).thenReturn(updatedEmployee);

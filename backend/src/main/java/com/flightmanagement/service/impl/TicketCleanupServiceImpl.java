@@ -5,6 +5,7 @@ import com.flightmanagement.entity.Ticket;
 import com.flightmanagement.repository.TicketRepository;
 import com.flightmanagement.service.FlightTicketClassService;
 import com.flightmanagement.service.ParameterService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@ConditionalOnProperty(name = "spring.task.scheduling.enabled", havingValue = "true", matchIfMissing = true)
 @Transactional
 public class TicketCleanupServiceImpl {
 
@@ -29,13 +31,13 @@ public class TicketCleanupServiceImpl {
 		this.flightTicketClassService = flightTicketClassService;
 	}
 
-	// Run every 1 minutes
-	@Scheduled(fixedRate = 60000) // 1 minute in milliseconds
-	public void cleanupExpiredUnpaidTickets() {
-		try {
-			// Get the maximum booking hold duration from parameters
-			ParameterDto parameters = parameterService.getParameterSet();
-			int maxBookingHoldDuration = parameters.getMaxBookingHoldDuration();
+   // Run every 1 minutes
+   @Scheduled(fixedRate = 60000) // 1 minute in milliseconds
+   public void cleanupExpiredUnpaidTickets() {
+      try {
+         // Get the maximum booking hold duration from parameters
+         ParameterDto parameters = parameterService.getLatestParameter();
+         int maxBookingHoldDuration = parameters.getMaxBookingHoldDuration();
 
 			// Calculate cutoff time (current time + hold duration hours before flight)
 			LocalDateTime cutoffTime = LocalDateTime.now().plusHours(maxBookingHoldDuration);

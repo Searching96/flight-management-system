@@ -6,24 +6,29 @@ export class MessageService {
   private readonly baseUrl = "/messages";
 
   // Message CRUD operations
-  async getAllMessages(): Promise<ApiResponse<Message[]>> {
-    return apiClient.get(this.baseUrl);
+  async getAllMessages(): Promise<Message[]> {
+    const response = await apiClient.get<ApiResponse<Message[]>>(this.baseUrl);
+    return response.data;
   }
 
-  async getMessageById(id: number): Promise<ApiResponse<Message>> {
-    return apiClient.get(`${this.baseUrl}/${id}`);
+  async getMessageById(id: number): Promise<Message> {
+    const response = await apiClient.get<ApiResponse<Message>>(`${this.baseUrl}/${id}`);
+    return response.data;
   }
 
-  async getSentMessages(): Promise<ApiResponse<Message[]>> {
-    return apiClient.get(`${this.baseUrl}/sent`);
+  async getSentMessages(): Promise<Message[]> {
+    const response = await apiClient.get<ApiResponse<Message[]>>(`${this.baseUrl}/sent`);
+    return response.data;
   }
 
-  async getUnreadMessages(): Promise<ApiResponse<Message[]>> {
-    return apiClient.get(`${this.baseUrl}/unread`);
+  async getUnreadMessages(): Promise<Message[]> {
+    const response = await apiClient.get<ApiResponse<Message[]>>(`${this.baseUrl}/unread`);
+    return response.data;
   }
 
-  async getUnreadCount(): Promise<ApiResponse<number>> {
-    return apiClient.get(`${this.baseUrl}/unread/count`);
+  async getUnreadCount(): Promise<number> {
+    const response = await apiClient.get<ApiResponse<number>>(`${this.baseUrl}/unread/count`);
+    return response.data;
   }
 
   async markAsRead(messageId: number): Promise<void> {
@@ -88,21 +93,24 @@ export class MessageService {
   }
 
   async getMessagesByChatboxId(chatboxId: number): Promise<Message[]> {
-    return apiClient.get(`${this.baseUrl}/chatbox/${chatboxId}`);
+    const response = await apiClient.get<ApiResponse<Message[]>>(`${this.baseUrl}/chatbox/${chatboxId}`);
+    return response.data;
   }
 
   async createMessage(messageData: any): Promise<Message> {
-    return apiClient.post(this.baseUrl, messageData);
+    const response = await apiClient.post<ApiResponse<Message>>(this.baseUrl, messageData);
+    return response.data;
   }
 
   async createCustomerMessage(
     chatboxId: number,
     content: string
   ): Promise<Message> {
-    return apiClient.post(`${this.baseUrl}/customer`, {
+    const response = await apiClient.post<ApiResponse<Message>>(`${this.baseUrl}/customer`, {
       chatboxId,
       content,
     });
+    return response.data;
   }
 
   async createEmployeeMessage(
@@ -115,11 +123,12 @@ export class MessageService {
       employeeId,
       content,
     });
-    return apiClient.post(`${this.baseUrl}/employee`, {
+    const response = await apiClient.post<ApiResponse<Message>>(`${this.baseUrl}/employee`, {
       chatboxId,
       employeeId,
       content,
     });
+    return response.data;
   }
 }
 

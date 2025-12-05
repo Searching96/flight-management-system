@@ -1,7 +1,9 @@
 package com.flightmanagement.config;
 
 import com.flightmanagement.dto.*;
+import com.flightmanagement.enums.EmployeeType;
 import com.flightmanagement.service.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +12,9 @@ import java.time.LocalDateTime;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
+
+    @Value("${app.data-initializer.enabled:true}")
+    private boolean enabled;
 
     private final ParameterService parameterService;
 
@@ -47,6 +52,10 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        if (!enabled) {
+            System.out.println("ℹ️  Data initializer is disabled");
+            return;
+        }
         System.out.println("🚀 Initializing Flight Management System Demo Data...");
         initializeParameters();
         initializeTicketClasses();
@@ -61,7 +70,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initializeParameters() {
         try {
-            parameterService.getParameterSet();
+            parameterService.getLatestParameter();
         } catch (RuntimeException e) {
             parameterService.initializeDefaultParameters();
             System.out.println("✓ Default parameters initialized");
@@ -124,7 +133,7 @@ public class DataInitializer implements CommandLineRunner {
                 schedulingEmployee.setCitizenId("555555555");
                 schedulingEmployee.setPhoneNumber("0123456785");
                 schedulingEmployee.setAccountType(2); // Employee
-                schedulingEmployee.setEmployeeType(1); // Flight Scheduling
+                schedulingEmployee.setEmployeeType(EmployeeType.FLIGHT_SCHEDULING);
                 accountService.createAccount(schedulingEmployee);
                 System.out.println("Created Flight Scheduling employee at 2025-06-11 08:30:03 UTC");
 
@@ -136,7 +145,7 @@ public class DataInitializer implements CommandLineRunner {
                 ticketingEmployee.setCitizenId("222222222");
                 ticketingEmployee.setPhoneNumber("0123456782");
                 ticketingEmployee.setAccountType(2); // Employee
-                ticketingEmployee.setEmployeeType(2); // Ticketing
+                ticketingEmployee.setEmployeeType(EmployeeType.TICKETING);
                 accountService.createAccount(ticketingEmployee);
                 System.out.println("Created Ticketing employee at 2025-06-11 08:30:03 UTC");
 
@@ -148,7 +157,7 @@ public class DataInitializer implements CommandLineRunner {
                 supportEmployee.setCitizenId("333333333");
                 supportEmployee.setPhoneNumber("0123456783");
                 supportEmployee.setAccountType(2); // Employee
-                supportEmployee.setEmployeeType(3); // Support
+                supportEmployee.setEmployeeType(EmployeeType.SUPPORT); // Support
                 accountService.createAccount(supportEmployee);
                 System.out.println("Created Customer Support employee at 2025-06-11 08:30:03 UTC");
 
@@ -160,7 +169,7 @@ public class DataInitializer implements CommandLineRunner {
                 accountingEmployee.setCitizenId("444444444");
                 accountingEmployee.setPhoneNumber("0123456784");
                 accountingEmployee.setAccountType(2); // Employee
-                accountingEmployee.setEmployeeType(4); // Accounting
+                accountingEmployee.setEmployeeType(EmployeeType.ACCOUNTING); // Accounting
                 accountService.createAccount(accountingEmployee);
                 System.out.println("Created Accounting employee at 2025-06-11 08:30:03 UTC");
 
@@ -172,7 +181,7 @@ public class DataInitializer implements CommandLineRunner {
                 flightOpsEmployee.setCitizenId("111111111");
                 flightOpsEmployee.setPhoneNumber("0123456781");
                 flightOpsEmployee.setAccountType(2); // Employee
-                flightOpsEmployee.setEmployeeType(5); // Flight Operations
+                flightOpsEmployee.setEmployeeType(EmployeeType.FLIGHT_OPERATIONS); // Flight Operations
                 accountService.createAccount(flightOpsEmployee);
                 System.out.println("Created Flight Operations employee at 2025-06-11 08:30:03 UTC");
 
@@ -184,7 +193,7 @@ public class DataInitializer implements CommandLineRunner {
                 hrEmployee.setCitizenId("666666666");
                 hrEmployee.setPhoneNumber("0123456786");
                 hrEmployee.setAccountType(2); // Employee
-                hrEmployee.setEmployeeType(6); // Human Resources
+                hrEmployee.setEmployeeType(EmployeeType.HUMAN_RESOURCES); // Human Resources
                 accountService.createAccount(hrEmployee);
                 System.out.println("Created Human Resources employee at 2025-06-11 08:30:03 UTC");
 
@@ -196,7 +205,7 @@ public class DataInitializer implements CommandLineRunner {
                 adminEmployee.setCitizenId("777777777");
                 adminEmployee.setPhoneNumber("0123456787");
                 adminEmployee.setAccountType(2); // Employee
-                adminEmployee.setEmployeeType(7); // Administrator
+                adminEmployee.setEmployeeType(EmployeeType.ADMINISTRATOR); // Administrator
                 accountService.createAccount(adminEmployee);
                 System.out.println("Created System Administrator employee at 2025-06-11 08:30:03 UTC");
 
@@ -210,7 +219,7 @@ public class DataInitializer implements CommandLineRunner {
                 seniorFlightOps.setCitizenId("888888888");
                 seniorFlightOps.setPhoneNumber("0123456788");
                 seniorFlightOps.setAccountType(2); // Employee
-                seniorFlightOps.setEmployeeType(5); // Flight Operations
+                seniorFlightOps.setEmployeeType(EmployeeType.FLIGHT_OPERATIONS); // Flight Operations
                 accountService.createAccount(seniorFlightOps);
                 System.out.println("Created Senior Flight Operations Manager at 2025-06-11 08:30:03 UTC");
 
@@ -222,7 +231,7 @@ public class DataInitializer implements CommandLineRunner {
                 customerServiceSup.setCitizenId("999999999");
                 customerServiceSup.setPhoneNumber("0123456789");
                 customerServiceSup.setAccountType(2); // Employee
-                customerServiceSup.setEmployeeType(3); // Support
+                customerServiceSup.setEmployeeType(EmployeeType.SUPPORT); // Support
                 accountService.createAccount(customerServiceSup);
                 System.out.println("Created Customer Service Supervisor at 2025-06-11 08:30:03 UTC");
 
