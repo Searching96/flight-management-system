@@ -123,7 +123,7 @@ public class DataInitializer implements CommandLineRunner {
     private void initializeDemoAccounts() {
         try {
             if (accountService.getAllAccounts().isEmpty()) {
-                System.out.println("Creating demo accounts at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+                System.out.println("Creating demo accounts at 2025-06-11 08:30:03 UTC");
 
                 // 1. Flight Scheduling Employee (Type 1)
                 RegisterDto schedulingEmployee = new RegisterDto();
@@ -135,7 +135,7 @@ public class DataInitializer implements CommandLineRunner {
                 schedulingEmployee.setAccountType(2); // Employee
                 schedulingEmployee.setEmployeeType(EmployeeType.FLIGHT_SCHEDULING);
                 accountService.createAccount(schedulingEmployee);
-                System.out.println("Created Flight Scheduling employee at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+                System.out.println("Created Flight Scheduling employee at 2025-06-11 08:30:03 UTC");
 
                 // 2. Ticketing Employee (Type 2)
                 RegisterDto ticketingEmployee = new RegisterDto();
@@ -147,7 +147,7 @@ public class DataInitializer implements CommandLineRunner {
                 ticketingEmployee.setAccountType(2); // Employee
                 ticketingEmployee.setEmployeeType(EmployeeType.TICKETING);
                 accountService.createAccount(ticketingEmployee);
-                System.out.println("Created Ticketing employee at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+                System.out.println("Created Ticketing employee at 2025-06-11 08:30:03 UTC");
 
                 // 3. Support Employee (Type 3)
                 RegisterDto supportEmployee = new RegisterDto();
@@ -159,7 +159,7 @@ public class DataInitializer implements CommandLineRunner {
                 supportEmployee.setAccountType(2); // Employee
                 supportEmployee.setEmployeeType(EmployeeType.SUPPORT); // Support
                 accountService.createAccount(supportEmployee);
-                System.out.println("Created Customer Support employee at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+                System.out.println("Created Customer Support employee at 2025-06-11 08:30:03 UTC");
 
                 // 4. Accounting Employee (Type 4)
                 RegisterDto accountingEmployee = new RegisterDto();
@@ -171,7 +171,7 @@ public class DataInitializer implements CommandLineRunner {
                 accountingEmployee.setAccountType(2); // Employee
                 accountingEmployee.setEmployeeType(EmployeeType.ACCOUNTING); // Accounting
                 accountService.createAccount(accountingEmployee);
-                System.out.println("Created Accounting employee at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+                System.out.println("Created Accounting employee at 2025-06-11 08:30:03 UTC");
 
                 // 5. Flight Operations Employee (Type 5)
                 RegisterDto flightOpsEmployee = new RegisterDto();
@@ -183,7 +183,7 @@ public class DataInitializer implements CommandLineRunner {
                 flightOpsEmployee.setAccountType(2); // Employee
                 flightOpsEmployee.setEmployeeType(EmployeeType.FLIGHT_OPERATIONS); // Flight Operations
                 accountService.createAccount(flightOpsEmployee);
-                System.out.println("Created Flight Operations employee at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+                System.out.println("Created Flight Operations employee at 2025-06-11 08:30:03 UTC");
 
                 // 6. Human Resources Employee (Type 6)
                 RegisterDto hrEmployee = new RegisterDto();
@@ -195,7 +195,7 @@ public class DataInitializer implements CommandLineRunner {
                 hrEmployee.setAccountType(2); // Employee
                 hrEmployee.setEmployeeType(EmployeeType.HUMAN_RESOURCES); // Human Resources
                 accountService.createAccount(hrEmployee);
-                System.out.println("Created Human Resources employee at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+                System.out.println("Created Human Resources employee at 2025-06-11 08:30:03 UTC");
 
                 // 7. Administrator Employee (Type 7)
                 RegisterDto adminEmployee = new RegisterDto();
@@ -207,7 +207,7 @@ public class DataInitializer implements CommandLineRunner {
                 adminEmployee.setAccountType(2); // Employee
                 adminEmployee.setEmployeeType(EmployeeType.ADMINISTRATOR); // Administrator
                 accountService.createAccount(adminEmployee);
-                System.out.println("Created System Administrator employee at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+                System.out.println("Created System Administrator employee at 2025-06-11 08:30:03 UTC");
 
                 // Additional demo accounts for variety
 
@@ -221,7 +221,7 @@ public class DataInitializer implements CommandLineRunner {
                 seniorFlightOps.setAccountType(2); // Employee
                 seniorFlightOps.setEmployeeType(EmployeeType.FLIGHT_OPERATIONS); // Flight Operations
                 accountService.createAccount(seniorFlightOps);
-                System.out.println("Created Senior Flight Operations Manager at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+                System.out.println("Created Senior Flight Operations Manager at 2025-06-11 08:30:03 UTC");
 
                 // Customer Service Supervisor
                 RegisterDto customerServiceSup = new RegisterDto();
@@ -233,7 +233,7 @@ public class DataInitializer implements CommandLineRunner {
                 customerServiceSup.setAccountType(2); // Employee
                 customerServiceSup.setEmployeeType(EmployeeType.SUPPORT); // Support
                 accountService.createAccount(customerServiceSup);
-                System.out.println("Created Customer Service Supervisor at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+                System.out.println("Created Customer Service Supervisor at 2025-06-11 08:30:03 UTC");
 
                 // Demo Customer Account
                 RegisterDto customer = new RegisterDto();
@@ -245,7 +245,7 @@ public class DataInitializer implements CommandLineRunner {
                 customer.setAccountType(1); // Customer
                 customer.setEmployeeType(null); // Not applicable for customers
                 accountService.createAccount(customer);
-                System.out.println("Created demo customer account at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+                System.out.println("Created demo customer account at 2025-06-11 08:30:03 UTC");
 
 
                 // Create demo customer
@@ -283,7 +283,7 @@ public class DataInitializer implements CommandLineRunner {
                 System.out.println("11. John Doe           : john.doe@email.com / 123Abc");
                 System.out.println("12. Jane Smith         : jane.smith@email.com / 123Abc");
                 System.out.println("=".repeat(80));
-                System.out.println("Demo accounts initialization completed at 2025-06-11 08:30:03 UTC by thinh0704hcm");
+                System.out.println("Demo accounts initialization completed at 2025-06-11 08:30:03 UTC");
             }
         } catch (Exception e) {
             System.err.println("⚠️ Error creating demo accounts: " + e.getMessage());

@@ -69,7 +69,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(authService.getCurrentUser());
       setLoading(false);
       console.log(
-        "User login successful at 2025-06-11 08:48:38 UTC by thinh0704hcm"
+        "User login successful at 2025-06-11 08:48:38 UTC by user"
       );
     } catch (err) {
       setLoading(false);
@@ -84,7 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(authService.getCurrentUser());
       setLoading(false);
       console.log(
-        "User registration successful at 2025-06-11 08:48:38 UTC by thinh0704hcm"
+        "User registration successful at 2025-06-11 08:48:38 UTC by user"
       );
     } catch (err) {
       setLoading(false);
@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = useCallback(() => {
     authService.logout();
     setUser(null);
-    console.log("User logout at 2025-06-11 08:48:38 UTC by thinh0704hcm");
+    console.log("User logout at 2025-06-11 08:48:38 UTC by user");
   }, []);
 
   const refresh = useCallback(async () => {
@@ -161,7 +161,7 @@ export const useAuth = (): AuthContextType => {
 
 /**
  * Updated Permissions Hook - Role-Based Access Control
- * Last updated: 2025-06-11 08:48:38 UTC by thinh0704hcm
+ * Last updated: 2025-06-11 08:48:38 UTC by user
  */
 export const usePermissions = () => {
   const { user } = useAuth();

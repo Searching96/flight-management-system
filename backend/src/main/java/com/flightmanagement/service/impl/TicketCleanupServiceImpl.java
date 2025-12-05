@@ -18,18 +18,18 @@ import java.util.List;
 @Transactional
 public class TicketCleanupServiceImpl {
 
-   private final TicketRepository ticketRepository;
+	private final TicketRepository ticketRepository;
 
-   private final ParameterService parameterService;
+	private final ParameterService parameterService;
 
-   private final FlightTicketClassService flightTicketClassService;
+	private final FlightTicketClassService flightTicketClassService;
 
-   public TicketCleanupServiceImpl(TicketRepository ticketRepository, ParameterService parameterService,
-                                   FlightTicketClassService flightTicketClassService) {
-      this.ticketRepository = ticketRepository;
-      this.parameterService = parameterService;
-      this.flightTicketClassService = flightTicketClassService;
-   }
+	public TicketCleanupServiceImpl(TicketRepository ticketRepository, ParameterService parameterService,
+			FlightTicketClassService flightTicketClassService) {
+		this.ticketRepository = ticketRepository;
+		this.parameterService = parameterService;
+		this.flightTicketClassService = flightTicketClassService;
+	}
 
    // Run every 1 minutes
    @Scheduled(fixedRate = 60000) // 1 minute in milliseconds
@@ -39,34 +39,34 @@ public class TicketCleanupServiceImpl {
          ParameterDto parameters = parameterService.getLatestParameter();
          int maxBookingHoldDuration = parameters.getMaxBookingHoldDuration();
 
-         // Calculate cutoff time (current time + hold duration hours before flight)
-         LocalDateTime cutoffTime = LocalDateTime.now().plusHours(maxBookingHoldDuration);
+			// Calculate cutoff time (current time + hold duration hours before flight)
+			LocalDateTime cutoffTime = LocalDateTime.now().plusHours(maxBookingHoldDuration);
 
-         // Find unpaid tickets for flights departing within the cutoff time
-         List<Ticket> expiredTickets = ticketRepository.findExpiredUnpaidTickets(cutoffTime);
+			// Find unpaid tickets for flights departing within the cutoff time
+			List<Ticket> expiredTickets = ticketRepository.findExpiredUnpaidTickets(cutoffTime);
 
-         System.out.println("Found " + expiredTickets.size() + " expired unpaid tickets to cleanup");
+			System.out.println("Found " + expiredTickets.size() + " expired unpaid tickets to cleanup");
 
-         for (Ticket ticket : expiredTickets) {
-            // Cancel the ticket (soft delete)
-            ticket.setTicketStatus((byte) 0); // 0: canceled
-            ticket.setDeletedAt(LocalDateTime.now());
-            ticketRepository.save(ticket);
+			for (Ticket ticket : expiredTickets) {
+				// Cancel the ticket (soft delete)
+				ticket.setTicketStatus((byte) 0); // 0: canceled
+				ticket.setDeletedAt(LocalDateTime.now());
+				ticketRepository.save(ticket);
 
-            // Return the seat to available inventory
-            flightTicketClassService.updateRemainingTickets(
-                  ticket.getFlight().getFlightId(),
-                  ticket.getTicketClass().getTicketClassId(),
-                  -1 // Add back 1 seat (negative quantity to increase remaining) // TODO
-            );
+				// Return the seat to available inventory
+				flightTicketClassService.updateRemainingTickets(
+						ticket.getFlight().getFlightId(),
+						ticket.getTicketClass().getTicketClassId(),
+						-1 // Add back 1 seat (negative quantity to increase remaining)
+				);
 
-            System.out.println("Canceled expired unpaid ticket ID: " + ticket.getTicketId() +
-                  " for flight: " + ticket.getFlight().getFlightCode());
-         }
+				System.out.println("Canceled expired unpaid ticket ID: " + ticket.getTicketId() +
+						" for flight: " + ticket.getFlight().getFlightCode());
+			}
 
-      } catch (Exception e) {
-         System.err.println("Error during ticket cleanup: " + e.getMessage());
-         e.printStackTrace();
-      }
-   }
+		} catch (Exception e) {
+			System.err.println("Error during ticket cleanup: " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
 }

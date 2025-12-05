@@ -177,7 +177,7 @@ const EmployeeManagement: React.FC<{
         console.log(
           "Updating employee:",
           editingEmployee.employeeId,
-          "at 2025-06-11 06:58:25 UTC by thinh0704hcm"
+          "at 2025-06-11 06:58:25 UTC by user"
         );
         await employeeService.updateEmployee(
           editingEmployee.employeeId!,
@@ -442,7 +442,7 @@ const EmployeeManagement: React.FC<{
           const errors: string[] = [];
           const validData: EmployeeFormData[] = [];
 
-          jsonData.forEach((row: any, index) => {
+          jsonData.forEach((row: any, index: any) => {
             const rowNumber = index + 2; // Excel row number (1-indexed + header)
             const employeeData: Partial<EmployeeFormData> = {};
 
@@ -597,7 +597,7 @@ const EmployeeManagement: React.FC<{
         </Spinner>
         <p className="mt-3">Đang tải danh sách nhân viên...</p>
         <p className="text-muted small">
-          Cập nhật lúc: 2025-06-11 06:58:25 UTC bởi thinh0704hcm
+          Cập nhật lúc: 2025-06-11 06:58:25 UTC bởi user
         </p>
       </Container>
     );

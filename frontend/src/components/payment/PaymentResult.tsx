@@ -52,7 +52,7 @@ const PaymentResult: React.FC = () => {
       // Extract confirmation code from the txnRef
       const confirmationCode = extractConfirmationCode(transactionDetails.data.orderId);
 
-      console.log(`Thử thanh toán lại tại 2025-06-11 05:14:08 UTC bởi thinh0704hcm cho mã: ${confirmationCode}`);
+      console.log(`Thử thanh toán lại tại 2025-06-11 05:14:08 UTC bởi user cho mã: ${confirmationCode}`);
 
       const response = await paymentService.createPayment(confirmationCode);
       if (response && response.data) {
@@ -225,7 +225,7 @@ const PaymentResult: React.FC = () => {
       <Container className="py-5 text-center">
         <Spinner animation="border" variant="primary" />
         <p className="mt-3">Đang xử lý kết quả thanh toán...</p>
-        <p className="text-muted small">Xử lý tại: 2025-06-11 05:14:08 UTC bởi thinh0704hcm</p>
+        <p className="text-muted small">Xử lý tại: 2025-06-11 05:14:08 UTC bởi user</p>
       </Container>
     );
   }

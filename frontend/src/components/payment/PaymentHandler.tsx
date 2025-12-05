@@ -199,7 +199,7 @@ const PaymentHandler: React.FC = () => {
           <span className="visually-hidden">Đang tải...</span>
         </Spinner>
         <p className="mt-3">Đang tải thông tin đặt chỗ...</p>
-        <p className="text-muted small">Xử lý tại: 2025-06-11 05:14:08 UTC bởi thinh0704hcm</p>
+        <p className="text-muted small">Xử lý tại: 2025-06-11 05:14:08 UTC bởi user</p>
       </Container>
     );
   }

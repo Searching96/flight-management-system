@@ -130,7 +130,7 @@ public class AuthServiceImpl implements AuthService {
 //                        employeeTypeName,
 //                        randomPassword  // Pass the generated password
 //                );
-//                System.out.println("Employee credentials email sent to: " + savedAccount.getEmail() + " at 2025-06-11 07:20:15 UTC by thinh0704hcm");
+//                System.out.println("Employee credentials email sent to: " + savedAccount.getEmail() + " at 2025-06-11 07:20:15 UTC by user");
 //                System.out.println("Generated password: " + randomPassword);
 //            } catch (Exception e) {
 //                System.err.println("Failed to send employee credentials email: " + e.getMessage());

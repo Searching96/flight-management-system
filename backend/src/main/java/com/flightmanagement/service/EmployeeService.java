@@ -8,7 +8,7 @@ import java.util.List;
  * Employee Service Interface
  * Provides comprehensive employee management functionality
  *
- * Last updated: 2025-06-11 07:46:23 UTC by thinh0704hcm
+ * Last updated: 2025-06-11 07:46:23 UTC by user
  */
 public interface EmployeeService {
 

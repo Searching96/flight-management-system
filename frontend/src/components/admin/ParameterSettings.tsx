@@ -51,7 +51,7 @@ export const ParameterSettings: React.FC<ParameterSettingsProps> = ({ readOnly =
             const data = Array.isArray(dataArr) ? dataArr[0] : dataArr;
             reset(data);
         } catch (err: any) {
-            console.error('Error loading parameters at 2025-06-11 09:12:40 UTC by thinh0704hcm:', err);
+            console.error('Error loading parameters at 2025-06-11 09:12:40 UTC by user:', err);
             setError('Không thể tải quy định hệ thống');
         } finally {
             setLoading(false);
@@ -64,13 +64,13 @@ export const ParameterSettings: React.FC<ParameterSettingsProps> = ({ readOnly =
             setError('');
             setSuccess('');
 
-            console.log('Updating parameters at 2025-06-11 09:12:40 UTC by thinh0704hcm');
+            console.log('Updating parameters at 2025-06-11 09:12:40 UTC by user');
             await parameterService.updateParameters(data);
 
             setSuccess('Cập nhật quy định thành công!');
             loadParameters();
         } catch (err: any) {
-            console.error('Error updating parameters at 2025-06-11 09:12:40 UTC by thinh0704hcm:', err);
+            console.error('Error updating parameters at 2025-06-11 09:12:40 UTC by user:', err);
             setError(err.message || 'Không thể cập nhật quy định');
         } finally {
             setSaving(false);
