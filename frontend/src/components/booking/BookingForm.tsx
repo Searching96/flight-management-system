@@ -21,11 +21,11 @@ import {
   passengerService,
   bookingConfirmationService,
   flightTicketClassService,
-  accountService,
   customerService,
 } from "../../services";
 import { flightDetailService } from "../../services/flightDetailService";
 import { Flight } from "../../models";
+import { BookingRequest, Ticket } from "../../models/Ticket";
 
 interface BookingFormData {
   passengers: {
@@ -96,27 +96,22 @@ const BookingForm: React.FC = () => {
     parseInt(queryPassengers || "0") || location.state?.passengerCount || 1;
 
   // Helper to get user info for default values
-  const [accountInfo, setAccountInfo] = useState<any>(null);
   const [customerScore, setCustomerScore] = useState<number>(0);
 
   useEffect(() => {
-    const logUserInfo = async () => {
+    const loadCustomerScore = async () => {
       if (user?.accountTypeName === "Customer" && user?.id) {
-        const userInfo = await accountService.getAccountById(user.id);
-        console.log("User account info:", userInfo);
-        setAccountInfo(userInfo);
-
         // Get customer's current score using customerService
         try {
           const customerInfo = await customerService.getCustomerById(user.id);
-          setCustomerScore(customerInfo.data.score || 0);
+          setCustomerScore(customerInfo.score || 0);
         } catch (error) {
           console.error("Error fetching customer score:", error);
           setCustomerScore(0);
         }
       }
     };
-    logUserInfo();
+    loadCustomerScore();
   }, [user]);
 
   const {
@@ -130,56 +125,57 @@ const BookingForm: React.FC = () => {
     defaultValues: {
       passengers: Array(passengerCount)
         .fill(null)
-        .map((_, i) => ({
-          passengerId: undefined,
-          firstName:
-            user?.accountTypeName === "Customer" && i === 0
-              ? accountInfo?.accountName || ""
-              : "",
-          lastName:
-            user?.accountTypeName === "Customer" && i === 0
-              ? accountInfo?.accountName || ""
-              : "",
-          dateOfBirth: "",
-          citizenId:
-            user?.accountTypeName === "Customer" && i === 0
-              ? accountInfo?.citizenId || ""
-              : "",
-          phoneNumber:
-            user?.accountTypeName === "Customer" && i === 0
-              ? accountInfo?.phoneNumber || ""
-              : "",
-          email:
-            user?.accountTypeName === "Customer" && i === 0
-              ? user.email || ""
-              : "",
-        })),
+        .map((_, i) => {
+          // Split accountName for first passenger if customer
+          const isFirstPassenger = i === 0;
+          const isCustomer = user?.accountTypeName === "Customer";
+          let firstName = "";
+          let lastName = "";
+          
+          if (isCustomer && isFirstPassenger && user?.accountName) {
+            const nameParts = user.accountName.trim().split(" ");
+            firstName = nameParts.slice(0, -1).join(" ") || "";
+            lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0] || "";
+          }
+          
+          return {
+            passengerId: undefined,
+            firstName,
+            lastName,
+            dateOfBirth: "",
+            citizenId: "", // Will be filled from customer data if available
+            phoneNumber: "", // Will be filled from customer data if available  
+            email: isCustomer && isFirstPassenger ? user.email || "" : "",
+          };
+        }),
       ticketClassId: parseInt(queryClass || "0") || 0,
       useFrequentFlyer: false,
     },
   });
 
-  // Update default values for first passenger when accountInfo is loaded
+  // Load customer details for first passenger when user is available
   useEffect(() => {
-    if (user?.accountTypeName === "Customer" && accountInfo?.accountName) {
-      console.log(
-        "Thiết lập thông tin hành khách mặc định từ tài khoản:",
-        accountInfo
-      );
-      const nameParts = accountInfo.accountName.trim().split(" ");
-      const firstName = nameParts.slice(0, -1).join(" ") || "";
-      const lastName =
-        nameParts.length > 1
-          ? nameParts[nameParts.length - 1]
-          : nameParts[0] || "";
-      setValue("passengers.0.firstName", firstName);
-      setValue("passengers.0.lastName", lastName);
-      setValue("passengers.0.citizenId", accountInfo.citizenId || "");
-      setValue("passengers.0.phoneNumber", accountInfo.phoneNumber || "");
-      setValue("passengers.0.email", accountInfo.email || user.email || "");
-    }
-    // eslint-disable-next-line
-  }, [accountInfo]);
+    const loadCustomerDetails = async () => {
+      if (user?.accountTypeName === "Customer" && user?.id) {
+        try {
+          console.log("Loading customer details for user:", user);
+          const customerInfo = await customerService.getCustomerById(user.id);
+          console.log("Customer details loaded:", customerInfo);
+          
+          // Update first passenger with customer details
+          if (customerInfo.citizenId) {
+            setValue("passengers.0.citizenId", customerInfo.citizenId);
+          }
+          if (customerInfo.phoneNumber) {
+            setValue("passengers.0.phoneNumber", customerInfo.phoneNumber);
+          }
+        } catch (error) {
+          console.error("Error loading customer details:", error);
+        }
+      }
+    };
+    loadCustomerDetails();
+  }, [user, setValue]);
 
   const { fields } = useFieldArray({
     control,
@@ -216,8 +212,8 @@ const BookingForm: React.FC = () => {
         ),
       ]);
 
-      setFlight(flightData.data);
-      setTicketClasses(ticketClassData.data);
+      setFlight(flightData);
+      setTicketClasses(ticketClassData);
     } catch (err: any) {
       console.error("Error loading booking data:", err);
       setError("Failed to load booking information");
@@ -311,16 +307,19 @@ const BookingForm: React.FC = () => {
         const passenger = data.passengers[i];
         if (passenger.citizenId) {
           try {
-            const existing = await passengerService.findExistingPassenger(
+            console.log("Checking existing passenger for citizenId:", passenger.citizenId);
+            const existingResponse = await passengerService.getPassengerByCitizenId(
               passenger.citizenId
             );
-            if (existing) {
+            console.log("Existing passenger response:", existingResponse);
+            if (existingResponse && existingResponse.data && existingResponse.data.passengerId) {
+              const existing = existingResponse.data;
               try {
                 const created = await passengerService.transformPassengerData(
                   passenger
                 );
                 await passengerService.updatePassenger(
-                  existing.data.passengerId!,
+                  existing.passengerId!,
                   created
                 );
               } catch (updateErr: any) {
@@ -334,7 +333,7 @@ const BookingForm: React.FC = () => {
               data.passengers[i] = {
                 ...data.passengers[i],
                 ...existing,
-                passengerId: existing.data.passengerId ?? 0,
+                passengerId: existing.passengerId ?? 0,
               };
             } else {
               // If not found, create new passenger
@@ -346,7 +345,7 @@ const BookingForm: React.FC = () => {
               );
               data.passengers[i] = {
                 ...data.passengers[i],
-                ...createdPassenger,
+                ...createdPassenger.data,
                 passengerId: createdPassenger.data.passengerId ?? 0,
               };
             }
@@ -362,7 +361,7 @@ const BookingForm: React.FC = () => {
                 );
                 data.passengers[i] = {
                   ...data.passengers[i],
-                  ...createdPassenger,
+                  ...createdPassenger.data,
                   passengerId: createdPassenger.data.passengerId ?? 0,
                 };
               } catch (createErr: any) {
@@ -397,63 +396,39 @@ const BookingForm: React.FC = () => {
             : selectedClass?.ticketClassName === "Business"
             ? "B"
             : "C";
-        return `${seatPrefix}${occupiedSeats.data + index + 1}`;
+        return `${seatPrefix}${occupiedSeats + index + 1}`;
       });
-
-      const booking = {
-        customerId: user?.id! ?? null,
-        flightId: Number(flightId),
-        passengers: data.passengers, // Keep original format for BookingReques
-        seatNumbers: seatNumbers,
-        ticketClassId: data.ticketClassId,
-      };
-
-      // Book the tickets
-      console.log("Booking data:", booking);
-
-      let confirmationCode = "";
-      try {
-        const response = await ticketService.generateConfirmationCode();
-        confirmationCode = response.data;
-      } catch (err: any) {
-        console.error("confirmation code: ", err);
-        return;
-      }
 
       // Calculate final prices with discount
       const { score, discountedPrice } = calculateScoreAndDiscount();
-      const pricePerTicket = discountedPrice / passengerCount;
 
-      const tickets = data.passengers.map((passenger, index) => ({
+      // Prepare booking request using the proper BookingRequest interface
+      const bookingRequest: BookingRequest = {
         flightId: Number(flightId),
+        customerId: user?.accountTypeName === "Customer" && user?.id ? user.id : 0, // Use 0 for guest bookings
         ticketClassId: data.ticketClassId,
-        bookCustomerId: user
-          ? user?.accountTypeName === "Customer" && user?.id != null
-            ? user.id
-            : null
-          : null,
-        passengerId: passenger.passengerId,
-        seatNumber: seatNumbers[index],
-        fare: pricePerTicket, // Use discounted price per ticket
-        confirmationCode: confirmationCode,
-      }));
+        passengers: data.passengers.map(passenger => ({
+          firstName: passenger.firstName,
+          lastName: passenger.lastName,
+          email: passenger.email,
+          citizenId: passenger.citizenId,
+          phoneNumber: passenger.phoneNumber,
+        })),
+        totalFare: discountedPrice,
+        seatNumbers: seatNumbers,
+      };
 
-      console.log("Tickets to be confirmed:", tickets);
+      console.log("Booking request:", bookingRequest);
 
-      for (const ticket of tickets) {
-        try {
-          const newTicket = ticketService.transformTicketData(ticket);
-          await ticketService.createTicket(newTicket);
-          await flightTicketClassService.updateRemainingTickets(
-            ticket.flightId,
-            ticket.ticketClassId,
-            1
-          );
-          console.log("Ticket created:", newTicket);
-        } catch (err: any) {
-          console.error("Error creating ticket:", err);
-          return;
-        }
+      // Book the tickets using the proper bookTickets method
+      let bookedTickets: Ticket[];
+      try {
+        bookedTickets = await ticketService.bookTickets(bookingRequest);
+        console.log("Tickets booked successfully:", bookedTickets);
+      } catch (err: any) {
+        console.error("Error booking tickets:", err);
+        setError("Đặt vé thất bại: " + (err.message || "Lỗi không xác định"));
+        return;
       }
 
       // Save earned score to customer account after successful booking
@@ -470,9 +445,12 @@ const BookingForm: React.FC = () => {
         }
       }
 
+      // Extract confirmation code from the first booked ticket
+      const confirmationCode = bookedTickets.length > 0 ? (bookedTickets[0].confirmationCode || "") : "";
+
       const confirmationData = bookingConfirmationService.createConfirmation(
         confirmationCode,
-        tickets,
+        bookedTickets,
         data.passengers.map((p) => p.firstName + " " + p.lastName),
         flight!
       );
@@ -487,7 +465,7 @@ const BookingForm: React.FC = () => {
           confirmationCode,
           confirmationData,
           message:
-            "Guest booking successful! Please save your confirmation code for future reference.",
+            "Booking successful! Please save your confirmation code for future reference.",
         },
       });
     } catch (err: any) {

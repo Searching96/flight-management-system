@@ -5,7 +5,6 @@ import com.flightmanagement.entity.Ticket;
 import com.flightmanagement.repository.TicketRepository;
 import com.flightmanagement.service.FlightTicketClassService;
 import com.flightmanagement.service.ParameterService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -37,7 +36,7 @@ public class TicketCleanupServiceImpl {
    public void cleanupExpiredUnpaidTickets() {
       try {
          // Get the maximum booking hold duration from parameters
-         ParameterDto parameters = parameterService.getParameterSet();
+         ParameterDto parameters = parameterService.getLatestParameter();
          int maxBookingHoldDuration = parameters.getMaxBookingHoldDuration();
 
          // Calculate cutoff time (current time + hold duration hours before flight)

@@ -133,22 +133,22 @@ class AuthService {
 
   async validateResetToken(passwordResetToken: string): Promise<boolean> {
     try {
-      const response = await apiClient.post<boolean>("/auth/validate", {
+      const response = await apiClient.post<ApiResponse<boolean>>("/auth/validate", {
         token: passwordResetToken,
       });
 
-      return response;
+      return response.data;
     } catch (error) {
       console.error("Token validation failed:", error);
       return false;
     }
   }
 
-  async forgetPassword(email: string): Promise<void> {
+  async forgetPassword(email: string, phoneNumber?: string): Promise<void> {
     await apiClient
-      .post("/auth/forget-password", { email })
+      .post("/auth/forget-password", { email, phoneNumber })
       .then(() => {
-        // console.log('Password reset email sent successfully');
+        console.log('Password reset email sent successfully');
       })
       .catch((error) => {
         console.error("Error sending password reset email:", error);

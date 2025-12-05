@@ -5,19 +5,22 @@ import type { ApiResponse } from "../models/ApiResponse";
 class TicketService {
   private readonly baseURL = "/tickets";
 
-  async getAllTickets(): Promise<ApiResponse<Ticket[]>> {
-    return apiClient.get(this.baseURL);
+  async getAllTickets(): Promise<Ticket[]> {
+    const response = await apiClient.get<ApiResponse<Ticket[]>>(this.baseURL);
+    return response.data;
   }
 
-  async getTicketById(ticketId: number): Promise<ApiResponse<Ticket>> {
-    return apiClient.get(`${this.baseURL}/${ticketId}`);
+  async getTicketById(ticketId: number): Promise<Ticket> {
+    const response = await apiClient.get<ApiResponse<Ticket>>(`${this.baseURL}/${ticketId}`);
+    return response.data;
   }
 
-  async getTicketsByFlightId(flightId: number): Promise<ApiResponse<Ticket[]>> {
-    return apiClient.get(`${this.baseURL}/flight/${flightId}`);
+  async getTicketsByFlightId(flightId: number): Promise<Ticket[]> {
+    const response = await apiClient.get<ApiResponse<Ticket[]>>(`${this.baseURL}/flight/${flightId}`);
+    return response.data;
   }
 
-  async bookTickets(booking: BookingRequest): Promise<ApiResponse<Ticket[]>> {
+  async bookTickets(booking: BookingRequest): Promise<Ticket[]> {
     // Transform passenger data format to match backend expectations
     const transformedBooking = {
       ...booking,
@@ -30,50 +33,59 @@ class TicketService {
     };
 
     console.log(transformedBooking);
-    return apiClient.post("/tickets/book", transformedBooking);
+    const response = await apiClient.post<ApiResponse<Ticket[]>>("/tickets/book", transformedBooking);
+    return response.data;
   }
 
-  async createTicket(ticketData: TicketRequest): Promise<ApiResponse<Ticket>> {
-    return apiClient.post(this.baseURL, ticketData);
+  async createTicket(ticketData: TicketRequest): Promise<Ticket> {
+    const response = await apiClient.post<ApiResponse<Ticket>>(this.baseURL, ticketData);
+    return response.data;
   }
 
   async updateTicket(
     ticketId: number,
     ticketData: Partial<TicketRequest>
-  ): Promise<ApiResponse<Ticket>> {
-    return apiClient.put(`${this.baseURL}/${ticketId}`, ticketData);
+  ): Promise<Ticket> {
+    const response = await apiClient.put<ApiResponse<Ticket>>(`${this.baseURL}/${ticketId}`, ticketData);
+    return response.data;
   }
 
-  async deleteTicket(ticketId: number): Promise<ApiResponse<void>> {
-    return apiClient.delete(`${this.baseURL}/${ticketId}`);
+  async deleteTicket(ticketId: number): Promise<void> {
+    await apiClient.delete<ApiResponse<void>>(`${this.baseURL}/${ticketId}`);
   }
 
   async getTicketsByCustomerId(
     customerId: number
-  ): Promise<ApiResponse<Ticket[]>> {
-    return apiClient.get(`${this.baseURL}/customer/${customerId}`);
+  ): Promise<Ticket[]> {
+    const response = await apiClient.get<ApiResponse<Ticket[]>>(`${this.baseURL}/customer/${customerId}`);
+    return response.data;
   }
 
-  async searchTickets(query: string): Promise<ApiResponse<Ticket[]>> {
-    return apiClient.get(`${this.baseURL}/search`, { params: { q: query } });
+  async searchTickets(query: string): Promise<Ticket[]> {
+    const response = await apiClient.get<ApiResponse<Ticket[]>>(`${this.baseURL}/search`, { params: { q: query } });
+    return response.data;
   }
 
-  async countAllTickets(): Promise<ApiResponse<number>> {
-    return apiClient.get(`${this.baseURL}/count`);
+  async countAllTickets(): Promise<number> {
+    const response = await apiClient.get<ApiResponse<number>>(`${this.baseURL}/count`);
+    return response.data;
   }
 
-  async generateConfirmationCode(): Promise<ApiResponse<string>> {
-    return apiClient.get(`${this.baseURL}/confirmation-code`);
+  async generateConfirmationCode(): Promise<string> {
+    const response = await apiClient.get<ApiResponse<string>>(`${this.baseURL}/confirmation-code`);
+    return response.data;
   }
 
   async getTicketsOnConfirmationCode(
     code: string
-  ): Promise<ApiResponse<Ticket[]>> {
-    return apiClient.get(`${this.baseURL}/booking-lookup/${code}`);
+  ): Promise<Ticket[]> {
+    const response = await apiClient.get<ApiResponse<Ticket[]>>(`${this.baseURL}/booking-lookup/${code}`);
+    return response.data;
   }
 
-  async payTicket(ticketId: number): Promise<ApiResponse<Ticket>> {
-    return apiClient.post(`${this.baseURL}/pay/${ticketId}`);
+  async payTicket(ticketId: number): Promise<Ticket> {
+    const response = await apiClient.post<ApiResponse<Ticket>>(`${this.baseURL}/pay/${ticketId}`);
+    return response.data;
   }
 
   transformTicketData(ticket: {

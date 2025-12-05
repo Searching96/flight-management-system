@@ -2,6 +2,7 @@ package com.flightmanagement.mapper;
 
 import com.flightmanagement.dto.EmployeeDto;
 import com.flightmanagement.entity.Employee;
+import com.flightmanagement.enums.EmployeeType;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class EmployeeMapper {
         dto.setEmail(entity.getAccount() != null ? entity.getAccount().getEmail() : null);
         dto.setPhoneNumber(entity.getAccount() != null ? entity.getAccount().getPhoneNumber() : null);
         dto.setCitizenId(entity.getAccount() != null ? entity.getAccount().getCitizenId() : null);
-        dto.setEmployeeType(entity.getEmployeeType());
+        dto.setEmployeeType(entity.getEmployeeType() != null ? entity.getEmployeeType().getValue() : null);
         dto.setEmployeeTypeName(getEmployeeTypeName(entity.getEmployeeType()));
         dto.setDeletedAt(entity.getDeletedAt());
         return dto;
@@ -29,7 +30,7 @@ public class EmployeeMapper {
         if (dto == null) return null;
         Employee entity = new Employee();
         entity.setEmployeeId(dto.getEmployeeId());
-        entity.setEmployeeType(dto.getEmployeeType());
+        entity.setEmployeeType(dto.getEmployeeType() != null ? EmployeeType.fromValue(dto.getEmployeeType()) : null);
         // Note: You must set the account relationship after saving the account
         return entity;
     }
@@ -42,14 +43,18 @@ public class EmployeeMapper {
         return dtoList.stream().map(this::toEntity).collect(Collectors.toList());
     }
 
-    private String getEmployeeTypeName(Integer employeeType) {
+    private String getEmployeeTypeName(EmployeeType employeeType) {
+        if (employeeType == null) {
+            return "Employee";
+        }
         return switch (employeeType) {
-            case 1 -> "Reception";
-            case 2 -> "Ticketing";
-            case 3 -> "Support";
-            case 4 -> "Accounting";
-            case 5 -> "Admin";
-            default -> "Employee";
+            case FLIGHT_SCHEDULING -> "Flight Scheduling";
+            case TICKETING -> "Ticketing";
+            case SUPPORT -> "Support";
+            case ACCOUNTING -> "Accounting";
+            case FLIGHT_OPERATIONS -> "Flight Operations";
+            case HUMAN_RESOURCES -> "Human Resources";
+            case ADMINISTRATOR -> "Administrator";
         };
     }
 }

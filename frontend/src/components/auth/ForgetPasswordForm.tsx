@@ -6,6 +6,7 @@ import { authService } from '../../services/authService';
 
 interface ForgetPasswordFormData {
     email: string;
+    phoneNumber: string;
 }
 
 const ForgetPasswordForm: React.FC = () => {
@@ -24,7 +25,7 @@ const ForgetPasswordForm: React.FC = () => {
             setLoading(true);
             setError('');
             setSuccess(false);
-            await authService.forgetPassword(data.email);
+            await authService.forgetPassword(data.email, data.phoneNumber);
             setSuccess(true);
         } catch (err: any) {
             const originalMessage = err.response?.data?.message || err.message || 'An error occurred';
@@ -76,6 +77,23 @@ const ForgetPasswordForm: React.FC = () => {
                                         />
                                         <Form.Control.Feedback type="invalid">
                                             {errors.email?.message}
+                                        </Form.Control.Feedback>
+                                    </Form.Group>
+
+                                    <Form.Group className="mb-4">
+                                        <Form.Label htmlFor="phoneNumber">Số điện thoại</Form.Label>
+                                        <Form.Control
+                                            id="phoneNumber"
+                                            type="text"
+                                            {...register('phoneNumber', {
+                                                required: 'Số điện thoại là bắt buộc',
+                                                pattern: { value: /^[0-9]{10,15}$/, message: 'Vui lòng nhập số điện thoại hợp lệ' }
+                                            })}
+                                            isInvalid={!!errors.phoneNumber}
+                                            placeholder="Nhập số điện thoại của bạn"
+                                        />
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.phoneNumber?.message}
                                         </Form.Control.Feedback>
                                     </Form.Group>
 

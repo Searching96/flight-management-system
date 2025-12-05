@@ -1,8 +1,11 @@
 package com.flightmanagement.controller;
 
+import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,17 +49,23 @@ public class DemoController {
 
     @Operation(summary = "Health check for demo API")
     @GetMapping("/health")
-    public String healthCheck() {
-        return "Demo API is running!";
+    public ResponseEntity<ApiResponse<String>> healthCheck() {
+        ApiResponse<String> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Health check successful",
+                "Demo API is running!",
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
     
     @Operation(summary = "Get demo information")
     @GetMapping("/info")
-    public Map<String, Object> getDemoInfo() {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getDemoInfo() {
         Map<String, Object> response = new HashMap<>();
         
         Map<String, Object> testingData = new HashMap<>();
-        testingData.put("parameters", parameterService.getParameterSet());
+        testingData.put("parameters", parameterService.getLatestParameter());
         testingData.put("ticketClasses", ticketClassService.getAllTicketClasses());
         testingData.put("airports", airportService.getAllAirports());
         testingData.put("planes", planeService.getAllPlanes());
@@ -66,6 +75,13 @@ public class DemoController {
         testingData.put("flightTicketClasses", flightTicketClassService.getAllFlightTicketClasses());
         
         response.put("testing_data", testingData);
-        return response;
+        
+        ApiResponse<Map<String, Object>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Demo information retrieved successfully",
+                response,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 }

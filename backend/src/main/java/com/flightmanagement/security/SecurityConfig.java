@@ -50,7 +50,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh",
-                                    "/api/auth/validate-token", "/api/auth/forget-password", "/api/auth/reset-password",
+                                    "/api/auth/validate", "/api/auth/forget-password", "/api/auth/reset-password",
                                     "/api/auth/employee/register",
                                     "/api/demo/**",
                                     "/api/flights/search", "/api/flights/{id}",
@@ -59,9 +59,10 @@ public class SecurityConfig {
                                     "/api/flight-ticket-classes/occupied-seats/**",
                                     "/api/flight-ticket-classes/{flightId}/{ticketClassId}/update-remaining",
                                     "/api/passengers/**",
+                                    "/api/tickets/book",
                                     "/api/tickets/confirmation-code", "/api/tickets/booking-lookup/{confirmationCode}", "/api/tickets/booking-lookup/{id}",
                                     "/api/flight-details/flight/{flightId}", "/api/parameters",
-                                    "/api/debug/login-by-name/{name}", "/ws/**", "/sockjs-node/**",
+                                    "/api/debug/**", "/ws/**", "/sockjs-node/**",
                                     "/api/payment/create", "/api/payment/return", "/api/payment/IPN",
                                     "/swagger-ui/**",
                                     "/swagger-ui.html",

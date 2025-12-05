@@ -5,6 +5,8 @@ import com.flightmanagement.dto.RegisterDto;
 import com.flightmanagement.entity.Account;
 import com.flightmanagement.entity.Customer;
 import com.flightmanagement.entity.Employee;
+import com.flightmanagement.enums.AccountType;
+import com.flightmanagement.enums.EmployeeType;
 import com.flightmanagement.mapper.AccountMapper;
 import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.service.impl.AccountServiceImpl;
@@ -76,7 +78,7 @@ public class AccountServiceTest {
         testAccount.setPassword("encodedPassword");
         testAccount.setPhoneNumber("0123456789");
         testAccount.setCitizenId("123456789");
-        testAccount.setAccountType(1);
+        testAccount.setAccountType(AccountType.CUSTOMER);
         testAccount.setDeletedAt(null);
 
         // Setup test customer
@@ -88,7 +90,7 @@ public class AccountServiceTest {
         // Setup test employee
         testEmployee = new Employee();
         testEmployee.setEmployeeId(1);
-        testEmployee.setEmployeeType(1);
+        testEmployee.setEmployeeType(EmployeeType.FLIGHT_SCHEDULING);
         testEmployee.setAccount(testAccount);
 
         // Setup test account DTO
@@ -98,7 +100,7 @@ public class AccountServiceTest {
         testAccountDto.setEmail("test@email.com");
         testAccountDto.setPhoneNumber("0123456789");
         testAccountDto.setCitizenId("123456789");
-        testAccountDto.setAccountType(1);
+        testAccountDto.setAccountType(AccountType.CUSTOMER.getValue());
 
         // Setup test register DTO
         testRegisterDto = new RegisterDto();
@@ -107,7 +109,7 @@ public class AccountServiceTest {
         testRegisterDto.setPassword("password123");
         testRegisterDto.setPhoneNumber("0987654321");
         testRegisterDto.setCitizenId("987654321");
-        testRegisterDto.setAccountType(1);
+        testRegisterDto.setAccountType(AccountType.CUSTOMER.getValue());
     }
 
     // ================ CREATE ACCOUNT TESTS ================
@@ -116,31 +118,31 @@ public class AccountServiceTest {
     @Tag("createAccount")
     void testCreateAccount_CustomerSuccess_ReturnsAccountDto() {
         // Given
-        testRegisterDto.setAccountType(1); // Customer
+        testRegisterDto.setAccountType(AccountType.CUSTOMER.getValue()); // Customer
         Account mappedAccount = new Account();
         mappedAccount.setAccountName("newuser");
         mappedAccount.setEmail("newuser@email.com");
-        mappedAccount.setAccountType(1);
+        mappedAccount.setAccountType(AccountType.CUSTOMER);
 
         Account savedAccount = new Account();
         savedAccount.setAccountId(2);
         savedAccount.setAccountName("newuser");
         savedAccount.setEmail("newuser@email.com");
         savedAccount.setPassword("encodedPassword123");
-        savedAccount.setAccountType(1);
+        savedAccount.setAccountType(AccountType.CUSTOMER);
         savedAccount.setDeletedAt(null);
 
         AccountDto resultDto = new AccountDto();
         resultDto.setAccountId(2);
         resultDto.setAccountName("newuser");
         resultDto.setEmail("newuser@email.com");
-        resultDto.setAccountType(1);
+        resultDto.setAccountType(AccountType.CUSTOMER.getValue());
 
         when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(false);
         when(accountMapper.toEntity(testRegisterDto)).thenReturn(mappedAccount);
         when(passwordEncoder.encode("password123")).thenReturn("encodedPassword123");
         when(accountRepository.save(any(Account.class))).thenReturn(savedAccount);
-        when(accountMapper.toDto(savedAccount)).thenReturn(resultDto);
+        when(accountMapper.toDto(savedAccount, null)).thenReturn(resultDto);
 
         // When
         AccountDto result = accountService.createAccount(testRegisterDto);
@@ -161,21 +163,21 @@ public class AccountServiceTest {
     @Tag("createAccount")
     void testCreateAccount_EmployeeSuccess_ReturnsAccountDto() {
         // Given
-        testRegisterDto.setAccountType(2); // Employee
-        testRegisterDto.setEmployeeType(1);
+        testRegisterDto.setAccountType(AccountType.EMPLOYEE.getValue()); // Employee
+        testRegisterDto.setEmployeeType(EmployeeType.FLIGHT_SCHEDULING);
         
         Account mappedAccount = new Account();
-        mappedAccount.setAccountType(2);
+        mappedAccount.setAccountType(AccountType.EMPLOYEE);
 
         Account savedAccount = new Account();
         savedAccount.setAccountId(3);
-        savedAccount.setAccountType(2);
+        savedAccount.setAccountType(AccountType.EMPLOYEE);
 
         when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(false);
         when(accountMapper.toEntity(testRegisterDto)).thenReturn(mappedAccount);
         when(passwordEncoder.encode("password123")).thenReturn("encodedPassword123");
         when(accountRepository.save(any(Account.class))).thenReturn(savedAccount);
-        when(accountMapper.toDto(savedAccount)).thenReturn(testAccountDto);
+        when(accountMapper.toDto(eq(savedAccount), any(Employee.class))).thenReturn(testAccountDto);
 
         // When
         AccountDto result = accountService.createAccount(testRegisterDto);
@@ -184,7 +186,7 @@ public class AccountServiceTest {
         assertNotNull(result);
         verify(accountRepository).save(argThat(account -> 
             account.getEmployee() != null && 
-            account.getEmployee().getEmployeeType().equals(1)));
+            account.getEmployee().getEmployeeType().equals(EmployeeType.FLIGHT_SCHEDULING)));
     }
 
     @Test
@@ -239,13 +241,14 @@ public class AccountServiceTest {
         // Given
         testRegisterDto.setAccountType(999); // Invalid type
         Account mappedAccount = new Account();
-        mappedAccount.setAccountType(999);
+        // Keep 999 as invalid value for testing error handling
+        // mappedAccount.setAccountType(999);
 
         when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(false);
         when(accountMapper.toEntity(testRegisterDto)).thenReturn(mappedAccount);
         when(passwordEncoder.encode("password123")).thenReturn("encodedPassword123");
         when(accountRepository.save(any(Account.class))).thenReturn(mappedAccount);
-        when(accountMapper.toDto(mappedAccount)).thenReturn(testAccountDto);
+        when(accountMapper.toDto(mappedAccount, null)).thenReturn(testAccountDto);
 
         // When
         AccountDto result = accountService.createAccount(testRegisterDto);
@@ -263,7 +266,7 @@ public class AccountServiceTest {
     void testGetAccountById_Success_ReturnsAccountDto() {
         // Given
         when(accountRepository.findActiveById(1)).thenReturn(Optional.of(testAccount));
-        when(accountMapper.toDto(testAccount)).thenReturn(testAccountDto);
+        when(accountMapper.toDto(testAccount, null)).thenReturn(testAccountDto);
 
         // When
         AccountDto result = accountService.getAccountById(1);
@@ -274,7 +277,7 @@ public class AccountServiceTest {
         assertEquals("testuser", result.getAccountName());
         assertEquals("test@email.com", result.getEmail());
         verify(accountRepository).findActiveById(1);
-        verify(accountMapper).toDto(testAccount);
+        verify(accountMapper).toDto(testAccount, null);
     }
 
     @Test
@@ -288,7 +291,7 @@ public class AccountServiceTest {
             () -> accountService.getAccountById(999));
         assertEquals("Account not found", exception.getMessage());
         verify(accountRepository).findActiveById(999);
-        verify(accountMapper, never()).toDto(any());
+        verify(accountMapper, never()).toDto(any(Account.class), any());
     }
 
     @Test
@@ -322,14 +325,14 @@ public class AccountServiceTest {
     void testGetAccountById_MapperException_PropagatesException() {
         // Given
         when(accountRepository.findActiveById(1)).thenReturn(Optional.of(testAccount));
-        when(accountMapper.toDto(testAccount)).thenThrow(new RuntimeException("DTO mapping failed"));
+        when(accountMapper.toDto(testAccount, null)).thenThrow(new RuntimeException("DTO mapping failed"));
 
         // When & Then
         RuntimeException exception = assertThrows(RuntimeException.class, 
             () -> accountService.getAccountById(1));
         assertEquals("DTO mapping failed", exception.getMessage());
         verify(accountRepository).findActiveById(1);
-        verify(accountMapper).toDto(testAccount);
+        verify(accountMapper).toDto(testAccount, null);
     }
 
     // ================ GET ACCOUNT BY EMAIL TESTS ================
@@ -339,7 +342,7 @@ public class AccountServiceTest {
     void testGetAccountByEmail_Success_ReturnsAccountDto() {
         // Given
         when(accountRepository.findByEmail("test@email.com")).thenReturn(Optional.of(testAccount));
-        when(accountMapper.toDto(testAccount)).thenReturn(testAccountDto);
+        when(accountMapper.toDto(testAccount, null)).thenReturn(testAccountDto);
 
         // When
         AccountDto result = accountService.getAccountByEmail("test@email.com");
@@ -349,7 +352,7 @@ public class AccountServiceTest {
         assertEquals("test@email.com", result.getEmail());
         assertEquals("testuser", result.getAccountName());
         verify(accountRepository).findByEmail("test@email.com");
-        verify(accountMapper).toDto(testAccount);
+        verify(accountMapper).toDto(testAccount, null);
     }
 
     @Test
@@ -409,14 +412,14 @@ public class AccountServiceTest {
     void testGetAccountByEmail_MapperException_PropagatesException() {
         // Given
         when(accountRepository.findByEmail("test@email.com")).thenReturn(Optional.of(testAccount));
-        when(accountMapper.toDto(testAccount)).thenThrow(new RuntimeException("Mapping error"));
+        when(accountMapper.toDto(testAccount, null)).thenThrow(new RuntimeException("Mapping error"));
 
         // When & Then
         RuntimeException exception = assertThrows(RuntimeException.class, 
             () -> accountService.getAccountByEmail("test@email.com"));
         assertEquals("Mapping error", exception.getMessage());
         verify(accountRepository).findByEmail("test@email.com");
-        verify(accountMapper).toDto(testAccount);
+        verify(accountMapper).toDto(testAccount, null);
     }
 
     // ================ GET ACCOUNT BY NAME TESTS ================
@@ -508,8 +511,8 @@ public class AccountServiceTest {
         List<Account> accounts = Arrays.asList(testAccount, account2);
 
         when(accountRepository.findAllActive()).thenReturn(accounts);
-        when(accountMapper.toDto(testAccount)).thenReturn(testAccountDto);
-        when(accountMapper.toDto(account2)).thenReturn(accountDto2);
+        when(accountMapper.toDto(testAccount, null)).thenReturn(testAccountDto);
+        when(accountMapper.toDto(account2, null)).thenReturn(accountDto2);
 
         // When
         List<AccountDto> result = accountService.getAllAccounts();
@@ -520,7 +523,7 @@ public class AccountServiceTest {
         assertEquals("testuser", result.get(0).getAccountName());
         assertEquals("user2", result.get(1).getAccountName());
         verify(accountRepository).findAllActive();
-        verify(accountMapper, times(2)).toDto(any(Account.class));
+        verify(accountMapper, times(2)).toDto(any(Account.class), eq(null));
     }
 
     @Test
@@ -536,7 +539,7 @@ public class AccountServiceTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(accountRepository).findAllActive();
-        verify(accountMapper, never()).toDto(any());
+        verify(accountMapper, never()).toDto(any(Account.class), any());
     }
 
     @Test
@@ -558,14 +561,14 @@ public class AccountServiceTest {
         // Given
         List<Account> accounts = Arrays.asList(testAccount);
         when(accountRepository.findAllActive()).thenReturn(accounts);
-        when(accountMapper.toDto(testAccount)).thenThrow(new RuntimeException("Mapping failed"));
+        when(accountMapper.toDto(testAccount, null)).thenThrow(new RuntimeException("Mapping failed"));
 
         // When & Then
         RuntimeException exception = assertThrows(RuntimeException.class, 
             () -> accountService.getAllAccounts());
         assertEquals("Mapping failed", exception.getMessage());
         verify(accountRepository).findAllActive();
-        verify(accountMapper).toDto(testAccount);
+        verify(accountMapper).toDto(testAccount, null);
     }
 
     @Test
@@ -574,7 +577,7 @@ public class AccountServiceTest {
         // Given
         List<Account> largeAccountList = Arrays.asList(testAccount, testAccount, testAccount, testAccount, testAccount);
         when(accountRepository.findAllActive()).thenReturn(largeAccountList);
-        when(accountMapper.toDto(any(Account.class))).thenReturn(testAccountDto);
+        when(accountMapper.toDto(any(Account.class), eq(null))).thenReturn(testAccountDto);
 
         // When
         List<AccountDto> result = accountService.getAllAccounts();
@@ -583,7 +586,7 @@ public class AccountServiceTest {
         assertNotNull(result);
         assertEquals(5, result.size());
         verify(accountRepository).findAllActive();
-        verify(accountMapper, times(5)).toDto(any(Account.class));
+        verify(accountMapper, times(5)).toDto(any(Account.class), eq(null));
     }
 
     // ================ UPDATE ACCOUNT TESTS ================
@@ -614,7 +617,7 @@ public class AccountServiceTest {
 
         when(accountRepository.findActiveById(1)).thenReturn(Optional.of(testAccount));
         when(accountRepository.save(testAccount)).thenReturn(updatedAccount);
-        when(accountMapper.toDto(updatedAccount)).thenReturn(resultDto);
+        when(accountMapper.toDto(updatedAccount, null)).thenReturn(resultDto);
 
         // When
         AccountDto result = accountService.updateAccount(1, updateDto);
@@ -627,7 +630,7 @@ public class AccountServiceTest {
         assertEquals("999999999", result.getCitizenId());
         verify(accountRepository).findActiveById(1);
         verify(accountRepository).save(testAccount);
-        verify(accountMapper).toDto(updatedAccount);
+        verify(accountMapper).toDto(updatedAccount, null);
         
         // Verify original entity was updated
         assertEquals("updateduser", testAccount.getAccountName());
@@ -646,7 +649,7 @@ public class AccountServiceTest {
 
         when(accountRepository.findActiveById(1)).thenReturn(Optional.of(testAccount));
         when(accountRepository.save(testAccount)).thenReturn(testAccount);
-        when(accountMapper.toDto(testAccount)).thenReturn(testAccountDto);
+        when(accountMapper.toDto(testAccount, null)).thenReturn(testAccountDto);
 
         String originalEmail = testAccount.getEmail();
         String originalPhone = testAccount.getPhoneNumber();
@@ -686,7 +689,7 @@ public class AccountServiceTest {
 
         when(accountRepository.findActiveById(1)).thenReturn(Optional.of(testAccount));
         when(accountRepository.save(testAccount)).thenReturn(testAccount);
-        when(accountMapper.toDto(testAccount)).thenReturn(testAccountDto);
+        when(accountMapper.toDto(testAccount, null)).thenReturn(testAccountDto);
 
         String originalName = testAccount.getAccountName();
         String originalEmail = testAccount.getEmail();
@@ -723,7 +726,7 @@ public class AccountServiceTest {
         // Given
         when(accountRepository.findActiveById(1)).thenReturn(Optional.of(testAccount));
         when(accountRepository.save(testAccount)).thenReturn(testAccount);
-        when(accountMapper.toDto(testAccount)).thenThrow(new RuntimeException("Mapping failed"));
+        when(accountMapper.toDto(testAccount, null)).thenThrow(new RuntimeException("Mapping failed"));
 
         // When & Then
         RuntimeException exception = assertThrows(RuntimeException.class, 
@@ -731,7 +734,7 @@ public class AccountServiceTest {
         assertEquals("Mapping failed", exception.getMessage());
         verify(accountRepository).findActiveById(1);
         verify(accountRepository).save(testAccount);
-        verify(accountMapper).toDto(testAccount);
+        verify(accountMapper).toDto(testAccount, null);
     }
 
     // ================ DELETE ACCOUNT TESTS ================
@@ -906,27 +909,27 @@ public class AccountServiceTest {
         // Given
         Account customer1 = new Account();
         customer1.setAccountId(1);
-        customer1.setAccountType(1);
+        customer1.setAccountType(AccountType.CUSTOMER);
         customer1.setDeletedAt(null);
 
         Account customer2 = new Account();
         customer2.setAccountId(2);
-        customer2.setAccountType(1);
+        customer2.setAccountType(AccountType.CUSTOMER);
         customer2.setDeletedAt(null);
 
         List<Account> customers = Arrays.asList(customer1, customer2);
 
         AccountDto customerDto1 = new AccountDto();
         customerDto1.setAccountId(1);
-        customerDto1.setAccountType(1);
+        customerDto1.setAccountType(AccountType.CUSTOMER.getValue());
 
         AccountDto customerDto2 = new AccountDto();
         customerDto2.setAccountId(2);
-        customerDto2.setAccountType(1);
+        customerDto2.setAccountType(AccountType.CUSTOMER.getValue());
 
         when(accountRepository.findByAccountType(1)).thenReturn(customers);
-        when(accountMapper.toDto(customer1)).thenReturn(customerDto1);
-        when(accountMapper.toDto(customer2)).thenReturn(customerDto2);
+        when(accountMapper.toDto(customer1, null)).thenReturn(customerDto1);
+        when(accountMapper.toDto(customer2, null)).thenReturn(customerDto2);
 
         // When
         List<AccountDto> result = accountService.getAccountsByType(1);
@@ -937,7 +940,7 @@ public class AccountServiceTest {
         assertEquals(1, result.get(0).getAccountType());
         assertEquals(1, result.get(1).getAccountType());
         verify(accountRepository).findByAccountType(1);
-        verify(accountMapper, times(2)).toDto(any(Account.class));
+        verify(accountMapper, times(2)).toDto(any(Account.class), eq(null));
     }
 
     @Test
@@ -946,22 +949,22 @@ public class AccountServiceTest {
         // Given
         Account activeAccount = new Account();
         activeAccount.setAccountId(1);
-        activeAccount.setAccountType(1);
+        activeAccount.setAccountType(AccountType.CUSTOMER);
         activeAccount.setDeletedAt(null);
 
         Account deletedAccount = new Account();
         deletedAccount.setAccountId(2);
-        deletedAccount.setAccountType(1);
+        deletedAccount.setAccountType(AccountType.CUSTOMER);
         deletedAccount.setDeletedAt(LocalDateTime.now());
 
         List<Account> accounts = Arrays.asList(activeAccount, deletedAccount);
 
         AccountDto activeDto = new AccountDto();
         activeDto.setAccountId(1);
-        activeDto.setAccountType(1);
+        activeDto.setAccountType(AccountType.CUSTOMER.getValue());
 
         when(accountRepository.findByAccountType(1)).thenReturn(accounts);
-        when(accountMapper.toDto(activeAccount)).thenReturn(activeDto);
+        when(accountMapper.toDto(activeAccount, null)).thenReturn(activeDto);
 
         // When
         List<AccountDto> result = accountService.getAccountsByType(1);
@@ -971,8 +974,8 @@ public class AccountServiceTest {
         assertEquals(1, result.size()); // Only active account
         assertEquals(1, result.get(0).getAccountId());
         verify(accountRepository).findByAccountType(1);
-        verify(accountMapper, times(1)).toDto(activeAccount);
-        verify(accountMapper, never()).toDto(deletedAccount);
+        verify(accountMapper, times(1)).toDto(activeAccount, null);
+        verify(accountMapper, never()).toDto(eq(deletedAccount), any(Employee.class));
     }
 
     @Test
@@ -988,7 +991,7 @@ public class AccountServiceTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(accountRepository).findByAccountType(999);
-        verify(accountMapper, never()).toDto(any());
+        verify(accountMapper, never()).toDto(any(Account.class), any());
     }
 
     @Test
@@ -1025,14 +1028,14 @@ public class AccountServiceTest {
         // Given
         List<Account> accounts = Arrays.asList(testAccount);
         when(accountRepository.findByAccountType(1)).thenReturn(accounts);
-        when(accountMapper.toDto(testAccount)).thenThrow(new RuntimeException("Mapping error"));
+        when(accountMapper.toDto(testAccount, null)).thenThrow(new RuntimeException("Mapping error"));
 
         // When & Then
         RuntimeException exception = assertThrows(RuntimeException.class, 
             () -> accountService.getAccountsByType(1));
         assertEquals("Mapping error", exception.getMessage());
         verify(accountRepository).findByAccountType(1);
-        verify(accountMapper).toDto(testAccount);
+        verify(accountMapper).toDto(testAccount, null);
     }
 
     // ================ VERIFY CURRENT PASSWORD TESTS ================

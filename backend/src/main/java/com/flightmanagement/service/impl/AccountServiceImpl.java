@@ -5,6 +5,7 @@ import com.flightmanagement.dto.RegisterDto;
 import com.flightmanagement.entity.Account;
 import com.flightmanagement.entity.Customer;
 import com.flightmanagement.entity.Employee;
+import com.flightmanagement.enums.AccountType;
 import com.flightmanagement.mapper.AccountMapper;
 import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.service.AccountService;
@@ -46,32 +47,36 @@ public class AccountServiceImpl implements AccountService {
         account.setDeletedAt(null);
 
         // Create associated entity BEFORE saving
-        if (dto.getAccountType() == 1) {
+        if (dto.getAccountType() == AccountType.CUSTOMER.getValue()) {
             Customer customer = new Customer();
             customer.setAccount(account); // Set bidirectional relationship
             account.setCustomer(customer); // Attach to account
-        } else if (dto.getAccountType() == 2) {
+            Account savedAccount = accountRepository.save(account); // Cascades save to Customer/Employee
+            return accountMapper.toDto(savedAccount, null);
+        } else if (dto.getAccountType() == AccountType.EMPLOYEE.getValue()) {
             Employee employee = new Employee();
             employee.setAccount(account); // Set bidirectional relationship
             employee.setEmployeeType(dto.getEmployeeType());
             account.setEmployee(employee); // Attach to account
+            Account savedAccount = accountRepository.save(account); // Cascades save to Customer/Employee
+            return accountMapper.toDto(savedAccount, employee);
         }
 
         Account savedAccount = accountRepository.save(account); // Cascades save to Customer/Employee
-        return accountMapper.toDto(savedAccount);
+        return accountMapper.toDto(savedAccount, null);
     }
 
     @Override
     public AccountDto getAccountById(Integer id) {
         return accountRepository.findActiveById(id)
-                .map(accountMapper::toDto)
+                .map(account -> accountMapper.toDto(account, account.getEmployee()))
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
     }
 
     @Override
     public AccountDto getAccountByEmail(String email) {
         return accountRepository.findByEmail(email)
-                .map(accountMapper::toDto)
+                .map(account -> accountMapper.toDto(account, account.getEmployee()))
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
     }
 
@@ -87,7 +92,7 @@ public class AccountServiceImpl implements AccountService {
     public List<AccountDto> getAllAccounts() {
         return accountRepository.findAllActive()
                 .stream()
-                .map(accountMapper::toDto)
+                .map(account -> accountMapper.toDto(account, account.getEmployee()))
                 .toList();
     }
 
@@ -112,7 +117,7 @@ public class AccountServiceImpl implements AccountService {
         }
         // Don't update accountType, password, or other sensitive fields
 
-        return accountMapper.toDto(accountRepository.save(account));
+        return accountMapper.toDto(accountRepository.save(account), account.getEmployee());
     }
 
     @Override
@@ -134,7 +139,7 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.findByAccountType(accountType)
                 .stream()
                 .filter(acc -> acc.getDeletedAt() == null)
-                .map(accountMapper::toDto)
+                .map(account -> accountMapper.toDto(account, account.getEmployee()))
                 .toList();
     }
 

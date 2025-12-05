@@ -53,21 +53,21 @@ const BookingLookup: React.FC = () => {
         searchData.confirmationCode
       );
 
-      if (!tickets || tickets.data.length === 0) {
+      if (!tickets || tickets.length === 0) {
         setError("Không tìm thấy đặt chỗ với mã xác nhận này");
         return;
       }
 
-      const firstTicket = tickets.data[0];
+      const firstTicket = tickets[0];
       const flight = await flightService.getFlightById(firstTicket.flightId!);
 
       const passengerNames = await Promise.all(
-        tickets.data.map(async (ticket) => {
+        tickets.map(async (ticket) => {
           try {
             const passenger = await passengerService.getPassengerById(
               ticket.passengerId!
             );
-            return passenger.data.passengerName;
+            return passenger.passengerName;
           } catch (error) {
             console.error(
               `Error getting passenger ${ticket.passengerId}:`,
@@ -78,23 +78,23 @@ const BookingLookup: React.FC = () => {
         })
       );
 
-      setIsPaid(tickets.data.every((ticket) => ticket.ticketStatus === 1));
+      setIsPaid(tickets.every((ticket) => ticket.ticketStatus === 1));
 
       const bookingData: BookingConfirmation = {
         confirmationCode: searchData.confirmationCode,
         bookingDate: new Date().toISOString(),
-        tickets: tickets.data,
+        tickets: tickets,
         passengers: passengerNames,
-        totalAmount: tickets.data.reduce(
-          (sum, ticket) => sum + (ticket.fare || 0),
+        totalAmount: tickets.reduce(
+          (sum: number, ticket: any) => sum + (ticket.fare || 0),
           0
         ),
         flightInfo: {
-          flightCode: flight.data.flightCode || "",
-          departureTime: flight.data.departureTime || "",
-          arrivalTime: flight.data.arrivalTime || "",
-          departureCity: flight.data.departureCityName || "",
-          arrivalCity: flight.data.arrivalCityName || "",
+          flightCode: flight.flightCode || "",
+          departureTime: flight.departureTime || "",
+          arrivalTime: flight.arrivalTime || "",
+          departureCity: flight.departureCityName || "",
+          arrivalCity: flight.arrivalCityName || "",
         },
       };
 

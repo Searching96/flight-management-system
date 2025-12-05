@@ -7,6 +7,7 @@ import com.flightmanagement.entity.Customer;
 import com.flightmanagement.entity.FlightTicketClass;
 import com.flightmanagement.entity.Plane;
 import com.flightmanagement.entity.TicketClass;
+import com.flightmanagement.enums.AccountType;
 import com.flightmanagement.repository.*;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,7 +118,7 @@ public class TicketBookingFlowIntegrationTest {
         testAccount.setPassword("password123");
         testAccount.setCitizenId("CID" + uniqueId);
         testAccount.setPhoneNumber("09" + uniqueId.substring(uniqueId.length() - 8));
-        testAccount.setAccountType(1); // 1 = customer
+        testAccount.setAccountType(AccountType.CUSTOMER); // 1 = customer
         testAccount = accountRepository.save(testAccount);
         
         // Create test customer and associate with account

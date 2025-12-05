@@ -7,12 +7,14 @@ import {
 import type { ApiResponse } from "../models/ApiResponse";
 
 class PassengerService {
-  async getAllPassengers(): Promise<ApiResponse<Passenger[]>> {
-    return apiClient.get("/passengers");
+  async getAllPassengers(): Promise<Passenger[]> {
+    const response = await apiClient.get<ApiResponse<Passenger[]>>("/passengers");
+    return response.data;
   }
 
-  async getPassengerById(id: number): Promise<ApiResponse<Passenger>> {
-    return apiClient.get(`/passengers/${id}`);
+  async getPassengerById(id: number): Promise<Passenger> {
+    const response = await apiClient.get<ApiResponse<Passenger>>(`/passengers/${id}`);
+    return response.data;
   }
 
   async getPassengerByCitizenId(

@@ -1,8 +1,10 @@
 package com.flightmanagement.controller;
 
+import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +28,7 @@ public class PaymentController {
 
     @Operation(summary = "Create a payment")
     @PostMapping("/create")
-    public ResponseEntity<Map<String, Object>> createPayment(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> createPayment(
             @RequestParam("confirmationCode") @NotBlank(message = "Confirmation code is required")
             String confirmationCodeParam,
 
@@ -38,36 +40,63 @@ public class PaymentController {
             HttpServletRequest request) {
 
         Map<String, Object> response = paymentService.createPayment(confirmationCodeParam, bankCode, language, request);
-
-        return ResponseEntity.ok(response);
+        
+        ApiResponse<Map<String, Object>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Payment created successfully",
+                response,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 
     @Operation(summary = "Process IPN callback")
     @GetMapping("/IPN")
-    public ResponseEntity<Map<String, String>> ipn(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> ipn(HttpServletRequest request) {
         Map<String, String> response = paymentService.processIPN(request);
-        return ResponseEntity.ok(response);
+        
+        ApiResponse<Map<String, String>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "IPN processed successfully",
+                response,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 
     @Operation(summary = "Process return callback")
     @GetMapping("/return")
-    public ResponseEntity<Map<String, Object>> processReturn(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> processReturn(HttpServletRequest request) {
         Map<String, Object> response = paymentService.processPaymentReturn(request);
-        return ResponseEntity.ok(response);
+        
+        ApiResponse<Map<String, Object>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Return processed successfully",
+                response,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 
     @PostMapping("/query")
-    public ResponseEntity<Map<String, Object>> queryTransaction(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> queryTransaction(
             @RequestParam("orderId") String orderId,
             @RequestParam("transDate") String transDate,
             HttpServletRequest request) {
 
         Map<String, Object> response = paymentService.queryTransaction(orderId, transDate, request);
-        return ResponseEntity.ok(response);
+        
+        ApiResponse<Map<String, Object>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Transaction query completed successfully",
+                response,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 
-    @PostMapping("/refund")
-    public ResponseEntity<Map<String, Object>> refundTransaction(
+    @PostMapping("refund")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> refundTransaction(
             @RequestParam("orderId") String orderId,
             @RequestParam("amount") String amount,
             @RequestParam("transDate") String transDate,
@@ -77,6 +106,48 @@ public class PaymentController {
 
         Map<String, Object> response = paymentService.refundTransaction(
                 orderId, amount, transDate, user, transType, request);
-        return ResponseEntity.ok(response);
+        
+        ApiResponse<Map<String, Object>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Refund transaction completed successfully",
+                response,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @Operation(summary = "Get payment status for confirmation code")
+    @GetMapping("/status/{confirmationCode}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getPaymentStatus(
+            @PathVariable("confirmationCode") @NotBlank(message = "Confirmation code is required")
+            String confirmationCode) {
+
+        Map<String, Object> response = paymentService.getPaymentStatus(confirmationCode);
+        
+        ApiResponse<Map<String, Object>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Payment status retrieved successfully",
+                response,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @Operation(summary = "Cancel payment for confirmation code")
+    @PostMapping("/cancel/{confirmationCode}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> cancelPayment(
+            @PathVariable("confirmationCode") @NotBlank(message = "Confirmation code is required")
+            String confirmationCode,
+            HttpServletRequest request) {
+
+        Map<String, Object> response = paymentService.cancelPayment(confirmationCode, request);
+        
+        ApiResponse<Map<String, Object>> apiResponse = new ApiResponse<>(
+                HttpStatus.OK,
+                "Payment cancellation completed",
+                response,
+                null
+        );
+        return ResponseEntity.ok(apiResponse);
     }
 }

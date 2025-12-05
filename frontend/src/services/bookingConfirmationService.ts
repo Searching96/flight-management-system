@@ -1,5 +1,5 @@
 import { apiClient } from './api';
-import { Ticket } from '../models';
+import { Ticket, ApiResponse } from '../models';
 
 export interface BookingConfirmation {
   confirmationCode: string;
@@ -92,11 +92,12 @@ export class BookingConfirmationService {
   async lookupBooking(request: BookingLookupRequest): Promise<BookingConfirmation | null> {
     // TODO: Add backend API call for registered user bookings
     try {
-      return await apiClient.get(`${this.baseUrl}/lookup/${request.confirmationCode}`, {
+      const response = await apiClient.get<ApiResponse<BookingConfirmation>>(`${this.baseUrl}/lookup/${request.confirmationCode}`, {
         params: {
           citizenId: request.citizenId
         }
       });
+      return response.data;
     } catch (error: any) {
       if (error.response?.status === 404) {
         return null; // Booking not found

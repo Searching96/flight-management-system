@@ -16,8 +16,8 @@ public interface PaymentService {
     Map<String, Object> createPayment(String confirmationCode, String bankCode, String language, HttpServletRequest request);
     
     /**
-     * Process the payment return from VNPay
-     * @param request The HTTP request containing the VNPay return parameters
+     * Process the payment return from payment gateway
+     * @param request The HTTP request containing the return parameters
      * @return A map containing the payment result
      */
     Map<String, Object> processPaymentReturn(HttpServletRequest request);
@@ -45,4 +45,19 @@ public interface PaymentService {
      */
     Map<String, Object> refundTransaction(String orderId, String amount, String transDate, 
                                         String user, String transType, HttpServletRequest request);
+                                        
+    /**
+     * Get payment status for a confirmation code
+     * @param confirmationCode The booking confirmation code
+     * @return A map containing the payment status information
+     */
+    Map<String, Object> getPaymentStatus(String confirmationCode);
+    
+    /**
+     * Cancel payment for a confirmation code
+     * @param confirmationCode The booking confirmation code
+     * @param request The HTTP request
+     * @return A map containing the cancellation result
+     */
+    Map<String, Object> cancelPayment(String confirmationCode, HttpServletRequest request);
 }

@@ -10,8 +10,9 @@ export class FlightService {
     return apiClient.get(this.baseUrl);
   }
 
-  async getFlightById(id: number): Promise<ApiResponse<Flight>> {
-    return apiClient.get(`${this.baseUrl}/${id}`);
+  async getFlightById(id: number): Promise<Flight> {
+    const response = await apiClient.get<ApiResponse<Flight>>(`${this.baseUrl}/${id}`);
+    return response.data;
   }
 
   async getFlightByCode(flightCode: string): Promise<ApiResponse<Flight>> {

@@ -17,6 +17,6 @@ public class PasswordForgetRequest {
     @Email(message = "Please provide a valid email address")
     private String email;
 
-    @NotBlank(message = "Password is required")
+    @NotBlank(message = "Phone number is required")
     private String phoneNumber;
 }

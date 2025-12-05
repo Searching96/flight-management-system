@@ -2,6 +2,7 @@ package com.flightmanagement.service.impl;
 
 import com.flightmanagement.dto.EmployeeDto;
 import com.flightmanagement.entity.Employee;
+import com.flightmanagement.enums.EmployeeType;
 import com.flightmanagement.entity.Account;
 import com.flightmanagement.mapper.EmployeeMapper;
 import com.flightmanagement.repository.EmployeeRepository;
@@ -73,7 +74,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         // Update employee fields
         if (updateRequest.getEmployeeType() != null) {
-            existingEmployee.setEmployeeType(updateRequest.getEmployeeType());
+            existingEmployee.setEmployeeType(EmployeeType.fromValue(updateRequest.getEmployeeType()));
         }
 
         // Update account fields if provided
@@ -162,7 +163,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findActiveById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
 
-        employee.setEmployeeType(newRole);
+        employee.setEmployeeType(EmployeeType.fromValue(newRole));
         Employee updatedEmployee = employeeRepository.save(employee);
         return employeeMapper.toDto(updatedEmployee);
     }

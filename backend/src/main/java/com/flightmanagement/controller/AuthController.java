@@ -75,7 +75,7 @@ public class AuthController {
     @Operation(summary = "Send password reset email")
     @PostMapping("/forget-password") // Yet to assign role
     public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody PasswordForgetRequest request) {
-        authService.processForgotPassword(request.getEmail());
+        authService.processForgotPassword(request.getEmail(), request.getPhoneNumber());
 
         ApiResponse<Void> response = new ApiResponse<>(
                 HttpStatus.OK,

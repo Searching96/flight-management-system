@@ -89,7 +89,6 @@ const PaymentHandler: React.FC = () => {
       };
 
       setBooking(bookingData);
-      console.log(`Booking loaded at 2025-06-11 05:14:08 UTC by thinh0704hcm for confirmation: ${confirmationCode}`);
     } catch (err: any) {
       console.error('Lỗi khi tải thông tin đặt chỗ:', err);
       setError('Không thể tải thông tin đặt chỗ. Vui lòng thử lại sau.');
@@ -98,27 +97,72 @@ const PaymentHandler: React.FC = () => {
     }
   };
 
+  // Generate txnRef in the same format as backend (HHMMSS + hex-encoded confirmationCode)
+  const generateTxnRef = (confirmationCode: string): string => {
+    // Get current time as HHMMSS (24-hour format)
+    const now = new Date();
+    const timePrefix = 
+      now.getHours().toString().padStart(2, '0') +
+      now.getMinutes().toString().padStart(2, '0') +
+      now.getSeconds().toString().padStart(2, '0');
+
+    // Convert confirmation code to hex
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(confirmationCode);
+    const hexConfirmationCode = Array.from(bytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    // Combine time prefix with hex confirmation code
+    const txnRef = timePrefix + hexConfirmationCode;
+
+    // Ensure it doesn't exceed 100 characters (VNPAY limit)
+    if (txnRef.length > 100) {
+      const maxHexLength = 100 - 6; // 6 = TIME_PREFIX_LENGTH (HHMMSS)
+      return timePrefix + hexConfirmationCode.substring(0, maxHexLength);
+    }
+
+    return txnRef;
+  };
+
   const handlePayment = async () => {
     if (!booking) return;
 
     try {
       setProcessingPayment(true);
-      console.log(`Payment initiated at 2025-06-11 05:14:08 UTC by thinh0704hcm for ${booking.confirmationCode}`);
       
-      const response = await paymentService.createPayment(booking.confirmationCode);
-      
-      if (response && response.data) {
-        console.log('Chuyển hướng đến URL thanh toán:', response.data);
-        window.location.href = response.data;
+      // BYPASS MODE: Call debug endpoint to mark as paid
+      console.log('BYPASS MODE: Calling debug endpoint to bypass payment');
+      const bypassResponse = await fetch(`/api/debug/bypass-payment/${booking.confirmationCode}`, {
+        method: 'POST',
+      });
+
+      if (bypassResponse.ok) {
+        const result = await bypassResponse.json();
+        console.log('Payment bypassed successfully:', result);
+        
+        // Generate properly encoded txnRef matching backend format
+        const txnRef = generateTxnRef(booking.confirmationCode);
+        
+        // Redirect to success page with mock parameters (use txnRef as orderId for consistency)
+        const successUrl = `/payment-result?resultCode=00&vnp_ResponseCode=00&vnp_TxnRef=${txnRef}&vnp_Amount=${booking.totalAmount * 100}&orderId=${txnRef}`;
+        navigate(successUrl);
       } else {
         setModalTitle('Lỗi thanh toán');
-        setModalMessage('URL thanh toán không hợp lệ. Vui lòng thử lại.');
+        setModalMessage('Không thể bypass thanh toán. Vui lòng thử lại.');
         setShowErrorModal(true);
       }
+
+      // Original payment flow (commented out for bypass)
+      // const response = await paymentService.createPayment(booking.confirmationCode);
+      // if (response && response.data) {
+      //   console.log('Chuyển hướng đến URL thanh toán:', response.data);
+      //   window.location.href = response.data;
+      // }
     } catch (error) {
-      console.error('Tạo thanh toán thất bại:', error);
+      console.error('Bypass thanh toán thất bại:', error);
       setModalTitle('Lỗi thanh toán');
-      setModalMessage('Không thể tạo thanh toán. Vui lòng thử lại sau.');
+      setModalMessage('Không thể xử lý thanh toán. Vui lòng thử lại sau.');
       setShowErrorModal(true);
     } finally {
       setProcessingPayment(false);
@@ -372,7 +416,7 @@ const PaymentHandler: React.FC = () => {
                 Sẵn sàng thanh toán?
               </h5>
               <p className="text-muted mb-4">
-                Bạn sẽ được chuyển hướng đến cổng thanh toán VNPay an toàn để hoàn tất giao dịch.
+                Bạn sẽ được chuyển hướng đến cổng thanh toán MoMo an toàn để hoàn tất giao dịch.
                 <br />
                 <small>Thời gian tạo: 2025-06-11 05:14:08 UTC</small>
               </p>
@@ -418,7 +462,7 @@ const PaymentHandler: React.FC = () => {
               <div className="mt-4">
                 <small className="text-muted">
                   <i className="bi bi-shield-check me-1 text-success"></i>
-                  Thanh toán được bảo mật 256-bit SSL bởi VNPay
+                  Thanh toán được bảo mật 256-bit SSL bởi MoMo
                 </small>
               </div>
             </Card.Body>

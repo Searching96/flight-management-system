@@ -1,5 +1,5 @@
 import { apiClient } from "./api";
-import { AuthResponse } from "../models";
+import { ApiResponse, AuthResponse } from "../models";
 
 class DebugService {
   private readonly baseUrl = "/debug";
@@ -14,15 +14,15 @@ class DebugService {
     console.log("Account name:", accountName);
 
     try {
-      const response = await apiClient.get<AuthResponse>(
+      const response = await apiClient.get<ApiResponse<AuthResponse>>(
         `${this.baseUrl}/login-by-name/${accountName}`
       );
       console.log("Debug login successful:", response);
-      localStorage.setItem("accessToken", response.accessToken);
-      localStorage.setItem("refreshToken", response.refreshToken);
-      localStorage.setItem("user", JSON.stringify(response.userDetails));
+      localStorage.setItem("accessToken", response.data.accessToken);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(response.data.userDetails));
       console.log("=== DebugService.loginByName END ===");
-      return response;
+      return response.data;
     } catch (error) {
       console.error("=== ERROR in DebugService.loginByName ===");
       console.error("Account name:", accountName);

@@ -163,7 +163,7 @@ public class FlightServiceImpl implements FlightService {
         }
         
         // Check minimum flight duration from parameters
-        ParameterDto parameters = parameterService.getParameterSet();
+        ParameterDto parameters = parameterService.getLatestParameter();
         long durationMinutes = Duration.between(request.getDepartureTime(), request.getArrivalTime()).toMinutes();
         
         if (durationMinutes < parameters.getMinFlightDuration()) {

@@ -80,7 +80,7 @@ const TicketingManagement: React.FC = () => {
       console.log("Fetched tickets:", allTickets);
 
       // Process each ticket to get complete information
-      const ticketInfoPromises = allTickets.data.map(async (ticket: any) => {
+      const ticketInfoPromises = allTickets.map(async (ticket: any) => {
         try {
           // Validate ticket object
           if (
@@ -136,15 +136,15 @@ const TicketingManagement: React.FC = () => {
 
           return {
             ticketId: ticket.ticketId,
-            flightCode: flight.data.flightCode || "N/A",
-            departureTime: flight.data.departureTime,
-            arrivalTime: flight.data.arrivalTime,
-            departureAirport: flight.data.departureAirportName || "N/A",
-            arrivalAirport: flight.data.arrivalAirportName || "N/A",
-            passengerCitizenId: passenger.data.citizenId || "N/A",
-            passengerName: passenger.data.passengerName || "N/A",
-            phoneNumber: passenger.data.phoneNumber || "N/A",
-            paymentTime: ticket.data.paymentTime,
+            flightCode: flight.flightCode || "N/A",
+            departureTime: flight.departureTime,
+            arrivalTime: flight.arrivalTime,
+            departureAirport: flight.departureAirportName || "N/A",
+            arrivalAirport: flight.arrivalAirportName || "N/A",
+            passengerCitizenId: passenger.citizenId || "N/A",
+            passengerName: passenger.passengerName || "N/A",
+            phoneNumber: passenger.phoneNumber || "N/A",
+            paymentTime: ticket.paymentTime,
             ticketStatus,
             fare: ticket.fare || 0,
             seatNumber: seatNumber,
@@ -334,12 +334,12 @@ const TicketingManagement: React.FC = () => {
       );
       if (
         ticketData &&
-        ticketData.data.ticketClassId &&
-        ticketData.data.flightId
+        ticketData.ticketClassId &&
+        ticketData.flightId
       ) {
         await flightTicketClassService.updateRemainingTickets(
-          ticketData.data.flightId,
-          ticketData.data.ticketClassId,
+          ticketData.flightId,
+          ticketData.ticketClassId,
           -1
         );
       }

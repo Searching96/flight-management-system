@@ -2,6 +2,7 @@ package com.flightmanagement.service.impl;
 
 import com.flightmanagement.dto.*;
 import com.flightmanagement.entity.*;
+import com.flightmanagement.enums.AccountType;
 import com.flightmanagement.mapper.TicketMapper;
 import com.flightmanagement.repository.*;
 import com.flightmanagement.service.*;
@@ -97,11 +98,12 @@ public class TicketServiceImpl implements TicketService {
         }
 
         Customer bookingCustomer = null;
-        if (ticketDto.getBookCustomerId() != null) {
+        if (ticketDto.getBookCustomerId() != null && ticketDto.getBookCustomerId() != 0) {
             bookingCustomer = customerRepository.findById(ticketDto.getBookCustomerId())
                     .orElseGet(() -> createCustomerFromAccount(ticketDto.getBookCustomerId()));
             ticket.setBookCustomer(bookingCustomer);
         }
+        // For guest bookings (customer ID 0 or null), bookingCustomer remains null
 
         Passenger passenger = null;
         if (ticketDto.getPassengerId() != null) {
@@ -300,7 +302,8 @@ public class TicketServiceImpl implements TicketService {
             TicketDto ticketDto = new TicketDto();
             ticketDto.setFlightId(bookingDto.getFlightId());
             ticketDto.setTicketClassId(bookingDto.getTicketClassId());
-            ticketDto.setBookCustomerId(bookingDto.getCustomerId());
+            // For guest bookings, set customer ID to null instead of 0
+            ticketDto.setBookCustomerId(bookingDto.getCustomerId() == 0 ? null : bookingDto.getCustomerId());
             ticketDto.setPassengerId(existingPassenger.getPassengerId());
             ticketDto.setSeatNumber(seatNumber);
             ticketDto.setFare(flightTicketClass.getSpecifiedFare());
@@ -436,7 +439,7 @@ public class TicketServiceImpl implements TicketService {
                 .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
 
         // Verify this is a customer account (accountType = 1)
-        if (account.getAccountType() != 1) {
+        if (account.getAccountType() != AccountType.CUSTOMER) {
             throw new RuntimeException("Account " + accountId + " is not a customer account");
         }
 
