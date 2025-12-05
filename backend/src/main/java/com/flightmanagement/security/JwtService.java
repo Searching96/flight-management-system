@@ -22,7 +22,6 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secret;
 
-    // Add these new fields to your JwtService
     @Value("${jwt.password-reset.secret}")
     private String passwordResetSecret;
 

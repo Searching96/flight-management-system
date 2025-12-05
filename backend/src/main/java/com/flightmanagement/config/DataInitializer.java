@@ -13,9 +13,6 @@ import java.time.LocalDateTime;
 @Component
 public class DataInitializer implements CommandLineRunner {
 
-    @Value("${app.data-initializer.enabled:true}")
-    private boolean enabled;
-
     private final ParameterService parameterService;
 
     private final TicketClassService ticketClassService;
@@ -52,10 +49,6 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (!enabled) {
-            System.out.println("ℹ️  Data initializer is disabled");
-            return;
-        }
         System.out.println("🚀 Initializing Flight Management System Demo Data...");
         initializeParameters();
         initializeTicketClasses();

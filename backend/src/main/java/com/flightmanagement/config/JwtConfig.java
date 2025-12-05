@@ -12,11 +12,11 @@ import java.nio.charset.StandardCharsets;
 @Configuration
 public class JwtConfig {
 
-    @Value("${jwt.secret:flightmanagementsecretkey}")
+    @Value("${jwt.secret}")
     private String jwtSecretString;
 
     @Getter
-    @Value("${jwt.expiration:86400000}")
+    @Value("${jwt.expiration}")
     private long jwtExpiration;
 
     @Bean
