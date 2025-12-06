@@ -17,7 +17,6 @@ export { planeService } from "./planeService";
 export { ticketClassService } from "./ticketClassService";
 export { ticketService } from "./ticketService";
 export { parameterService } from "./ParameterService";
-export { paymentService } from "./paymentService";
 export { debugService } from "./debugService";
 export { statisticsService } from "./statisticsService";
 

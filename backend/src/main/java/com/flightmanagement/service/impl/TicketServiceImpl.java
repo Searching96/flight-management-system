@@ -9,6 +9,7 @@ import com.flightmanagement.service.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -114,104 +115,97 @@ public class TicketServiceImpl implements TicketService {
         }
 
         Ticket savedTicket = ticketRepository.save(ticket);
-        TicketDto savedTicketDto = ticketMapper.toDto(savedTicket);
 
-        // Send single ticket confirmation email after successful ticket creation
-        if (savedTicket.getTicketStatus() == 0) {
-            System.out.println("Ticket info: " + savedTicketDto +
-                    " at 2025-06-11 07:34:18 UTC by user");
-            try {
-                sendSingleTicketConfirmation(savedTicketDto, bookingCustomer, passenger);
-            } catch (Exception e) {
-                System.err.println("Failed to send ticket confirmation email for ticket: " +
-                        savedTicketDto.getTicketId() + " - " + e.getMessage());
-            }
-        }
-
-        return savedTicketDto;
+        return ticketMapper.toDto(savedTicket);
     }
-
     /**
-     * Send single ticket confirmation email to customer
+     * Send multi-passenger booking confirmation email
      */
-    private void sendSingleTicketConfirmation(TicketDto ticket, Customer customer, Passenger passenger) {
+    private void sendMultiPassengerBookingConfirmation(List<TicketDto> tickets) {
         try {
-            if (ticket.getBookCustomerId() != null) {
+            if (tickets.isEmpty()) {
+                System.err.println("Cannot send booking confirmation: no tickets provided");
+                return;
+            }
+
+            // Get first ticket for common information
+            TicketDto firstTicket = tickets.get(0);
+            
+            // Get flight information
+            Flight flight = flightRepository.findById(firstTicket.getFlightId())
+                    .orElseThrow(() -> new RuntimeException("Flight not found"));
+
+            // Format departure time
+            String formattedDepartureTime = flight.getDepartureTime()
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+
+            // Check if payment is needed
+            boolean needsPayment = firstTicket.getTicketStatus() == null || firstTicket.getTicketStatus() == 0;
+
+            // Calculate total fare
+            BigDecimal totalFare = tickets.stream()
+                    .map(TicketDto::getFare)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // Build passenger info list
+            List<EmailService.PassengerTicketInfo> passengerInfoList = new ArrayList<>();
+            for (TicketDto ticket : tickets) {
+                Passenger passenger = passengerRepository.findById(ticket.getPassengerId())
+                        .orElse(null);
+                if (passenger != null) {
+                    passengerInfoList.add(new EmailService.PassengerTicketInfo(
+                            passenger.getPassengerName(),
+                            ticket.getSeatNumber(),
+                            ticket.getFare()));
+                }
+            }
+
+            // Determine recipient email and customer name
+            String recipientEmail;
+            String customerName;
+
+            if (firstTicket.getBookCustomerId() != null) {
                 // Customer booking
+                Customer customer = customerRepository.findById(firstTicket.getBookCustomerId())
+                        .orElse(null);
                 if (customer == null || customer.getAccount() == null) {
                     System.err.println(
-                            "Cannot send ticket confirmation: customer or account is null at 2025-06-11 10:47:59 UTC by user");
+                            "Cannot send booking confirmation: customer or account is null");
                     return;
                 }
-
-                // Get flight information
-                Flight flight = flightRepository.findById(ticket.getFlightId())
-                        .orElseThrow(() -> new RuntimeException("Flight not found"));
-
-                String customerEmail = customer.getAccount().getEmail();
-                String customerName = customer.getAccount().getAccountName();
-                String passengerName = passenger != null ? passenger.getPassengerName() : "Hành khách";
-
-                // Format departure time
-                String formattedDepartureTime = flight.getDepartureTime()
-                        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-
-                // Check if payment is needed
-                boolean needsPayment = ticket.getTicketStatus() == null || ticket.getTicketStatus() == 0;
-
-                // Send single ticket confirmation email for customer booking
-                emailService.sendSingleTicketConfirmation(
-                        customerEmail,
-                        customerName,
-                        passengerName,
-                        ticket.getConfirmationCode(),
-                        flight.getFlightCode(),
-                        flight.getDepartureAirport().getCityName(),
-                        flight.getArrivalAirport().getCityName(), // Fixed: was departure twice
-                        formattedDepartureTime,
-                        ticket.getSeatNumber(),
-                        ticket.getFare(),
-                        needsPayment);
+                recipientEmail = customer.getAccount().getEmail();
+                customerName = customer.getAccount().getAccountName();
             } else {
-                // Guest booking - use passenger information
-                if (passenger == null) {
+                // Guest booking - send to first passenger's email
+                Passenger firstPassenger = passengerRepository.findById(firstTicket.getPassengerId())
+                        .orElse(null);
+                if (firstPassenger == null || firstPassenger.getEmail() == null) {
                     System.err.println(
-                            "Cannot send ticket confirmation: passenger is null for guest booking at 2025-06-11 10:47:59 UTC by user");
+                            "Cannot send booking confirmation: first passenger or email is null for guest booking");
                     return;
                 }
-
-                // Get flight information
-                Flight flight = flightRepository.findById(ticket.getFlightId())
-                        .orElseThrow(() -> new RuntimeException("Flight not found"));
-
-                String guestEmail = passenger.getEmail(); // Assuming passenger has email field
-                String guestName = passenger.getPassengerName();
-                String passengerName = passenger.getPassengerName();
-
-                // Format departure time
-                String formattedDepartureTime = flight.getDepartureTime()
-                        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-
-                // Check if payment is needed
-                boolean needsPayment = ticket.getTicketStatus() == null || ticket.getTicketStatus() == 0;
-
-                // Send single ticket confirmation email for guest booking
-                emailService.sendSingleTicketConfirmation(
-                        guestEmail,
-                        guestName,
-                        passengerName,
-                        ticket.getConfirmationCode(),
-                        flight.getFlightCode(),
-                        flight.getDepartureAirport().getCityName(),
-                        flight.getArrivalAirport().getCityName(),
-                        formattedDepartureTime,
-                        ticket.getSeatNumber(),
-                        ticket.getFare(),
-                        needsPayment);
+                recipientEmail = firstPassenger.getEmail();
+                customerName = firstPassenger.getPassengerName();
             }
+
+            // Send consolidated email with all passengers
+            emailService.sendMultiPassengerBookingConfirmation(
+                    recipientEmail,
+                    customerName,
+                    firstTicket.getConfirmationCode(),
+                    flight.getFlightCode(),
+                    flight.getDepartureAirport().getCityName(),
+                    flight.getArrivalAirport().getCityName(),
+                    formattedDepartureTime,
+                    passengerInfoList,
+                    totalFare,
+                    needsPayment);
+
+            System.out.println("Multi-passenger booking confirmation email sent to: " + recipientEmail);
+
         } catch (Exception e) {
-            System.err.println("Error sending single ticket confirmation email: " + e.getMessage());
-            throw new RuntimeException("Failed to send ticket confirmation email", e);
+            System.err.println("Error sending multi-passenger booking confirmation email: " + e.getMessage());
+            throw new RuntimeException("Failed to send booking confirmation email", e);
         }
     }
 
@@ -287,6 +281,8 @@ public class TicketServiceImpl implements TicketService {
                     ", Available: " + flightTicketClass.getRemainingTicketQuantity());
         }
 
+        String confirmationCode = generateConfirmationCode();
+
         // Create tickets for each passenger
         for (int i = 0; i < bookingDto.getPassengers().size(); i++) {
             PassengerDto passengerDto = bookingDto.getPassengers().get(i);
@@ -307,7 +303,7 @@ public class TicketServiceImpl implements TicketService {
             ticketDto.setSeatNumber(seatNumber);
             ticketDto.setFare(flightTicketClass.getSpecifiedFare());
             ticketDto.setTicketStatus((byte) 0); // 0: unpaid (default)
-            ticketDto.setConfirmationCode(generateConfirmationCode());
+            ticketDto.setConfirmationCode(confirmationCode);
 
             TicketDto createdTicket = createTicket(ticketDto);
             bookedTickets.add(createdTicket);
@@ -320,6 +316,15 @@ public class TicketServiceImpl implements TicketService {
                 bookingDto.getPassengers().size());
 
         System.out.println("Booking successful - Created " + bookedTickets.size() + " tickets");
+
+        // Send consolidated booking confirmation email for multiple passengers
+        if (!bookedTickets.isEmpty()) {
+            try {
+                sendMultiPassengerBookingConfirmation(bookedTickets);
+            } catch (Exception e) {
+                System.err.println("Failed to send multi-passenger booking confirmation email: " + e.getMessage());
+            }
+        }
 
         return bookedTickets;
     }

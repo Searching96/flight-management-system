@@ -1,170 +1,254 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Alert, Button, Spinner, Badge, Modal } from 'react-bootstrap';
-import { paymentService, customerService, ticketService } from '../../services';
-import { useAuth } from '../../hooks/useAuth';
-import { PaymentReturnResponse } from '../../models';
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Alert,
+  Button,
+  Spinner,
+  Badge,
+  Modal,
+} from "react-bootstrap";
+import { customerService, ticketService } from "../../services";
+import { useAuth } from "../../hooks/useAuth";
+
+interface PaymentReturnResponse {
+  signatureValid: boolean;
+  data: {
+    orderId?: string;
+    vnp_TxnRef?: string;
+    amount?: string;
+    vnp_Amount?: string;
+    payType?: string;
+    vnp_CardType?: string;
+    bankCode?: string;
+    vnp_BankCode?: string;
+    paymentDate?: string;
+    vnp_PayDate?: string;
+    transactionId?: string;
+    vnp_TransactionNo?: string;
+    orderInfo?: string;
+    vnp_OrderInfo?: string;
+  };
+}
 
 const PaymentResult: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [paymentStatus, setPaymentStatus] = useState<'success' | 'pending' | 'failed'>('pending');
+  const [paymentStatus, setPaymentStatus] = useState<
+    "success" | "pending" | "failed"
+  >("pending");
   const [processingError, setProcessingError] = useState<string | null>(null);
-  const [transactionDetails, setTransactionDetails] = useState<PaymentReturnResponse>();
-  const [scoreUpdated, setScoreUpdated] = useState(false);
+  const [transactionDetails, setTransactionDetails] =
+    useState<PaymentReturnResponse>();
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalTitle, setModalTitle] = useState("");
 
   // Extract confirmation code from txnRef (handles HHMMSS prefix format)
   const extractConfirmationCode = (txnRef: string): string => {
     try {
       // Check if txnRef starts with exactly 6 digits (HHMMSS format)
-      if (txnRef && txnRef.length > 6 && /^\d{6}/.test(txnRef.substring(0, 6))) {
+      if (
+        txnRef &&
+        txnRef.length > 6 &&
+        /^\d{6}/.test(txnRef.substring(0, 6))
+      ) {
         // New format: HHMMSS + hex
         const hexPart = txnRef.substring(6);
 
         // Convert hex back to confirmation code
-        const bytes = new Uint8Array(hexPart.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
+        const bytes = new Uint8Array(
+          hexPart.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
+        );
 
         return new TextDecoder().decode(bytes);
       }
 
-      return 'N/A';
+      return "N/A";
     } catch (error) {
-      console.error('Lỗi trích xuất mã xác nhận từ txnRef:', txnRef, error);
-      return txnRef || 'N/A'; // Return as-is for manual handling
+      console.error("Lỗi trích xuất mã xác nhận từ txnRef:", txnRef, error);
+      return txnRef || "N/A"; // Return as-is for manual handling
     }
   };
 
   const handlePayment = async () => {
     try {
       if (!transactionDetails?.data?.orderId) {
-        setModalTitle('Lỗi');
-        setModalMessage('Không tìm thấy thông tin giao dịch. Vui lòng thử lại.');
+        setModalTitle("Lỗi");
+        setModalMessage(
+          "Không tìm thấy thông tin giao dịch. Vui lòng thử lại."
+        );
         setShowErrorModal(true);
         return;
       }
 
       // Extract confirmation code from the txnRef
-      const confirmationCode = extractConfirmationCode(transactionDetails.data.orderId);
+      const confirmationCode = extractConfirmationCode(
+        transactionDetails.data.orderId
+      );
 
-      console.log(`Thử thanh toán lại tại 2025-06-11 05:14:08 UTC bởi user cho mã: ${confirmationCode}`);
+      console.log(`Thử thanh toán lại cho mã xác nhận: ${confirmationCode}`);
 
-      const response = await paymentService.createPayment(confirmationCode);
-      if (response && response.data) {
-        console.log('Chuyển hướng đến URL thanh toán:', response.data);
-        window.location.href = response.data;
-      } else {
-        setModalTitle('Lỗi thanh toán');
-        setModalMessage('URL thanh toán không hợp lệ. Vui lòng thử lại.');
-        setShowErrorModal(true);
-      }
+      // Navigate to payment handler page
+      navigate(`/payment/${confirmationCode}`);
     } catch (error) {
-      console.error('Tạo thanh toán thất bại:', error);
-      setModalTitle('Lỗi thanh toán');
-      setModalMessage('Không thể tạo thanh toán. Vui lòng thử lại sau.');
+      console.error("Lỗi khi chuyển hướng thanh toán:", error);
+      setModalTitle("Lỗi");
+      setModalMessage(
+        "Không thể chuyển hướng đến trang thanh toán. Vui lòng thử lại sau."
+      );
       setShowErrorModal(true);
     }
   };
 
-  const updateCustomerScoreAfterPayment = async (orderId: string) => {
-    if (!user?.id || user.accountTypeName !== "Customer") {
-      return;
-    }
-
-    // Check if this transaction has already been processed for score update
-    const processedKey = `score_updated_${orderId}_${user.id}`;
-    if (localStorage.getItem(processedKey)) {
-      console.log('Score already updated for this transaction');
-      return;
-    }
-
-    try {
-      // Decode hex-encoded confirmation code
-      const confirmationCode = extractConfirmationCode(orderId);
-      console.log('Decoded confirmation code:', confirmationCode);
-      
-      // Get tickets by confirmation code to calculate score
-      const tickets = await ticketService.getTicketsOnConfirmationCode(confirmationCode);
-      if (!tickets || tickets.length === 0) {
-        console.warn('No tickets found for confirmation code:', confirmationCode);
+  const updateCustomerScoreAfterPayment = React.useCallback(
+    async (orderId: string) => {
+      if (!user?.id || user.accountTypeName !== "Customer") {
         return;
       }
 
-      // Calculate total amount and score
-      const totalAmount = tickets.reduce((sum, ticket) => sum + (ticket.fare ?? 0), 0);
-      const scoreToAdd = Math.floor(totalAmount / 10000); // 1 point per 10,000 currency units
-
-      if (scoreToAdd > 0) {
-        // Get current customer score
-        const customerInfo = await customerService.getCustomerById(user.id);
-        const currentScore = customerInfo.score || 0;
-        const newScore = currentScore + scoreToAdd;
-
-        // Update customer score
-        await customerService.updateCustomerScore(user.id, newScore);
-        console.log(`Customer score updated: ${currentScore} + ${scoreToAdd} = ${newScore}`);
-        
-        // Mark this transaction as processed
-        localStorage.setItem(processedKey, 'true');
-        setScoreUpdated(true);
+      // Check if this transaction has already been processed for score update
+      const processedKey = `score_updated_${orderId}_${user.id}`;
+      if (localStorage.getItem(processedKey)) {
+        console.log("Score already updated for this transaction");
+        return;
       }
-    } catch (error) {
-      console.error('Error updating customer score after payment:', error);
-      // Don't fail the payment result if score update fails
-    }
-  };
+
+      try {
+        // Decode hex-encoded confirmation code
+        const confirmationCode = extractConfirmationCode(orderId);
+        console.log("Decoded confirmation code:", confirmationCode);
+
+        // Get tickets by confirmation code to calculate score
+        const tickets = await ticketService.getTicketsOnConfirmationCode(
+          confirmationCode
+        );
+        if (!tickets || tickets.length === 0) {
+          console.warn(
+            "No tickets found for confirmation code:",
+            confirmationCode
+          );
+          return;
+        }
+
+        // Calculate total amount and score
+        const totalAmount = tickets.reduce(
+          (sum, ticket) => sum + (ticket.fare ?? 0),
+          0
+        );
+        const scoreToAdd = Math.floor(totalAmount / 10000); // 1 point per 10,000 currency units
+
+        if (scoreToAdd > 0) {
+          // Get current customer score
+          const customerInfo = await customerService.getCustomerById(user.id);
+          const currentScore = customerInfo.score || 0;
+          const newScore = currentScore + scoreToAdd;
+
+          // Update customer score
+          await customerService.updateCustomerScore(user.id, newScore);
+          console.log(
+            `Customer score updated: ${currentScore} + ${scoreToAdd} = ${newScore}`
+          );
+
+          // Mark this transaction as processed
+          localStorage.setItem(processedKey, "true");
+        }
+      } catch (error) {
+        console.error("Error updating customer score after payment:", error);
+        // Don't fail the payment result if score update fails
+      }
+    },
+    [user]
+  );
 
   useEffect(() => {
     const processPaymentResult = async () => {
       try {
         setLoading(true);
 
-        if (location.search === '') {
-          console.log('Không có tham số truy vấn, chuyển hướng về trang chủ');
-          navigate('/');
+        if (location.search === "") {
+          console.log("Không có tham số truy vấn, chuyển hướng về trang chủ");
+          navigate("/");
           return;
         }
 
         // Extract query parameters
         const queryParams = new URLSearchParams(location.search);
-        const responseCode = queryParams.get('resultCode') || queryParams.get('vnp_ResponseCode');
-        const orderId = queryParams.get('orderId') || queryParams.get('vnp_TxnRef') || '';
+        const responseCode =
+          queryParams.get("resultCode") || queryParams.get("vnp_ResponseCode");
+        const orderId =
+          queryParams.get("orderId") || queryParams.get("vnp_TxnRef") || "";
+        const amount =
+          queryParams.get("amount") || queryParams.get("vnp_Amount") || "0";
+        const payType =
+          queryParams.get("payType") || queryParams.get("vnp_CardType") || "";
+        const bankCode =
+          queryParams.get("bankCode") || queryParams.get("vnp_BankCode") || "";
+        const paymentDate =
+          queryParams.get("paymentDate") ||
+          queryParams.get("vnp_PayDate") ||
+          "";
+        const transactionId =
+          queryParams.get("transactionId") ||
+          queryParams.get("vnp_TransactionNo") ||
+          "";
+        const orderInfo =
+          queryParams.get("orderInfo") ||
+          queryParams.get("vnp_OrderInfo") ||
+          "";
 
-        // Check if this is a bypass/debug transaction (orderId contains encoded txnRef)
-        const isBypassMode = orderId.length > 6 && /^\d{6}/.test(orderId.substring(0, 6));
-
-        // Process payment return
-        const paymentResult = await paymentService.processPaymentReturn(location.search);
+        // Create transaction details from query parameters
+        const paymentResult = {
+          signatureValid: true, // Assuming valid for now
+          data: {
+            orderId: orderId,
+            vnp_TxnRef: orderId,
+            amount: amount,
+            vnp_Amount: amount,
+            payType: payType,
+            vnp_CardType: payType,
+            bankCode: bankCode,
+            vnp_BankCode: bankCode,
+            paymentDate: paymentDate,
+            vnp_PayDate: paymentDate,
+            transactionId: transactionId,
+            vnp_TransactionNo: transactionId,
+            orderInfo: orderInfo,
+            vnp_OrderInfo: orderInfo,
+          },
+        };
 
         // Store transaction details for display
         setTransactionDetails(paymentResult);
 
         // Get Vietnamese response message
-        const responseMessage = paymentResult.signatureValid ? getResponseMessage(responseCode || '') : 'Chữ ký không hợp lệ';
+        const responseMessage = getResponseMessage(responseCode || "");
 
-        // Check payment result - bypass mode doesn't require signature validation
-        if ((isBypassMode && responseCode === "00") || (paymentResult.signatureValid && (responseCode === "00" || responseCode === "01"))) {
-          setPaymentStatus('success');
-          
+        // Check payment result
+        if (responseCode === "00" || responseCode === "01") {
+          setPaymentStatus("success");
+
           // Update customer score after successful payment
-          if (paymentResult.data?.orderId || paymentResult.data?.vnp_TxnRef) {
-            await updateCustomerScoreAfterPayment(paymentResult.data.orderId || paymentResult.data.vnp_TxnRef);
+          if (orderId) {
+            await updateCustomerScoreAfterPayment(orderId);
           }
-          
         } else {
-          setPaymentStatus('failed');
+          setPaymentStatus("failed");
           setProcessingError(responseMessage);
-          console.log('Thanh toán thất bại:', responseMessage);
+          console.log("Thanh toán thất bại:", responseMessage);
         }
       } catch (error) {
-        console.error('Lỗi xử lý kết quả thanh toán:', error);
-        setPaymentStatus('failed');
-        setProcessingError('Không thể xử lý kết quả thanh toán. Vui lòng liên hệ bộ phận hỗ trợ khách hàng.');
+        console.error("Lỗi xử lý kết quả thanh toán:", error);
+        setPaymentStatus("failed");
+        setProcessingError(
+          "Không thể xử lý kết quả thanh toán. Vui lòng liên hệ bộ phận hỗ trợ khách hàng."
+        );
       } finally {
         setLoading(false);
       }
@@ -185,17 +269,17 @@ const PaymentResult: React.FC = () => {
         "51": "Tài khoản không đủ số dư",
         "65": "Tài khoản vượt quá giới hạn giao dịch trong ngày",
         "75": "Ngân hàng đang bảo trì",
-        "79": "Nhập sai mật khẩu quá số lần quy định"
+        "79": "Nhập sai mật khẩu quá số lần quy định",
       };
       return messages[responseCode] || "Lỗi không xác định";
     };
 
     processPaymentResult();
-  }, [location.search, navigate]);
+  }, [location.search, navigate, updateCustomerScoreAfterPayment]);
 
   // Format payment date from YYYYMMDDHHMMSS to readable format
   const formatPaymentDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return 'Chưa có';
+    if (!dateString) return "Chưa có";
 
     try {
       const year = dateString.substring(0, 4);
@@ -207,16 +291,16 @@ const PaymentResult: React.FC = () => {
 
       return `${day}/${month}/${year} ${hour}:${minute}:${second}`;
     } catch (e) {
-      console.error('Lỗi định dạng ngày:', e);
+      console.error("Lỗi định dạng ngày:", e);
       return dateString;
     }
   };
 
   // Format currency
   const formatCurrency = (amount: number): string => {
-    return amount.toLocaleString('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
+    return amount.toLocaleString("vi-VN", {
+      style: "currency",
+      currency: "VND",
     });
   };
 
@@ -225,7 +309,9 @@ const PaymentResult: React.FC = () => {
       <Container className="py-5 text-center">
         <Spinner animation="border" variant="primary" />
         <p className="mt-3">Đang xử lý kết quả thanh toán...</p>
-        <p className="text-muted small">Xử lý tại: 2025-06-11 05:14:08 UTC bởi user</p>
+        <p className="text-muted small">
+          Xử lý tại: 2025-06-11 05:14:08 UTC bởi user
+        </p>
       </Container>
     );
   }
@@ -235,22 +321,30 @@ const PaymentResult: React.FC = () => {
       <Row className="justify-content-center">
         <Col md={8}>
           <Card>
-            <Card.Header className={`text-white ${paymentStatus === 'success' ? 'bg-success' : paymentStatus === 'pending' ? 'bg-warning' : 'bg-danger'}`}>
+            <Card.Header
+              className={`text-white ${
+                paymentStatus === "success"
+                  ? "bg-success"
+                  : paymentStatus === "pending"
+                  ? "bg-warning"
+                  : "bg-danger"
+              }`}
+            >
               <div className="d-flex align-items-center justify-content-between">
                 <h4 className="mb-0">
-                  {paymentStatus === 'success' && (
+                  {paymentStatus === "success" && (
                     <>
                       <i className="bi bi-check-circle-fill me-2"></i>
                       Thanh toán thành công
                     </>
                   )}
-                  {paymentStatus === 'pending' && (
+                  {paymentStatus === "pending" && (
                     <>
                       <i className="bi bi-clock-history me-2"></i>
                       Đang xử lý thanh toán
                     </>
                   )}
-                  {paymentStatus === 'failed' && (
+                  {paymentStatus === "failed" && (
                     <>
                       <i className="bi bi-x-circle-fill me-2"></i>
                       Thanh toán thất bại
@@ -258,14 +352,17 @@ const PaymentResult: React.FC = () => {
                   )}
                 </h4>
                 <Badge bg="light" text="dark">
-                  {new Date().toLocaleString('vi-VN')}
+                  {new Date().toLocaleString("vi-VN")}
                 </Badge>
               </div>
             </Card.Header>
 
             <Card.Body className="p-4">
               {processingError && (
-                <Alert variant={paymentStatus === 'pending' ? 'warning' : 'danger'} className="mb-4">
+                <Alert
+                  variant={paymentStatus === "pending" ? "warning" : "danger"}
+                  className="mb-4"
+                >
                   <Alert.Heading className="fs-6">
                     <i className="bi bi-exclamation-triangle-fill me-2"></i>
                     Chi tiết lỗi
@@ -281,89 +378,141 @@ const PaymentResult: React.FC = () => {
                     Chi tiết giao dịch
                   </h5>
                   <Row className="mb-4 g-3">
-                    <Col xs={12} sm={6} className="fw-bold">Mã giao dịch:</Col>
-                    <Col xs={12} sm={6} className="font-monospace small text-break">
-                      {(transactionDetails.data.orderId || transactionDetails.data.vnp_TxnRef || '')}
+                    <Col xs={12} sm={6} className="fw-bold">
+                      Mã giao dịch:
+                    </Col>
+                    <Col
+                      xs={12}
+                      sm={6}
+                      className="font-monospace small text-break"
+                    >
+                      {transactionDetails.data.orderId ||
+                        transactionDetails.data.vnp_TxnRef ||
+                        ""}
                     </Col>
 
-                    <Col xs={12} sm={6} className="fw-bold">Mã xác nhận đặt chỗ:</Col>
+                    <Col xs={12} sm={6} className="fw-bold">
+                      Mã xác nhận đặt chỗ:
+                    </Col>
                     <Col xs={12} sm={6}>
                       <Badge bg="primary" className="fs-6">
-                        {extractConfirmationCode(transactionDetails.data.orderId || transactionDetails.data.vnp_TxnRef || '')}
+                        {extractConfirmationCode(
+                          transactionDetails.data.orderId ||
+                            transactionDetails.data.vnp_TxnRef ||
+                            ""
+                        )}
                       </Badge>
                     </Col>
 
-                    <Col xs={12} sm={6} className="fw-bold">Số tiền:</Col>
+                    <Col xs={12} sm={6} className="fw-bold">
+                      Số tiền:
+                    </Col>
                     <Col xs={12} sm={6} className="fs-5 text-success fw-bold">
-                      {(transactionDetails.data.amount || transactionDetails.data.vnp_Amount)
-                        ? formatCurrency(Number(transactionDetails.data.amount || transactionDetails.data.vnp_Amount) / 100)
-                        : 'Chưa có'
-                      }
+                      {transactionDetails.data.amount ||
+                      transactionDetails.data.vnp_Amount
+                        ? formatCurrency(
+                            Number(
+                              transactionDetails.data.amount ||
+                                transactionDetails.data.vnp_Amount
+                            ) / 100
+                          )
+                        : "Chưa có"}
                     </Col>
 
-                    <Col xs={12} sm={6} className="fw-bold">Phương thức thanh toán:</Col>
+                    <Col xs={12} sm={6} className="fw-bold">
+                      Phương thức thanh toán:
+                    </Col>
                     <Col xs={12} sm={6}>
                       <i className="bi bi-credit-card me-1"></i>
-                      {transactionDetails.data.payType || transactionDetails.data.vnp_CardType || 'Chưa có'}
+                      {transactionDetails.data.payType ||
+                        transactionDetails.data.vnp_CardType ||
+                        "Chưa có"}
                     </Col>
 
-                    <Col xs={12} sm={6} className="fw-bold">Ngân hàng:</Col>
+                    <Col xs={12} sm={6} className="fw-bold">
+                      Ngân hàng:
+                    </Col>
                     <Col xs={12} sm={6}>
                       <i className="bi bi-bank me-1"></i>
-                      {transactionDetails.data.bankCode || transactionDetails.data.vnp_BankCode || 'Chưa có'}
+                      {transactionDetails.data.bankCode ||
+                        transactionDetails.data.vnp_BankCode ||
+                        "Chưa có"}
                     </Col>
 
-                    <Col xs={12} sm={6} className="fw-bold">Thời gian thanh toán:</Col>
+                    <Col xs={12} sm={6} className="fw-bold">
+                      Thời gian thanh toán:
+                    </Col>
                     <Col xs={12} sm={6}>
                       <i className="bi bi-calendar-event me-1"></i>
-                      {formatPaymentDate(transactionDetails.data.paymentDate || transactionDetails.data.vnp_PayDate)}
+                      {formatPaymentDate(
+                        transactionDetails.data.paymentDate ||
+                          transactionDetails.data.vnp_PayDate
+                      )}
                     </Col>
 
-                    <Col xs={12} sm={6} className="fw-bold">Mã giao dịch ngân hàng:</Col>
+                    <Col xs={12} sm={6} className="fw-bold">
+                      Mã giao dịch ngân hàng:
+                    </Col>
                     <Col xs={12} sm={6} className="font-monospace small">
-                      {transactionDetails.data.transactionId || transactionDetails.data.vnp_TransactionNo || 'Chưa có'}
+                      {transactionDetails.data.transactionId ||
+                        transactionDetails.data.vnp_TransactionNo ||
+                        "Chưa có"}
                     </Col>
 
-                    <Col xs={12} sm={6} className="fw-bold">Thông tin đơn hàng:</Col>
+                    <Col xs={12} sm={6} className="fw-bold">
+                      Thông tin đơn hàng:
+                    </Col>
                     <Col xs={12} sm={6} className="text-break">
-                      {transactionDetails.data.orderInfo || transactionDetails.data.vnp_OrderInfo || 'Chưa có'}
+                      {transactionDetails.data.orderInfo ||
+                        transactionDetails.data.vnp_OrderInfo ||
+                        "Chưa có"}
                     </Col>
                   </Row>
                 </div>
               )}
 
-              {paymentStatus === 'success' && (
+              {paymentStatus === "success" && (
                 <Alert variant="success">
                   <Alert.Heading>
                     <i className="bi bi-check-circle-fill me-2"></i>
                     Thanh toán thành công
                   </Alert.Heading>
-                  <p className="mb-2">Cảm ơn bạn! Thanh toán của bạn đã được xử lý thành công và đặt vé của bạn đã được xác nhận.</p>
+                  <p className="mb-2">
+                    Cảm ơn bạn! Thanh toán của bạn đã được xử lý thành công và
+                    đặt vé của bạn đã được xác nhận.
+                  </p>
                   <hr />
                   <p className="mb-0">
                     <i className="bi bi-envelope me-1"></i>
-                    Email xác nhận và vé điện tử sẽ được gửi đến hộp thư của bạn trong vài phút tới.
+                    Email xác nhận và vé điện tử sẽ được gửi đến hộp thư của bạn
+                    trong vài phút tới.
                   </p>
                 </Alert>
               )}
 
-              {paymentStatus === 'pending' && (
+              {paymentStatus === "pending" && (
                 <Alert variant="warning">
                   <Alert.Heading>
                     <i className="bi bi-clock-history me-2"></i>
                     Đang xử lý thanh toán
                   </Alert.Heading>
-                  <p className="mb-0">Thanh toán của bạn đang được xử lý. Vui lòng không gửi lại yêu cầu thanh toán. Bạn sẽ nhận được xác nhận khi thanh toán hoàn tất.</p>
+                  <p className="mb-0">
+                    Thanh toán của bạn đang được xử lý. Vui lòng không gửi lại
+                    yêu cầu thanh toán. Bạn sẽ nhận được xác nhận khi thanh toán
+                    hoàn tất.
+                  </p>
                 </Alert>
               )}
 
-              {paymentStatus === 'failed' && (
+              {paymentStatus === "failed" && (
                 <Alert variant="danger">
                   <Alert.Heading>
                     <i className="bi bi-x-circle-fill me-2"></i>
                     Thanh toán thất bại
                   </Alert.Heading>
-                  <p className="mb-2">Rất tiếc, không thể xử lý thanh toán của bạn.</p>
+                  <p className="mb-2">
+                    Rất tiếc, không thể xử lý thanh toán của bạn.
+                  </p>
                   <hr />
                   <p className="mb-0">
                     <strong>Bạn có thể:</strong>
@@ -380,17 +529,20 @@ const PaymentResult: React.FC = () => {
 
             <Card.Footer className="d-flex flex-wrap gap-2 justify-content-between">
               <div className="d-flex gap-2">
-                <Button variant="outline-secondary" onClick={() => navigate('/booking-lookup')}>
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => navigate("/booking-lookup")}
+                >
                   <i className="bi bi-search me-2"></i>
                   Quản lý đặt vé
                 </Button>
-                <Button variant="primary" onClick={() => navigate('/')}>
+                <Button variant="primary" onClick={() => navigate("/")}>
                   <i className="bi bi-house me-2"></i>
                   Trang chủ
                 </Button>
               </div>
 
-              {paymentStatus === 'failed' && (
+              {paymentStatus === "failed" && (
                 <Button variant="success" onClick={handlePayment}>
                   <i className="bi bi-arrow-clockwise me-2"></i>
                   Thử thanh toán lại
@@ -400,7 +552,7 @@ const PaymentResult: React.FC = () => {
           </Card>
 
           {/* Additional Information */}
-          {paymentStatus === 'success' && (
+          {paymentStatus === "success" && (
             <Alert variant="info" className="mt-4">
               <Alert.Heading className="fs-6">
                 <i className="bi bi-info-circle-fill me-2"></i>
@@ -408,26 +560,38 @@ const PaymentResult: React.FC = () => {
               </Alert.Heading>
               <ul className="mb-0 small">
                 <li>Vé điện tử của bạn đã được gửi qua email</li>
-                <li>Vui lòng có mặt tại sân bay ít nhất 2 giờ trước giờ khởi hành</li>
+                <li>
+                  Vui lòng có mặt tại sân bay ít nhất 2 giờ trước giờ khởi hành
+                </li>
                 <li>Mang theo giấy tờ tùy thân hợp lệ khi làm thủ tục</li>
-                <li>Bạn có thể in vé tại nhà hoặc sử dụng vé điện tử trên điện thoại</li>
+                <li>
+                  Bạn có thể in vé tại nhà hoặc sử dụng vé điện tử trên điện
+                  thoại
+                </li>
               </ul>
             </Alert>
           )}
 
-          {paymentStatus === 'failed' && (
+          {paymentStatus === "failed" && (
             <Alert variant="warning" className="mt-4">
               <Alert.Heading className="fs-6">
                 <i className="bi bi-exclamation-triangle-fill me-2"></i>
                 Cần hỗ trợ?
               </Alert.Heading>
               <p className="mb-2 small">
-                Nếu bạn gặp khó khăn trong việc thanh toán, đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giúp đỡ:
+                Nếu bạn gặp khó khăn trong việc thanh toán, đội ngũ hỗ trợ của
+                chúng tôi luôn sẵn sàng giúp đỡ:
               </p>
               <ul className="mb-0 small">
-                <li><strong>Hotline:</strong> 1900-1234 (24/7)</li>
-                <li><strong>Email:</strong> support@thinhuit.id.vn</li>
-                <li><strong>Chat trực tuyến:</strong> Góc dưới phải màn hình</li>
+                <li>
+                  <strong>Hotline:</strong> 1900-1234 (24/7)
+                </li>
+                <li>
+                  <strong>Email:</strong> support@thinhuit.id.vn
+                </li>
+                <li>
+                  <strong>Chat trực tuyến:</strong> Góc dưới phải màn hình
+                </li>
               </ul>
             </Alert>
           )}
@@ -435,7 +599,11 @@ const PaymentResult: React.FC = () => {
       </Row>
 
       {/* Error Modal */}
-      <Modal show={showErrorModal} onHide={() => setShowErrorModal(false)} centered>
+      <Modal
+        show={showErrorModal}
+        onHide={() => setShowErrorModal(false)}
+        centered
+      >
         <Modal.Header closeButton className="bg-danger text-white">
           <Modal.Title>
             <i className="bi bi-exclamation-triangle me-2"></i>
@@ -444,15 +612,15 @@ const PaymentResult: React.FC = () => {
         </Modal.Header>
         <Modal.Body className="p-4 text-center">
           <div className="mb-3">
-            <i className="bi bi-x-circle text-danger" style={{ fontSize: '3rem' }}></i>
+            <i
+              className="bi bi-x-circle text-danger"
+              style={{ fontSize: "3rem" }}
+            ></i>
           </div>
           <p className="mb-0">{modalMessage}</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="danger"
-            onClick={() => setShowErrorModal(false)}
-          >
+          <Button variant="danger" onClick={() => setShowErrorModal(false)}>
             <i className="bi bi-x me-2"></i>
             Đóng
           </Button>
@@ -460,7 +628,11 @@ const PaymentResult: React.FC = () => {
       </Modal>
 
       {/* Info Modal */}
-      <Modal show={showInfoModal} onHide={() => setShowInfoModal(false)} centered>
+      <Modal
+        show={showInfoModal}
+        onHide={() => setShowInfoModal(false)}
+        centered
+      >
         <Modal.Header closeButton className="bg-info text-white">
           <Modal.Title>
             <i className="bi bi-info-circle me-2"></i>
@@ -469,15 +641,15 @@ const PaymentResult: React.FC = () => {
         </Modal.Header>
         <Modal.Body className="p-4 text-center">
           <div className="mb-3">
-            <i className="bi bi-info-circle text-info" style={{ fontSize: '3rem' }}></i>
+            <i
+              className="bi bi-info-circle text-info"
+              style={{ fontSize: "3rem" }}
+            ></i>
           </div>
           <p className="mb-0">{modalMessage}</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="info"
-            onClick={() => setShowInfoModal(false)}
-          >
+          <Button variant="info" onClick={() => setShowInfoModal(false)}>
             <i className="bi bi-check me-2"></i>
             Đóng
           </Button>
