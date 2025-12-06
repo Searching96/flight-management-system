@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@Transactional
 public class FlightTicketClassServiceImpl implements FlightTicketClassService {
 
     private final FlightTicketClassRepository flightTicketClassRepository;

@@ -6,13 +6,11 @@ import com.flightmanagement.mapper.PassengerMapper;
 import com.flightmanagement.repository.PassengerRepository;
 import com.flightmanagement.service.PassengerService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@Transactional
 public class PassengerServiceImpl implements PassengerService {
     
     private final PassengerRepository passengerRepository;

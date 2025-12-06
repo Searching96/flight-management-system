@@ -8,7 +8,6 @@ import com.flightmanagement.mapper.EmployeeMapper;
 import com.flightmanagement.repository.EmployeeRepository;
 import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.service.EmployeeService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +24,6 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeMapper employeeMapper;
 
-    @Autowired
     public EmployeeServiceImpl(EmployeeRepository employeeRepository, AccountRepository accountRepository, EmployeeMapper employeeMapper) {
         this.employeeRepository = employeeRepository;
         this.accountRepository = accountRepository;
