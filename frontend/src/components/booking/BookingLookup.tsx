@@ -109,10 +109,6 @@ const BookingLookup: React.FC = () => {
     }
   };
 
-  const handleCancelBooking = async () => {
-    setShowCancelModal(true);
-  };
-
   const confirmCancelBooking = async () => {
     if (!booking) return;
 
@@ -553,7 +549,7 @@ const BookingLookup: React.FC = () => {
                     {/* {isPaid && (
                       <Col xs={12} md={4}>
                         <Button
-                          onClick={handleCancelBooking}
+                          onClick={() => setShowCancelModal(true)}
                           variant="danger"
                           className="w-100 mb-2"
                         >

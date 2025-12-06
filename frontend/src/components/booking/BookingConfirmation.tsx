@@ -1,14 +1,22 @@
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Alert, Badge, ListGroup } from 'react-bootstrap';
-import { BookingConfirmation as BookingConfirmationType } from '../../services/bookingConfirmationService';
+import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Alert,
+  Badge,
+} from "react-bootstrap";
+import { BookingConfirmation as BookingConfirmationType } from "../../services/bookingConfirmationService";
 
 const BookingConfirmation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   //const { user } = useAuth();
 
-  const { confirmationCode, confirmationData, message } = location.state || {};
+  const { confirmationCode, confirmationData } = location.state || {};
 
   if (!confirmationCode || !confirmationData) {
     return (
@@ -18,9 +26,10 @@ const BookingConfirmation: React.FC = () => {
             <Card>
               <Card.Body className="text-center py-5">
                 <Alert variant="danger" className="mb-4">
-                  Không tìm thấy dữ liệu xác nhận đặt chỗ. Vui lòng kiểm tra thông tin đặt chỗ của bạn.
+                  Không tìm thấy dữ liệu xác nhận đặt chỗ. Vui lòng kiểm tra
+                  thông tin đặt chỗ của bạn.
                 </Alert>
-                <Button onClick={() => navigate('/')} variant="primary">
+                <Button onClick={() => navigate("/")} variant="primary">
                   Về trang chủ
                 </Button>
               </Card.Body>
@@ -32,10 +41,10 @@ const BookingConfirmation: React.FC = () => {
   }
 
   const booking: BookingConfirmationType = confirmationData;
-  const isPaid = booking.tickets.every(ticket => ticket.ticketStatus === 1);
+  const isPaid = booking.tickets.every((ticket) => ticket.ticketStatus === 1);
 
   const handlePrint = () => {
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.innerHTML = `
     @media print {
       /* Remove all margins and padding from page */
@@ -104,12 +113,11 @@ const BookingConfirmation: React.FC = () => {
     // Clean up
     setTimeout(() => {
       document.head.removeChild(style);
-
     }, 1000);
   };
 
   const handlePayment = async () => {
-    navigate('/payment/' + booking.confirmationCode);
+    navigate("/payment/" + booking.confirmationCode);
   };
 
   // const handleScoreUpdate = async () => {
@@ -137,11 +145,20 @@ const BookingConfirmation: React.FC = () => {
                 <div className="display-1 text-success mb-3">✅</div>
                 <h1 className="text-success mb-3">Đặt chỗ thành công!</h1>
                 <div className="mb-3">
-                  <Badge bg={isPaid ? "success" : "warning"} className="fs-5 px-3 py-2">
-                    {isPaid ?
-                      <><i className="bi bi-check-circle me-2"></i>Đã thanh toán</> :
-                      <><i className="bi bi-clock-history me-2"></i>Chờ thanh toán</>
-                    }
+                  <Badge
+                    bg={isPaid ? "success" : "warning"}
+                    className="fs-5 px-3 py-2"
+                  >
+                    {isPaid ? (
+                      <>
+                        <i className="bi bi-check-circle me-2"></i>Đã thanh toán
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-clock-history me-2"></i>Chờ thanh
+                        toán
+                      </>
+                    )}
                   </Badge>
                 </div>
               </Card.Body>
@@ -180,26 +197,41 @@ const BookingConfirmation: React.FC = () => {
                   <Row className="g-4">
                     <Col md={6}>
                       <div className="p-3 bg-light rounded">
-                        <strong className="text-muted d-block mb-2">Chuyến bay:</strong>
-                        <span className="fs-5 fw-bold text-primary">{booking.flightInfo.flightCode}</span>
+                        <strong className="text-muted d-block mb-2">
+                          Chuyến bay:
+                        </strong>
+                        <span className="fs-5 fw-bold text-primary">
+                          {booking.flightInfo.flightCode}
+                        </span>
                       </div>
                     </Col>
                     <Col md={6}>
                       <div className="p-3 bg-light rounded">
-                        <strong className="text-muted d-block mb-2">Tuyến đường:</strong>
-                        <span className="fs-5 fw-bold">{booking.flightInfo.departureCity} → {booking.flightInfo.arrivalCity}</span>
+                        <strong className="text-muted d-block mb-2">
+                          Tuyến đường:
+                        </strong>
+                        <span className="fs-5 fw-bold">
+                          {booking.flightInfo.departureCity} →{" "}
+                          {booking.flightInfo.arrivalCity}
+                        </span>
                       </div>
                     </Col>
                     <Col md={6}>
                       <div className="p-3 bg-light rounded">
-                        <strong className="text-muted d-block mb-2">Khởi hành:</strong>
+                        <strong className="text-muted d-block mb-2">
+                          Khởi hành:
+                        </strong>
                         <div className="fs-6 fw-bold">
-                          {new Date(booking.flightInfo.departureTime).toLocaleDateString('vi-VN')}
+                          {new Date(
+                            booking.flightInfo.departureTime
+                          ).toLocaleDateString("vi-VN")}
                         </div>
                         <div className="text-primary">
-                          {new Date(booking.flightInfo.departureTime).toLocaleTimeString('vi-VN', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
+                          {new Date(
+                            booking.flightInfo.departureTime
+                          ).toLocaleTimeString("vi-VN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
                           })}
                         </div>
                       </div>
@@ -207,14 +239,20 @@ const BookingConfirmation: React.FC = () => {
                     {booking.flightInfo.arrivalTime && (
                       <Col md={6}>
                         <div className="p-3 bg-light rounded">
-                          <strong className="text-muted d-block mb-2">Đến:</strong>
+                          <strong className="text-muted d-block mb-2">
+                            Đến:
+                          </strong>
                           <div className="fs-6 fw-bold">
-                            {new Date(booking.flightInfo.arrivalTime).toLocaleDateString('vi-VN')}
+                            {new Date(
+                              booking.flightInfo.arrivalTime
+                            ).toLocaleDateString("vi-VN")}
                           </div>
                           <div className="text-success">
-                            {new Date(booking.flightInfo.arrivalTime).toLocaleTimeString('vi-VN', { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
+                            {new Date(
+                              booking.flightInfo.arrivalTime
+                            ).toLocaleTimeString("vi-VN", {
+                              hour: "2-digit",
+                              minute: "2-digit",
                             })}
                           </div>
                         </div>
@@ -237,15 +275,21 @@ const BookingConfirmation: React.FC = () => {
                             <Row className="align-items-center">
                               <Col md={8}>
                                 <div className="d-flex align-items-center mb-2">
-                                  <div 
+                                  <div
                                     className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
-                                    style={{ width: '40px', height: '40px', fontSize: '18px', fontWeight: 'bold' }}
+                                    style={{
+                                      width: "40px",
+                                      height: "40px",
+                                      fontSize: "18px",
+                                      fontWeight: "bold",
+                                    }}
                                   >
                                     {index + 1}
                                   </div>
                                   <div>
                                     <h6 className="mb-1 fw-bold">
-                                      {booking.passengers && booking.passengers[index]}
+                                      {booking.passengers &&
+                                        booking.passengers[index]}
                                     </h6>
                                     <div className="text-muted">
                                       <i className="bi bi-geo-alt me-1"></i>
@@ -256,12 +300,21 @@ const BookingConfirmation: React.FC = () => {
                               </Col>
                               <Col md={4} className="text-md-end">
                                 <div className="mb-2">
-                                  <Badge bg={ticket.ticketStatus === 1 ? "success" : "warning"} className="mb-2">
-                                    {ticket.ticketStatus === 1 ? "Đã thanh toán" : "Chờ thanh toán"}
+                                  <Badge
+                                    bg={
+                                      ticket.ticketStatus === 1
+                                        ? "success"
+                                        : "warning"
+                                    }
+                                    className="mb-2"
+                                  >
+                                    {ticket.ticketStatus === 1
+                                      ? "Đã thanh toán"
+                                      : "Chờ thanh toán"}
                                   </Badge>
                                 </div>
                                 <div className="fs-4 fw-bold text-primary">
-                                  {ticket.fare?.toLocaleString('vi-VN')} VND
+                                  {ticket.fare?.toLocaleString("vi-VN")} VND
                                 </div>
                               </Col>
                             </Row>
@@ -281,31 +334,46 @@ const BookingConfirmation: React.FC = () => {
                   <Row className="g-4 mb-4">
                     <Col md={6}>
                       <div className="p-3 bg-light rounded">
-                        <strong className="text-muted d-block mb-2">Ngày đặt:</strong>
+                        <strong className="text-muted d-block mb-2">
+                          Ngày đặt:
+                        </strong>
                         <span className="fs-6 fw-bold">
-                          {new Date(booking.bookingDate).toLocaleDateString('vi-VN')}
+                          {new Date(booking.bookingDate).toLocaleDateString(
+                            "vi-VN"
+                          )}
                         </span>
                       </div>
                     </Col>
                     <Col md={6}>
                       <div className="p-3 bg-light rounded">
-                        <strong className="text-muted d-block mb-2">Tổng hành khách:</strong>
-                        <span className="fs-6 fw-bold">{booking.tickets.length} người</span>
+                        <strong className="text-muted d-block mb-2">
+                          Tổng hành khách:
+                        </strong>
+                        <span className="fs-6 fw-bold">
+                          {booking.tickets.length} người
+                        </span>
                       </div>
                     </Col>
                     <Col md={6}>
                       <div className="p-3 bg-light rounded">
-                        <strong className="text-muted d-block mb-2">Trạng thái thanh toán:</strong>
-                        <Badge bg={isPaid ? "success" : "warning"} className="fs-6 px-3 py-2">
+                        <strong className="text-muted d-block mb-2">
+                          Trạng thái thanh toán:
+                        </strong>
+                        <Badge
+                          bg={isPaid ? "success" : "warning"}
+                          className="fs-6 px-3 py-2"
+                        >
                           {isPaid ? "Đã thanh toán" : "Chờ thanh toán"}
                         </Badge>
                       </div>
                     </Col>
                     <Col md={6}>
                       <div className="p-3 bg-primary text-white rounded">
-                        <strong className="d-block mb-2 opacity-75">Tổng tiền:</strong>
+                        <strong className="d-block mb-2 opacity-75">
+                          Tổng tiền:
+                        </strong>
                         <div className="fs-5 fw-bold">
-                          {booking.totalAmount.toLocaleString('vi-VN')} VND
+                          {booking.totalAmount.toLocaleString("vi-VN")} VND
                         </div>
                       </div>
                     </Col>
@@ -313,7 +381,6 @@ const BookingConfirmation: React.FC = () => {
                 </div>
               </Card.Body>
             </Card>
-
           </div>
 
           {/* Action Buttons - Hidden during print */}
@@ -332,7 +399,7 @@ const BookingConfirmation: React.FC = () => {
                 </Col>
                 <Col xs={12} lg={isPaid ? 4 : 3}>
                   <Button
-                    onClick={() => navigate('/booking-lookup')}
+                    onClick={() => navigate("/booking-lookup")}
                     variant="primary"
                     className="w-100 mb-2"
                   >
@@ -341,7 +408,7 @@ const BookingConfirmation: React.FC = () => {
                 </Col>
                 <Col xs={12} lg={isPaid ? 4 : 3}>
                   <Button
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate("/")}
                     variant="primary"
                     className="w-100 mb-2"
                   >
@@ -371,10 +438,18 @@ const BookingConfirmation: React.FC = () => {
             </Card.Header>
             <Card.Body>
               <ul className="mb-0">
-                <li>Lưu mã xác nhận của bạn: <strong className="text-primary">{booking.confirmationCode}</strong></li>
+                <li>
+                  Lưu mã xác nhận của bạn:{" "}
+                  <strong className="text-primary">
+                    {booking.confirmationCode}
+                  </strong>
+                </li>
                 <li>Có mặt tại sân bay ít nhất 2 tiếng trước giờ khởi hành</li>
                 <li>Mang theo giấy tờ tùy thân hợp lệ và mã xác nhận</li>
-                <li>Bạn có thể quản lý đặt chỗ bằng cách sử dụng nút "Quản lý đặt chỗ" ở trên</li>
+                <li>
+                  Bạn có thể quản lý đặt chỗ bằng cách sử dụng nút "Quản lý đặt
+                  chỗ" ở trên
+                </li>
               </ul>
             </Card.Body>
           </Card>

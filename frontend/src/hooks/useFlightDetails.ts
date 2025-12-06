@@ -66,7 +66,7 @@ export function useFlightDetails() {
           .filter(
             (detail) => detail.mediumAirportId !== 0 && detail.arrivalTime
           )
-          .map(({ index, ...detailWithoutIndex }) => ({
+          .map(({ index: _index, ...detailWithoutIndex }) => ({
             ...detailWithoutIndex,
             flightId: flightId, // Ensure correct flight ID
           }));

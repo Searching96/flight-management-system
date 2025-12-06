@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Container,
   Row,
@@ -64,10 +64,6 @@ const TicketingManagement: React.FC = () => {
   useEffect(() => {
     fetchAllTickets();
   }, []);
-
-  useEffect(() => {
-    filterTickets();
-  }, [tickets, searchTerm, statusFilter, dateFilter]);
 
   const fetchAllTickets = async () => {
     try {
@@ -173,7 +169,7 @@ const TicketingManagement: React.FC = () => {
     }
   };
 
-  const filterTickets = () => {
+  const filterTickets = useCallback(() => {
     let filtered = tickets;
 
     // Filter by search term
@@ -230,7 +226,11 @@ const TicketingManagement: React.FC = () => {
     }
 
     setFilteredTickets(filtered);
-  };
+  }, [tickets, searchTerm, statusFilter, dateFilter]);
+
+  useEffect(() => {
+    filterTickets();
+  }, [filterTickets]);
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString("vi-VN", {
@@ -332,11 +332,7 @@ const TicketingManagement: React.FC = () => {
       const ticketData = await ticketService.getTicketById(
         selectedTicket.ticketId
       );
-      if (
-        ticketData &&
-        ticketData.ticketClassId &&
-        ticketData.flightId
-      ) {
+      if (ticketData && ticketData.ticketClassId && ticketData.flightId) {
         await flightTicketClassService.updateRemainingTickets(
           ticketData.flightId,
           ticketData.ticketClassId,
