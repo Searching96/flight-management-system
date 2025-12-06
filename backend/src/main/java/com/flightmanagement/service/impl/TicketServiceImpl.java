@@ -75,10 +75,11 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    @Transactional
     public TicketDto createTicket(TicketDto ticketDto) {
         Ticket ticket = new Ticket();
+
         ticket.setSeatNumber(ticketDto.getSeatNumber());
-        // ticket.setTicketStatus(ticketDto.getTicketStatus());
         ticket.setPaymentTime(ticketDto.getPaymentTime());
         ticket.setFare(ticketDto.getFare());
         ticket.setConfirmationCode(ticketDto.getConfirmationCode());
@@ -93,24 +94,20 @@ public class TicketServiceImpl implements TicketService {
 
         if (ticketDto.getTicketClassId() != null) {
             TicketClass ticketClass = ticketClassRepository.findById(ticketDto.getTicketClassId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "TicketClass not found with id: " + ticketDto.getTicketClassId()));
+                    .orElseThrow(() -> new RuntimeException("TicketClass not found with id: " + ticketDto.getTicketClassId()));
             ticket.setTicketClass(ticketClass);
         }
 
-        Customer bookingCustomer = null;
+        // For guest bookings (customer ID 0 or null), bookingCustomer remains null
         if (ticketDto.getBookCustomerId() != null && ticketDto.getBookCustomerId() != 0) {
-            bookingCustomer = customerRepository.findById(ticketDto.getBookCustomerId())
+            Customer bookingCustomer = customerRepository.findById(ticketDto.getBookCustomerId())
                     .orElseGet(() -> createCustomerFromAccount(ticketDto.getBookCustomerId()));
             ticket.setBookCustomer(bookingCustomer);
         }
-        // For guest bookings (customer ID 0 or null), bookingCustomer remains null
 
-        Passenger passenger = null;
         if (ticketDto.getPassengerId() != null) {
-            passenger = passengerRepository.findById(ticketDto.getPassengerId())
-                    .orElseThrow(
-                            () -> new RuntimeException("Passenger not found with id: " + ticketDto.getPassengerId()));
+            Passenger passenger = passengerRepository.findById(ticketDto.getPassengerId())
+                    .orElseThrow(() -> new RuntimeException("Passenger not found with id: " + ticketDto.getPassengerId()));
             ticket.setPassenger(passenger);
         }
 
@@ -121,91 +118,9 @@ public class TicketServiceImpl implements TicketService {
     /**
      * Send multi-passenger booking confirmation email
      */
-    private void sendMultiPassengerBookingConfirmation(List<TicketDto> tickets) {
-        try {
-            if (tickets.isEmpty()) {
-                System.err.println("Cannot send booking confirmation: no tickets provided");
-                return;
-            }
-
-            // Get first ticket for common information
-            TicketDto firstTicket = tickets.get(0);
-            
-            // Get flight information
-            Flight flight = flightRepository.findById(firstTicket.getFlightId())
-                    .orElseThrow(() -> new RuntimeException("Flight not found"));
-
-            // Format departure time
-            String formattedDepartureTime = flight.getDepartureTime()
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-
-            // Check if payment is needed
-            boolean needsPayment = firstTicket.getTicketStatus() == null || firstTicket.getTicketStatus() == 0;
-
-            // Calculate total fare
-            BigDecimal totalFare = tickets.stream()
-                    .map(TicketDto::getFare)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            // Build passenger info list
-            List<EmailService.PassengerTicketInfo> passengerInfoList = new ArrayList<>();
-            for (TicketDto ticket : tickets) {
-                Passenger passenger = passengerRepository.findById(ticket.getPassengerId())
-                        .orElse(null);
-                if (passenger != null) {
-                    passengerInfoList.add(new EmailService.PassengerTicketInfo(
-                            passenger.getPassengerName(),
-                            ticket.getSeatNumber(),
-                            ticket.getFare()));
-                }
-            }
-
-            // Determine recipient email and customer name
-            String recipientEmail;
-            String customerName;
-
-            if (firstTicket.getBookCustomerId() != null) {
-                // Customer booking
-                Customer customer = customerRepository.findById(firstTicket.getBookCustomerId())
-                        .orElse(null);
-                if (customer == null || customer.getAccount() == null) {
-                    System.err.println(
-                            "Cannot send booking confirmation: customer or account is null");
-                    return;
-                }
-                recipientEmail = customer.getAccount().getEmail();
-                customerName = customer.getAccount().getAccountName();
-            } else {
-                // Guest booking - send to first passenger's email
-                Passenger firstPassenger = passengerRepository.findById(firstTicket.getPassengerId())
-                        .orElse(null);
-                if (firstPassenger == null || firstPassenger.getEmail() == null) {
-                    System.err.println(
-                            "Cannot send booking confirmation: first passenger or email is null for guest booking");
-                    return;
-                }
-                recipientEmail = firstPassenger.getEmail();
-                customerName = firstPassenger.getPassengerName();
-            }
-
-            // Send consolidated email with all passengers
-            emailService.sendMultiPassengerBookingConfirmation(
-                    recipientEmail,
-                    customerName,
-                    firstTicket.getConfirmationCode(),
-                    flight.getFlightCode(),
-                    flight.getDepartureAirport().getCityName(),
-                    flight.getArrivalAirport().getCityName(),
-                    formattedDepartureTime,
-                    passengerInfoList,
-                    totalFare,
-                    needsPayment);
-
-            System.out.println("Multi-passenger booking confirmation email sent to: " + recipientEmail);
-
-        } catch (Exception e) {
-            System.err.println("Error sending multi-passenger booking confirmation email: " + e.getMessage());
-            throw new RuntimeException("Failed to send booking confirmation email", e);
+    private void sendPassengersBookingConfirmation(List<TicketDto> tickets) {
+        for (TicketDto ticketDto : tickets) {
+            emailService.sendBookingConfirmation(ticketDto);
         }
     }
 
@@ -295,10 +210,10 @@ public class TicketServiceImpl implements TicketService {
 
             // Create ticket
             TicketDto ticketDto = new TicketDto();
+
             ticketDto.setFlightId(bookingDto.getFlightId());
             ticketDto.setTicketClassId(bookingDto.getTicketClassId());
-            // For guest bookings, set customer ID to null instead of 0
-            ticketDto.setBookCustomerId(bookingDto.getCustomerId() == 0 ? null : bookingDto.getCustomerId());
+            ticketDto.setBookCustomerId(bookingDto.getCustomerId()); // can be null for guest
             ticketDto.setPassengerId(existingPassenger.getPassengerId());
             ticketDto.setSeatNumber(seatNumber);
             ticketDto.setFare(flightTicketClass.getSpecifiedFare());
@@ -320,7 +235,7 @@ public class TicketServiceImpl implements TicketService {
         // Send consolidated booking confirmation email for multiple passengers
         if (!bookedTickets.isEmpty()) {
             try {
-                sendMultiPassengerBookingConfirmation(bookedTickets);
+                sendPassengersBookingConfirmation(bookedTickets);
             } catch (Exception e) {
                 System.err.println("Failed to send multi-passenger booking confirmation email: " + e.getMessage());
             }

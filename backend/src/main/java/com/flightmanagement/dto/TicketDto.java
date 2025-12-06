@@ -15,14 +15,24 @@ import java.time.LocalDateTime;
 public class TicketDto {
     
     private Integer ticketId;
+
     private Integer flightId;
+
     private Integer ticketClassId;
+
     private Integer bookCustomerId;
+
     private Integer passengerId;
+
     private String seatNumber;
+
     private Byte ticketStatus;
+
     private LocalDateTime paymentTime;
+
     private BigDecimal fare;
+
     private String confirmationCode;
+
     private String orderId;
 }

@@ -131,9 +131,9 @@ public class DebugController {
             }
 
             // Send confirmation emails (replicate MoMoServiceImpl behavior)
-            if (paidCount > 0) {
-                sendBookingConfirmationEmail(tickets, mockTransactionId, mockTransactionId);
-            }
+//            if (paidCount > 0) {
+//                sendBookingConfirmationEmail(tickets, mockTransactionId, mockTransactionId);
+//            }
 
             Map<String, Object> result = new HashMap<>();
             result.put("confirmationCode", confirmationCode);
@@ -172,70 +172,70 @@ public class DebugController {
      * Send booking confirmation email for the entire booking
      * Replicated from MoMoServiceImpl to match normal payment flow
      */
-    private void sendBookingConfirmationEmail(List<TicketDto> tickets, String orderId, String transId) {
-        try {
-            // Group tickets by passenger for cleaner email structure
-            Map<Integer, List<TicketDto>> ticketsByPassenger = tickets.stream()
-                    .collect(java.util.stream.Collectors.groupingBy(TicketDto::getPassengerId));
-
-            for (Map.Entry<Integer, List<TicketDto>> entry : ticketsByPassenger.entrySet()) {
-                try {
-                    PassengerDto passenger = passengerService.getPassengerById(entry.getKey());
-                    
-                    if (passenger != null && !entry.getValue().isEmpty()) {
-                        TicketDto firstTicket = entry.getValue().get(0);
-                        FlightDto flight = flightService.getFlightById(firstTicket.getFlightId());
-
-                        if (flight != null) {
-                            // Calculate total fare for this passenger's tickets
-                            BigDecimal totalFare = entry.getValue().stream()
-                                    .map(TicketDto::getFare)
-                                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                            // Get seat numbers for this passenger
-                            String seatNumbers = entry.getValue().stream()
-                                    .map(TicketDto::getSeatNumber)
-                                    .collect(java.util.stream.Collectors.joining(", "));
-
-                            // Format departure time
-                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                            String departureTime = flight.getDepartureTime().format(formatter);
-
-                            List<EmailService.PassengerTicketInfo> passengerInfoList = new ArrayList<>();
-                            for (TicketDto ticket : tickets) {
-                                Passenger passengers = passengerRepository.findById(ticket.getPassengerId())
-                                        .orElse(null);
-                                if (passengers != null) {
-                                    passengerInfoList.add(new EmailService.PassengerTicketInfo(
-                                            passenger.getPassengerName(),
-                                            ticket.getSeatNumber(),
-                                            ticket.getFare()));
-                                }
-                            }
-
-                            // Send email to passenger
-                            emailService.sendMultiPassengerBookingConfirmation(
-                                    passenger.getEmail(),
-                                    passenger.getPassengerName(),
-                                    firstTicket.getConfirmationCode(),
-                                    flight.getFlightCode(),
-                                    flight.getDepartureCityName(),
-                                    flight.getArrivalCityName(),
-                                    departureTime,
-                                    passengerInfoList,
-                                    totalFare,
-                                    false // needsPayment = false since payment is complete
-                            );
-
-                            System.out.println("Sent confirmation email to: " + passenger.getEmail());
-                        }
-                    }
-                } catch (Exception e) {
-                    System.err.println("Error sending email to passenger " + entry.getKey() + ": " + e.getMessage());
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Error sending booking confirmation emails: " + e.getMessage());
-        }
-    }
+//    private void sendBookingConfirmationEmail(List<TicketDto> tickets, String orderId, String transId) {
+//        try {
+//            // Group tickets by passenger for cleaner email structure
+//            Map<Integer, List<TicketDto>> ticketsByPassenger = tickets.stream()
+//                    .collect(java.util.stream.Collectors.groupingBy(TicketDto::getPassengerId));
+//
+//            for (Map.Entry<Integer, List<TicketDto>> entry : ticketsByPassenger.entrySet()) {
+//                try {
+//                    PassengerDto passenger = passengerService.getPassengerById(entry.getKey());
+//
+//                    if (passenger != null && !entry.getValue().isEmpty()) {
+//                        TicketDto firstTicket = entry.getValue().get(0);
+//                        FlightDto flight = flightService.getFlightById(firstTicket.getFlightId());
+//
+//                        if (flight != null) {
+//                            // Calculate total fare for this passenger's tickets
+//                            BigDecimal totalFare = entry.getValue().stream()
+//                                    .map(TicketDto::getFare)
+//                                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+//
+//                            // Get seat numbers for this passenger
+//                            String seatNumbers = entry.getValue().stream()
+//                                    .map(TicketDto::getSeatNumber)
+//                                    .collect(java.util.stream.Collectors.joining(", "));
+//
+//                            // Format departure time
+//                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+//                            String departureTime = flight.getDepartureTime().format(formatter);
+//
+//                            List<EmailService.PassengerTicketInfo> passengerInfoList = new ArrayList<>();
+//                            for (TicketDto ticket : tickets) {
+//                                Passenger passengers = passengerRepository.findById(ticket.getPassengerId())
+//                                        .orElse(null);
+//                                if (passengers != null) {
+//                                    passengerInfoList.add(new EmailService.PassengerTicketInfo(
+//                                            passenger.getPassengerName(),
+//                                            ticket.getSeatNumber(),
+//                                            ticket.getFare()));
+//                                }
+//                            }
+//
+//                            // Send email to passenger
+//                            emailService.sendMultiPassengerBookingConfirmation(
+//                                    passenger.getEmail(),
+//                                    passenger.getPassengerName(),
+//                                    firstTicket.getConfirmationCode(),
+//                                    flight.getFlightCode(),
+//                                    flight.getDepartureCityName(),
+//                                    flight.getArrivalCityName(),
+//                                    departureTime,
+//                                    passengerInfoList,
+//                                    totalFare,
+//                                    false // needsPayment = false since payment is complete
+//                            );
+//
+//                            System.out.println("Sent confirmation email to: " + passenger.getEmail());
+//                        }
+//                    }
+//                } catch (Exception e) {
+//                    System.err.println("Error sending email to passenger " + entry.getKey() + ": " + e.getMessage());
+//                }
+//            }
+//        } catch (Exception e) {
+//            System.err.println("Error sending booking confirmation emails: " + e.getMessage());
+//        }
+//    }
 }
