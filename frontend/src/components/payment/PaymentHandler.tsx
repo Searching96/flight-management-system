@@ -1,55 +1,61 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Alert, Spinner, Badge, ListGroup, Modal } from 'react-bootstrap';
-import { BookingConfirmation } from '../../services/bookingConfirmationService';
-import { ticketService, flightService, passengerService, paymentService } from '../../services';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Alert,
+  Spinner,
+  Badge,
+  ListGroup,
+  Modal,
+} from "react-bootstrap";
+import { BookingConfirmation } from "../../services/bookingConfirmationService";
+import { ticketService, flightService, passengerService } from "../../services";
 
 const PaymentHandler: React.FC = () => {
   const { confirmationCode } = useParams<{ confirmationCode: string }>();
   const navigate = useNavigate();
-  
+
   const [booking, setBooking] = useState<BookingConfirmation | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [processingPayment, setProcessingPayment] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalTitle, setModalTitle] = useState("");
 
-  useEffect(() => {
-    if (confirmationCode) {
-      loadBookingDetails();
-    } else {
-      setError('Mã xác nhận không hợp lệ');
-      setLoading(false);
-    }
-  }, [confirmationCode]);
-
-  const loadBookingDetails = async () => {
+  const loadBookingDetails = React.useCallback(async () => {
     if (!confirmationCode) return;
 
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
-      const tickets = await ticketService.getTicketsOnConfirmationCode(confirmationCode);
+      const tickets = await ticketService.getTicketsOnConfirmationCode(
+        confirmationCode
+      );
 
       if (!tickets || tickets.length === 0) {
-        setError('Không tìm thấy đặt chỗ với mã xác nhận này');
+        setError("Không tìm thấy đặt chỗ với mã xác nhận này");
         return;
       }
 
       // Check if booking is already paid
-      const isPaid = tickets.every(ticket => ticket.ticketStatus === 1);
+      const isPaid = tickets.every((ticket) => ticket.ticketStatus === 1);
       if (isPaid) {
-        setError('Đặt chỗ này đã được thanh toán');
+        setError("Đặt chỗ này đã được thanh toán");
         return;
       }
 
       // Check if there are any unpaid tickets
-      const hasUnpaidTickets = tickets.some(ticket => ticket.ticketStatus === 0);
+      const hasUnpaidTickets = tickets.some(
+        (ticket) => ticket.ticketStatus === 0
+      );
       if (!hasUnpaidTickets) {
-        setError('Không có vé nào cần thanh toán');
+        setError("Không có vé nào cần thanh toán");
         return;
       }
 
@@ -59,10 +65,15 @@ const PaymentHandler: React.FC = () => {
       const passengerNames = await Promise.all(
         tickets.map(async (ticket) => {
           try {
-            const passenger = await passengerService.getPassengerById(ticket.passengerId!);
+            const passenger = await passengerService.getPassengerById(
+              ticket.passengerId!
+            );
             return passenger.passengerName;
           } catch (error) {
-            console.error(`Lỗi khi lấy thông tin hành khách ${ticket.passengerId}:`, error);
+            console.error(
+              `Lỗi khi lấy thông tin hành khách ${ticket.passengerId}:`,
+              error
+            );
             return `Hành khách ${ticket.passengerId}`;
           }
         })
@@ -70,7 +81,7 @@ const PaymentHandler: React.FC = () => {
 
       // Calculate total for unpaid tickets only
       const totalAmount = tickets
-        .filter(ticket => ticket.ticketStatus === 0)
+        .filter((ticket) => ticket.ticketStatus === 0)
         .reduce((sum, ticket) => sum + (ticket.fare || 0), 0);
 
       const bookingData: BookingConfirmation = {
@@ -80,38 +91,47 @@ const PaymentHandler: React.FC = () => {
         passengers: passengerNames,
         totalAmount: totalAmount,
         flightInfo: {
-          flightCode: flight.flightCode || '',
-          departureTime: flight.departureTime || '',
-          arrivalTime: flight.arrivalTime || '',
-          departureCity: flight.departureCityName || '',
-          arrivalCity: flight.arrivalCityName || ''
-        }
+          flightCode: flight.flightCode || "",
+          departureTime: flight.departureTime || "",
+          arrivalTime: flight.arrivalTime || "",
+          departureCity: flight.departureCityName || "",
+          arrivalCity: flight.arrivalCityName || "",
+        },
       };
 
       setBooking(bookingData);
     } catch (err: any) {
-      console.error('Lỗi khi tải thông tin đặt chỗ:', err);
-      setError('Không thể tải thông tin đặt chỗ. Vui lòng thử lại sau.');
+      console.error("Lỗi khi tải thông tin đặt chỗ:", err);
+      setError("Không thể tải thông tin đặt chỗ. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [confirmationCode]);
+
+  useEffect(() => {
+    if (confirmationCode) {
+      loadBookingDetails();
+    } else {
+      setError("Mã xác nhận không hợp lệ");
+      setLoading(false);
+    }
+  }, [confirmationCode, loadBookingDetails]);
 
   // Generate txnRef in the same format as backend (HHMMSS + hex-encoded confirmationCode)
   const generateTxnRef = (confirmationCode: string): string => {
     // Get current time as HHMMSS (24-hour format)
     const now = new Date();
-    const timePrefix = 
-      now.getHours().toString().padStart(2, '0') +
-      now.getMinutes().toString().padStart(2, '0') +
-      now.getSeconds().toString().padStart(2, '0');
+    const timePrefix =
+      now.getHours().toString().padStart(2, "0") +
+      now.getMinutes().toString().padStart(2, "0") +
+      now.getSeconds().toString().padStart(2, "0");
 
     // Convert confirmation code to hex
     const encoder = new TextEncoder();
     const bytes = encoder.encode(confirmationCode);
     const hexConfirmationCode = Array.from(bytes)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
 
     // Combine time prefix with hex confirmation code
     const txnRef = timePrefix + hexConfirmationCode;
@@ -130,26 +150,31 @@ const PaymentHandler: React.FC = () => {
 
     try {
       setProcessingPayment(true);
-      
+
       // BYPASS MODE: Call debug endpoint to mark as paid
-      console.log('BYPASS MODE: Calling debug endpoint to bypass payment');
-      const bypassResponse = await fetch(`/api/debug/bypass-payment/${booking.confirmationCode}`, {
-        method: 'POST',
-      });
+      console.log("BYPASS MODE: Calling debug endpoint to bypass payment");
+      const bypassResponse = await fetch(
+        `/api/debug/bypass-payment/${booking.confirmationCode}`,
+        {
+          method: "POST",
+        }
+      );
 
       if (bypassResponse.ok) {
         const result = await bypassResponse.json();
-        console.log('Payment bypassed successfully:', result);
-        
+        console.log("Payment bypassed successfully:", result);
+
         // Generate properly encoded txnRef matching backend format
         const txnRef = generateTxnRef(booking.confirmationCode);
-        
+
         // Redirect to success page with mock parameters (use txnRef as orderId for consistency)
-        const successUrl = `/payment-result?resultCode=00&vnp_ResponseCode=00&vnp_TxnRef=${txnRef}&vnp_Amount=${booking.totalAmount * 100}&orderId=${txnRef}`;
+        const successUrl = `/payment-result?resultCode=00&vnp_ResponseCode=00&vnp_TxnRef=${txnRef}&vnp_Amount=${
+          booking.totalAmount * 100
+        }&orderId=${txnRef}`;
         navigate(successUrl);
       } else {
-        setModalTitle('Lỗi thanh toán');
-        setModalMessage('Không thể bypass thanh toán. Vui lòng thử lại.');
+        setModalTitle("Lỗi thanh toán");
+        setModalMessage("Không thể bypass thanh toán. Vui lòng thử lại.");
         setShowErrorModal(true);
       }
 
@@ -160,9 +185,9 @@ const PaymentHandler: React.FC = () => {
       //   window.location.href = response.data;
       // }
     } catch (error) {
-      console.error('Bypass thanh toán thất bại:', error);
-      setModalTitle('Lỗi thanh toán');
-      setModalMessage('Không thể xử lý thanh toán. Vui lòng thử lại sau.');
+      console.error("Bypass thanh toán thất bại:", error);
+      setModalTitle("Lỗi thanh toán");
+      setModalMessage("Không thể xử lý thanh toán. Vui lòng thử lại sau.");
       setShowErrorModal(true);
     } finally {
       setProcessingPayment(false);
@@ -171,24 +196,24 @@ const PaymentHandler: React.FC = () => {
 
   const formatDateTime = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleString('vi-VN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'Asia/Ho_Chi_Minh'
+      return new Date(dateString).toLocaleString("vi-VN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Ho_Chi_Minh",
       });
     } catch (error) {
-      console.error('Lỗi định dạng thời gian:', error);
+      console.error("Lỗi định dạng thời gian:", error);
       return dateString;
     }
   };
 
   const formatCurrency = (amount: number) => {
-    return amount.toLocaleString('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
+    return amount.toLocaleString("vi-VN", {
+      style: "currency",
+      currency: "VND",
     });
   };
 
@@ -199,7 +224,9 @@ const PaymentHandler: React.FC = () => {
           <span className="visually-hidden">Đang tải...</span>
         </Spinner>
         <p className="mt-3">Đang tải thông tin đặt chỗ...</p>
-        <p className="text-muted small">Xử lý tại: 2025-06-11 05:14:08 UTC bởi user</p>
+        <p className="text-muted small">
+          Xử lý tại: 2025-06-11 05:14:08 UTC bởi user
+        </p>
       </Container>
     );
   }
@@ -221,11 +248,17 @@ const PaymentHandler: React.FC = () => {
                   {error}
                 </Alert>
                 <div className="d-flex gap-3 justify-content-center">
-                  <Button variant="primary" onClick={() => navigate('/booking-lookup')}>
+                  <Button
+                    variant="primary"
+                    onClick={() => navigate("/booking-lookup")}
+                  >
                     <i className="bi bi-search me-2"></i>
                     Tìm kiếm đặt chỗ
                   </Button>
-                  <Button variant="outline-secondary" onClick={() => navigate('/')}>
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => navigate("/")}
+                  >
                     <i className="bi bi-house me-2"></i>
                     Về trang chủ
                   </Button>
@@ -254,8 +287,12 @@ const PaymentHandler: React.FC = () => {
   }
 
   // Calculate unpaid tickets
-  const unpaidTickets = booking.tickets.filter(ticket => ticket.ticketStatus === 0);
-  const paidTickets = booking.tickets.filter(ticket => ticket.ticketStatus === 1);
+  const unpaidTickets = booking.tickets.filter(
+    (ticket) => ticket.ticketStatus === 0
+  );
+  const paidTickets = booking.tickets.filter(
+    (ticket) => ticket.ticketStatus === 1
+  );
 
   return (
     <Container className="py-5">
@@ -267,18 +304,24 @@ const PaymentHandler: React.FC = () => {
               <i className="bi bi-credit-card me-2"></i>
               Thanh toán đặt chỗ
             </h1>
-            <p className="text-muted">Hoàn tất thanh toán để xác nhận đặt chỗ của bạn</p>
+            <p className="text-muted">
+              Hoàn tất thanh toán để xác nhận đặt chỗ của bạn
+            </p>
           </div>
 
           {/* Payment Status Alert */}
           <Alert variant="warning" className="mb-4">
             <div className="d-flex align-items-center">
-              <i className="bi bi-clock-history me-3" style={{ fontSize: '1.5rem' }}></i>
+              <i
+                className="bi bi-clock-history me-3"
+                style={{ fontSize: "1.5rem" }}
+              ></i>
               <div>
                 <h6 className="mb-1">Thanh toán đang chờ xử lý</h6>
                 <small>
                   Có {unpaidTickets.length} vé cần thanh toán
-                  {paidTickets.length > 0 && ` (${paidTickets.length} vé đã thanh toán)`}
+                  {paidTickets.length > 0 &&
+                    ` (${paidTickets.length} vé đã thanh toán)`}
                 </small>
               </div>
             </div>
@@ -307,13 +350,15 @@ const PaymentHandler: React.FC = () => {
                 <Row className="g-3">
                   <Col sm={6}>
                     <strong>Chuyến bay:</strong>
-                    <div className="fs-5 text-primary">{booking.flightInfo.flightCode}</div>
+                    <div className="fs-5 text-primary">
+                      {booking.flightInfo.flightCode}
+                    </div>
                   </Col>
                   <Col sm={6}>
                     <strong>Tuyến đường:</strong>
                     <div className="fs-5">
                       <i className="bi bi-geo-alt me-1"></i>
-                      {booking.flightInfo.departureCity} 
+                      {booking.flightInfo.departureCity}
                       <i className="bi bi-arrow-right mx-2"></i>
                       {booking.flightInfo.arrivalCity}
                     </div>
@@ -347,9 +392,11 @@ const PaymentHandler: React.FC = () => {
                   {booking.tickets.map((ticket, index) => {
                     const isUnpaid = ticket.ticketStatus === 0;
                     return (
-                      <ListGroup.Item 
-                        key={index} 
-                        className={`d-flex justify-content-between align-items-center ${isUnpaid ? 'border-warning' : 'border-success'}`}
+                      <ListGroup.Item
+                        key={index}
+                        className={`d-flex justify-content-between align-items-center ${
+                          isUnpaid ? "border-warning" : "border-success"
+                        }`}
                       >
                         <div>
                           <strong>
@@ -359,8 +406,8 @@ const PaymentHandler: React.FC = () => {
                           <div className="text-muted">
                             <i className="bi bi-geo-alt me-1"></i>
                             Ghế: {ticket.seatNumber}
-                            <Badge 
-                              bg={isUnpaid ? "warning" : "success"} 
+                            <Badge
+                              bg={isUnpaid ? "warning" : "success"}
                               className="ms-2"
                             >
                               {isUnpaid ? "Chờ thanh toán" : "Đã thanh toán"}
@@ -368,7 +415,10 @@ const PaymentHandler: React.FC = () => {
                           </div>
                         </div>
                         <div className="text-end">
-                          <Badge bg={isUnpaid ? "primary" : "secondary"} className="fs-6">
+                          <Badge
+                            bg={isUnpaid ? "primary" : "secondary"}
+                            className="fs-6"
+                          >
                             {formatCurrency(ticket.fare || 0)}
                           </Badge>
                         </div>
@@ -388,7 +438,8 @@ const PaymentHandler: React.FC = () => {
                     </h5>
                     <small className="text-muted">
                       {unpaidTickets.length} vé chưa thanh toán
-                      {paidTickets.length > 0 && ` • ${paidTickets.length} vé đã thanh toán`}
+                      {paidTickets.length > 0 &&
+                        ` • ${paidTickets.length} vé đã thanh toán`}
                     </small>
                   </Col>
                   <Col xs="auto">
@@ -398,7 +449,13 @@ const PaymentHandler: React.FC = () => {
                       </div>
                       {paidTickets.length > 0 && (
                         <small className="text-muted">
-                          Tổng ban đầu: {formatCurrency(booking.tickets.reduce((sum, ticket) => sum + (ticket.fare || 0), 0))}
+                          Tổng ban đầu:{" "}
+                          {formatCurrency(
+                            booking.tickets.reduce(
+                              (sum, ticket) => sum + (ticket.fare || 0),
+                              0
+                            )
+                          )}
                         </small>
                       )}
                     </div>
@@ -416,28 +473,26 @@ const PaymentHandler: React.FC = () => {
                 Sẵn sàng thanh toán?
               </h5>
               <p className="text-muted mb-4">
-                Bạn sẽ được chuyển hướng đến cổng thanh toán MoMo an toàn để hoàn tất giao dịch.
+                Bạn sẽ được chuyển hướng đến cổng thanh toán MoMo an toàn để
+                hoàn tất giao dịch.
                 <br />
                 <small>Thời gian tạo: 2025-06-11 05:14:08 UTC</small>
               </p>
-              
+
               <div className="d-flex gap-3 justify-content-center flex-wrap">
                 <Button
                   variant="outline-secondary"
-                  onClick={() => navigate('/booking-lookup')}
+                  onClick={() => navigate("/booking-lookup")}
                 >
                   <i className="bi bi-search me-2"></i>
                   Quản lý đặt chỗ
                 </Button>
-                
-                <Button
-                  variant="outline-primary"
-                  onClick={() => navigate('/')}
-                >
+
+                <Button variant="outline-primary" onClick={() => navigate("/")}>
                   <i className="bi bi-house me-2"></i>
                   Trang chủ
                 </Button>
-                
+
                 <Button
                   variant="success"
                   size="lg"
@@ -475,10 +530,21 @@ const PaymentHandler: React.FC = () => {
               Lưu ý quan trọng
             </Alert.Heading>
             <ul className="mb-0 small">
-              <li>Vui lòng hoàn tất thanh toán trước thời gian khởi hành ít nhất 2 giờ</li>
-              <li>Sau khi thanh toán thành công, bạn sẽ nhận được email xác nhận tự động</li>
-              <li>Vé điện tử sẽ được gửi qua email sau khi thanh toán thành công</li>
-              <li>Nếu gặp vấn đề, vui lòng liên hệ hotline: 1900-1234 hoặc support@thinhuit.id.vn</li>
+              <li>
+                Vui lòng hoàn tất thanh toán trước thời gian khởi hành ít nhất 2
+                giờ
+              </li>
+              <li>
+                Sau khi thanh toán thành công, bạn sẽ nhận được email xác nhận
+                tự động
+              </li>
+              <li>
+                Vé điện tử sẽ được gửi qua email sau khi thanh toán thành công
+              </li>
+              <li>
+                Nếu gặp vấn đề, vui lòng liên hệ hotline: 1900-1234 hoặc
+                support@thinhuit.id.vn
+              </li>
               <li>Giao dịch có hiệu lực trong 15 phút kể từ khi tạo</li>
             </ul>
           </Alert>
@@ -486,7 +552,11 @@ const PaymentHandler: React.FC = () => {
       </Row>
 
       {/* Error Modal */}
-      <Modal show={showErrorModal} onHide={() => setShowErrorModal(false)} centered>
+      <Modal
+        show={showErrorModal}
+        onHide={() => setShowErrorModal(false)}
+        centered
+      >
         <Modal.Header closeButton className="bg-danger text-white">
           <Modal.Title>
             <i className="bi bi-exclamation-triangle me-2"></i>
@@ -495,15 +565,15 @@ const PaymentHandler: React.FC = () => {
         </Modal.Header>
         <Modal.Body className="p-4 text-center">
           <div className="mb-3">
-            <i className="bi bi-x-circle text-danger" style={{ fontSize: '3rem' }}></i>
+            <i
+              className="bi bi-x-circle text-danger"
+              style={{ fontSize: "3rem" }}
+            ></i>
           </div>
           <p className="mb-0">{modalMessage}</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="danger"
-            onClick={() => setShowErrorModal(false)}
-          >
+          <Button variant="danger" onClick={() => setShowErrorModal(false)}>
             <i className="bi bi-x me-2"></i>
             Đóng
           </Button>

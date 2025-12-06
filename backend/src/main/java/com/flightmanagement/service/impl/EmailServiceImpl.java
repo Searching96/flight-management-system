@@ -2,7 +2,6 @@ package com.flightmanagement.service.impl;
 
 import com.flightmanagement.service.EmailService;
 import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -12,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 public class EmailServiceImpl implements EmailService {
@@ -1024,5 +1024,324 @@ public class EmailServiceImpl implements EmailService {
         } catch (Exception e) {
             throw new RuntimeException("Gửi email thông tin nhân viên thất bại", e);
         }
+    }
+
+    /**
+     * Send booking confirmation email for multiple passengers
+     */
+    @Override
+    public void sendMultiPassengerBookingConfirmation(String to, String customerName, String confirmationCode,
+            String flightCode, String departureCity, String arrivalCity,
+            String departureTime, List<PassengerTicketInfo> passengers,
+            BigDecimal totalFare, boolean needsPayment) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setSubject("🎫 Xác nhận đặt vé cho " + passengers.size() + " hành khách - " + confirmationCode);
+
+            String currentTime = Instant.now().atZone(ZoneOffset.UTC).format(EMAIL_DATETIME_FORMAT);
+            String paymentStatus = needsPayment ? "⏱️ Chờ thanh toán" : "✅ Đã thanh toán";
+
+            // Build passenger list for plain text
+            StringBuilder passengerListPlainText = new StringBuilder();
+            for (int i = 0; i < passengers.size(); i++) {
+                EmailService.PassengerTicketInfo p = passengers.get(i);
+                passengerListPlainText.append(String.format("""
+                        
+                        Hành khách %d:
+                        - Tên: %s
+                        - Số ghế: %s
+                        - Giá vé: %s VND
+                        """, (i + 1), p.getPassengerName(), p.getSeatNumber(), p.getFare()));
+            }
+
+            String paymentSection = needsPayment ? String.format("""
+
+                    ⚠️ YÊU CẦU THANH TOÁN:
+                    ======================
+                    Các vé này cần thanh toán để được xác nhận.
+                    Vui lòng hoàn tất thanh toán tại: %s/payment/%s
+
+                    Lưu ý: Vé chưa thanh toán có thể bị hủy tự động.
+                    """, frontendUrl, confirmationCode) : "";
+
+            // Plain text version
+            String plainTextContent = String.format("""
+                    ✈️ FLIGHT MANAGEMENT - XÁC NHẬN ĐẶT VÉ
+                    ========================================
+
+                    Kính chào %s!
+
+                    🎫 ĐẶT VÉ THÀNH CÔNG CHO %d HÀNH KHÁCH!
+
+                    Các vé máy bay đã được đặt thành công. Dưới đây là thông tin chi tiết:
+
+                    📋 THÔNG TIN CHUNG:
+                    ===================
+                    Mã xác nhận: %s
+                    Khách hàng đặt vé: %s
+                    Chuyến bay: %s
+                    Tuyến đường: %s → %s
+                    Khởi hành: %s
+                    Số lượng hành khách: %d
+                    Tổng giá vé: %s VND
+                    Trạng thái: %s
+
+                    👥 THÔNG TIN HÀNH KHÁCH:
+                    ========================%s
+                    %s
+                    ✈️ CHUẨN BỊ CHO CHUYẾN BAY:
+                    ============================
+                    • Có mặt tại sân bay ít nhất 2 tiếng trước giờ khởi hành
+                    • Mỗi hành khách mang theo giấy tờ tùy thân hợp lệ (CCCD/Hộ chiếu)
+                    • In vé điện tử hoặc lưu mã xác nhận trên điện thoại
+                    • Kiểm tra quy định hành lý của hãng bay
+
+                    📱 QUẢN LÝ ĐẶT CHỖ:
+                    ====================
+                    Truy cập: %s/booking-lookup
+                    Nhập mã xác nhận: %s
+
+                    ⚠️ QUAN TRỌNG:
+                    Vui lòng lưu mã xác nhận này để tra cứu và quản lý đặt chỗ.
+
+                    📞 HỖ TRỢ KHÁCH HÀNG:
+                    =====================
+                    Email: support@thinhuit.id.vn
+                    Hotline: 1900-1234 (24/7)
+                    Website: %s
+
+                    Cảm ơn bạn đã chọn Flight Management!
+
+                    ==========================================
+                    ✈️ Đội ngũ Flight Management
+                    Bảo mật • Tin cậy • Hiệu quả
+                    Email được gửi vào: %s UTC
+                    ==========================================
+
+                    Đây là email tự động. Vui lòng không trả lời email này.
+                    """, customerName, passengers.size(), confirmationCode, customerName, flightCode,
+                    departureCity, arrivalCity, departureTime, passengers.size(), totalFare, paymentStatus,
+                    passengerListPlainText.toString(), paymentSection, frontendUrl, confirmationCode,
+                    frontendUrl, currentTime);
+
+            // HTML version
+            String htmlContent = generateMultiPassengerHtml(customerName, confirmationCode, flightCode,
+                    departureCity, arrivalCity, departureTime, passengers, totalFare, needsPayment, currentTime);
+
+            helper.setText(plainTextContent, htmlContent);
+            mailSender.send(mimeMessage);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Gửi email xác nhận đặt vé cho nhiều hành khách thất bại", e);
+        }
+    }
+
+    /**
+     * Generate HTML content for multi-passenger booking confirmation
+     */
+    private String generateMultiPassengerHtml(String customerName, String confirmationCode,
+            String flightCode, String departureCity, String arrivalCity,
+            String departureTime, List<EmailService.PassengerTicketInfo> passengers,
+            BigDecimal totalFare, boolean needsPayment, String currentTime) {
+
+        String paymentButton = "";
+        String paymentWarning = "";
+        String statusColor = needsPayment ? "#ffc107" : "#28a745";
+        String statusTextColor = needsPayment ? "black" : "white";
+        String statusText = needsPayment ? "⏱️ Chờ thanh toán" : "✅ Đã thanh toán";
+
+        if (needsPayment) {
+            String paymentLink = frontendUrl + "/payment/" + confirmationCode;
+            paymentButton = String.format("""
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="%s"
+                           style="display: inline-block; padding: 15px 30px;
+                                  background: linear-gradient(135deg, #28a745 0%%, #20c997 100%%);
+                                  color: #ffffff; text-decoration: none; border-radius: 8px;
+                                  font-weight: bold; font-size: 16px;
+                                  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);">
+                            💳 Hoàn tất thanh toán - %s VND
+                        </a>
+                    </div>
+                    """, paymentLink, totalFare);
+
+            paymentWarning = """
+                    <div style="text-align: center; color: #dc3545; font-weight: bold;
+                              margin: 20px 0; background-color: #f8d7da; padding: 15px;
+                              border-radius: 6px; border: 1px solid #f5c6cb;">
+                        <p style="margin: 0 0 10px 0;">
+                            ⚠️ Yêu cầu thanh toán: Các vé này cần thanh toán để được xác nhận.
+                        </p>
+                        <p style="margin: 0; font-size: 14px;">
+                            Vé chưa thanh toán có thể bị hủy tự động.
+                        </p>
+                    </div>
+                    """;
+        }
+
+        // Build passenger rows HTML
+        StringBuilder passengerRowsHtml = new StringBuilder();
+        for (int i = 0; i < passengers.size(); i++) {
+            EmailService.PassengerTicketInfo p = passengers.get(i);
+            String rowBg = (i % 2 == 0) ? "#f8f9fa" : "#ffffff";
+            passengerRowsHtml.append(String.format("""
+                    <tr style="background-color: %s;">
+                        <td style="padding: 15px; border-bottom: 1px solid #dee2e6; text-align: center; font-weight: bold;">%d</td>
+                        <td style="padding: 15px; border-bottom: 1px solid #dee2e6;">%s</td>
+                        <td style="padding: 15px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                            <span style="background-color: #007bff; color: white; padding: 6px 12px; border-radius: 12px; font-weight: bold;">%s</span>
+                        </td>
+                        <td style="padding: 15px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold; color: #28a745;">%s VND</td>
+                    </tr>
+                    """, rowBg, (i + 1), p.getPassengerName(), p.getSeatNumber(), p.getFare()));
+        }
+
+        return String.format(
+                """
+                         <!DOCTYPE html>
+                         <html>
+                         <head>
+                             <meta charset="UTF-8">
+                             <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                             <title>Xác nhận đặt vé - %s</title>
+                         </head>
+                         <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+                             <div style="max-width: 700px; margin: 0 auto; background-color: #ffffff;">
+                        \s
+                                 <!-- Header -->
+                                 <div style="background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); padding: 30px; text-align: center;">
+                                     <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">
+                                         ✈️ Flight Management
+                                     </h1>
+                                     <p style="color: #ffffff; margin: 10px 0 0 0; opacity: 0.9;">
+                                         Xác nhận đặt vé cho %d hành khách
+                                     </p>
+                                     <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0; font-size: 12px;">
+                                         Đặt vé: %s UTC
+                                     </p>
+                                 </div>
+                        \s
+                                 <!-- Success Message -->
+                                 <div style="padding: 30px; text-align: center; background-color: #d4edda; border-bottom: 1px solid #c3e6cb;">
+                                     <div style="font-size: 48px; margin-bottom: 15px;">🎫</div>
+                                     <h2 style="color: #155724; margin: 0 0 15px 0;">Đặt vé thành công!</h2>
+                                     <p style="color: #155724; margin: 0;">
+                                         Kính chào %s, %d vé máy bay đã được đặt thành công
+                                     </p>
+                                     <div style="margin: 15px 0;">
+                                         <span style="background-color: %s; color: %s; padding: 10px 20px; border-radius: 25px; font-weight: bold; font-size: 14px;">
+                                             %s
+                                         </span>
+                                     </div>
+                                 </div>
+                        \s
+                                 %s
+                                 %s
+                        \s
+                                 <!-- Booking Information -->
+                                 <div style="padding: 30px;">
+                                     <h3 style="color: #007bff; margin-bottom: 20px; font-size: 18px; border-bottom: 2px solid #007bff; padding-bottom: 10px;">
+                                         🎫 Thông tin đặt vé
+                                     </h3>
+                        \s
+                                     <table style="width: 100%%; border-collapse: collapse; margin-bottom: 30px; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden;">
+                                         <tr style="background-color: #f8f9fa;">
+                                             <td style="padding: 15px; border-bottom: 1px solid #dee2e6; font-weight: bold; width: 35%%;">Mã xác nhận:</td>
+                                             <td style="padding: 15px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 16px; font-weight: bold; color: #007bff;">%s</td>
+                                         </tr>
+                                         <tr>
+                                             <td style="padding: 15px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Khách hàng:</td>
+                                             <td style="padding: 15px; border-bottom: 1px solid #dee2e6;">%s</td>
+                                         </tr>
+                                         <tr style="background-color: #f8f9fa;">
+                                             <td style="padding: 15px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Chuyến bay:</td>
+                                             <td style="padding: 15px; border-bottom: 1px solid #dee2e6; font-weight: bold; color: #007bff;">%s</td>
+                                         </tr>
+                                         <tr>
+                                             <td style="padding: 15px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Tuyến đường:</td>
+                                             <td style="padding: 15px; border-bottom: 1px solid #dee2e6;">%s → %s</td>
+                                         </tr>
+                                         <tr style="background-color: #f8f9fa;">
+                                             <td style="padding: 15px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Khởi hành:</td>
+                                             <td style="padding: 15px; border-bottom: 1px solid #dee2e6;">%s</td>
+                                         </tr>
+                                         <tr>
+                                             <td style="padding: 15px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Số lượng hành khách:</td>
+                                             <td style="padding: 15px; border-bottom: 1px solid #dee2e6; font-weight: bold; color: #007bff;">%d người</td>
+                                         </tr>
+                                         <tr style="background-color: #d4edda;">
+                                             <td style="padding: 15px; font-weight: bold; font-size: 16px;">Tổng giá vé:</td>
+                                             <td style="padding: 15px; font-size: 18px; font-weight: bold; color: #28a745;">%s VND</td>
+                                         </tr>
+                                     </table>
+                        \s
+                                     <!-- Passenger Details -->
+                                     <h3 style="color: #007bff; margin: 30px 0 20px 0; font-size: 18px; border-bottom: 2px solid #007bff; padding-bottom: 10px;">
+                                         👥 Thông tin hành khách
+                                     </h3>
+                        \s
+                                     <table style="width: 100%%; border-collapse: collapse; margin-bottom: 30px; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden;">
+                                         <thead>
+                                             <tr style="background-color: #007bff; color: white;">
+                                                 <th style="padding: 15px; text-align: center; width: 10%%;">STT</th>
+                                                 <th style="padding: 15px; text-align: left; width: 40%%;">Tên hành khách</th>
+                                                 <th style="padding: 15px; text-align: center; width: 25%%;">Số ghế</th>
+                                                 <th style="padding: 15px; text-align: right; width: 25%%;">Giá vé</th>
+                                             </tr>
+                                         </thead>
+                                         <tbody>
+                                             %s
+                                         </tbody>
+                                     </table>
+                        \s
+                                     <!-- Preparation Instructions -->
+                                     <h4 style="color: #007bff; margin: 30px 0 15px 0;">✈️ Chuẩn bị cho chuyến bay</h4>
+                                     <ul style="color: #666; line-height: 1.8; margin: 0; padding-left: 20px;">
+                                         <li>Có mặt tại sân bay <strong>ít nhất 2 tiếng trước</strong> giờ khởi hành</li>
+                                         <li>Mỗi hành khách mang theo <strong>giấy tờ tùy thân hợp lệ</strong> (CCCD/Hộ chiếu)</li>
+                                         <li>In vé điện tử hoặc lưu mã xác nhận trên điện thoại</li>
+                                         <li>Kiểm tra quy định hành lý của hãng bay</li>
+                                     </ul>
+                                                \s
+                                     <!-- Important Notice -->
+                                     <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 20px; margin: 30px 0;">
+                                         <h4 style="color: #856404; margin: 0 0 15px 0; font-size: 16px;">
+                                             ⚠️ Quan trọng
+                                         </h4>
+                                         <p style="color: #856404; margin: 0; line-height: 1.6;">
+                                             Vui lòng lưu mã xác nhận <strong>%s</strong> để tra cứu và quản lý đặt chỗ của bạn cho tất cả %d hành khách.
+                                         </p>
+                                     </div>
+                        \s
+                                     <p style="color: #666666; line-height: 1.6; margin: 25px 0 0 0; text-align: center;">
+                                         Nếu bạn có thắc mắc, liên hệ hỗ trợ tại
+                                         <a href="mailto:support@thinhuit.id.vn" style="color: #007bff;">support@thinhuit.id.vn</a>
+                                         hoặc gọi hotline <strong>1900-1234</strong>
+                                     </p>
+                                 </div>
+                        \s
+                                 <!-- Footer -->
+                                 <div style="background-color: #f8f9fa; padding: 25px 30px; text-align: center; border-top: 1px solid #e9ecef;">
+                                     <p style="color: #6c757d; margin: 0 0 10px 0; font-weight: bold;">
+                                         ✈️ Đội ngũ Flight Management
+                                     </p>
+                                     <p style="color: #6c757d; margin: 0; font-size: 12px;">
+                                         Bảo mật • Tin cậy • Hiệu quả<br>
+                                         Cảm ơn bạn đã chọn chúng tôi!
+                                     </p>
+                                 </div>
+                        \s
+                             </div>
+                         </body>
+                         </html>
+                        \s""",
+                confirmationCode, passengers.size(), currentTime, customerName, passengers.size(),
+                statusColor, statusTextColor, statusText, paymentButton, paymentWarning,
+                confirmationCode, customerName, flightCode, departureCity, arrivalCity, departureTime,
+                passengers.size(), totalFare, passengerRowsHtml.toString(), confirmationCode, passengers.size());
     }
 }

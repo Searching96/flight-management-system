@@ -5,6 +5,8 @@ import com.flightmanagement.dto.FlightDto;
 import com.flightmanagement.dto.PassengerDto;
 import com.flightmanagement.dto.TicketDto;
 import com.flightmanagement.entity.ApiResponse;
+import com.flightmanagement.entity.Passenger;
+import com.flightmanagement.repository.PassengerRepository;
 import com.flightmanagement.service.AuthService;
 import com.flightmanagement.service.EmailService;
 import com.flightmanagement.service.FlightService;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,10 +37,12 @@ public class DebugController {
     private final PassengerService passengerService;
     private final FlightService flightService;
     private final EmailService emailService;
+    private final PassengerRepository passengerRepository;
 
     public DebugController(AuthService authService, TicketService ticketService,
                           PassengerService passengerService, FlightService flightService,
-                          EmailService emailService) {
+                          EmailService emailService, PassengerRepository passengerRepository) {
+        this.passengerRepository = passengerRepository;
         this.authService = authService;
         this.ticketService = ticketService;
         this.passengerService = passengerService;
@@ -196,17 +201,28 @@ public class DebugController {
                             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
                             String departureTime = flight.getDepartureTime().format(formatter);
 
+                            List<EmailService.PassengerTicketInfo> passengerInfoList = new ArrayList<>();
+                            for (TicketDto ticket : tickets) {
+                                Passenger passengers = passengerRepository.findById(ticket.getPassengerId())
+                                        .orElse(null);
+                                if (passengers != null) {
+                                    passengerInfoList.add(new EmailService.PassengerTicketInfo(
+                                            passenger.getPassengerName(),
+                                            ticket.getSeatNumber(),
+                                            ticket.getFare()));
+                                }
+                            }
+
                             // Send email to passenger
-                            emailService.sendSingleTicketConfirmation(
+                            emailService.sendMultiPassengerBookingConfirmation(
                                     passenger.getEmail(),
-                                    passenger.getPassengerName(),
                                     passenger.getPassengerName(),
                                     firstTicket.getConfirmationCode(),
                                     flight.getFlightCode(),
                                     flight.getDepartureCityName(),
                                     flight.getArrivalCityName(),
                                     departureTime,
-                                    seatNumbers,
+                                    passengerInfoList,
                                     totalFare,
                                     false // needsPayment = false since payment is complete
                             );

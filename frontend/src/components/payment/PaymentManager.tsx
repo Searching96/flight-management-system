@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Row, 
-  Col, 
-  Card, 
-  Button, 
-  Alert, 
-  Badge, 
+import React, { useState, useEffect } from "react";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Alert,
+  Badge,
   Spinner,
   Modal,
   Form,
-  Table
-} from 'react-bootstrap';
-import { paymentService } from '../../services';
+  Table,
+} from "react-bootstrap";
+import { ticketService } from "../../services";
 
 interface PaymentStatus {
   success: boolean;
@@ -33,94 +33,144 @@ interface PaymentManagerProps {
   confirmationCode?: string;
 }
 
-const PaymentManager: React.FC<PaymentManagerProps> = ({ confirmationCode: initialCode }) => {
-  const [confirmationCode, setConfirmationCode] = useState(initialCode || '');
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null);
+const PaymentManager: React.FC<PaymentManagerProps> = ({
+  confirmationCode: initialCode,
+}) => {
+  const [confirmationCode, setConfirmationCode] = useState(initialCode || "");
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [refundAmount, setRefundAmount] = useState('');
+  const [refundAmount, setRefundAmount] = useState("");
   const [processing, setProcessing] = useState(false);
+
+  const handleCheckStatus = React.useCallback(async () => {
+    if (!confirmationCode.trim()) {
+      setError("Please enter a confirmation code");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      // Get tickets by confirmation code
+      const tickets = await ticketService.getTicketsOnConfirmationCode(
+        confirmationCode
+      );
+
+      if (!tickets || tickets.length === 0) {
+        setError("No tickets found for this confirmation code");
+        setPaymentStatus(null);
+        return;
+      }
+
+      // Calculate payment status from tickets
+      const totalTickets = tickets.length;
+      const paidTickets = tickets.filter((t) => t.ticketStatus === 1).length;
+      const unpaidTickets = tickets.filter((t) => t.ticketStatus === 0).length;
+      const totalAmount = tickets.reduce((sum, t) => sum + (t.fare || 0), 0);
+      const paidAmount = tickets
+        .filter((t) => t.ticketStatus === 1)
+        .reduce((sum, t) => sum + (t.fare || 0), 0);
+      const unpaidAmount = tickets
+        .filter((t) => t.ticketStatus === 0)
+        .reduce((sum, t) => sum + (t.fare || 0), 0);
+      const bookingPaid = unpaidTickets === 0;
+      const partiallyPaid = paidTickets > 0 && unpaidTickets > 0;
+
+      const status: PaymentStatus = {
+        success: true,
+        confirmationCode: confirmationCode,
+        totalTickets,
+        paidTickets,
+        unpaidTickets,
+        bookingPaid,
+        partiallyPaid,
+        totalAmount,
+        paidAmount,
+        unpaidAmount,
+        paymentRequired: unpaidTickets > 0,
+        message: bookingPaid
+          ? "All tickets paid"
+          : `${unpaidTickets} ticket(s) pending payment`,
+      };
+
+      setPaymentStatus(status);
+    } catch (err: any) {
+      setError(
+        "Error checking payment status: " + (err.message || "Unknown error")
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [confirmationCode]);
 
   useEffect(() => {
     if (confirmationCode) {
       handleCheckStatus();
     }
-  }, [confirmationCode]);
+  }, [confirmationCode, handleCheckStatus]);
 
-  const handleCheckStatus = async () => {
-    if (!confirmationCode.trim()) {
-      setError('Please enter a confirmation code');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    
-    try {
-      const status = await paymentService.getPaymentStatus(confirmationCode);
-      setPaymentStatus(status);
-      
-      if (!status.success) {
-        setError(status.message || 'Failed to get payment status');
-      }
-    } catch (err: any) {
-      setError('Error checking payment status: ' + (err.message || 'Unknown error'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreatePayment = async () => {
+  const handleCreatePayment = () => {
     if (!paymentStatus) return;
-    
-    setProcessing(true);
-    try {
-      const result = await paymentService.createPayment(confirmationCode);
-      
-      if (result.code === '00' && result.data) {
-        // Redirect to MoMo payment page
-        window.open(result.data, '_self');
-      } else {
-        setError('Failed to create payment: ' + result.message);
-      }
-    } catch (err: any) {
-      setError('Error creating payment: ' + (err.message || 'Unknown error'));
-    } finally {
-      setProcessing(false);
-    }
+
+    // Navigate to payment page
+    window.location.href = `/payment/${confirmationCode}`;
   };
 
   const handleCancelPayment = async () => {
     if (!paymentStatus) return;
-    
+
     setProcessing(true);
     try {
-      const result = await paymentService.cancelPayment(confirmationCode);
-      
-      if (result.success) {
-        setShowCancelModal(false);
-        await handleCheckStatus(); // Refresh status
-        alert(`Payment cancelled successfully. ${result.cancelledTickets} tickets were cancelled.`);
-      } else {
-        if (result.requiresRefund) {
-          setError('Cannot cancel - payment already completed. Use refund instead.');
-        } else {
-          setError('Failed to cancel payment: ' + result.message);
+      // Get tickets to cancel
+      const tickets = await ticketService.getTicketsOnConfirmationCode(
+        confirmationCode
+      );
+
+      if (!tickets || tickets.length === 0) {
+        setError("No tickets found to cancel");
+        return;
+      }
+
+      // Check if any tickets are already paid
+      const paidTickets = tickets.filter((t) => t.ticketStatus === 1);
+      if (paidTickets.length > 0) {
+        setError(
+          "Cannot cancel - some tickets are already paid. Please contact support for refund."
+        );
+        return;
+      }
+
+      // Cancel all unpaid tickets
+      let cancelledCount = 0;
+      for (const ticket of tickets) {
+        if (ticket.ticketStatus === 0 && ticket.ticketId) {
+          await ticketService.deleteTicket(ticket.ticketId);
+          cancelledCount++;
         }
       }
+
+      setShowCancelModal(false);
+      await handleCheckStatus(); // Refresh status
+      alert(
+        `Payment cancelled successfully. ${cancelledCount} ticket(s) were cancelled.`
+      );
     } catch (err: any) {
-      setError('Error cancelling payment: ' + (err.message || 'Unknown error'));
+      setError("Error cancelling payment: " + (err.message || "Unknown error"));
     } finally {
       setProcessing(false);
     }
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(amount);
   };
 
@@ -151,8 +201,8 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ confirmationCode: initi
                     </Form.Group>
                   </Col>
                   <Col md={4} className="d-flex align-items-end">
-                    <Button 
-                      variant="primary" 
+                    <Button
+                      variant="primary"
                       onClick={handleCheckStatus}
                       disabled={loading || !confirmationCode.trim()}
                       className="w-100"
@@ -191,15 +241,29 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ confirmationCode: initi
                       <Col md={6}>
                         <h6>Booking Details</h6>
                         <p className="mb-1">
-                          <strong>Confirmation Code:</strong> {paymentStatus.confirmationCode}
+                          <strong>Confirmation Code:</strong>{" "}
+                          {paymentStatus.confirmationCode}
                         </p>
                         <p className="mb-1">
-                          <strong>Total Tickets:</strong> {paymentStatus.totalTickets}
+                          <strong>Total Tickets:</strong>{" "}
+                          {paymentStatus.totalTickets}
                         </p>
                         <p className="mb-1">
-                          <strong>Payment Status:</strong>{' '}
-                          <Badge bg={paymentStatus.bookingPaid ? 'success' : paymentStatus.partiallyPaid ? 'warning' : 'secondary'}>
-                            {paymentStatus.bookingPaid ? 'Booking Paid' : paymentStatus.partiallyPaid ? 'Partial Payment' : 'Payment Pending'}
+                          <strong>Payment Status:</strong>{" "}
+                          <Badge
+                            bg={
+                              paymentStatus.bookingPaid
+                                ? "success"
+                                : paymentStatus.partiallyPaid
+                                ? "warning"
+                                : "secondary"
+                            }
+                          >
+                            {paymentStatus.bookingPaid
+                              ? "Booking Paid"
+                              : paymentStatus.partiallyPaid
+                              ? "Partial Payment"
+                              : "Payment Pending"}
                           </Badge>
                         </p>
                       </Col>
@@ -248,7 +312,8 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ confirmationCode: initi
                           ) : (
                             <>
                               <i className="bi bi-credit-card me-2"></i>
-                              Pay Booking ({formatCurrency(paymentStatus.totalAmount)})
+                              Pay Booking (
+                              {formatCurrency(paymentStatus.totalAmount)})
                             </>
                           )}
                         </Button>
@@ -301,21 +366,26 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ confirmationCode: initi
         <Modal.Body>
           <p>Are you sure you want to cancel this booking?</p>
           <p className="text-muted">
-            This action will cancel all unpaid tickets for confirmation code: <strong>{confirmationCode}</strong>
+            This action will cancel all unpaid tickets for confirmation code:{" "}
+            <strong>{confirmationCode}</strong>
           </p>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowCancelModal(false)}>
             Keep Booking
           </Button>
-          <Button variant="danger" onClick={handleCancelPayment} disabled={processing}>
+          <Button
+            variant="danger"
+            onClick={handleCancelPayment}
+            disabled={processing}
+          >
             {processing ? (
               <>
                 <Spinner size="sm" className="me-2" />
                 Cancelling...
               </>
             ) : (
-              'Cancel Booking'
+              "Cancel Booking"
             )}
           </Button>
         </Modal.Footer>
@@ -339,7 +409,8 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ confirmationCode: initi
                 max={paymentStatus?.totalAmount || 0}
               />
               <Form.Text className="text-muted">
-                Maximum refund amount: {formatCurrency(paymentStatus?.totalAmount || 0)}
+                Maximum refund amount:{" "}
+                {formatCurrency(paymentStatus?.totalAmount || 0)}
               </Form.Text>
             </Form.Group>
           </Form>
@@ -355,7 +426,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({ confirmationCode: initi
                 Processing...
               </>
             ) : (
-              'Request Refund'
+              "Request Refund"
             )}
           </Button>
         </Modal.Footer>

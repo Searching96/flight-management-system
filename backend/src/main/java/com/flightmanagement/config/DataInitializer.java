@@ -383,9 +383,9 @@ public class DataInitializer implements CommandLineRunner {
                 detail2_2.setLayoverDuration(20); // 20 minutes layover
                 flightDetailService.createFlightDetail(detail2_2);
 
-                System.out.println("✓ Demo flight details (stopovers) created");
-                System.out.println("  - Flight 1 (SGN -> HAN): 2 stopovers at Da Nang and Nha Trang");
-                System.out.println("  - Flight 2 (HAN -> DAD): 2 stopovers at Ho Chi Minh City and Nha Trang");
+//                System.out.println("✓ Demo flight details (stopovers) created");
+//                System.out.println("  - Flight 1 (SGN -> HAN): 2 stopovers at Da Nang and Nha Trang");
+//                System.out.println("  - Flight 2 (HAN -> DAD): 2 stopovers at Ho Chi Minh City and Nha Trang");
             }
         } catch (Exception e) {
 //            System.err.println("⚠️ Error creating demo flight details: " + e.getMessage());

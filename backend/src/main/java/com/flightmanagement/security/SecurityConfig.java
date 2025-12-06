@@ -63,7 +63,6 @@ public class SecurityConfig {
                                     "/api/tickets/confirmation-code", "/api/tickets/booking-lookup/{confirmationCode}", "/api/tickets/booking-lookup/{id}",
                                     "/api/flight-details/flight/{flightId}", "/api/parameters",
                                     "/api/debug/**", "/ws/**", "/sockjs-node/**",
-                                    "/api/payment/create", "/api/payment/return", "/api/payment/IPN",
                                     "/swagger-ui/**",
                                     "/swagger-ui.html",
                                     "/v3/api-docs/**",
