@@ -8,6 +8,8 @@ import com.flightmanagement.service.impl.FlightServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -310,103 +312,380 @@ public class FlightServiceTest {
 
     // ==================== searchFlights Tests ====================
 
+    @Nested
+    @DisplayName("SearchFlights Tests - Full Path Coverage")
     @Tag("searchFlights")
-    @Test
-    void searchFlights_withTicketClass_returnsFilteredFlights() {
-        FlightSearchCriteria criteria = new FlightSearchCriteria(1, 2, LocalDateTime.now(), 2, 1);
-        List<Flight> flights = Arrays.asList(validFlight);
-        List<FlightDto> expectedDtos = Arrays.asList(validFlightDto);
+    class SearchFlightsTests {
 
-        when(flightRepository.findFlightsWithTicketClass(1, 2, criteria.getDepartureDate(), 1, 2))
-            .thenReturn(flights);
-        when(flightMapper.toDtoList(flights)).thenReturn(expectedDtos);
+        private FlightSearchCriteria criteria;
+        private LocalDateTime departureDate;
+        private List<Flight> flights;
+        private List<FlightDto> flightDtos;
 
-        List<FlightDto> result = flightService.searchFlights(criteria);
+        @BeforeEach
+        void setUp() {
+            departureDate = LocalDateTime.of(2024, 12, 25, 10, 0);
+            
+            // Setup test flights
+            Flight flight1 = new Flight();
+            flight1.setFlightId(1);
+            flight1.setFlightCode("VN101");
+            
+            Flight flight2 = new Flight();
+            flight2.setFlightId(2);
+            flight2.setFlightCode("VN102");
+            
+            flights = Arrays.asList(flight1, flight2);
+            
+            FlightDto dto1 = new FlightDto();
+            dto1.setFlightId(1);
+            dto1.setFlightCode("VN101");
+            
+            FlightDto dto2 = new FlightDto();
+            dto2.setFlightId(2);
+            dto2.setFlightCode("VN102");
+            
+            flightDtos = Arrays.asList(dto1, dto2);
+        }
 
-        assertEquals(1, result.size());
-        verify(flightRepository).findFlightsWithTicketClass(1, 2, criteria.getDepartureDate(), 1, 2);
-    }
+        // ===== NHÓM 1: Happy Paths - With TicketClass =====
 
-    @Tag("searchFlights")
-    @Test
-    void searchFlights_withoutTicketClass_returnsAllFlights() {
-        FlightSearchCriteria criteria = new FlightSearchCriteria(1, 2, LocalDateTime.now(), 2, null);
-        List<Flight> flights = Arrays.asList(validFlight);
-        List<FlightDto> expectedDtos = Arrays.asList(validFlightDto);
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC1: Search with valid ticketClassId > 0 - Returns filtered flights")
+        void searchFlights_WithValidTicketClassId_ReturnsFilteredFlights() {
+            // Arrange
+            criteria = new FlightSearchCriteria(1, 2, departureDate, 2, 1);
 
-        when(flightRepository.findFlightsByRoute(1, 2, criteria.getDepartureDate()))
-            .thenReturn(flights);
-        when(flightMapper.toDtoList(flights)).thenReturn(expectedDtos);
+            when(flightRepository.findFlightsWithTicketClass(1, 2, departureDate, 1, 2))
+                .thenReturn(flights);
+            when(flightMapper.toDtoList(flights)).thenReturn(flightDtos);
 
-        List<FlightDto> result = flightService.searchFlights(criteria);
+            // Act
+            List<FlightDto> result = flightService.searchFlights(criteria);
 
-        assertEquals(1, result.size());
-        verify(flightRepository).findFlightsByRoute(1, 2, criteria.getDepartureDate());
-    }
+            // Assert
+            assertNotNull(result);
+            assertEquals(2, result.size());
+            assertEquals("VN101", result.get(0).getFlightCode());
+            verify(flightRepository).findFlightsWithTicketClass(1, 2, departureDate, 1, 2);
+            verify(flightRepository, never()).findFlightsByRoute(anyInt(), anyInt(), any());
+            verify(flightMapper).toDtoList(flights);
+        }
 
-    @Tag("searchFlights")
-    @Test
-    void searchFlights_withTicketClassZero_returnsAllFlights() {
-        FlightSearchCriteria criteria = new FlightSearchCriteria(1, 2, LocalDateTime.now(), 2, 0);
-        List<Flight> flights = Arrays.asList(validFlight);
-        List<FlightDto> expectedDtos = Arrays.asList(validFlightDto);
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC2: Search with ticketClassId and 1 passenger - Returns flights")
+        void searchFlights_WithTicketClassIdAndSinglePassenger_ReturnsFlights() {
+            // Arrange
+            criteria = new FlightSearchCriteria(1, 2, departureDate, 1, 3);
 
-        when(flightRepository.findFlightsByRoute(1, 2, criteria.getDepartureDate()))
-            .thenReturn(flights);
-        when(flightMapper.toDtoList(flights)).thenReturn(expectedDtos);
+            when(flightRepository.findFlightsWithTicketClass(1, 2, departureDate, 3, 1))
+                .thenReturn(Arrays.asList(flights.get(0)));
+            when(flightMapper.toDtoList(anyList())).thenReturn(Arrays.asList(flightDtos.get(0)));
 
-        List<FlightDto> result = flightService.searchFlights(criteria);
+            // Act
+            List<FlightDto> result = flightService.searchFlights(criteria);
 
-        assertEquals(1, result.size());
-        verify(flightRepository).findFlightsByRoute(1, 2, criteria.getDepartureDate());
-    }
+            // Assert
+            assertNotNull(result);
+            assertEquals(1, result.size());
+            verify(flightRepository).findFlightsWithTicketClass(1, 2, departureDate, 3, 1);
+        }
 
-    @Tag("searchFlights")
-    @Test
-    void searchFlights_noFlightsFound_returnsEmptyList() {
-        FlightSearchCriteria criteria = new FlightSearchCriteria(1, 2, LocalDateTime.now(), 2, null);
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC3: Search with ticketClassId and multiple passengers - Returns flights")
+        void searchFlights_WithTicketClassIdAndMultiplePassengers_ReturnsFlights() {
+            // Arrange
+            criteria = new FlightSearchCriteria(1, 2, departureDate, 5, 2);
 
-        when(flightRepository.findFlightsByRoute(1, 2, criteria.getDepartureDate()))
-            .thenReturn(Collections.emptyList());
-        when(flightMapper.toDtoList(Collections.emptyList())).thenReturn(Collections.emptyList());
+            when(flightRepository.findFlightsWithTicketClass(1, 2, departureDate, 2, 5))
+                .thenReturn(flights);
+            when(flightMapper.toDtoList(flights)).thenReturn(flightDtos);
 
-        List<FlightDto> result = flightService.searchFlights(criteria);
+            // Act
+            List<FlightDto> result = flightService.searchFlights(criteria);
 
-        assertTrue(result.isEmpty());
-    }
+            // Assert
+            assertNotNull(result);
+            assertEquals(2, result.size());
+            verify(flightRepository).findFlightsWithTicketClass(1, 2, departureDate, 2, 5);
+        }
 
-    @Tag("searchFlights")
-    @Test
-    void searchFlights_repositoryThrowsException_wrapsException() {
-        FlightSearchCriteria criteria = new FlightSearchCriteria(1, 2, LocalDateTime.now(), 2, 1);
+        // ===== NHÓM 2: Happy Paths - Without TicketClass =====
 
-        when(flightRepository.findFlightsWithTicketClass(anyInt(), anyInt(), any(), anyInt(), anyInt()))
-            .thenThrow(new RuntimeException("Database error"));
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC4: Search with null ticketClassId - Returns all flights on route")
+        void searchFlights_WithNullTicketClassId_ReturnsAllFlightsOnRoute() {
+            // Arrange
+            criteria = new FlightSearchCriteria(1, 2, departureDate, 2, null);
 
-        RuntimeException exception = assertThrows(
-            RuntimeException.class,
-            () -> flightService.searchFlights(criteria)
-        );
+            when(flightRepository.findFlightsByRoute(1, 2, departureDate))
+                .thenReturn(flights);
+            when(flightMapper.toDtoList(flights)).thenReturn(flightDtos);
 
-        assertTrue(exception.getMessage().contains("Failed to search flights"));
-    }
+            // Act
+            List<FlightDto> result = flightService.searchFlights(criteria);
 
-    @Tag("searchFlights")
-    @Test
-    void searchFlights_multipleFlightsWithTicketClass_returnsAll() {
-        FlightSearchCriteria criteria = new FlightSearchCriteria(1, 2, LocalDateTime.now(), 2, 1);
-        Flight flight2 = new Flight();
-        flight2.setFlightId(2);
-        List<Flight> flights = Arrays.asList(validFlight, flight2);
-        List<FlightDto> expectedDtos = Arrays.asList(validFlightDto, new FlightDto());
+            // Assert
+            assertNotNull(result);
+            assertEquals(2, result.size());
+            verify(flightRepository).findFlightsByRoute(1, 2, departureDate);
+            verify(flightRepository, never()).findFlightsWithTicketClass(anyInt(), anyInt(), any(), anyInt(), anyInt());
+            verify(flightMapper).toDtoList(flights);
+        }
 
-        when(flightRepository.findFlightsWithTicketClass(1, 2, criteria.getDepartureDate(), 1, 2))
-            .thenReturn(flights);
-        when(flightMapper.toDtoList(flights)).thenReturn(expectedDtos);
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC5: Search with ticketClassId = 0 - Returns all flights on route")
+        void searchFlights_WithZeroTicketClassId_ReturnsAllFlightsOnRoute() {
+            // Arrange
+            criteria = new FlightSearchCriteria(1, 2, departureDate, 2, 0);
 
-        List<FlightDto> result = flightService.searchFlights(criteria);
+            when(flightRepository.findFlightsByRoute(1, 2, departureDate))
+                .thenReturn(flights);
+            when(flightMapper.toDtoList(flights)).thenReturn(flightDtos);
 
-        assertEquals(2, result.size());
+            // Act
+            List<FlightDto> result = flightService.searchFlights(criteria);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(2, result.size());
+            verify(flightRepository).findFlightsByRoute(1, 2, departureDate);
+            verify(flightRepository, never()).findFlightsWithTicketClass(anyInt(), anyInt(), any(), anyInt(), anyInt());
+        }
+
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC6: Search with ticketClassId < 0 - Returns all flights on route")
+        void searchFlights_WithNegativeTicketClassId_ReturnsAllFlightsOnRoute() {
+            // Arrange
+            criteria = new FlightSearchCriteria(1, 2, departureDate, 2, -1);
+
+            when(flightRepository.findFlightsByRoute(1, 2, departureDate))
+                .thenReturn(flights);
+            when(flightMapper.toDtoList(flights)).thenReturn(flightDtos);
+
+            // Act
+            List<FlightDto> result = flightService.searchFlights(criteria);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(2, result.size());
+            verify(flightRepository).findFlightsByRoute(1, 2, departureDate);
+        }
+
+        // ===== NHÓM 3: Empty Results =====
+
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC7: Search with ticketClassId but no flights found - Returns empty list")
+        void searchFlights_WithTicketClassIdNoFlightsFound_ReturnsEmptyList() {
+            // Arrange
+            criteria = new FlightSearchCriteria(1, 2, departureDate, 2, 1);
+
+            when(flightRepository.findFlightsWithTicketClass(1, 2, departureDate, 1, 2))
+                .thenReturn(Collections.emptyList());
+            when(flightMapper.toDtoList(Collections.emptyList())).thenReturn(Collections.emptyList());
+
+            // Act
+            List<FlightDto> result = flightService.searchFlights(criteria);
+
+            // Assert
+            assertNotNull(result);
+            assertTrue(result.isEmpty());
+            verify(flightRepository).findFlightsWithTicketClass(1, 2, departureDate, 1, 2);
+        }
+
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC8: Search without ticketClassId but no flights found - Returns empty list")
+        void searchFlights_WithoutTicketClassIdNoFlightsFound_ReturnsEmptyList() {
+            // Arrange
+            criteria = new FlightSearchCriteria(1, 2, departureDate, 2, null);
+
+            when(flightRepository.findFlightsByRoute(1, 2, departureDate))
+                .thenReturn(Collections.emptyList());
+            when(flightMapper.toDtoList(Collections.emptyList())).thenReturn(Collections.emptyList());
+
+            // Act
+            List<FlightDto> result = flightService.searchFlights(criteria);
+
+            // Assert
+            assertNotNull(result);
+            assertTrue(result.isEmpty());
+            verify(flightRepository).findFlightsByRoute(1, 2, departureDate);
+        }
+
+        // ===== NHÓM 4: Exception Handling =====
+
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC9: Repository throws exception with ticketClassId - Wraps and rethrows")
+        void searchFlights_RepositoryThrowsExceptionWithTicketClass_WrapsAndRethrows() {
+            // Arrange
+            criteria = new FlightSearchCriteria(1, 2, departureDate, 2, 1);
+
+            when(flightRepository.findFlightsWithTicketClass(anyInt(), anyInt(), any(), anyInt(), anyInt()))
+                .thenThrow(new RuntimeException("Database connection error"));
+
+            // Act & Assert
+            RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+                flightService.searchFlights(criteria);
+            });
+
+            assertEquals("Failed to search flights", exception.getMessage());
+            assertTrue(exception.getCause().getMessage().contains("Database connection error"));
+            verify(flightRepository).findFlightsWithTicketClass(1, 2, departureDate, 1, 2);
+        }
+
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC10: Repository throws exception without ticketClassId - Wraps and rethrows")
+        void searchFlights_RepositoryThrowsExceptionWithoutTicketClass_WrapsAndRethrows() {
+            // Arrange
+            criteria = new FlightSearchCriteria(1, 2, departureDate, 2, null);
+
+            when(flightRepository.findFlightsByRoute(anyInt(), anyInt(), any()))
+                .thenThrow(new RuntimeException("Query timeout"));
+
+            // Act & Assert
+            RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+                flightService.searchFlights(criteria);
+            });
+
+            assertEquals("Failed to search flights", exception.getMessage());
+            assertTrue(exception.getCause().getMessage().contains("Query timeout"));
+            verify(flightRepository).findFlightsByRoute(1, 2, departureDate);
+        }
+
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC11: Mapper throws exception - Propagates exception")
+        void searchFlights_MapperThrowsException_PropagatesException() {
+            // Arrange
+            criteria = new FlightSearchCriteria(1, 2, departureDate, 2, 1);
+
+            when(flightRepository.findFlightsWithTicketClass(1, 2, departureDate, 1, 2))
+                .thenReturn(flights);
+            when(flightMapper.toDtoList(flights))
+                .thenThrow(new RuntimeException("Mapping error"));
+
+            // Act & Assert
+            RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+                flightService.searchFlights(criteria);
+            });
+
+            assertEquals("Failed to search flights", exception.getMessage());
+            assertTrue(exception.getCause().getMessage().contains("Mapping error"));
+        }
+
+        // ===== NHÓM 5: Edge Cases =====
+
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC12: Search with same departure and arrival airports - Returns flights")
+        void searchFlights_SameDepartureAndArrivalAirports_ReturnsFlights() {
+            // Arrange
+            criteria = new FlightSearchCriteria(1, 1, departureDate, 2, null);
+
+            when(flightRepository.findFlightsByRoute(1, 1, departureDate))
+                .thenReturn(flights);
+            when(flightMapper.toDtoList(flights)).thenReturn(flightDtos);
+
+            // Act
+            List<FlightDto> result = flightService.searchFlights(criteria);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(2, result.size());
+            verify(flightRepository).findFlightsByRoute(1, 1, departureDate);
+        }
+
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC13: Search with very large passenger count - Returns flights")
+        void searchFlights_VeryLargePassengerCount_ReturnsFlights() {
+            // Arrange
+            criteria = new FlightSearchCriteria(1, 2, departureDate, 100, 1);
+
+            when(flightRepository.findFlightsWithTicketClass(1, 2, departureDate, 1, 100))
+                .thenReturn(flights);
+            when(flightMapper.toDtoList(flights)).thenReturn(flightDtos);
+
+            // Act
+            List<FlightDto> result = flightService.searchFlights(criteria);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(2, result.size());
+            verify(flightRepository).findFlightsWithTicketClass(1, 2, departureDate, 1, 100);
+        }
+
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC14: Search returns single flight - Returns list with one element")
+        void searchFlights_SingleFlightReturned_ReturnsListWithOneElement() {
+            // Arrange
+            criteria = new FlightSearchCriteria(1, 2, departureDate, 2, 1);
+
+            when(flightRepository.findFlightsWithTicketClass(1, 2, departureDate, 1, 2))
+                .thenReturn(Arrays.asList(flights.get(0)));
+            when(flightMapper.toDtoList(anyList())).thenReturn(Arrays.asList(flightDtos.get(0)));
+
+            // Act
+            List<FlightDto> result = flightService.searchFlights(criteria);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(1, result.size());
+            assertEquals("VN101", result.get(0).getFlightCode());
+        }
+
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC15: Search with past date - Returns flights")
+        void searchFlights_WithPastDate_ReturnsFlights() {
+            // Arrange
+            LocalDateTime pastDate = LocalDateTime.of(2023, 1, 1, 10, 0);
+            criteria = new FlightSearchCriteria(1, 2, pastDate, 2, null);
+
+            when(flightRepository.findFlightsByRoute(1, 2, pastDate))
+                .thenReturn(flights);
+            when(flightMapper.toDtoList(flights)).thenReturn(flightDtos);
+
+            // Act
+            List<FlightDto> result = flightService.searchFlights(criteria);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(2, result.size());
+            verify(flightRepository).findFlightsByRoute(1, 2, pastDate);
+        }
+
+        @Test
+        @Tag("searchFlights")
+        @DisplayName("TC16: Search with future date - Returns flights")
+        void searchFlights_WithFutureDate_ReturnsFlights() {
+            // Arrange
+            LocalDateTime futureDate = LocalDateTime.of(2026, 12, 31, 23, 59);
+            criteria = new FlightSearchCriteria(1, 2, futureDate, 2, 1);
+
+            when(flightRepository.findFlightsWithTicketClass(1, 2, futureDate, 1, 2))
+                .thenReturn(flights);
+            when(flightMapper.toDtoList(flights)).thenReturn(flightDtos);
+
+            // Act
+            List<FlightDto> result = flightService.searchFlights(criteria);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(2, result.size());
+            verify(flightRepository).findFlightsWithTicketClass(1, 2, futureDate, 1, 2);
+        }
     }
 
     // ==================== searchFlightsByDate Tests ====================
