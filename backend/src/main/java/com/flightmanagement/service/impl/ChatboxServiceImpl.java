@@ -8,7 +8,6 @@ import com.flightmanagement.repository.ChatboxRepository;
 import com.flightmanagement.repository.MessageRepository;
 import com.flightmanagement.repository.CustomerRepository;
 import com.flightmanagement.service.ChatboxService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

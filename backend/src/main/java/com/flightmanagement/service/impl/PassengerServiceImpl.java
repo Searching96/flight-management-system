@@ -6,13 +6,12 @@ import com.flightmanagement.mapper.PassengerMapper;
 import com.flightmanagement.repository.PassengerRepository;
 import com.flightmanagement.service.PassengerService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
-@Transactional
 public class PassengerServiceImpl implements PassengerService {
     
     private final PassengerRepository passengerRepository;
@@ -85,9 +84,9 @@ public class PassengerServiceImpl implements PassengerService {
     }
     
     @Override
-    public List<PassengerDto> getPassengersByEmail(String email) {
-        List<Passenger> passengers = passengerRepository.findByEmail(email);
-        return passengerMapper.toDtoList(passengers);
+    public PassengerDto getPassengersByEmail(String email) {
+        Optional<Passenger> passengers = passengerRepository.findByEmail(email);
+        return passengerMapper.toDto(passengers.orElse(null));
     }
     
     @Override

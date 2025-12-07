@@ -5,7 +5,6 @@ import com.flightmanagement.entity.Plane;
 import com.flightmanagement.mapper.PlaneMapper;
 import com.flightmanagement.repository.PlaneRepository;
 import com.flightmanagement.service.PlaneService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

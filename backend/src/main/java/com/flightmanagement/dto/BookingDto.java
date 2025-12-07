@@ -15,9 +15,14 @@ import java.util.List;
 public class BookingDto {
     
     private Integer flightId;
+
     private Integer customerId;
+
     private Integer ticketClassId;
+
     private List<PassengerDto> passengers;
+
     private BigDecimal totalFare;
+
     private List<String> seatNumbers;
 }

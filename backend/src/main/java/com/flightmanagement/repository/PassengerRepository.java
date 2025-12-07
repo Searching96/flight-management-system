@@ -22,7 +22,7 @@ public interface PassengerRepository extends JpaRepository<Passenger, Integer> {
     Optional<Passenger> findByCitizenId(@Param("citizenId") String citizenId);
     
     @Query("SELECT p FROM Passenger p WHERE p.email = :email AND p.deletedAt IS NULL")
-    List<Passenger> findByEmail(@Param("email") String email);
+    Optional<Passenger> findByEmail(@Param("email") String email);
     
     @Query("SELECT p FROM Passenger p WHERE LOWER(p.passengerName) LIKE LOWER(CONCAT('%', :name, '%')) AND p.deletedAt IS NULL")
     List<Passenger> findByPassengerNameContainingIgnoreCase(@Param("name") String name);
