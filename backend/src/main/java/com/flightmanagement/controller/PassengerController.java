@@ -102,9 +102,9 @@ public class PassengerController {
 
     @Operation(summary = "Get passengers by email")
     @GetMapping("/email/{email}")
-    public ResponseEntity<ApiResponse<List<PassengerDto>>> getPassengersByEmail(@PathVariable String email) {
-        List<PassengerDto> passengers = passengerService.getPassengersByEmail(email);
-        ApiResponse<List<PassengerDto>> apiResponse = new ApiResponse<>(
+    public ResponseEntity<ApiResponse<PassengerDto>> getPassengersByEmail(@PathVariable String email) {
+        PassengerDto passengers = passengerService.getPassengersByEmail(email);
+        ApiResponse<PassengerDto> apiResponse = new ApiResponse<>(
                 HttpStatus.OK,
                 "Passengers retrieved by email successfully",
                 passengers,

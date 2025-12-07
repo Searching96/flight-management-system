@@ -11,6 +11,6 @@ public interface PassengerService {
     PassengerDto createPassenger(PassengerDto passengerDto);
     PassengerDto updatePassenger(Integer id, PassengerDto passengerDto);
     void deletePassenger(Integer id);
-    List<PassengerDto> getPassengersByEmail(String email);
+    PassengerDto getPassengersByEmail(String email);
     List<PassengerDto> searchPassengersByName(String name);
 }

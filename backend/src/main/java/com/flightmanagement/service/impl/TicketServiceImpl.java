@@ -12,9 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
-@Transactional
 public class TicketServiceImpl implements TicketService {
 
     private final TicketRepository ticketRepository;
@@ -98,9 +98,12 @@ public class TicketServiceImpl implements TicketService {
 
         // For guest bookings (customer ID 0 or null), bookingCustomer remains null
         if (ticketDto.getBookCustomerId() != null && ticketDto.getBookCustomerId() != 0) {
-            Customer bookingCustomer = customerRepository.findById(ticketDto.getBookCustomerId())
-                    .orElseGet(() -> createCustomerFromAccount(ticketDto.getBookCustomerId()));
-            ticket.setBookCustomer(bookingCustomer);
+            Optional<Customer> bookingCustomer = customerRepository.findById(ticketDto.getBookCustomerId());
+            if (bookingCustomer.isPresent()) {
+                ticket.setBookCustomer(bookingCustomer.get());
+            } else {
+                ticket.setBookCustomer(null);
+            }
         }
 
         if (ticketDto.getPassengerId() != null) {
@@ -346,26 +349,5 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public boolean isSeatAvailable(Integer flightId, String seatNumber) {
         return ticketRepository.findByFlightIdAndSeatNumber(flightId, seatNumber).isEmpty();
-    }
-
-    /**
-     * Creates a Customer entity from an existing Account
-     */
-    private Customer createCustomerFromAccount(Integer accountId) {
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new RuntimeException("Account not found with id: " + accountId));
-
-        // Verify this is a customer account (accountType = 1)
-        if (account.getAccountType() != AccountType.CUSTOMER) {
-            throw new RuntimeException("Account " + accountId + " is not a customer account");
-        }
-
-        Customer customer = new Customer();
-        customer.setCustomerId(accountId);
-        customer.setAccount(account);
-        customer.setScore(0); // Default score
-        customer.setDeletedAt(null);
-
-        return customerRepository.save(customer);
     }
 }
