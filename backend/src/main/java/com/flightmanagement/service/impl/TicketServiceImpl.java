@@ -2,7 +2,6 @@ package com.flightmanagement.service.impl;
 
 import com.flightmanagement.dto.*;
 import com.flightmanagement.entity.*;
-import com.flightmanagement.enums.AccountType;
 import com.flightmanagement.mapper.TicketMapper;
 import com.flightmanagement.repository.*;
 import com.flightmanagement.service.*;
