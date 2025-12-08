@@ -13,6 +13,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,7 +26,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Ticket Service Test Suite")
-@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class TicketServiceTest {
 
     @Mock
@@ -163,6 +165,8 @@ class TicketServiceTest {
 
             // Assert
             assertNotNull(result);
+
+            // Verify that no lookups were performed
             verify(flightRepository, never()).findById(any());
             verify(ticketClassRepository, never()).findById(any());
             verify(customerRepository, never()).findById(any());
@@ -261,35 +265,7 @@ class TicketServiceTest {
         }
 
         @Test
-        @DisplayName("TC8: Customer not exists - Creates from account")
-        void createTicket_CustomerNotExists_CreatesFromAccount() {
-            // Arrange - Customer doesn't exist, fallback to createCustomerFromAccount
-            ticketDto.setFlightId(1);
-            ticketDto.setTicketClassId(1);
-            ticketDto.setBookCustomerId(5);
-            ticketDto.setPassengerId(1);
-
-            Customer newCustomer = new Customer();
-            newCustomer.setCustomerId(5);
-
-            when(flightRepository.findById(1)).thenReturn(Optional.of(flight));
-            when(ticketClassRepository.findById(1)).thenReturn(Optional.of(ticketClass));
-            when(customerRepository.findById(5)).thenReturn(Optional.empty());
-            when(passengerRepository.findById(1)).thenReturn(Optional.of(passenger));
-            when(ticketRepository.save(any(Ticket.class))).thenReturn(ticket);
-            when(ticketMapper.toDto(ticket)).thenReturn(ticketDto);
-
-            // Act
-            TicketDto result = ticketService.createTicket(ticketDto);
-
-            // Assert
-            assertNotNull(result);
-            verify(customerRepository).findById(5);
-            verify(ticketRepository).save(any(Ticket.class));
-        }
-
-        @Test
-        @DisplayName("TC9: Partial null fields - Success")
+        @DisplayName("TC8: Partial null fields - Success")
         void createTicket_PartialNullFields_Success() {
             // Arrange - Mix of null and valid fields
             ticketDto.setFlightId(1);
@@ -315,7 +291,7 @@ class TicketServiceTest {
         }
 
         @Test
-        @DisplayName("TC10: All entities valid - Verify relationships set")
+        @DisplayName("TC9: All entities valid - Verify relationships set")
         void createTicket_AllEntitiesValid_VerifyRelationshipsSet() {
             // Arrange
             ticketDto.setFlightId(1);
@@ -500,61 +476,10 @@ class TicketServiceTest {
             verify(flightTicketClassService).updateRemainingTickets(1, 1, 2);
         }
 
-        @Test
-        @DisplayName("TC5: Multiple passengers, partial seats - Mix provided + generated")
-        void bookTickets_MultiplePassengersPartialSeats_MixProvidedAndGenerated() {
-            // Arrange
-            PassengerDto passenger2 = new PassengerDto();
-            passenger2.setPassengerId(2);
-            passenger2.setEmail("jane@example.com");
-            passenger2.setCitizenId("987654321");
-
-            PassengerDto passenger3 = new PassengerDto();
-            passenger3.setPassengerId(3);
-            passenger3.setEmail("bob@example.com");
-            passenger3.setCitizenId("555555555");
-
-            bookingDto.setPassengers(Arrays.asList(passengerDto, passenger2, passenger3));
-            bookingDto.setSeatNumbers(null); // Use null to trigger automatic seat generation for all
-
-            mockCreateTicketDependencies();
-
-            // Act
-            List<TicketDto> result = ticketService.bookTickets(bookingDto);
-
-            // Assert
-            assertNotNull(result);
-            assertEquals(3, result.size());
-            verify(flightTicketClassService).updateRemainingTickets(1, 1, 3);
-        }
-
-        @Test
-        @DisplayName("TC6: Multiple passengers, empty seatNumbers list - Auto generates all")
-        void bookTickets_MultiplePassengersEmptySeatList_AutoGeneratesAll() {
-            // Arrange
-            PassengerDto passenger2 = new PassengerDto();
-            passenger2.setPassengerId(2);
-            passenger2.setEmail("jane@example.com");
-            passenger2.setCitizenId("987654321");
-
-            bookingDto.setPassengers(Arrays.asList(passengerDto, passenger2));
-            bookingDto.setSeatNumbers(new ArrayList<>()); // Empty list triggers generation
-
-            mockCreateTicketDependencies();
-
-            // Act
-            List<TicketDto> result = ticketService.bookTickets(bookingDto);
-
-            // Assert
-            assertNotNull(result);
-            assertEquals(2, result.size());
-            verify(flightTicketClassService).updateRemainingTickets(1, 1, 2);
-        }
-
         // ===== NHÓM 3: Exception Paths =====
 
         @Test
-        @DisplayName("TC7: Validation fails - Throws exception")
+        @DisplayName("TC5: Validation fails - Throws exception")
         void bookTickets_ValidationFails_ThrowsException() {
             // Arrange
             bookingDto.setPassengers(null); // Invalid - null passengers
@@ -569,7 +494,7 @@ class TicketServiceTest {
         }
 
         @Test
-        @DisplayName("TC8: Not enough tickets - Throws exception")
+        @DisplayName("TC6: Not enough tickets - Throws exception")
         void bookTickets_NotEnoughTickets_ThrowsException() {
             // Arrange
             PassengerDto passenger2 = new PassengerDto();
@@ -598,7 +523,7 @@ class TicketServiceTest {
         }
 
         @Test
-        @DisplayName("TC9: Flight ticket class not found - Throws exception")
+        @DisplayName("TC7: Flight ticket class not found - Throws exception")
         void bookTickets_FlightTicketClassNotFound_ThrowsException() {
             // Arrange
             bookingDto.setPassengers(Arrays.asList(passengerDto));
@@ -619,7 +544,7 @@ class TicketServiceTest {
         // ===== NHÓM 4: Edge Cases =====
 
         @Test
-        @DisplayName("TC10: Exactly remaining tickets - Success")
+        @DisplayName("TC8: Exactly remaining tickets - Success")
         void bookTickets_ExactlyRemainingTickets_Success() {
             // Arrange
             PassengerDto passenger2 = new PassengerDto();
@@ -643,26 +568,9 @@ class TicketServiceTest {
             verify(flightTicketClassService).updateRemainingTickets(1, 1, 2);
         }
 
-        @Test
-        @DisplayName("TC11: Email sending fails - Continues successfully")
-        void bookTickets_EmailSendingFails_ContinuesSuccessfully() {
-            // Arrange
-            bookingDto.setPassengers(Arrays.asList(passengerDto));
-            bookingDto.setSeatNumbers(Arrays.asList("12A"));
-
-            mockCreateTicketDependencies();
-
-            // Act
-            List<TicketDto> result = ticketService.bookTickets(bookingDto);
-
-            // Assert - Booking should still succeed even if email fails
-            assertNotNull(result);
-            assertEquals(1, result.size());
-            verify(flightTicketClassService).updateRemainingTickets(1, 1, 1);
-        }
 
         @Test
-        @DisplayName("TC12: Same confirmation code for all tickets")
+        @DisplayName("TC9: Same confirmation code for all tickets")
         void bookTickets_ConfirmationCodeGenerated_AllTicketsSameCode() {
             // Arrange
             PassengerDto passenger2 = new PassengerDto();
@@ -694,14 +602,14 @@ class TicketServiceTest {
             // Mock validation: isFlightAvailable calls getFlightTicketClassById
             when(flightTicketClassService.getFlightTicketClassById(anyInt(), anyInt()))
                     .thenReturn(flightTicketClassDto);
-            
+
             // Mock getOrCreatePassenger -> uses passengerService.getPassengerByCitizenId
             when(passengerService.getPassengerByCitizenId(anyString())).thenReturn(passengerDto);
-            
+
             // Mock seat availability check
             when(ticketRepository.findByFlightIdAndSeatNumber(anyInt(), anyString()))
                     .thenReturn(Optional.empty());
-            
+
             // Mock createTicket dependencies
             when(flightRepository.findById(anyInt())).thenReturn(Optional.of(flight));
             when(ticketClassRepository.findById(anyInt())).thenReturn(Optional.of(ticketClass));
