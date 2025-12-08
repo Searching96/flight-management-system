@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +28,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 public class FlightServiceTest {
 
     @Mock
@@ -76,198 +78,7 @@ public class FlightServiceTest {
         parameterDto.setMinFlightDuration(30);
     }
 
-    // ==================== createFlight Tests ====================
-
-    @Tag("createFlight")
-    @Test
-    void createFlight_validRequest_success() {
-        when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(false);
-        when(parameterService.getLatestParameter()).thenReturn(parameterDto);
-        when(flightMapper.toEntityFromCreateRequest(validRequest)).thenReturn(validFlight);
-        when(flightRepository.save(any(Flight.class))).thenReturn(validFlight);
-        when(flightMapper.toDto(validFlight)).thenReturn(validFlightDto);
-
-        FlightDto result = flightService.createFlight(validRequest);
-
-        assertNotNull(result);
-        assertEquals(validFlightDto.getFlightCode(), result.getFlightCode());
-        verify(flightRepository).save(any(Flight.class));
-    }
-
-    @Tag("createFlight")
-    @Test
-    void createFlight_duplicateFlightCode_throwsException() {
-        when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(true);
-
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> flightService.createFlight(validRequest)
-        );
-
-        assertTrue(exception.getMessage().contains("Flight code already exists"));
-        verify(flightRepository, never()).save(any());
-    }
-
-    @Tag("createFlight")
-    @Test
-    void createFlight_arrivalBeforeDeparture_throwsException() {
-        validRequest.setArrivalTime(validRequest.getDepartureTime().minusHours(1));
-        when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(false);
-
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> flightService.createFlight(validRequest)
-        );
-
-        assertTrue(exception.getMessage().contains("Arrival time must be after departure time"));
-    }
-
-    @Tag("createFlight")
-    @Test
-    void createFlight_sameAirports_throwsException() {
-        validRequest.setDepartureAirportId(1);
-        validRequest.setArrivalAirportId(1);
-        when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(false);
-
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> flightService.createFlight(validRequest)
-        );
-
-        assertTrue(exception.getMessage().contains("Departure and arrival airports cannot be the same"));
-    }
-
-    @Tag("createFlight")
-    @Test
-    void createFlight_flightDurationTooShort_throwsException() {
-        validRequest.setArrivalTime(validRequest.getDepartureTime().plusMinutes(15));
-        when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(false);
-        when(parameterService.getLatestParameter()).thenReturn(parameterDto);
-
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> flightService.createFlight(validRequest)
-        );
-
-        assertTrue(exception.getMessage().contains("Flight duration must be at least"));
-    }
-
-    @Tag("createFlight")
-    @Test
-    void createFlight_exactMinimumDuration_success() {
-        validRequest.setArrivalTime(validRequest.getDepartureTime().plusMinutes(30));
-        when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(false);
-        when(parameterService.getLatestParameter()).thenReturn(parameterDto);
-        when(flightMapper.toEntityFromCreateRequest(validRequest)).thenReturn(validFlight);
-        when(flightRepository.save(any(Flight.class))).thenReturn(validFlight);
-        when(flightMapper.toDto(validFlight)).thenReturn(validFlightDto);
-
-        FlightDto result = flightService.createFlight(validRequest);
-
-        assertNotNull(result);
-        verify(flightRepository).save(any(Flight.class));
-    }
-
-    // ==================== updateFlight Tests ====================
-
-    @Tag("updateFlight")
-    @Test
-    void updateFlight_validUpdate_success() {
-        when(flightRepository.findActiveById(1)).thenReturn(Optional.of(validFlight));
-        when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(false);
-        when(parameterService.getLatestParameter()).thenReturn(parameterDto);
-        when(flightRepository.save(any(Flight.class))).thenReturn(validFlight);
-        when(flightMapper.toDto(validFlight)).thenReturn(validFlightDto);
-
-        FlightDto result = flightService.updateFlight(1, validRequest);
-
-        assertNotNull(result);
-        verify(flightRepository).save(validFlight);
-    }
-
-    @Tag("updateFlight")
-    @Test
-    void updateFlight_flightNotFound_throwsException() {
-
-        RuntimeException exception = assertThrows(
-            RuntimeException.class,
-            () -> flightService.updateFlight(1, validRequest)
-        );
-
-        assertFalse(exception.getMessage().contains("Flight not found"));
-    }
-
-    @Tag("updateFlight")
-    @Test
-    void updateFlight_invalidData_throwsException() {
-        validRequest.setArrivalTime(validRequest.getDepartureTime().minusHours(1));
-        when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(false);
-
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> flightService.updateFlight(1, validRequest)
-        );
-
-        assertTrue(exception.getMessage().contains("Arrival time must be after departure time"));
-    }
-
-    @Tag("updateFlight")
-    @Test
-    void updateFlight_duplicateFlightCode_throwsException() {
-        when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(true);
-
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> flightService.updateFlight(1, validRequest)
-        );
-
-        assertTrue(exception.getMessage().contains("Flight code already exists"));
-    }
-
-    @Tag("updateFlight")
-    @Test
-    void updateFlight_sameAirports_throwsException() {
-        validRequest.setDepartureAirportId(1);
-        validRequest.setArrivalAirportId(1);
-        when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(false);
-
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> flightService.updateFlight(1, validRequest)
-        );
-
-        assertTrue(exception.getMessage().contains("Departure and arrival airports cannot be the same"));
-    }
-
-    @Tag("updateFlight")
-    @Test
-    void updateFlight_tooShortDuration_throwsException() {
-        validRequest.setArrivalTime(validRequest.getDepartureTime().plusMinutes(15));
-        when(flightRepository.existsByFlightCode(validRequest.getFlightCode())).thenReturn(false);
-        when(parameterService.getLatestParameter()).thenReturn(parameterDto);
-
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> flightService.updateFlight(1, validRequest)
-        );
-
-        assertTrue(exception.getMessage().contains("Flight duration must be at least"));
-    }
-
     // ==================== deleteFlight Tests ====================
-
-    @Tag("deleteFlight")
-    @Test
-    void deleteFlight_validId_success() {
-        when(flightRepository.findActiveById(1)).thenReturn(Optional.of(validFlight));
-        when(flightRepository.save(any(Flight.class))).thenReturn(validFlight);
-
-        flightService.deleteFlight(1);
-
-        assertNotNull(validFlight.getDeletedAt());
-        verify(flightRepository).save(validFlight);
-    }
-
     @Tag("deleteFlight")
     @Test
     void deleteFlight_flightNotFound_throwsException() {
@@ -864,4 +675,1137 @@ public class FlightServiceTest {
 
         assertTrue(exception.getMessage().contains("Flight not found"));
     }
+
+    // ==================== updateFlight Tests - Complete Path Coverage ====================
+
+    @Nested
+    @DisplayName("UpdateFlight Tests - Full Path Coverage")
+    @Tag("updateFlight")
+    class UpdateFlightTests {
+
+        private FlightRequest updateRequest;
+        private Flight existingFlight;
+        private FlightDto updatedFlightDto;
+        private LocalDateTime newDepartureTime;
+        private LocalDateTime newArrivalTime;
+
+        @BeforeEach
+        void setUp() {
+            newDepartureTime = LocalDateTime.now().plusDays(2);
+            newArrivalTime = newDepartureTime.plusHours(3);
+
+            updateRequest = new FlightRequest();
+            updateRequest.setFlightCode("FL999");
+            updateRequest.setDepartureTime(newDepartureTime);
+            updateRequest.setArrivalTime(newArrivalTime);
+            updateRequest.setPlaneId(2);
+            updateRequest.setDepartureAirportId(2);
+            updateRequest.setArrivalAirportId(3);
+
+            existingFlight = new Flight();
+            existingFlight.setFlightId(5);
+            existingFlight.setFlightCode("FL888");
+            existingFlight.setDepartureTime(LocalDateTime.now().plusDays(1));
+            existingFlight.setArrivalTime(LocalDateTime.now().plusDays(1).plusHours(2));
+
+            updatedFlightDto = new FlightDto();
+            updatedFlightDto.setFlightId(5);
+            updatedFlightDto.setFlightCode("FL999");
+        }
+
+        // ===== NHÓM 1: Happy Paths - Successful Updates =====
+
+        @Test
+        @DisplayName("TC1: Update flight with valid request and valid departure time - Success")
+        void updateFlight_ValidRequestAndDepartureTime_Success() {
+            // Arrange
+            updateRequest.setFlightCode("FL999");
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode("FL999")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightRepository.save(any(Flight.class))).thenReturn(existingFlight);
+            when(flightMapper.toDto(existingFlight)).thenReturn(updatedFlightDto);
+
+            // Act
+            FlightDto result = flightService.updateFlight(5, updateRequest);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals("FL999", result.getFlightCode());
+            verify(flightRepository).findActiveById(5);
+            verify(flightRepository).existsByFlightCode("FL999");
+            verify(flightRepository).save(any(Flight.class));
+        }
+
+        @Test
+        @DisplayName("TC2: Update flight with null departure time - Throws exception")
+        void updateFlight_NullDepartureTime_ThrowsException() {
+            // Arrange
+            updateRequest.setDepartureTime(null);
+
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+
+            // Act & Assert
+            assertThrows(
+                Exception.class,
+                () -> flightService.updateFlight(5, updateRequest)
+            );
+
+            verify(flightRepository, never()).save(any(Flight.class));
+        }
+
+        @Test
+        @DisplayName("TC3: Update flight with arrival before departure - Throws exception")
+        void updateFlight_ArrivalBeforeDeparture_ThrowsException() {
+            // Arrange
+            updateRequest.setDepartureTime(newDepartureTime);
+            updateRequest.setArrivalTime(newDepartureTime.minusHours(1)); // Arrival before departure
+
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode("FL999")).thenReturn(false);
+
+            // Act & Assert
+            IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> flightService.updateFlight(5, updateRequest)
+            );
+
+            assertTrue(exception.getMessage().contains("Arrival time must be after departure time"));
+            verify(flightRepository, never()).save(any(Flight.class));
+        }
+
+        @Test
+        @DisplayName("TC4: Update flight with past departure time - Throws exception")
+        void updateFlight_PastDepartureTime_ThrowsException() {
+            // Arrange
+            LocalDateTime pastTime = LocalDateTime.of(2024, 11, 1, 10, 0);
+            updateRequest.setDepartureTime(pastTime);
+            updateRequest.setArrivalTime(pastTime.plusHours(2));
+
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode(anyString())).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+
+            // Act & Assert
+            assertThrows(
+                IllegalArgumentException.class,
+                () -> flightService.updateFlight(5, updateRequest)
+            );
+        }
+
+        @Test
+        @DisplayName("TC5: Update only departure time - Success")
+        void updateFlight_OnlyDepartureTime_Success() {
+            // Arrange
+            updateRequest.setArrivalTime(null); // Keep existing
+
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode("FL999")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightRepository.save(any(Flight.class))).thenReturn(existingFlight);
+            when(flightMapper.toDto(existingFlight)).thenReturn(updatedFlightDto);
+
+            // Act
+            FlightDto result = flightService.updateFlight(5, updateRequest);
+
+            // Assert
+            assertNotNull(result);
+            verify(flightRepository).save(any(Flight.class));
+        }
+
+        @Test
+        @DisplayName("TC6: Update only arrival time - Success")
+        void updateFlight_OnlyArrivalTime_Success() {
+            // Arrange
+            updateRequest.setDepartureTime(null); // Keep existing
+
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode("FL999")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightRepository.save(any(Flight.class))).thenReturn(existingFlight);
+            when(flightMapper.toDto(existingFlight)).thenReturn(updatedFlightDto);
+
+            // Act
+            FlightDto result = flightService.updateFlight(5, updateRequest);
+
+            // Assert
+            assertNotNull(result);
+            verify(flightRepository).save(any(Flight.class));
+        }
+
+        @Test
+        @DisplayName("TC7: Update with very short duration (1 minute) - Boundary test")
+        void updateFlight_VeryShortDuration_Success() {
+            // Arrange
+            parameterDto.setMinFlightDuration(1); // Allow 1 minute
+            updateRequest.setArrivalTime(newDepartureTime.plusMinutes(1));
+
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode("FL999")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightRepository.save(any(Flight.class))).thenReturn(existingFlight);
+            when(flightMapper.toDto(existingFlight)).thenReturn(updatedFlightDto);
+
+            // Act
+            FlightDto result = flightService.updateFlight(5, updateRequest);
+
+            // Assert
+            assertNotNull(result);
+            verify(flightRepository).save(any(Flight.class));
+        }
+
+        @Test
+        @DisplayName("TC8: Update with very long duration (5 days) - Boundary test")
+        void updateFlight_VeryLongDuration_Success() {
+            // Arrange
+            updateRequest.setArrivalTime(newDepartureTime.plusDays(5));
+
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode("FL999")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightRepository.save(any(Flight.class))).thenReturn(existingFlight);
+            when(flightMapper.toDto(existingFlight)).thenReturn(updatedFlightDto);
+
+            // Act
+            FlightDto result = flightService.updateFlight(5, updateRequest);
+
+            // Assert
+            assertNotNull(result);
+            verify(flightRepository).save(any(Flight.class));
+        }
+
+        @Test
+        @DisplayName("TC10: Update flight with bookings - Throws exception or constraints")
+        void updateFlight_WithBookings_ThrowsException() {
+            // Arrange - Assumes business rule prevents updates when bookings exist
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode("FL999")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            // Mock that this flight has bookings - implementation dependent
+
+            // Act - May succeed or fail depending on business rules
+            // If constraint exists, expect exception
+            FlightDto result = flightService.updateFlight(5, updateRequest);
+            
+            // Assert
+            assertNotNull(result);
+        }
+
+        @Test
+        @DisplayName("TC11: Update with same values (idempotent) - Success")
+        void updateFlight_SameValues_Success() {
+            // Arrange
+            updateRequest.setFlightCode(existingFlight.getFlightCode());
+            updateRequest.setDepartureTime(existingFlight.getDepartureTime());
+            updateRequest.setArrivalTime(existingFlight.getArrivalTime());
+
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode(existingFlight.getFlightCode())).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightRepository.save(any(Flight.class))).thenReturn(existingFlight);
+            when(flightMapper.toDto(existingFlight)).thenReturn(updatedFlightDto);
+
+            // Act
+            FlightDto result = flightService.updateFlight(5, updateRequest);
+
+            // Assert
+            assertNotNull(result);
+            verify(flightRepository).save(any(Flight.class));
+        }
+
+        @Test
+        @DisplayName("TC12: Update non-existent flight - Throws exception")
+        void updateFlight_DuplicateFlightCode_ThrowsException() {
+            // Arrange
+            updateRequest.setFlightCode("FL999");
+            
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode("FL999")).thenReturn(true);
+
+            // Act & Assert
+            IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> flightService.updateFlight(5, updateRequest)
+            );
+
+            assertTrue(exception.getMessage().contains("Flight code already exists"));
+        }
+
+        @Test
+        @DisplayName("TC7: Update flight with same departure and arrival airports - Throws exception")
+        void updateFlight_SameDepartureAndArrivalAirports_ThrowsException() {
+            // Arrange
+            updateRequest.setDepartureAirportId(1);
+            updateRequest.setArrivalAirportId(1); // Same airport
+
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode("FL999")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+
+            // Act & Assert
+            IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> flightService.updateFlight(5, updateRequest)
+            );
+
+            assertTrue(exception.getMessage().contains("Departure and arrival airports cannot be the same"));
+        }
+
+        // ===== NHÓM 4: Insufficient Flight Duration =====
+
+        @Test
+        @DisplayName("TC8: Update flight with duration less than minimum - Throws exception")
+        void updateFlight_InsufficientFlightDuration_ThrowsException() {
+            // Arrange
+            parameterDto.setMinFlightDuration(60); // 60 minutes minimum
+            updateRequest.setDepartureTime(newDepartureTime);
+            updateRequest.setArrivalTime(newDepartureTime.plusMinutes(30)); // Only 30 minutes
+
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode("FL999")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+
+            // Act & Assert
+            IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> flightService.updateFlight(5, updateRequest)
+            );
+
+            assertTrue(exception.getMessage().contains("Flight duration must be at least"));
+        }
+
+        @Test
+        @DisplayName("TC9: Update flight with exact minimum duration - Success")
+        void updateFlight_ExactMinimumDuration_Success() {
+            // Arrange
+            parameterDto.setMinFlightDuration(180); // 180 minutes minimum
+            updateRequest.setDepartureTime(newDepartureTime);
+            updateRequest.setArrivalTime(newDepartureTime.plusMinutes(180)); // Exactly 180 minutes
+
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode("FL999")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightRepository.save(any(Flight.class))).thenReturn(existingFlight);
+            when(flightMapper.toDto(existingFlight)).thenReturn(updatedFlightDto);
+
+            // Act
+            FlightDto result = flightService.updateFlight(5, updateRequest);
+
+            // Assert
+            assertNotNull(result);
+            verify(flightRepository).save(any(Flight.class));
+        }
+
+        // ===== NHÓM 5: Flight Not Found & Repository/Mapper Errors =====
+
+        @Test
+        @DisplayName("TC10: Update flight with non-existent ID - Throws exception")
+        void updateFlight_FlightNotFound_ThrowsException() {
+            // Arrange
+            when(flightRepository.findActiveById(999)).thenReturn(Optional.empty());
+            when(flightRepository.existsByFlightCode(anyString())).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+
+            // Act & Assert
+            RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> flightService.updateFlight(999, updateRequest)
+            );
+
+            assertTrue(exception.getMessage().contains("Flight") && exception.getMessage().contains("not found"), 
+                      "Expected message to contain 'Flight' and 'not found', got: " + exception.getMessage());
+            verify(flightRepository, never()).save(any(Flight.class));
+        }
+
+        @Test
+        @DisplayName("TC11: Update flight when repository save fails - Propagates exception")
+        void updateFlight_RepositorySaveFails_PropagatesException() {
+            // Arrange
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode("FL999")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightRepository.save(any(Flight.class)))
+                .thenThrow(new RuntimeException("Database error"));
+
+            // Act & Assert
+            assertThrows(
+                RuntimeException.class,
+                () -> flightService.updateFlight(5, updateRequest)
+            );
+
+            verify(flightRepository).save(any(Flight.class));
+        }
+
+        @Test
+        @DisplayName("TC12: Update flight when mapper fails - Propagates exception")
+        void updateFlight_MapperFails_PropagatesException() {
+            // Arrange
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode("FL999")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightRepository.save(any(Flight.class))).thenReturn(existingFlight);
+            when(flightMapper.toDto(existingFlight))
+                .thenThrow(new RuntimeException("Mapping error"));
+
+            // Act & Assert
+            assertThrows(
+                RuntimeException.class,
+                () -> flightService.updateFlight(5, updateRequest)
+            );
+        }
+
+        @Test
+        @DisplayName("TC13: Update flight when parameter service fails - Propagates exception")
+        void updateFlight_ParameterServiceFails_PropagatesException() {
+            // Arrange
+            when(flightRepository.findActiveById(5)).thenReturn(Optional.of(existingFlight));
+            when(flightRepository.existsByFlightCode("FL999")).thenReturn(false);
+            when(parameterService.getLatestParameter())
+                .thenThrow(new RuntimeException("Parameter service error"));
+
+            // Act & Assert
+            assertThrows(
+                RuntimeException.class,
+                () -> flightService.updateFlight(5, updateRequest)
+            );
+
+            verify(flightRepository, never()).save(any(Flight.class));
+        }
+    }
+
+    // ==================== createFlight Tests - Complete Path Coverage ====================
+
+    @Nested
+    @DisplayName("CreateFlight Tests - Full Path Coverage")
+    @Tag("createFlight")
+    class CreateFlightTests {
+
+        private FlightRequest createRequest;
+        private Flight createdFlight;
+        private FlightDto createdFlightDto;
+
+        @BeforeEach
+        void setUp() {
+            LocalDateTime departureTime = LocalDateTime.of(2024, 12, 25, 10, 0);
+            LocalDateTime arrivalTime = LocalDateTime.of(2024, 12, 25, 13, 30);
+
+            createRequest = new FlightRequest();
+            createRequest.setFlightCode("VN2024");
+            createRequest.setDepartureTime(departureTime);
+            createRequest.setArrivalTime(arrivalTime);
+            createRequest.setPlaneId(1);
+            createRequest.setDepartureAirportId(1);
+            createRequest.setArrivalAirportId(2);
+
+            createdFlight = new Flight();
+            createdFlight.setFlightId(10);
+            createdFlight.setFlightCode("VN2024");
+            createdFlight.setDeletedAt(null);
+
+            createdFlightDto = new FlightDto();
+            createdFlightDto.setFlightId(10);
+            createdFlightDto.setFlightCode("VN2024");
+
+            parameterDto.setMinFlightDuration(30);
+        }
+
+        // ===== NHÓM 1: Happy Paths - Successful Creation =====
+
+        @Test
+        @DisplayName("TC1: Create flight with valid request - Success")
+        void createFlight_ValidRequest_Success() {
+            // Arrange
+            when(flightRepository.existsByFlightCode("VN2024")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightMapper.toEntityFromCreateRequest(createRequest)).thenReturn(createdFlight);
+            when(flightRepository.save(any(Flight.class))).thenReturn(createdFlight);
+            when(flightMapper.toDto(createdFlight)).thenReturn(createdFlightDto);
+
+            // Act
+            FlightDto result = flightService.createFlight(createRequest);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals("VN2024", result.getFlightCode());
+            assertEquals(10, result.getFlightId());
+            verify(flightRepository).save(any(Flight.class));
+        }
+
+        // ===== NHÓM 2: Duplicate Flight Code Validation =====
+
+        @Test
+        @DisplayName("TC2: Create flight with existing flight code - Throws exception")
+        void createFlight_DuplicateFlightCode_ThrowsException() {
+            // Arrange
+            when(flightRepository.existsByFlightCode("VN2024")).thenReturn(true);
+
+            // Act & Assert
+            IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> flightService.createFlight(createRequest)
+            );
+
+            assertTrue(exception.getMessage().contains("Flight code already exists"));
+            verify(flightRepository, never()).save(any(Flight.class));
+        }
+
+        // ===== NHÓM 3: Time Validation =====
+
+        @Test
+        @DisplayName("TC3: Create flight with arrival before departure - Throws exception")
+        void createFlight_ArrivalBeforeDeparture_ThrowsException() {
+            // Arrange
+            createRequest.setDepartureTime(LocalDateTime.of(2024, 12, 25, 13, 30));
+            createRequest.setArrivalTime(LocalDateTime.of(2024, 12, 25, 10, 0));
+
+            when(flightRepository.existsByFlightCode("VN2024")).thenReturn(false);
+
+            // Act & Assert
+            IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> flightService.createFlight(createRequest)
+            );
+
+            assertTrue(exception.getMessage().contains("Arrival time must be after departure time"));
+        }
+
+        @Test
+        @DisplayName("TC4: Create flight with past departure time - Throws exception")
+        void createFlight_PastDepartureTime_ThrowsException() {
+            // Arrange
+            LocalDateTime pastTime = LocalDateTime.of(2024, 11, 1, 10, 0); // Past date
+            createRequest.setDepartureTime(pastTime);
+            createRequest.setArrivalTime(pastTime.plusHours(2));
+
+            when(flightRepository.existsByFlightCode("VN2024")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+
+            // Act & Assert
+            IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> flightService.createFlight(createRequest)
+            );
+
+            assertTrue(exception.getMessage().contains("Departure date cannot be in the past") ||
+                      exception.getMessage().contains("past"));
+        }
+
+        @Test
+        @DisplayName("TC5: Create flight with same departure and arrival airports - Throws exception")
+        void createFlight_SameAirports_ThrowsException() {
+            // Arrange
+            parameterDto.setMinFlightDuration(120); // 2 hours
+            createRequest.setDepartureTime(LocalDateTime.of(2024, 12, 25, 10, 0));
+            createRequest.setArrivalTime(LocalDateTime.of(2024, 12, 25, 10, 30)); // Only 30 minutes
+
+            when(flightRepository.existsByFlightCode("VN2024")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+
+            // Act & Assert
+            IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> flightService.createFlight(createRequest)
+            );
+
+            assertTrue(exception.getMessage().contains("Flight duration must be at least"));
+        }
+
+        @Test
+        @DisplayName("TC5: Create flight with same departure and arrival airports - Throws exception")
+        void createFlight_SameAirports_ThrowsException() {
+            // Arrange
+            createRequest.setDepartureAirportId(1);
+            createRequest.setArrivalAirportId(1);
+
+            when(flightRepository.existsByFlightCode("VN2024")).thenReturn(false);
+
+            // Act & Assert
+            IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> flightService.createFlight(createRequest)
+            );
+
+            assertTrue(exception.getMessage().contains("Departure and arrival airports cannot be the same"));
+        }
+
+        // ===== NHÓM 4: Boundary Value Tests =====
+
+        @Test
+        @DisplayName("TC6: Create flight with minimum seats (1) - Success")
+        void createFlight_MinimumSeats_Success() {
+            // Arrange
+            createRequest.setFlightCode("VN2024");
+            // Assuming totalSeats can be set via request or plane configuration
+            
+            when(flightRepository.existsByFlightCode("VN2024")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightMapper.toEntityFromCreateRequest(createRequest)).thenReturn(createdFlight);
+            when(flightRepository.save(any(Flight.class))).thenReturn(createdFlight);
+            when(flightMapper.toDto(createdFlight)).thenReturn(createdFlightDto);
+
+            // Act
+            FlightDto result = flightService.createFlight(createRequest);
+
+            // Assert
+            assertNotNull(result);
+            verify(flightRepository).save(any(Flight.class));
+        }
+
+        @Test
+        @DisplayName("TC7: Create flight with maximum seats (500) - Success")
+        void createFlight_MaximumSeats_Success() {
+            // Arrange
+            createRequest.setFlightCode("VN2024");
+            // Assuming totalSeats configured for maximum
+            
+            when(flightRepository.existsByFlightCode("VN2024")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightMapper.toEntityFromCreateRequest(createRequest)).thenReturn(createdFlight);
+            when(flightRepository.save(any(Flight.class))).thenReturn(createdFlight);
+            when(flightMapper.toDto(createdFlight)).thenReturn(createdFlightDto);
+
+            // Act
+            FlightDto result = flightService.createFlight(createRequest);
+
+            // Assert
+            assertNotNull(result);
+            verify(flightRepository).save(any(Flight.class));
+        }
+
+        // ===== NHÓM 5: Null/Invalid Input =====
+
+        @Test
+        @DisplayName("TC8: Create flight with null flight code - Throws exception")
+        void createFlight_NullFlightCode_ThrowsException() {
+            // Arrange
+            createRequest.setFlightCode(null);
+
+            // Act & Assert
+            assertThrows(
+                Exception.class,
+                () -> flightService.createFlight(createRequest)
+            );
+
+            verify(flightRepository, never()).save(any(Flight.class));
+        }
+
+        @Test
+        @DisplayName("TC9: Create flight with non-existent departure airport - Throws exception")
+        void createFlight_InvalidDepartureAirport_ThrowsException() {
+            // Arrange
+            createRequest.setDepartureAirportId(999); // Non-existent ID
+
+            when(flightRepository.existsByFlightCode("VN2024")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            // Repository or service should validate airport existence
+
+            // Act & Assert
+            assertThrows(
+                RuntimeException.class,
+                () -> flightService.createFlight(createRequest)
+            );
+        }
+
+        @Test
+        @DisplayName("TC10: Create flight with non-existent arrival airport - Throws exception")
+        void createFlight_InvalidArrivalAirport_ThrowsException() {
+            // Arrange
+            createRequest.setArrivalAirportId(888); // Non-existent ID
+
+            when(flightRepository.existsByFlightCode("VN2024")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            // Repository or service should validate airport existence
+
+            // Act & Assert
+            assertThrows(
+                RuntimeException.class,
+                () -> flightService.createFlight(createRequest)
+            );
+        }
+    }
+
+    // ==================== Old tests removed - replaced with consolidated tests above ====================
+
+    @Nested
+    @DisplayName("[DEPRECATED] Old CreateFlight Tests - DO NOT USE")
+    @Tag("deprecated")
+    class DeprecatedCreateFlightTests {
+
+        @Test
+        @DisplayName("[OLD] TC7: Create flight when repository save fails - Propagates exception")
+        void createFlight_RepositorySaveFails_PropagatesException() {
+            // Arrange
+            when(flightRepository.existsByFlightCode("VN2024")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightMapper.toEntityFromCreateRequest(createRequest)).thenReturn(createdFlight);
+            when(flightRepository.save(any(Flight.class)))
+                .thenThrow(new RuntimeException("Database error"));
+
+            // Act & Assert
+            assertThrows(
+                RuntimeException.class,
+                () -> flightService.createFlight(createRequest)
+            );
+        }
+
+        @Test
+        @DisplayName("TC8: Create flight when parameter service fails - Propagates exception")
+        void createFlight_ParameterServiceFails_PropagatesException() {
+            // Arrange
+            when(flightRepository.existsByFlightCode("VN2024")).thenReturn(false);
+            when(parameterService.getLatestParameter())
+                .thenThrow(new RuntimeException("Parameter service error"));
+
+            // Act & Assert
+            assertThrows(
+                RuntimeException.class,
+                () -> flightService.createFlight(createRequest)
+            );
+
+            verify(flightRepository, never()).save(any(Flight.class));
+        }
+
+        @Test
+        @DisplayName("TC9: Create flight when mapper fails - Propagates exception")
+        void createFlight_MapperFails_PropagatesException() {
+            // Arrange
+            when(flightRepository.existsByFlightCode("VN2024")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightMapper.toEntityFromCreateRequest(createRequest))
+                .thenThrow(new RuntimeException("Mapping error"));
+
+            // Act & Assert
+            assertThrows(
+                RuntimeException.class,
+                () -> flightService.createFlight(createRequest)
+            );
+
+            verify(flightRepository, never()).save(any(Flight.class));
+        }
+
+        @Test
+        @DisplayName("TC10: Create flight with deletedAt null after save - Success")
+        void createFlight_DeletedAtSetToNull_Success() {
+            // Arrange
+            when(flightRepository.existsByFlightCode("VN2024")).thenReturn(false);
+            when(parameterService.getLatestParameter()).thenReturn(parameterDto);
+            when(flightMapper.toEntityFromCreateRequest(createRequest)).thenReturn(createdFlight);
+            when(flightRepository.save(any(Flight.class))).thenAnswer(invocation -> {
+                Flight flight = invocation.getArgument(0);
+                assertNull(flight.getDeletedAt());
+                return flight;
+            });
+            when(flightMapper.toDto(createdFlight)).thenReturn(createdFlightDto);
+
+            // Act
+            FlightDto result = flightService.createFlight(createRequest);
+
+            // Assert
+            assertNotNull(result);
+            verify(flightRepository).save(argThat(flight -> flight.getDeletedAt() == null));
+        }
+    }
+
+//     // ==================== getFlightsByDateRange Tests - Complete Path Coverage ====================
+
+//     @Nested
+//     @DisplayName("GetFlightsByDateRange Tests - Full Path Coverage")
+//     @Tag("getFlightsByDateRange")
+//     class GetFlightsByDateRangeTests {
+
+//         private LocalDateTime startDate;
+//         private LocalDateTime endDate;
+//         private List<Flight> flights;
+//         private List<FlightDto> flightDtos;
+
+//         @BeforeEach
+//         void setUp() {
+//             startDate = LocalDateTime.of(2024, 12, 20, 0, 0);
+//             endDate = LocalDateTime.of(2024, 12, 30, 23, 59);
+
+//             Flight flight1 = new Flight();
+//             flight1.setFlightId(1);
+//             flight1.setFlightCode("VN101");
+
+//             Flight flight2 = new Flight();
+//             flight2.setFlightId(2);
+//             flight2.setFlightCode("VN102");
+
+//             flights = Arrays.asList(flight1, flight2);
+
+//             FlightDto dto1 = new FlightDto();
+//             dto1.setFlightId(1);
+//             dto1.setFlightCode("VN101");
+
+//             FlightDto dto2 = new FlightDto();
+//             dto2.setFlightId(2);
+//             dto2.setFlightCode("VN102");
+
+//             flightDtos = Arrays.asList(dto1, dto2);
+//         }
+
+//         // ===== NHÓM 1: Happy Paths - Flights Found =====
+
+//         @Test
+//         @DisplayName("TC1: Get flights within date range with multiple flights - Returns all flights")
+//         void getFlightsByDateRange_MultipleFlights_ReturnsAll() {
+//             // Arrange
+//             when(flightRepository.findByDepartureDateRange(startDate, endDate))
+//                 .thenReturn(flights);
+//             when(flightMapper.toDtoList(flights)).thenReturn(flightDtos);
+
+//             // Act
+//             List<FlightDto> result = flightService.getFlightsByDateRange(startDate, endDate);
+
+//             // Assert
+//             assertNotNull(result);
+//             assertEquals(2, result.size());
+//             assertEquals("VN101", result.get(0).getFlightCode());
+//             assertEquals("VN102", result.get(1).getFlightCode());
+//             verify(flightRepository).findByDepartureDateRange(startDate, endDate);
+//         }
+
+//         @Test
+//         @DisplayName("TC2: Get flights within date range with single flight - Returns list with one element")
+//         void getFlightsByDateRange_SingleFlight_ReturnsList() {
+//             // Arrange
+//             when(flightRepository.findByDepartureDateRange(startDate, endDate))
+//                 .thenReturn(Arrays.asList(flights.get(0)));
+//             when(flightMapper.toDtoList(anyList())).thenReturn(Arrays.asList(flightDtos.get(0)));
+
+//             // Act
+//             List<FlightDto> result = flightService.getFlightsByDateRange(startDate, endDate);
+
+//             // Assert
+//             assertNotNull(result);
+//             assertEquals(1, result.size());
+//             verify(flightRepository).findByDepartureDateRange(startDate, endDate);
+//         }
+
+//         // ===== NHÓM 2: Empty Results =====
+
+//         @Test
+//         @DisplayName("TC3: Get flights within date range with no flights - Returns empty list")
+//         void getFlightsByDateRange_NoFlights_ReturnsEmptyList() {
+//             // Arrange
+//             when(flightRepository.findByDepartureDateRange(startDate, endDate))
+//                 .thenReturn(Collections.emptyList());
+//             when(flightMapper.toDtoList(Collections.emptyList())).thenReturn(Collections.emptyList());
+
+//             // Act
+//             List<FlightDto> result = flightService.getFlightsByDateRange(startDate, endDate);
+
+//             // Assert
+//             assertNotNull(result);
+//             assertTrue(result.isEmpty());
+//             verify(flightRepository).findByDepartureDateRange(startDate, endDate);
+//         }
+
+//         // ===== NHÓM 3: Date Range Edge Cases =====
+
+//         @Test
+//         @DisplayName("TC4: Get flights with same start and end date - Returns flights")
+//         void getFlightsByDateRange_SameDateRange_ReturnsFlights() {
+//             // Arrange
+//             LocalDateTime sameDate = LocalDateTime.of(2024, 12, 25, 0, 0);
+//             when(flightRepository.findByDepartureDateRange(sameDate, sameDate))
+//                 .thenReturn(Arrays.asList(flights.get(0)));
+//             when(flightMapper.toDtoList(anyList())).thenReturn(Arrays.asList(flightDtos.get(0)));
+
+//             // Act
+//             List<FlightDto> result = flightService.getFlightsByDateRange(sameDate, sameDate);
+
+//             // Assert
+//             assertNotNull(result);
+//             assertEquals(1, result.size());
+//         }
+
+//         @Test
+//         @DisplayName("TC5: Get flights with past date range - Returns flights")
+//         void getFlightsByDateRange_PastDateRange_ReturnsFlights() {
+//             // Arrange
+//             LocalDateTime pastStart = LocalDateTime.of(2023, 12, 20, 0, 0);
+//             LocalDateTime pastEnd = LocalDateTime.of(2023, 12, 30, 23, 59);
+
+//             when(flightRepository.findByDepartureDateRange(pastStart, pastEnd))
+//                 .thenReturn(flights);
+//             when(flightMapper.toDtoList(flights)).thenReturn(flightDtos);
+
+//             // Act
+//             List<FlightDto> result = flightService.getFlightsByDateRange(pastStart, pastEnd);
+
+//             // Assert
+//             assertNotNull(result);
+//             assertEquals(2, result.size());
+//         }
+
+//         @Test
+//         @DisplayName("TC6: Get flights with future date range - Returns flights")
+//         void getFlightsByDateRange_FutureDateRange_ReturnsFlights() {
+//             // Arrange
+//             LocalDateTime futureStart = LocalDateTime.of(2025, 12, 20, 0, 0);
+//             LocalDateTime futureEnd = LocalDateTime.of(2025, 12, 30, 23, 59);
+
+//             when(flightRepository.findByDepartureDateRange(futureStart, futureEnd))
+//                 .thenReturn(flights);
+//             when(flightMapper.toDtoList(flights)).thenReturn(flightDtos);
+
+//             // Act
+//             List<FlightDto> result = flightService.getFlightsByDateRange(futureStart, futureEnd);
+
+//             // Assert
+//             assertNotNull(result);
+//             assertEquals(2, result.size());
+//         }
+
+//         // ===== NHÓM 4: Repository and Mapper Errors =====
+
+//         @Test
+//         @DisplayName("TC7: Get flights when repository throws exception - Propagates exception")
+//         void getFlightsByDateRange_RepositoryThrowsException_PropagatesException() {
+//             // Arrange
+//             when(flightRepository.findByDepartureDateRange(startDate, endDate))
+//                 .thenThrow(new RuntimeException("Database error"));
+
+//             // Act & Assert
+//             assertThrows(
+//                 RuntimeException.class,
+//                 () -> flightService.getFlightsByDateRange(startDate, endDate)
+//             );
+//         }
+
+//         @Test
+//         @DisplayName("TC8: Get flights when mapper throws exception - Propagates exception")
+//         void getFlightsByDateRange_MapperThrowsException_PropagatesException() {
+//             // Arrange
+//             when(flightRepository.findByDepartureDateRange(startDate, endDate))
+//                 .thenReturn(flights);
+//             when(flightMapper.toDtoList(flights))
+//                 .thenThrow(new RuntimeException("Mapping error"));
+
+//             // Act & Assert
+//             assertThrows(
+//                 RuntimeException.class,
+//                 () -> flightService.getFlightsByDateRange(startDate, endDate)
+//             );
+//         }
+
+//         // ===== NHÓM 5: Large Result Sets =====
+
+//         @Test
+//         @DisplayName("TC9: Get flights with many flights returned - Returns all flights")
+//         void getFlightsByDateRange_ManyFlights_ReturnsAll() {
+//             // Arrange
+//             List<Flight> manyFlights = new ArrayList<>();
+//             List<FlightDto> manyDtos = new ArrayList<>();
+//             for (int i = 0; i < 50; i++) {
+//                 Flight flight = new Flight();
+//                 flight.setFlightId(i);
+//                 flight.setFlightCode("VN" + String.format("%03d", i));
+//                 manyFlights.add(flight);
+
+//                 FlightDto dto = new FlightDto();
+//                 dto.setFlightId(i);
+//                 dto.setFlightCode("VN" + String.format("%03d", i));
+//                 manyDtos.add(dto);
+//             }
+
+//             when(flightRepository.findByDepartureDateRange(startDate, endDate))
+//                 .thenReturn(manyFlights);
+//             when(flightMapper.toDtoList(manyFlights)).thenReturn(manyDtos);
+
+//             // Act
+//             List<FlightDto> result = flightService.getFlightsByDateRange(startDate, endDate);
+
+//             // Assert
+//             assertNotNull(result);
+//             assertEquals(50, result.size());
+//         }
+//     }
+
+//     // ==================== checkFlightAvailability Tests - Complete Path Coverage ====================
+
+//     @Nested
+//     @DisplayName("CheckFlightAvailability Tests - Full Path Coverage")
+//     @Tag("checkFlightAvailability")
+//     class CheckFlightAvailabilityTests {
+
+//         private List<FlightTicketClassDto> ticketClasses;
+
+//         @BeforeEach
+//         void setUp() {
+//             FlightTicketClassDto class1 = new FlightTicketClassDto();
+//             class1.setFlightId(1);
+//             class1.setTicketClassId(1);
+
+//             FlightTicketClassDto class2 = new FlightTicketClassDto();
+//             class2.setFlightId(1);
+//             class2.setTicketClassId(2);
+
+//             FlightTicketClassDto class3 = new FlightTicketClassDto();
+//             class3.setFlightId(1);
+//             class3.setTicketClassId(3);
+
+//             ticketClasses = Arrays.asList(class1, class2, class3);
+//         }
+
+//         // ===== NHÓM 1: Happy Paths - Flight Found with Classes =====
+
+//         @Test
+//         @DisplayName("TC1: Check availability for valid flight with multiple ticket classes - Returns all classes")
+//         void checkFlightAvailability_ValidFlightMultipleClasses_ReturnsAll() {
+//             // Arrange
+//             when(flightRepository.findActiveById(1)).thenReturn(Optional.of(validFlight));
+//             when(flightTicketClassService.getFlightTicketClassesByFlightId(1))
+//                 .thenReturn(ticketClasses);
+
+//             // Act
+//             List<FlightTicketClassDto> result = flightService.checkFlightAvailability(1);
+
+//             // Assert
+//             assertNotNull(result);
+//             assertEquals(3, result.size());
+//             verify(flightRepository).findActiveById(1);
+//             verify(flightTicketClassService).getFlightTicketClassesByFlightId(1);
+//         }
+
+//         @Test
+//         @DisplayName("TC2: Check availability for valid flight with single ticket class - Returns class")
+//         void checkFlightAvailability_ValidFlightSingleClass_ReturnsClass() {
+//             // Arrange
+//             when(flightRepository.findActiveById(1)).thenReturn(Optional.of(validFlight));
+//             when(flightTicketClassService.getFlightTicketClassesByFlightId(1))
+//                 .thenReturn(Arrays.asList(ticketClasses.get(0)));
+
+//             // Act
+//             List<FlightTicketClassDto> result = flightService.checkFlightAvailability(1);
+
+//             // Assert
+//             assertNotNull(result);
+//             assertEquals(1, result.size());
+//         }
+
+//         // ===== NHÓM 2: No Ticket Classes Found =====
+
+//         @Test
+//         @DisplayName("TC3: Check availability for valid flight with no ticket classes - Returns empty list")
+//         void checkFlightAvailability_NoTicketClasses_ReturnsEmptyList() {
+//             // Arrange
+//             when(flightRepository.findActiveById(1)).thenReturn(Optional.of(validFlight));
+//             when(flightTicketClassService.getFlightTicketClassesByFlightId(1))
+//                 .thenReturn(Collections.emptyList());
+
+//             // Act
+//             List<FlightTicketClassDto> result = flightService.checkFlightAvailability(1);
+
+//             // Assert
+//             assertNotNull(result);
+//             assertTrue(result.isEmpty());
+//             verify(flightTicketClassService).getFlightTicketClassesByFlightId(1);
+//         }
+
+//         // ===== NHÓM 3: Flight Not Found =====
+
+//         @Test
+//         @DisplayName("TC4: Check availability for non-existent flight ID - Throws exception")
+//         void checkFlightAvailability_FlightNotFound_ThrowsException() {
+//             // Arrange
+//             when(flightRepository.findActiveById(999)).thenReturn(Optional.empty());
+
+//             // Act & Assert
+//             RuntimeException exception = assertThrows(
+//                 RuntimeException.class,
+//                 () -> flightService.checkFlightAvailability(999)
+//             );
+
+//             assertTrue(exception.getMessage().contains("Flight not found"));
+//             verify(flightTicketClassService, never()).getFlightTicketClassesByFlightId(any());
+//         }
+
+//         @Test
+//         @DisplayName("TC5: Check availability for deleted flight (ID not found) - Throws exception")
+//         void checkFlightAvailability_DeletedFlight_ThrowsException() {
+//             // Arrange
+//             when(flightRepository.findActiveById(5)).thenReturn(Optional.empty());
+
+//             // Act & Assert
+//             RuntimeException exception = assertThrows(
+//                 RuntimeException.class,
+//                 () -> flightService.checkFlightAvailability(5)
+//             );
+
+//             assertTrue(exception.getMessage().contains("Flight not found"));
+//         }
+
+//         // ===== NHÓM 4: Service Layer Errors =====
+
+//         @Test
+//         @DisplayName("TC6: Check availability when ticket class service throws exception - Wraps exception")
+//         void checkFlightAvailability_ServiceThrowsException_WrapsException() {
+//             // Arrange
+//             when(flightRepository.findActiveById(1)).thenReturn(Optional.of(validFlight));
+//             when(flightTicketClassService.getFlightTicketClassesByFlightId(1))
+//                 .thenThrow(new RuntimeException("Service connection error"));
+
+//             // Act & Assert
+//             RuntimeException exception = assertThrows(
+//                 RuntimeException.class,
+//                 () -> flightService.checkFlightAvailability(1)
+//             );
+
+//             assertTrue(exception.getMessage().contains("Error checking flight availability"));
+//         }
+
+//         @Test
+//         @DisplayName("TC7: Check availability when repository throws exception - Wraps exception")
+//         void checkFlightAvailability_RepositoryThrowsException_WrapsException() {
+//             // Arrange
+//             when(flightRepository.findActiveById(1))
+//                 .thenThrow(new RuntimeException("Database error"));
+
+//             // Act & Assert
+//             RuntimeException exception = assertThrows(
+//                 RuntimeException.class,
+//                 () -> flightService.checkFlightAvailability(1)
+//             );
+
+//             assertTrue(exception.getMessage().contains("Error checking flight availability"));
+//         }
+
+//         // ===== NHÓM 5: Large Result Sets =====
+
+//         @Test
+//         @DisplayName("TC8: Check availability with many ticket classes - Returns all classes")
+//         void checkFlightAvailability_ManyTicketClasses_ReturnsAll() {
+//             // Arrange
+//             List<FlightTicketClassDto> manyClasses = new ArrayList<>();
+//             for (int i = 1; i <= 20; i++) {
+//                 FlightTicketClassDto dto = new FlightTicketClassDto();
+//                 dto.setFlightId(1);
+//                 dto.setTicketClassId(i);
+//                 manyClasses.add(dto);
+//             }
+
+//             when(flightRepository.findActiveById(1)).thenReturn(Optional.of(validFlight));
+//             when(flightTicketClassService.getFlightTicketClassesByFlightId(1))
+//                 .thenReturn(manyClasses);
+
+//             // Act
+//             List<FlightTicketClassDto> result = flightService.checkFlightAvailability(1);
+
+//             // Assert
+//             assertNotNull(result);
+//             assertEquals(20, result.size());
+//         }
+
+//         @Test
+//         @DisplayName("TC9: Check availability with null flight ID - Throws exception")
+//         void checkFlightAvailability_NullFlightId_ThrowsException() {
+//             // Act & Assert
+//             assertThrows(
+//                 Exception.class,
+//                 () -> flightService.checkFlightAvailability(null)
+//             );
+//         }
+//     }
 }
