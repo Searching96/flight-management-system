@@ -10,7 +10,6 @@ import com.flightmanagement.repository.FlightRepository;
 import com.flightmanagement.repository.TicketClassRepository;
 import com.flightmanagement.service.FlightTicketClassService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
