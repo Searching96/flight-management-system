@@ -65,6 +65,7 @@ public class ParameterServiceTest {
 
     // ==================== getLatestParameter Tests ====================
 
+    // NESTED CLASS: GET LATEST PARAMETER TESTS
     @Nested
     @DisplayName("GetLatestParameter Tests")
     @Tag("getLatestParameter")
@@ -132,6 +133,7 @@ public class ParameterServiceTest {
 
     // ==================== updateParameters Tests ====================
 
+    // NESTED CLASS: UPDATE PARAMETERS TESTS
     @Nested
     @DisplayName("UpdateParameters Tests")
     @Tag("updateParameters")
@@ -225,24 +227,24 @@ public class ParameterServiceTest {
         }
     }
 
-    // ==================== Individual Update Methods Tests ====================
+    // ==================== updateMaxMediumAirports Tests ====================
 
+    // NESTED CLASS: UPDATE MAX MEDIUM AIRPORTS TESTS
     @Nested
-    @DisplayName("Individual Update Methods Tests")
-    @Tag("individualUpdates")
-    class IndividualUpdateMethodsTests {
+    @DisplayName("UpdateMaxMediumAirports Tests")
+    @Tag("updateMaxMediumAirports")
+    class UpdateMaxMediumAirportsTests {
 
         @BeforeEach
         void setUp() {
-            // Setup for individual update methods
             when(parameterRepository.findLatestParameter()).thenReturn(Optional.of(validParameter));
             when(parameterMapper.toDto(validParameter)).thenReturn(validParameterDto);
         }
 
         @Test
-        @Tag("individualUpdates")
-        @DisplayName("Update max medium airports - Updates only that field")
-        void updateMaxMediumAirports_UpdatesField_CallsUpdateParameters() {
+        @Tag("updateMaxMediumAirports")
+        @DisplayName("Update max medium airports - Updates field successfully")
+        void updateMaxMediumAirports_UpdatesFieldSuccessfully() {
             // Arrange
             Parameter savedParameter = new Parameter();
             savedParameter.setMaxMediumAirport(5);
@@ -264,9 +266,41 @@ public class ParameterServiceTest {
         }
 
         @Test
-        @Tag("individualUpdates")
-        @DisplayName("Update min flight duration - Updates only that field")
-        void updateMinFlightDuration_UpdatesField_CallsUpdateParameters() {
+        @Tag("updateMaxMediumAirports")
+        @DisplayName("Update when no parameter exists - Throws exception")
+        void updateMaxMediumAirports_NoParameterExists_ThrowsException() {
+            // Arrange
+            when(parameterRepository.findLatestParameter()).thenReturn(Optional.empty());
+
+            // Act & Assert
+            RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+                parameterService.updateMaxMediumAirports(5);
+            });
+
+            assertEquals("No parameters found", exception.getMessage());
+            verify(parameterRepository).findLatestParameter();
+            verify(parameterRepository, never()).deleteAll();
+        }
+    }
+
+    // ==================== updateMinFlightDuration Tests ====================
+
+    // NESTED CLASS: UPDATE MIN FLIGHT DURATION TESTS
+    @Nested
+    @DisplayName("UpdateMinFlightDuration Tests")
+    @Tag("updateMinFlightDuration")
+    class UpdateMinFlightDurationTests {
+
+        @BeforeEach
+        void setUp() {
+            when(parameterRepository.findLatestParameter()).thenReturn(Optional.of(validParameter));
+            when(parameterMapper.toDto(validParameter)).thenReturn(validParameterDto);
+        }
+
+        @Test
+        @Tag("updateMinFlightDuration")
+        @DisplayName("Update min flight duration - Updates field successfully")
+        void updateMinFlightDuration_UpdatesFieldSuccessfully() {
             // Arrange
             Parameter savedParameter = new Parameter();
             ParameterDto updatedDto = new ParameterDto();
@@ -284,11 +318,26 @@ public class ParameterServiceTest {
             verify(parameterRepository).deleteAll();
             verify(parameterRepository).save(any(Parameter.class));
         }
+    }
+
+    // ==================== updateMaxLayoverDuration Tests ====================
+
+    // NESTED CLASS: UPDATE MAX LAYOVER DURATION TESTS
+    @Nested
+    @DisplayName("UpdateMaxLayoverDuration Tests")
+    @Tag("updateMaxLayoverDuration")
+    class UpdateMaxLayoverDurationTests {
+
+        @BeforeEach
+        void setUp() {
+            when(parameterRepository.findLatestParameter()).thenReturn(Optional.of(validParameter));
+            when(parameterMapper.toDto(validParameter)).thenReturn(validParameterDto);
+        }
 
         @Test
-        @Tag("individualUpdates")
-        @DisplayName("Update max layover duration - Updates only that field")
-        void updateMaxLayoverDuration_UpdatesField_CallsUpdateParameters() {
+        @Tag("updateMaxLayoverDuration")
+        @DisplayName("Update max layover duration - Updates field successfully")
+        void updateMaxLayoverDuration_UpdatesFieldSuccessfully() {
             // Arrange
             Parameter savedParameter = new Parameter();
             ParameterDto updatedDto = new ParameterDto();
@@ -306,11 +355,26 @@ public class ParameterServiceTest {
             verify(parameterRepository).deleteAll();
             verify(parameterRepository).save(any(Parameter.class));
         }
+    }
+
+    // ==================== updateMinLayoverDuration Tests ====================
+
+    // NESTED CLASS: UPDATE MIN LAYOVER DURATION TESTS
+    @Nested
+    @DisplayName("UpdateMinLayoverDuration Tests")
+    @Tag("updateMinLayoverDuration")
+    class UpdateMinLayoverDurationTests {
+
+        @BeforeEach
+        void setUp() {
+            when(parameterRepository.findLatestParameter()).thenReturn(Optional.of(validParameter));
+            when(parameterMapper.toDto(validParameter)).thenReturn(validParameterDto);
+        }
 
         @Test
-        @Tag("individualUpdates")
-        @DisplayName("Update min layover duration - Updates only that field")
-        void updateMinLayoverDuration_UpdatesField_CallsUpdateParameters() {
+        @Tag("updateMinLayoverDuration")
+        @DisplayName("Update min layover duration - Updates field successfully")
+        void updateMinLayoverDuration_UpdatesFieldSuccessfully() {
             // Arrange
             Parameter savedParameter = new Parameter();
             ParameterDto updatedDto = new ParameterDto();
@@ -328,11 +392,26 @@ public class ParameterServiceTest {
             verify(parameterRepository).deleteAll();
             verify(parameterRepository).save(any(Parameter.class));
         }
+    }
+
+    // ==================== updateMinBookingInAdvanceDuration Tests ====================
+
+    // NESTED CLASS: UPDATE MIN BOOKING IN ADVANCE DURATION TESTS
+    @Nested
+    @DisplayName("UpdateMinBookingInAdvanceDuration Tests")
+    @Tag("updateMinBookingInAdvanceDuration")
+    class UpdateMinBookingInAdvanceDurationTests {
+
+        @BeforeEach
+        void setUp() {
+            when(parameterRepository.findLatestParameter()).thenReturn(Optional.of(validParameter));
+            when(parameterMapper.toDto(validParameter)).thenReturn(validParameterDto);
+        }
 
         @Test
-        @Tag("individualUpdates")
-        @DisplayName("Update min booking in advance duration - Updates only that field")
-        void updateMinBookingInAdvanceDuration_UpdatesField_CallsUpdateParameters() {
+        @Tag("updateMinBookingInAdvanceDuration")
+        @DisplayName("Update min booking in advance duration - Updates field successfully")
+        void updateMinBookingInAdvanceDuration_UpdatesFieldSuccessfully() {
             // Arrange
             Parameter savedParameter = new Parameter();
             ParameterDto updatedDto = new ParameterDto();
@@ -350,11 +429,26 @@ public class ParameterServiceTest {
             verify(parameterRepository).deleteAll();
             verify(parameterRepository).save(any(Parameter.class));
         }
+    }
+
+    // ==================== updateMaxBookingHoldDuration Tests ====================
+
+    // NESTED CLASS: UPDATE MAX BOOKING HOLD DURATION TESTS
+    @Nested
+    @DisplayName("UpdateMaxBookingHoldDuration Tests")
+    @Tag("updateMaxBookingHoldDuration")
+    class UpdateMaxBookingHoldDurationTests {
+
+        @BeforeEach
+        void setUp() {
+            when(parameterRepository.findLatestParameter()).thenReturn(Optional.of(validParameter));
+            when(parameterMapper.toDto(validParameter)).thenReturn(validParameterDto);
+        }
 
         @Test
-        @Tag("individualUpdates")
-        @DisplayName("Update max booking hold duration - Updates only that field")
-        void updateMaxBookingHoldDuration_UpdatesField_CallsUpdateParameters() {
+        @Tag("updateMaxBookingHoldDuration")
+        @DisplayName("Update max booking hold duration - Updates field successfully")
+        void updateMaxBookingHoldDuration_UpdatesFieldSuccessfully() {
             // Arrange
             Parameter savedParameter = new Parameter();
             ParameterDto updatedDto = new ParameterDto();
@@ -372,27 +466,11 @@ public class ParameterServiceTest {
             verify(parameterRepository).deleteAll();
             verify(parameterRepository).save(any(Parameter.class));
         }
-
-        @Test
-        @Tag("individualUpdates")
-        @DisplayName("Individual update when no parameter exists - Throws exception")
-        void individualUpdate_NoParameterExists_ThrowsException() {
-            // Arrange
-            when(parameterRepository.findLatestParameter()).thenReturn(Optional.empty());
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-                parameterService.updateMaxMediumAirports(5);
-            });
-
-            assertEquals("No parameters found", exception.getMessage());
-            verify(parameterRepository).findLatestParameter();
-            verify(parameterRepository, never()).deleteAll();
-        }
     }
 
     // ==================== initializeDefaultParameters Tests ====================
 
+    // NESTED CLASS: INITIALIZE DEFAULT PARAMETERS TESTS
     @Nested
     @DisplayName("InitializeDefaultParameters Tests")
     @Tag("initializeDefaultParameters")

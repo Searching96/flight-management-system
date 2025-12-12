@@ -37,8 +37,9 @@ public class StatisticsServiceTest {
 
     // ==================== getYearlyStatistics Tests ====================
 
+    // NESTED CLASS: GET YEARLY STATISTICS TESTS
     @Nested
-    @DisplayName("GetYearlyStatistics Tests - Full Path Coverage")
+    @DisplayName("GetYearlyStatistics Tests")
     @Tag("getYearlyStatistics")
     class GetYearlyStatisticsTests {
 
@@ -160,8 +161,9 @@ public class StatisticsServiceTest {
 
     // ==================== getMonthlyStatistics Tests ====================
 
+    // NESTED CLASS: GET MONTHLY STATISTICS TESTS
     @Nested
-    @DisplayName("GetMonthlyStatistics Tests - Full Path Coverage")
+    @DisplayName("GetMonthlyStatistics Tests")
     @Tag("getMonthlyStatistics")
     class GetMonthlyStatisticsTests {
 
