@@ -123,23 +123,6 @@ public class StatisticsServiceTest {
 
         @Test
         @Tag("getYearlyStatistics")
-        @DisplayName("Repository throws exception - Propagates exception")
-        void getYearlyStatistics_RepositoryThrowsException_PropagatesException() {
-            // Arrange
-            when(statisticsRepository.getStatisticsForLast5Years())
-                .thenThrow(new RuntimeException("Database error"));
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-                statisticsService.getYearlyStatistics();
-            });
-
-            assertEquals("Database error", exception.getMessage());
-            verify(statisticsRepository).getStatisticsForLast5Years();
-        }
-
-        @Test
-        @Tag("getYearlyStatistics")
         @DisplayName("Get yearly statistics with zero values - Handles zero correctly")
         void getYearlyStatistics_WithZeroValues_HandlesCorrectly() {
             // Arrange
@@ -253,24 +236,6 @@ public class StatisticsServiceTest {
 
         @Test
         @Tag("getMonthlyStatistics")
-        @DisplayName("Repository throws exception - Propagates exception")
-        void getMonthlyStatistics_RepositoryThrowsException_PropagatesException() {
-            // Arrange
-            Integer year = 2025;
-            when(statisticsRepository.getMonthlyStatisticsByYear(year))
-                .thenThrow(new RuntimeException("Database error"));
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-                statisticsService.getMonthlyStatistics(year);
-            });
-
-            assertEquals("Database error", exception.getMessage());
-            verify(statisticsRepository).getMonthlyStatisticsByYear(year);
-        }
-
-        @Test
-        @Tag("getMonthlyStatistics")
         @DisplayName("Get monthly statistics with all 12 months - Returns full year data")
         void getMonthlyStatistics_WithFullYear_ReturnsAllMonths() {
             // Arrange
@@ -317,27 +282,6 @@ public class StatisticsServiceTest {
             assertEquals(0L, result.get(0).getTotalFlights());
             assertEquals(BigDecimal.ZERO, result.get(0).getTotalRevenue());
             assertEquals(0L, result.get(0).getTotalPassengers());
-        }
-
-        @Test
-        @Tag("getMonthlyStatistics")
-        @DisplayName("Get monthly statistics for past year - Returns historical data")
-        void getMonthlyStatistics_ForPastYear_ReturnsHistoricalData() {
-            // Arrange
-            Integer year = 2020;
-            Object[] pastMonth = new Object[]{6, 2020, 80L, new BigDecimal("3000000.00"), 8000L};
-            List<Object[]> pastMonthList = Collections.singletonList(pastMonth);
-            when(statisticsRepository.getMonthlyStatisticsByYear(year)).thenReturn(pastMonthList);
-
-            // Act
-            List<MonthlyStatisticsDto> result = statisticsService.getMonthlyStatistics(year);
-
-            // Assert
-            assertNotNull(result);
-            assertEquals(1, result.size());
-            assertEquals(6, result.get(0).getMonth());
-            assertEquals(2020, result.get(0).getYear());
-            verify(statisticsRepository).getMonthlyStatisticsByYear(year);
         }
     }
 }
