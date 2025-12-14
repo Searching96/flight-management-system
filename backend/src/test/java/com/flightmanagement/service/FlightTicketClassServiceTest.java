@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings("null")
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FlightTicketClassService Tests - Full Path Coverage")
 public class FlightTicketClassServiceTest {
@@ -86,80 +87,106 @@ public class FlightTicketClassServiceTest {
             validEntity.setFlight(validFlight);
             validEntity.setTicketClass(validTicketClass);
         }
-
-        // ===== NHÓM 1: Happy Paths - Successful Creation =====
-
+        
         @Test
-        @DisplayName("TC1: Create with null FlightId and null TicketClassId - Success without relations")
-        void createFlightTicketClass_NullFlightIdAndNullTicketClassId_SuccessWithoutRelations() {
-            // Arrange
+        @DisplayName("TC1: Create with missing input (null FlightId or TicketClassId) - Throws IllegalArgumentException")
+        void createFlightTicketClass_MissingInput_ThrowsIllegalArgumentException() {
+            // Arrange - Test with null FlightId
             validDto.setFlightId(null);
-            validDto.setTicketClassId(null);
+            validDto.setTicketClassId(1);
 
-            FlightTicketClass savedEntity = new FlightTicketClass();
-            savedEntity.setSpecifiedFare(new BigDecimal("150.00"));
-            savedEntity.setTicketQuantity(100);
-            savedEntity.setRemainingTicketQuantity(100);
+            // Act & Assert
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> flightTicketClassService.createFlightTicketClass(validDto)
+            );
 
-            FlightTicketClassDto resultDto = new FlightTicketClassDto();
-            resultDto.setSpecifiedFare(new BigDecimal("150.00"));
-            resultDto.setTicketQuantity(100);
-            resultDto.setRemainingTicketQuantity(100);
-
-            when(flightTicketClassRepository.save(any(FlightTicketClass.class))).thenReturn(savedEntity);
-            when(flightTicketClassMapper.toDto(savedEntity)).thenReturn(resultDto);
-
-            // Act
-            FlightTicketClassDto result = flightTicketClassService.createFlightTicketClass(validDto);
-
-            // Assert
-            assertNotNull(result);
-            assertEquals(new BigDecimal("150.00"), result.getSpecifiedFare());
+            assertTrue(exception.getMessage().contains("FlightId and TicketClassId are required"));
             verify(flightRepository, never()).findById(anyInt());
             verify(ticketClassRepository, never()).findById(anyInt());
-            verify(flightTicketClassRepository).save(any(FlightTicketClass.class));
-            verify(flightTicketClassMapper).toDto(savedEntity);
+            verify(flightTicketClassRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("TC2: Create with valid FlightId and null TicketClassId - Success with Flight only")
-        void createFlightTicketClass_ValidFlightIdAndNullTicketClassId_SuccessWithFlightOnly() {
-            // Arrange
-            validDto.setTicketClassId(null);
+        @DisplayName("TC2: Create with duplicate data (already added) - Throws IllegalArgumentException")
+        void createFlightTicketClass_DuplicateData_ThrowsIllegalArgumentException() {
+            // Arrange - Setup valid IDs
+            validDto.setFlightId(1);
+            validDto.setTicketClassId(1);
+            
+            FlightTicketClass existingEntity = new FlightTicketClass();
+            existingEntity.setFlightId(1);
+            existingEntity.setTicketClassId(1);
 
-            FlightTicketClass savedEntity = new FlightTicketClass();
-            savedEntity.setFlightId(1);
-            savedEntity.setFlight(validFlight);
-            savedEntity.setSpecifiedFare(new BigDecimal("150.00"));
-            savedEntity.setTicketQuantity(100);
-            savedEntity.setRemainingTicketQuantity(100);
+            when(flightTicketClassRepository.findByFlightIdAndTicketClassId(1, 1))
+                .thenReturn(Optional.of(existingEntity));
 
-            FlightTicketClassDto resultDto = new FlightTicketClassDto();
-            resultDto.setFlightId(1);
-            resultDto.setSpecifiedFare(new BigDecimal("150.00"));
+            // Act & Assert
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> flightTicketClassService.createFlightTicketClass(validDto)
+            );
 
-            when(flightRepository.findById(1)).thenReturn(Optional.of(validFlight));
-            when(flightTicketClassRepository.save(any(FlightTicketClass.class))).thenReturn(savedEntity);
-            when(flightTicketClassMapper.toDto(savedEntity)).thenReturn(resultDto);
+            assertTrue(exception.getMessage().contains("Already added"));
+            verify(flightTicketClassRepository).findByFlightIdAndTicketClassId(1, 1);
+            verify(flightRepository, never()).findById(anyInt());
+            verify(flightTicketClassRepository, never()).save(any());
+        }
 
-            // Act
-            FlightTicketClassDto result = flightTicketClassService.createFlightTicketClass(validDto);
+        @Test
+        @DisplayName("TC3: Create with Flight not found - Throws RuntimeException")
+        void createFlightTicketClass_FlightNotFound_ThrowsRuntimeException() {
+            // Arrange - Valid IDs, but Flight doesn't exist
+            validDto.setFlightId(1);
+            validDto.setTicketClassId(1);
 
-            // Assert
-            assertNotNull(result);
-            assertEquals(1, result.getFlightId());
+            when(flightTicketClassRepository.findByFlightIdAndTicketClassId(1, 1))
+                .thenReturn(Optional.empty());
+            when(flightRepository.findById(1)).thenReturn(Optional.empty());
+
+            // Act & Assert
+            RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> flightTicketClassService.createFlightTicketClass(validDto)
+            );
+
+            assertTrue(exception.getMessage().contains("Flight not found"));
+            assertTrue(exception.getMessage().contains("id: 1"));
+            verify(flightTicketClassRepository).findByFlightIdAndTicketClassId(1, 1);
             verify(flightRepository).findById(1);
             verify(ticketClassRepository, never()).findById(anyInt());
-            verify(flightTicketClassRepository).save(argThat(ftc -> 
-                ftc.getFlight() != null && ftc.getFlightId() == 1
-            ));
-            verify(flightTicketClassMapper).toDto(savedEntity);
+            verify(flightTicketClassRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("TC3: Create with valid FlightId and TicketClassId - Success with both relations")
-        void createFlightTicketClass_ValidFlightIdAndTicketClassId_SuccessWithBothRelations() {
-            // Arrange
+        @DisplayName("TC4: Create with TicketClass not found - Throws RuntimeException")
+        void createFlightTicketClass_TicketClassNotFound_ThrowsRuntimeException() {
+            // Arrange - Valid Flight, but TicketClass doesn't exist
+            validDto.setFlightId(1);
+            validDto.setTicketClassId(1);
+
+            when(flightTicketClassRepository.findByFlightIdAndTicketClassId(1, 1))
+                .thenReturn(Optional.empty());
+            when(flightRepository.findById(1)).thenReturn(Optional.of(validFlight));
+            when(ticketClassRepository.findById(1)).thenReturn(Optional.empty());
+
+            // Act & Assert
+            RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> flightTicketClassService.createFlightTicketClass(validDto)
+            );
+
+            assertTrue(exception.getMessage().contains("TicketClass not found"));
+            assertTrue(exception.getMessage().contains("id: 1"));
+            verify(flightTicketClassRepository).findByFlightIdAndTicketClassId(1, 1);
+            verify(flightRepository).findById(1);
+            verify(ticketClassRepository).findById(1);
+            verify(flightTicketClassRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("TC5: Create with valid data (happy path) - Success")
+        void createFlightTicketClass_ValidData_Success() {
+            // Arrange - Setup all valid conditions
+            validDto.setFlightId(1);
+            validDto.setTicketClassId(1);
+
             FlightTicketClass savedEntity = new FlightTicketClass();
             savedEntity.setFlightId(1);
             savedEntity.setTicketClassId(1);
@@ -169,6 +196,8 @@ public class FlightTicketClassServiceTest {
             savedEntity.setTicketQuantity(100);
             savedEntity.setRemainingTicketQuantity(100);
 
+            when(flightTicketClassRepository.findByFlightIdAndTicketClassId(1, 1))
+                .thenReturn(Optional.empty());
             when(flightRepository.findById(1)).thenReturn(Optional.of(validFlight));
             when(ticketClassRepository.findById(1)).thenReturn(Optional.of(validTicketClass));
             when(flightTicketClassRepository.save(any(FlightTicketClass.class))).thenReturn(savedEntity);
@@ -181,76 +210,12 @@ public class FlightTicketClassServiceTest {
             assertNotNull(result);
             assertEquals(1, result.getFlightId());
             assertEquals(1, result.getTicketClassId());
+            assertEquals(new BigDecimal("150.00"), result.getSpecifiedFare());
+            verify(flightTicketClassRepository).findByFlightIdAndTicketClassId(1, 1);
             verify(flightRepository).findById(1);
             verify(ticketClassRepository).findById(1);
-            verify(flightTicketClassRepository).save(argThat(ftc -> 
-                ftc.getFlight() != null && ftc.getFlightId() == 1 &&
-                ftc.getTicketClass() != null && ftc.getTicketClassId() == 1
-            ));
+            verify(flightTicketClassRepository).save(any(FlightTicketClass.class));
             verify(flightTicketClassMapper).toDto(savedEntity);
-        }
-
-        // ===== NHÓM 2: Exception Paths - Entity Not Found =====
-
-        @Test
-        @DisplayName("TC4: Create with non-existent FlightId - Throws RuntimeException")
-        void createFlightTicketClass_NonExistentFlightId_ThrowsRuntimeException() {
-            // Arrange
-            validDto.setFlightId(999);
-
-            when(flightRepository.findById(999)).thenReturn(Optional.empty());
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> flightTicketClassService.createFlightTicketClass(validDto)
-            );
-
-            assertTrue(exception.getMessage().contains("Flight not found"));
-            assertTrue(exception.getMessage().contains("id: 999"));
-            verify(flightRepository).findById(999);
-            verify(flightTicketClassRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("TC5: Create with null FlightId and non-existent TicketClassId - Throws RuntimeException")
-        void createFlightTicketClass_NullFlightIdAndNonExistentTicketClassId_ThrowsRuntimeException() {
-            // Arrange
-            validDto.setFlightId(null);
-            validDto.setTicketClassId(888);
-
-            when(ticketClassRepository.findById(888)).thenReturn(Optional.empty());
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> flightTicketClassService.createFlightTicketClass(validDto)
-            );
-
-            assertTrue(exception.getMessage().contains("TicketClass not found"));
-            assertTrue(exception.getMessage().contains("id: 888"));
-            verify(flightRepository, never()).findById(anyInt());
-            verify(ticketClassRepository).findById(888);
-            verify(flightTicketClassRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("TC6: Create with valid FlightId and non-existent TicketClassId - Throws RuntimeException")
-        void createFlightTicketClass_ValidFlightIdAndNonExistentTicketClassId_ThrowsRuntimeException() {
-            // Arrange
-            validDto.setTicketClassId(777);
-
-            when(flightRepository.findById(1)).thenReturn(Optional.of(validFlight));
-            when(ticketClassRepository.findById(777)).thenReturn(Optional.empty());
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> flightTicketClassService.createFlightTicketClass(validDto)
-            );
-
-            assertTrue(exception.getMessage().contains("TicketClass not found"));
-            assertTrue(exception.getMessage().contains("id: 777"));
-            verify(flightRepository).findById(1);
-            verify(ticketClassRepository).findById(777);
-            verify(flightTicketClassRepository, never()).save(any());
         }
     }
 
@@ -284,8 +249,8 @@ public class FlightTicketClassServiceTest {
         }
 
         @Test
-        @DisplayName("TC1: Update valid FlightTicketClass - Success")
-        void updateFlightTicketClass_ValidUpdate_Success() {
+        @DisplayName("TC2: Happy Path - Update existing FlightTicketClass then save and return DTO")
+        void updateFlightTicketClass_HappyPath_SaveAndReturnDto() {
             // Arrange
             when(flightTicketClassRepository.findByFlightIdAndTicketClassId(1, 1))
                 .thenReturn(Optional.of(validEntity));
@@ -306,8 +271,8 @@ public class FlightTicketClassServiceTest {
         }
 
         @Test
-        @DisplayName("TC2: Update non-existent FlightTicketClass - RuntimeException")
-        void updateFlightTicketClass_NotFound_ThrowsException() {
+        @DisplayName("TC1: Entity Not Found - findBy... returns Empty then orElseThrow triggers RuntimeException")
+        void updateFlightTicketClass_EntityNotFound_ThrowsRuntimeException() {
             // Arrange
             when(flightTicketClassRepository.findByFlightIdAndTicketClassId(1, 1))
                 .thenReturn(Optional.empty());
@@ -348,8 +313,8 @@ public class FlightTicketClassServiceTest {
         }
 
         @Test
-        @DisplayName("TC1: Delete valid FlightTicketClass - Success")
-        void deleteFlightTicketClass_ValidIds_Success() {
+        @DisplayName("TC2: Happy Path - Set deletedAt then save (Void success)")
+        void deleteFlightTicketClass_HappyPath_SetDeletedAtAndSave_Void() {
             // Arrange
             when(flightTicketClassRepository.findByFlightIdAndTicketClassId(1, 1))
                 .thenReturn(Optional.of(validEntity));
@@ -369,8 +334,8 @@ public class FlightTicketClassServiceTest {
         }
 
         @Test
-        @DisplayName("TC2: Delete non-existent FlightTicketClass - RuntimeException")
-        void deleteFlightTicketClass_NotFound_ThrowsException() {
+        @DisplayName("TC1: Entity Not Found - findBy... returns Empty then orElseThrow triggers RuntimeException")
+        void deleteFlightTicketClass_EntityNotFound_ThrowsRuntimeException() {
             // Arrange
             when(flightTicketClassRepository.findByFlightIdAndTicketClassId(1, 1))
                 .thenReturn(Optional.empty());

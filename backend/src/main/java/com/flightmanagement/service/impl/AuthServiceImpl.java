@@ -23,6 +23,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -81,41 +82,42 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional // 1. Fix Transaction
     public AuthResponse register(RegisterDto request) {
         if (accountRepo.existsByEmailAndNotDeleted(request.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
+
+        // 2. Xử lý logic password và type TRƯỚC khi tạo object để tránh save nhiều lần
+        String finalPassword = request.getPassword();
+        if (request.getAccountType() == AccountType.EMPLOYEE.getValue()) {
+            finalPassword = generateRandomPassword(); // Chỉ sinh pass, chưa encode vội
+        }
+
         Account newAccount = new Account();
-        // Map common fields
         newAccount.setAccountName(request.getAccountName());
         newAccount.setEmail(request.getEmail());
-        newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
+        newAccount.setPassword(passwordEncoder.encode(finalPassword)); // Encode 1 lần duy nhất
         newAccount.setCitizenId(request.getCitizenId());
         newAccount.setPhoneNumber(request.getPhoneNumber());
         newAccount.setAccountType(AccountType.fromValue(request.getAccountType()));
 
         Account savedAccount = accountRepo.save(newAccount);
 
-        // Handle account type-specific relationships
+        // 3. Chỉ lưu các bảng phụ (Relationship)
         if (request.getAccountType() == AccountType.CUSTOMER.getValue()) {
             Customer customer = new Customer();
             customer.setAccount(savedAccount);
             customerRepository.save(customer);
-            savedAccount.setCustomer(customer);
-            // emailService.sendCustomerWelcomeEmail(savedAccount.getEmail(), savedAccount.getAccountName());
+            // savedAccount.setCustomer(customer); // JPA tự manage, không cần set ngược lại nếu không dùng ngay
         } else if (request.getAccountType() == AccountType.EMPLOYEE.getValue()) {
-            // Generate random password for employee
-            String randomPassword = generateRandomPassword();
-            System.out.println(randomPassword);
             Employee employee = new Employee();
             employee.setAccount(savedAccount);
             employee.setEmployeeType(request.getEmployeeType());
-            Employee savedEmployee = employeeRepository.save(employee);
-
-            // Associate employee with account + set random password
-            savedAccount.setEmployee(savedEmployee);
-            savedAccount.setPassword(passwordEncoder.encode(randomPassword));
-            accountRepo.save(savedAccount);
+            employeeRepository.save(employee);
+        } else {
+            // NEW: Chặn các loại tài khoản không hợp lệ (VD: ADMIN, MOD, 999...)
+            throw new IllegalArgumentException("Invalid Account Type: " + request.getAccountType());
         }
 
             // Get employee type name for email

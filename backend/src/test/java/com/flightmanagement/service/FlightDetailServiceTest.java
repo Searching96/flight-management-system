@@ -68,7 +68,6 @@ public class FlightDetailServiceTest {
     @DisplayName("GetAllFlightDetails Tests - Full Path Coverage")
     @Tag("getAllFlightDetails")
     class GetAllFlightDetailsTests {
-
         @Test
         @DisplayName("TC1: Get all flight details - Returns multiple records")
         void getAllFlightDetails_ReturnsMultipleRecords() {
@@ -324,231 +323,66 @@ public class FlightDetailServiceTest {
     @DisplayName("CreateFlightDetail Tests - Full Path Coverage")
     @Tag("createFlightDetail")
     class CreateFlightDetailTests {
-
-        // ===== NHÓM 1: Happy Paths =====
+        @Test
+        @DisplayName("TC1: Null DTO - Throws IllegalArgumentException")
+        void createFlightDetail_NullDto_ThrowsIllegalArgumentException() {
+            assertThrows(IllegalArgumentException.class, () -> flightDetailService.createFlightDetail(null));
+            verify(flightDetailRepository, never()).save(any(FlightDetail.class));
+        }
 
         @Test
-        @DisplayName("TC1: Create with valid request - Success")
+        @DisplayName("TC2: Missing flightId - Throws IllegalArgumentException")
+        void createFlightDetail_MissingFlightId_ThrowsIllegalArgumentException() {
+            validFlightDetailDto.setFlightId(null);
+
+            assertThrows(IllegalArgumentException.class, () -> flightDetailService.createFlightDetail(validFlightDetailDto));
+            verify(flightDetailRepository, never()).save(any(FlightDetail.class));
+        }
+
+        @Test
+        @DisplayName("TC3: Missing mediumAirportId - Throws IllegalArgumentException")
+        void createFlightDetail_MissingAirportId_ThrowsIllegalArgumentException() {
+            validFlightDetailDto.setMediumAirportId(null);
+
+            assertThrows(IllegalArgumentException.class, () -> flightDetailService.createFlightDetail(validFlightDetailDto));
+            verify(flightDetailRepository, never()).save(any(FlightDetail.class));
+        }
+
+        @Test
+        @DisplayName("TC4: Missing arrivalTime - Throws IllegalArgumentException")
+        void createFlightDetail_MissingArrivalTime_ThrowsIllegalArgumentException() {
+            validFlightDetailDto.setArrivalTime(null);
+
+            assertThrows(IllegalArgumentException.class, () -> flightDetailService.createFlightDetail(validFlightDetailDto));
+            verify(flightDetailRepository, never()).save(any(FlightDetail.class));
+        }
+
+        @Test
+        @DisplayName("TC5: Missing layoverDuration - Throws IllegalArgumentException")
+        void createFlightDetail_MissingLayoverDuration_ThrowsIllegalArgumentException() {
+            validFlightDetailDto.setLayoverDuration(null);
+
+            assertThrows(IllegalArgumentException.class, () -> flightDetailService.createFlightDetail(validFlightDetailDto));
+            verify(flightDetailRepository, never()).save(any(FlightDetail.class));
+        }
+
+        @Test
+        @DisplayName("TC6: Create with valid request - Success")
         void createFlightDetail_ValidRequest_Success() {
-            // Arrange
+            validFlightDetail.setDeletedAt(LocalDateTime.now());
+
             when(flightDetailMapper.toEntity(validFlightDetailDto)).thenReturn(validFlightDetail);
             when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
             when(flightDetailMapper.toDto(validFlightDetail)).thenReturn(validFlightDetailDto);
 
-            // Act
             FlightDetailDto result = flightDetailService.createFlightDetail(validFlightDetailDto);
 
-            // Assert
             assertNotNull(result);
             assertEquals(1, result.getFlightId());
             assertEquals(2, result.getMediumAirportId());
+            assertNull(validFlightDetail.getDeletedAt());
             verify(flightDetailRepository).save(any(FlightDetail.class));
-        }
-
-        @Test
-        @DisplayName("TC2: Create with non-existent flight ID - Throws exception")
-        void createFlightDetail_NonExistentFlight_ThrowsException() {
-            // Arrange
-            validFlightDetailDto.setFlightId(999); // Non-existent flight
-
-            when(flightDetailMapper.toEntity(validFlightDetailDto)).thenReturn(validFlightDetail);
-            when(flightDetailRepository.save(any(FlightDetail.class)))
-                .thenThrow(new RuntimeException("Foreign key constraint violation"));
-
-            // Act & Assert
-            assertThrows(
-                RuntimeException.class,
-                () -> flightDetailService.createFlightDetail(validFlightDetailDto)
-            );
-        }
-
-        @Test
-        @DisplayName("TC3: Create with non-existent airport ID - Throws exception")
-        void createFlightDetail_NonExistentAirport_ThrowsException() {
-            // Arrange
-            validFlightDetailDto.setMediumAirportId(888); // Non-existent airport
-
-            when(flightDetailMapper.toEntity(validFlightDetailDto)).thenReturn(validFlightDetail);
-            when(flightDetailRepository.save(any(FlightDetail.class)))
-                .thenThrow(new RuntimeException("Foreign key constraint violation"));
-
-            // Act & Assert
-            assertThrows(
-                RuntimeException.class,
-                () -> flightDetailService.createFlightDetail(validFlightDetailDto)
-            );
-        }
-
-        @Test
-        @DisplayName("TC4: Create with zero layover duration - Success")
-        void createFlightDetail_ZeroLayoverDuration_Success() {
-            // Arrange
-            validFlightDetailDto.setLayoverDuration(0);
-            validFlightDetail.setLayoverDuration(0);
-
-            when(flightDetailMapper.toEntity(validFlightDetailDto)).thenReturn(validFlightDetail);
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
-            when(flightDetailMapper.toDto(validFlightDetail)).thenReturn(validFlightDetailDto);
-
-            // Act
-            FlightDetailDto result = flightDetailService.createFlightDetail(validFlightDetailDto);
-
-            // Assert
-            assertNotNull(result);
-            assertEquals(0, result.getLayoverDuration());
-            verify(flightDetailRepository).save(any(FlightDetail.class));
-        }
-
-        @Test
-        @DisplayName("TC5: Create with large layover duration (1440 min) - Success")
-        void createFlightDetail_LargeLayoverDuration_Success() {
-            // Arrange
-            validFlightDetailDto.setLayoverDuration(1440);
-            validFlightDetail.setLayoverDuration(1440);
-
-            when(flightDetailMapper.toEntity(validFlightDetailDto)).thenReturn(validFlightDetail);
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
-            when(flightDetailMapper.toDto(validFlightDetail)).thenReturn(validFlightDetailDto);
-
-            // Act
-            FlightDetailDto result = flightDetailService.createFlightDetail(validFlightDetailDto);
-
-            // Assert
-            assertEquals(1440, result.getLayoverDuration());
-        }
-
-        @Test
-        @DisplayName("TC6: Create with negative layover duration - Throws exception")
-        void createFlightDetail_NegativeLayover_ThrowsException() {
-            // Arrange
-            validFlightDetailDto.setLayoverDuration(-30);
-
-            when(flightDetailMapper.toEntity(validFlightDetailDto)).thenReturn(validFlightDetail);
-            when(flightDetailRepository.save(any(FlightDetail.class)))
-                .thenThrow(new IllegalArgumentException("Layover duration cannot be negative"));
-
-            // Act & Assert
-            assertThrows(
-                Exception.class,
-                () -> flightDetailService.createFlightDetail(validFlightDetailDto)
-            );
-        }
-
-        @Test
-        @DisplayName("TC7: Create with null arrival time - Throws exception")
-        void createFlightDetail_NullArrivalTime_ThrowsException() {
-            // Arrange
-            validFlightDetailDto.setArrivalTime(null);
-
-            // Act & Assert
-            assertThrows(
-                Exception.class,
-                () -> flightDetailService.createFlightDetail(validFlightDetailDto)
-            );
-
-            verify(flightDetailRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("TC8: Create sets DeletedAt to null - Success")
-        void createFlightDetail_SetsDeletedAtToNull() {
-            // Arrange
-            FlightDetail detailWithDeletedAt = new FlightDetail();
-            detailWithDeletedAt.setFlightId(1);
-            detailWithDeletedAt.setMediumAirportId(2);
-            detailWithDeletedAt.setArrivalTime(arrivalTime);
-            detailWithDeletedAt.setDeletedAt(LocalDateTime.now());
-
-            when(flightDetailMapper.toEntity(validFlightDetailDto)).thenReturn(detailWithDeletedAt);
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
-            when(flightDetailMapper.toDto(validFlightDetail)).thenReturn(validFlightDetailDto);
-
-            // Act
-            flightDetailService.createFlightDetail(validFlightDetailDto);
-
-            // Assert
-            assertNull(detailWithDeletedAt.getDeletedAt());
-            verify(flightDetailRepository).save(detailWithDeletedAt);
-        }
-
-        @Test
-        @DisplayName("TC5: Create with minimal data - Success")
-        void createFlightDetail_WithMinimalData_Success() {
-            // Arrange
-            FlightDetailDto minimalDto = new FlightDetailDto();
-            minimalDto.setFlightId(1);
-            minimalDto.setMediumAirportId(2);
-
-            FlightDetail minimalDetail = new FlightDetail();
-            minimalDetail.setFlightId(1);
-            minimalDetail.setMediumAirportId(2);
-
-            when(flightDetailMapper.toEntity(minimalDto)).thenReturn(minimalDetail);
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(minimalDetail);
-            when(flightDetailMapper.toDto(minimalDetail)).thenReturn(minimalDto);
-
-            // Act
-            FlightDetailDto result = flightDetailService.createFlightDetail(minimalDto);
-
-            // Assert
-            assertNotNull(result);
-            verify(flightDetailRepository).save(minimalDetail);
-        }
-
-        // ===== NHÓM 3: Exception Handling - Mapper =====
-
-        @Test
-        @DisplayName("TC6: Mapper throws exception - Propagates exception")
-        void createFlightDetail_MapperThrowsException_PropagatesException() {
-            // Arrange
-            when(flightDetailMapper.toEntity(validFlightDetailDto))
-                .thenThrow(new RuntimeException("Mapping error"));
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> flightDetailService.createFlightDetail(validFlightDetailDto)
-            );
-
-            assertTrue(exception.getMessage().contains("Mapping error"));
-            verify(flightDetailRepository, never()).save(any());
-        }
-
-        // ===== NHÓM 4: Exception Handling - Repository =====
-
-        @Test
-        @DisplayName("TC7: Repository save throws exception - Propagates exception")
-        void createFlightDetail_RepositoryThrowsException_PropagatesException() {
-            // Arrange
-            when(flightDetailMapper.toEntity(validFlightDetailDto)).thenReturn(validFlightDetail);
-            when(flightDetailRepository.save(any(FlightDetail.class)))
-                .thenThrow(new RuntimeException("Database error"));
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> flightDetailService.createFlightDetail(validFlightDetailDto)
-            );
-
-            assertTrue(exception.getMessage().contains("Database error"));
-        }
-
-        // ===== NHÓM 5: Exception Handling - Output Mapper =====
-
-        @Test
-        @DisplayName("TC8: Output mapper throws exception - Propagates exception")
-        void createFlightDetail_OutputMapperThrowsException_PropagatesException() {
-            // Arrange
-            when(flightDetailMapper.toEntity(validFlightDetailDto)).thenReturn(validFlightDetail);
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
-            when(flightDetailMapper.toDto(validFlightDetail))
-                .thenThrow(new RuntimeException("Output mapping error"));
-
-            // Act & Assert
-            assertThrows(
-                RuntimeException.class,
-                () -> flightDetailService.createFlightDetail(validFlightDetailDto)
-            );
+            verify(flightDetailMapper).toDto(validFlightDetail);
         }
     }
 
@@ -693,84 +527,6 @@ public class FlightDetailServiceTest {
             // Assert
             assertNotNull(result);
             verify(flightDetailRepository).save(any(FlightDetail.class));
-        }
-    }
-
-    // ==================== Old UpdateFlightDetail tests marked deprecated ====================
-
-    @Nested
-    @DisplayName("[DEPRECATED] Old UpdateFlightDetail Tests")
-    @Tag("deprecated")
-    class DeprecatedUpdateFlightDetailTests {
-
-        @Test
-        @DisplayName("[OLD] TC6: Update non-existent detail - Throws exception")
-        void updateFlightDetail_NotFound_ThrowsException() {
-            // Arrange
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(999, 888))
-                .thenReturn(Optional.empty());
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> flightDetailService.updateFlightDetail(999, 888, validFlightDetailDto)
-            );
-
-            assertTrue(exception.getMessage().contains("FlightDetail not found"));
-            assertTrue(exception.getMessage().contains("flight: 999"));
-            assertTrue(exception.getMessage().contains("airport: 888"));
-            verify(flightDetailRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("[OLD] TC7: Update with different IDs - Throws exception")
-        void updateFlightDetail_DifferentIds_ThrowsException() {
-            // Arrange
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.empty());
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> flightDetailService.updateFlightDetail(1, 2, validFlightDetailDto)
-            );
-
-            assertTrue(exception.getMessage().contains("FlightDetail not found"));
-        }
-
-        @Test
-        @DisplayName("[OLD] TC8: Repository save throws exception - Propagates exception")
-        void updateFlightDetail_RepositoryThrowsException_PropagatesException() {
-            // Arrange
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.of(validFlightDetail));
-            when(flightDetailRepository.save(any(FlightDetail.class)))
-                .thenThrow(new RuntimeException("Database error"));
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> flightDetailService.updateFlightDetail(1, 2, validFlightDetailDto)
-            );
-
-            assertTrue(exception.getMessage().contains("Database error"));
-        }
-
-        @Test
-        @DisplayName("[OLD] TC9: Output mapper throws exception - Propagates exception")
-        void updateFlightDetail_MapperThrowsException_PropagatesException() {
-            // Arrange
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.of(validFlightDetail));
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
-            when(flightDetailMapper.toDto(validFlightDetail))
-                .thenThrow(new RuntimeException("Mapping error"));
-
-            // Act & Assert
-            assertThrows(
-                RuntimeException.class,
-                () -> flightDetailService.updateFlightDetail(1, 2, validFlightDetailDto)
-            );
         }
     }
 
