@@ -131,20 +131,23 @@ const BookingForm: React.FC = () => {
           const isCustomer = user?.accountTypeName === "Customer";
           let firstName = "";
           let lastName = "";
-          
+
           if (isCustomer && isFirstPassenger && user?.accountName) {
             const nameParts = user.accountName.trim().split(" ");
             firstName = nameParts.slice(0, -1).join(" ") || "";
-            lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0] || "";
+            lastName =
+              nameParts.length > 1
+                ? nameParts[nameParts.length - 1]
+                : nameParts[0] || "";
           }
-          
+
           return {
             passengerId: undefined,
             firstName,
             lastName,
             dateOfBirth: "",
             citizenId: "", // Will be filled from customer data if available
-            phoneNumber: "", // Will be filled from customer data if available  
+            phoneNumber: "", // Will be filled from customer data if available
             email: isCustomer && isFirstPassenger ? user.email || "" : "",
           };
         }),
@@ -161,7 +164,7 @@ const BookingForm: React.FC = () => {
           console.log("Loading customer details for user:", user);
           const customerInfo = await customerService.getCustomerById(user.id);
           console.log("Customer details loaded:", customerInfo);
-          
+
           // Update first passenger with customer details
           if (customerInfo.citizenId) {
             setValue("passengers.0.citizenId", customerInfo.citizenId);
@@ -307,12 +310,20 @@ const BookingForm: React.FC = () => {
         const passenger = data.passengers[i];
         if (passenger.citizenId) {
           try {
-            console.log("Checking existing passenger for citizenId:", passenger.citizenId);
-            const existingResponse = await passengerService.getPassengerByCitizenId(
+            console.log(
+              "Checking existing passenger for citizenId:",
               passenger.citizenId
             );
+            const existingResponse =
+              await passengerService.getPassengerByCitizenId(
+                passenger.citizenId
+              );
             console.log("Existing passenger response:", existingResponse);
-            if (existingResponse && existingResponse.data && existingResponse.data.passengerId) {
+            if (
+              existingResponse &&
+              existingResponse.data &&
+              existingResponse.data.passengerId
+            ) {
               const existing = existingResponse.data;
               try {
                 const created = await passengerService.transformPassengerData(
@@ -405,9 +416,10 @@ const BookingForm: React.FC = () => {
       // Prepare booking request using the proper BookingRequest interface
       const bookingRequest: BookingRequest = {
         flightId: Number(flightId),
-        customerId: user?.accountTypeName === "Customer" && user?.id ? user.id : 0, // Use 0 for guest bookings
+        customerId:
+          user?.accountTypeName === "Customer" && user?.id ? user.id : 0, // Use 0 for guest bookings
         ticketClassId: data.ticketClassId,
-        passengers: data.passengers.map(passenger => ({
+        passengers: data.passengers.map((passenger) => ({
           firstName: passenger.firstName,
           lastName: passenger.lastName,
           email: passenger.email,
@@ -446,7 +458,8 @@ const BookingForm: React.FC = () => {
       }
 
       // Extract confirmation code from the first booked ticket
-      const confirmationCode = bookedTickets.length > 0 ? (bookedTickets[0].confirmationCode || "") : "";
+      const confirmationCode =
+        bookedTickets.length > 0 ? bookedTickets[0].confirmationCode || "" : "";
 
       const confirmationData = bookingConfirmationService.createConfirmation(
         confirmationCode,
@@ -605,6 +618,19 @@ const BookingForm: React.FC = () => {
                   type="text"
                   {...register(`passengers.${index}.firstName`, {
                     required: "Tên là bắt buộc",
+                    minLength: {
+                      value: 2,
+                      message: "Tên phải có ít nhất 2 ký tự",
+                    },
+                    maxLength: {
+                      value: 50,
+                      message: "Tên không được vượt quá 50 ký tự",
+                    },
+                    pattern: {
+                      value:
+                        /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ\s]+$/,
+                      message: "Tên chỉ được chứa chữ cái",
+                    },
                   })}
                   placeholder="Nhập tên"
                   isInvalid={!!errors.passengers?.[index]?.firstName}
@@ -623,6 +649,19 @@ const BookingForm: React.FC = () => {
                   type="text"
                   {...register(`passengers.${index}.lastName`, {
                     required: "Họ là bắt buộc",
+                    minLength: {
+                      value: 2,
+                      message: "Họ phải có ít nhất 2 ký tự",
+                    },
+                    maxLength: {
+                      value: 50,
+                      message: "Họ không được vượt quá 50 ký tự",
+                    },
+                    pattern: {
+                      value:
+                        /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ\s]+$/,
+                      message: "Họ chỉ được chứa chữ cái",
+                    },
                   })}
                   placeholder="Nhập họ"
                   isInvalid={!!errors.passengers?.[index]?.lastName}
@@ -660,23 +699,38 @@ const BookingForm: React.FC = () => {
 
             <Col md={6}>
               <Form.Group>
-                <Form.Label>Số điện thoại</Form.Label>
+                <Form.Label>Số điện thoại *</Form.Label>
                 <div className="d-flex gap-2">
                   <Form.Control
                     type="tel"
-                    placeholder="Số điện thoại"
+                    placeholder="Số điện thoại (10 chữ số)"
                     value={currentPhone.replace(/^\+\d+\s*/, "")}
                     onChange={(e) => {
                       const phoneNumber = `${e.target.value}`;
-                      setValue(`passengers.${index}.phoneNumber`, phoneNumber);
+                      setValue(`passengers.${index}.phoneNumber`, phoneNumber, {
+                        shouldValidate: true,
+                      });
                     }}
                     disabled={isAccountPassenger}
+                    isInvalid={!!errors.passengers?.[index]?.phoneNumber}
                   />
                   <input
                     type="hidden"
-                    {...register(`passengers.${index}.phoneNumber`)}
+                    {...register(`passengers.${index}.phoneNumber`, {
+                      required: "Số điện thoại là bắt buộc",
+                      pattern: {
+                        value: /^(0|\+84)[0-9]{9}$/,
+                        message:
+                          "Số điện thoại phải có 10 chữ số bắt đầu bằng 0",
+                      },
+                    })}
                   />
                 </div>
+                {errors.passengers?.[index]?.phoneNumber && (
+                  <Form.Control.Feedback type="invalid" className="d-block">
+                    {errors.passengers?.[index]?.phoneNumber?.message}
+                  </Form.Control.Feedback>
+                )}
               </Form.Group>
             </Col>
           </Row>
@@ -689,6 +743,10 @@ const BookingForm: React.FC = () => {
                   type="text"
                   {...register(`passengers.${index}.citizenId`, {
                     required: "Căn cước công dân là bắt buộc",
+                    pattern: {
+                      value: /^[0-9]{9}$|^[0-9]{12}$/,
+                      message: "CCCD phải là 9 hoặc 12 chữ số",
+                    },
                   })}
                   placeholder="Nhập số căn cước công dân"
                   isInvalid={!!errors.passengers?.[index]?.citizenId}
