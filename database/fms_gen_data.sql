@@ -576,3 +576,7 @@ CROSS JOIN
 CROSS JOIN 
     (SELECT 1 UNION SELECT 2) t3
 LIMIT 150;
+
+insert into flight (flight_id, plane_id, departure_airport_id, arrival_airport_id, flight_code, departure_time,
+                    arrival_time, deleted_at)
+values (101, 44, 1, 2, 'VN-101', '2026-02-01 00:00:00', '2026-02-01 03:00:00', null);
