@@ -59,7 +59,7 @@ const Statistics: React.FC = () => {
     try {
       const stats = await statisticsService.getMonthlyStatistics(selectedYear);
       console.log("Monthly Statistics:", stats);
-      setMonthlyStats(stats);
+      setMonthlyStats(stats.data);
     } catch (error) {
       console.error("Error fetching monthly statistics:", error);
     } finally {
