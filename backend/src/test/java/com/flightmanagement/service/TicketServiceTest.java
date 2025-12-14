@@ -397,8 +397,8 @@ class TicketServiceTest {
         @DisplayName("TC1: Single passenger with seat number - Success")
         void bookTickets_SinglePassengerWithSeatNumber_Success() {
             // Arrange
-            bookingDto.setPassengers(Arrays.asList(passengerDto));
-            bookingDto.setSeatNumbers(Arrays.asList("12A"));
+            bookingDto.setPassengers(Collections.singletonList(passengerDto));
+            bookingDto.setSeatNumbers(List.of("12A"));
 
             mockCreateTicketDependencies();
 
@@ -416,7 +416,7 @@ class TicketServiceTest {
         @DisplayName("TC2: Single passenger, seatNumbers null - Auto generates seat")
         void bookTickets_SinglePassengerNoSeatList_AutoGeneratesSeat() {
             // Arrange
-            bookingDto.setPassengers(Arrays.asList(passengerDto));
+            bookingDto.setPassengers(Collections.singletonList(passengerDto));
             bookingDto.setSeatNumbers(null); // Trigger generateSeatNumber() path
 
             mockCreateTicketDependencies();
@@ -436,8 +436,8 @@ class TicketServiceTest {
         void bookTickets_GuestBooking_NullCustomerId_Success() {
             // Arrange
             bookingDto.setCustomerId(null); // Guest booking
-            bookingDto.setPassengers(Arrays.asList(passengerDto));
-            bookingDto.setSeatNumbers(Arrays.asList("12A"));
+            bookingDto.setPassengers(Collections.singletonList(passengerDto));
+            bookingDto.setSeatNumbers(List.of("12A"));
 
             mockCreateTicketDependencies();
 
@@ -526,7 +526,7 @@ class TicketServiceTest {
         @DisplayName("TC7: Flight ticket class not found - Throws exception")
         void bookTickets_FlightTicketClassNotFound_ThrowsException() {
             // Arrange
-            bookingDto.setPassengers(Arrays.asList(passengerDto));
+            bookingDto.setPassengers(Collections.singletonList(passengerDto));
             bookingDto.setSeatNumbers(null);
 
             when(flightTicketClassService.getFlightTicketClassById(anyInt(), anyInt()))

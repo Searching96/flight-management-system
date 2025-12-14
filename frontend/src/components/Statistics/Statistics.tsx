@@ -59,7 +59,7 @@ const Statistics: React.FC = () => {
     try {
       const stats = await statisticsService.getMonthlyStatistics(selectedYear);
       console.log("Monthly Statistics:", stats);
-      setMonthlyStats(stats);
+      setMonthlyStats(stats.data);
     } catch (error) {
       console.error("Error fetching monthly statistics:", error);
     } finally {
@@ -77,6 +77,7 @@ const Statistics: React.FC = () => {
     if (activeView === "monthly") {
       fetchMonthlyStats();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear, activeView]);
 
   // Generate years for combobox (current year and 4 previous years)
@@ -229,7 +230,7 @@ const Statistics: React.FC = () => {
                         fill="#8884d8"
                         dataKey="totalRevenue"
                       >
-                        {yearlyStats.map((entry: any, index: number) => (
+                        {yearlyStats.map((_entry: any, index: number) => (
                           <Cell
                             key={`cell-${index}`}
                             fill={COLORS[index % COLORS.length]}
@@ -471,7 +472,7 @@ const Statistics: React.FC = () => {
                         fill="#8884d8"
                         dataKey="totalRevenue"
                       >
-                        {monthlyStats.map((entry: any, index: number) => (
+                        {monthlyStats.map((_entry: any, index: number) => (
                           <Cell
                             key={`cell-${index}`}
                             fill={COLORS[index % COLORS.length]}
