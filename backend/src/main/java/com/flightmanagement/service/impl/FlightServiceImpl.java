@@ -63,10 +63,10 @@ public class FlightServiceImpl implements FlightService {
     
     @Override
     public FlightDto updateFlight(Integer id, FlightRequest updateRequest) {
-        validateFlightData(updateRequest);
         Flight existingFlight = flightRepository.findActiveById(id)
             .orElseThrow(() -> new RuntimeException("Flight not found with id: " + id));
         
+        validateFlightDataForUpdate(id, updateRequest);
         existingFlight.setFlightCode(updateRequest.getFlightCode());
         existingFlight.setDepartureTime(updateRequest.getDepartureTime());
         existingFlight.setArrivalTime(updateRequest.getArrivalTime());
@@ -93,8 +93,6 @@ public class FlightServiceImpl implements FlightService {
     
     @Override
     public List<FlightDto> searchFlights(FlightSearchCriteria criteria) {
-        System.out.println("FlightService.searchFlights called with criteria: " + criteria);
-        
         try {
             List<Flight> flights;
             
@@ -116,12 +114,9 @@ public class FlightServiceImpl implements FlightService {
                 );
             }
             
-            System.out.println("Found " + flights.size() + " flights in database");
             return flightMapper.toDtoList(flights);
             
         } catch (Exception e) {
-            System.err.println("Error in searchFlights: " + e.getMessage());
-            e.printStackTrace();
             throw new RuntimeException("Failed to search flights", e);
         }
     }
@@ -151,6 +146,30 @@ public class FlightServiceImpl implements FlightService {
     
     private void validateFlightData(FlightRequest request) {
         if (flightRepository.existsByFlightCode(request.getFlightCode())) {
+            throw new IllegalArgumentException("Flight code already exists: " + request.getFlightCode());
+        }
+
+        if (request.getArrivalTime().isBefore(request.getDepartureTime())) {
+            throw new IllegalArgumentException("Arrival time must be after departure time");
+        }
+        
+        if (request.getDepartureAirportId().equals(request.getArrivalAirportId())) {
+            throw new IllegalArgumentException("Departure and arrival airports cannot be the same");
+        }
+        
+        // Check minimum flight duration from parameters
+        ParameterDto parameters = parameterService.getLatestParameter();
+        long durationMinutes = Duration.between(request.getDepartureTime(), request.getArrivalTime()).toMinutes();
+        
+        if (durationMinutes < parameters.getMinFlightDuration()) {
+            throw new IllegalArgumentException("Flight duration must be at least " + parameters.getMinFlightDuration() + " minutes");
+        }
+    }
+
+    private void validateFlightDataForUpdate(Integer flightId, FlightRequest request) {
+        // Check duplicate code - exclude current flight
+        Flight existingFlightWithCode = flightRepository.findByFlightCode(request.getFlightCode()).orElse(null);
+        if (existingFlightWithCode != null && !existingFlightWithCode.getFlightId().equals(flightId)) {
             throw new IllegalArgumentException("Flight code already exists: " + request.getFlightCode());
         }
 

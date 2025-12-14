@@ -45,16 +45,25 @@ public class FlightDetailServiceImpl implements FlightDetailService {
     }
     
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public FlightDetailDto createFlightDetail(FlightDetailDto flightDetailDto) {
+        if (flightDetailDto == null
+            || flightDetailDto.getFlightId() == null
+            || flightDetailDto.getMediumAirportId() == null
+            || flightDetailDto.getArrivalTime() == null
+            || flightDetailDto.getLayoverDuration() == null) {
+            throw new IllegalArgumentException("FlightDetail payload is missing required fields");
+        }
+
         FlightDetail flightDetail = flightDetailMapper.toEntity(flightDetailDto);
+
         flightDetail.setDeletedAt(null);
         FlightDetail savedFlightDetail = flightDetailRepository.save(flightDetail);
         return flightDetailMapper.toDto(savedFlightDetail);
     }
     
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public FlightDetailDto updateFlightDetail(Integer flightId, Integer mediumAirportId, FlightDetailDto flightDetailDto) {
         FlightDetail existingFlightDetail = flightDetailRepository.findByFlightIdAndMediumAirportId(flightId, mediumAirportId)
             .orElseThrow(() -> new RuntimeException("FlightDetail not found for flight: " + flightId + " and airport: " + mediumAirportId));
@@ -67,6 +76,7 @@ public class FlightDetailServiceImpl implements FlightDetailService {
     }
     
     @Override
+    @Transactional
     public void deleteFlightDetail(Integer flightId, Integer mediumAirportId) {
         FlightDetail flightDetail = flightDetailRepository.findByFlightIdAndMediumAirportId(flightId, mediumAirportId)
             .orElseThrow(() -> new RuntimeException("FlightDetail not found for flight: " + flightId + " and airport: " + mediumAirportId));

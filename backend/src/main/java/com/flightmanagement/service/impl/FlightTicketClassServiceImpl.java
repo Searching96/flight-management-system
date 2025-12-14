@@ -56,30 +56,41 @@ public class FlightTicketClassServiceImpl implements FlightTicketClassService {
     }
 
     @Override
-    public FlightTicketClassDto createFlightTicketClass(FlightTicketClassDto flightTicketClassDto) {
-        FlightTicketClass flightTicketClass = new FlightTicketClass();
-        flightTicketClass.setSpecifiedFare(flightTicketClassDto.getSpecifiedFare());
-        flightTicketClass.setTicketQuantity(flightTicketClassDto.getTicketQuantity());
-        flightTicketClass.setRemainingTicketQuantity(flightTicketClassDto.getRemainingTicketQuantity());
-        flightTicketClass.setDeletedAt(null);
-
-        // Set entity relationships
-        if (flightTicketClassDto.getFlightId() != null) {
-            Flight flight = flightRepository.findById(flightTicketClassDto.getFlightId())
-                    .orElseThrow(() -> new RuntimeException("Flight not found with id: " + flightTicketClassDto.getFlightId()));
-            flightTicketClass.setFlight(flight);
-            flightTicketClass.setFlightId(flight.getFlightId());
+    @Transactional // Đảm bảo tính toàn vẹn dữ liệu
+    public FlightTicketClassDto createFlightTicketClass(FlightTicketClassDto dto) {
+        // 1. Validate Null Safety (Fail-fast)
+        if (dto.getFlightId() == null || dto.getTicketClassId() == null) {
+            throw new IllegalArgumentException("FlightId and TicketClassId are required fields.");
         }
 
-        if (flightTicketClassDto.getTicketClassId() != null) {
-            TicketClass ticketClass = ticketClassRepository.findById(flightTicketClassDto.getTicketClassId())
-                    .orElseThrow(() -> new RuntimeException("TicketClass not found with id: " + flightTicketClassDto.getTicketClassId()));
-            flightTicketClass.setTicketClass(ticketClass);
-            flightTicketClass.setTicketClassId(ticketClass.getTicketClassId());
+        // 2. Optimization: Check Duplicate (Business Validation)
+        // Tránh lỗi duplicate key từ DB và báo lỗi thân thiện hơn
+        if (flightTicketClassRepository.findByFlightIdAndTicketClassId(dto.getFlightId(), dto.getTicketClassId()).isPresent()) {
+            throw new IllegalArgumentException("This Ticket Class has already been added to the Flight.");
         }
 
-        FlightTicketClass savedFlightTicketClass = flightTicketClassRepository.save(flightTicketClass);
-        return flightTicketClassMapper.toDto(savedFlightTicketClass);
+        // 3. Fetch Relationships
+        Flight flight = flightRepository.findById(dto.getFlightId())
+                .orElseThrow(() -> new RuntimeException("Flight not found with id: " + dto.getFlightId()));
+
+        TicketClass ticketClass = ticketClassRepository.findById(dto.getTicketClassId())
+                .orElseThrow(() -> new RuntimeException("TicketClass not found with id: " + dto.getTicketClassId()));
+
+        // 4. Map & Set Relationships (FIXED HERE)
+        FlightTicketClass entity = flightTicketClassMapper.toEntity(dto);
+        
+        // --- QUAN TRỌNG: Phải set quan hệ thủ công sau khi fetch ---
+        entity.setFlight(flight);
+        entity.setTicketClass(ticketClass);
+        // Nếu Entity có trường Id riêng lẻ, set luôn để đảm bảo đồng bộ (tùy cấu hình JPA)
+        entity.setFlightId(flight.getFlightId()); 
+        entity.setTicketClassId(ticketClass.getTicketClassId());
+        
+        entity.setDeletedAt(null);
+
+        // 5. Save & Return
+        FlightTicketClass savedEntity = flightTicketClassRepository.save(entity);
+        return flightTicketClassMapper.toDto(savedEntity);
     }
 
     @Override

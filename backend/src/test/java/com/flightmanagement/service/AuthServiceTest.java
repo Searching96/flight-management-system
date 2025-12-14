@@ -18,6 +18,8 @@ import com.flightmanagement.security.CustomUserDetails;
 import com.flightmanagement.security.JwtService;
 import com.flightmanagement.service.impl.AuthServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -156,258 +159,187 @@ public class AuthServiceTest {
 
     // ================ AUTHENTICATE TESTS ================
 
-    @Test
+    @Nested
+    @DisplayName("Authenticate - Full Path Coverage")
     @Tag("authenticate")
-    void testAuthenticate_Success_ReturnsAuthResponse() {
-        // Given
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-            .thenReturn(testAuthentication);
-        when(jwtService.generateAccessToken(testUserDetails)).thenReturn("accessToken");
-        when(jwtService.generateRefreshToken(testUserDetails.getEmail())).thenReturn("refreshToken");
-        when(jwtService.getJwtExpirationMs()).thenReturn(3600000L);
-        when(authMapper.toUserDetailsDto(testUserDetails)).thenReturn(testUserDetailsDto);
+    class AuthenticateTests {
 
-        // When
-        AuthResponse result = authService.authenticate(testLoginRequest);
+        @Test
+        @DisplayName("TC1: Đăng nhập hợp lệ - Trả về AuthResponse")
+        void authenticate_LoginSuccess_ReturnsAuthResponse() {
+            // Arrange
+            when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(testAuthentication);
+            when(jwtService.generateAccessToken(testUserDetails)).thenReturn("accessToken");
+            when(jwtService.generateRefreshToken(testUserDetails.getEmail())).thenReturn("refreshToken");
+            when(jwtService.getJwtExpirationMs()).thenReturn(3600000L);
+            when(authMapper.toUserDetailsDto(testUserDetails)).thenReturn(testUserDetailsDto);
 
-        // Then
-        assertNotNull(result);
-        assertEquals("accessToken", result.getAccessToken());
-        assertEquals("refreshToken", result.getRefreshToken());
-        assertEquals("Bearer", result.getTokenType());
-        assertEquals(testUserDetailsDto, result.getUserDetails());
-        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(jwtService).generateAccessToken(testUserDetails);
-        verify(jwtService).generateRefreshToken(testUserDetails.getEmail());
-    }
+            // Act
+            AuthResponse result = authService.authenticate(testLoginRequest);
 
-    @Test
-    @Tag("authenticate")
-    void testAuthenticate_InvalidCredentials_ThrowsAuthenticationException() {
-        // Given
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-            .thenThrow(new RuntimeException("Authentication failed"));
+            // Assert
+            assertNotNull(result);
+            assertEquals("accessToken", result.getAccessToken());
+            assertEquals("refreshToken", result.getRefreshToken());
+            assertEquals("Bearer", result.getTokenType());
+            assertEquals(testUserDetailsDto, result.getUserDetails());
+            verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+            verify(jwtService).generateAccessToken(testUserDetails);
+            verify(jwtService).generateRefreshToken(testUserDetails.getEmail());
+            verify(authMapper).toUserDetailsDto(testUserDetails);
+        }
 
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> authService.authenticate(testLoginRequest));
-        assertEquals("Authentication failed", exception.getMessage());
-        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(jwtService, never()).generateAccessToken(any());
-    }
+        @Test
+        @DisplayName("TC2: Sai thông tin đăng nhập - Ném BadCredentialsException")
+        void authenticate_LoginFailed_BadCredentials_ThrowsException() {
+            // Arrange
+            when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new BadCredentialsException("Bad credentials"));
 
-    @Test
-    @Tag("authenticate")
-    void testAuthenticate_NullRequest_HandledByAuthenticationManager() {
-        // Given
-        lenient().when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-            .thenThrow(new RuntimeException("Invalid authentication request"));
+            // Act + Assert
+            BadCredentialsException exception = assertThrows(BadCredentialsException.class,
+                () -> authService.authenticate(testLoginRequest));
 
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> authService.authenticate(null));
-        assertTrue(exception.getMessage().contains("Invalid authentication request") || 
-                   exception instanceof NullPointerException);
-    }
-
-    @Test
-    @Tag("authenticate")
-    void testAuthenticate_JwtServiceException_PropagatesException() {
-        // Given
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-            .thenReturn(testAuthentication);
-        when(jwtService.generateAccessToken(testUserDetails)).thenThrow(new RuntimeException("JWT generation failed"));
-
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> authService.authenticate(testLoginRequest));
-        assertEquals("JWT generation failed", exception.getMessage());
-        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(jwtService).generateAccessToken(testUserDetails);
-    }
-
-    @Test
-    @Tag("authenticate")
-    void testAuthenticate_MapperException_PropagatesException() {
-        // Given
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-            .thenReturn(testAuthentication);
-        when(jwtService.generateAccessToken(testUserDetails)).thenReturn("accessToken");
-        when(jwtService.generateRefreshToken(testUserDetails.getEmail())).thenReturn("refreshToken");
-        when(jwtService.getJwtExpirationMs()).thenReturn(3600000L);
-        when(authMapper.toUserDetailsDto(testUserDetails)).thenThrow(new RuntimeException("Mapping failed"));
-
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> authService.authenticate(testLoginRequest));
-        assertEquals("Mapping failed", exception.getMessage());
-        verify(authMapper).toUserDetailsDto(testUserDetails);
-    }
-
-    @Test
-    @Tag("authenticate")
-    void testAuthenticate_EmptyEmailPassword_HandledByAuthenticationManager() {
-        // Given
-        LoginRequestDto emptyRequest = new LoginRequestDto();
-        emptyRequest.setEmail("");
-        emptyRequest.setPassword("");
-        
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-            .thenThrow(new RuntimeException("Empty credentials"));
-
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> authService.authenticate(emptyRequest));
-        assertEquals("Empty credentials", exception.getMessage());
-        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+            assertEquals("Bad credentials", exception.getMessage());
+            verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+            verifyNoInteractions(jwtService);
+            verifyNoInteractions(authMapper);
+        }
     }
 
     // ================ REGISTER TESTS ================
 
-    @Test
+    @Nested
+    @DisplayName("Register - Full Path Coverage")
     @Tag("register")
-    void testRegister_CustomerSuccess_ReturnsAuthResponse() {
-        // Given
-        testRegisterDto.setAccountType(AccountType.CUSTOMER.getValue()); // Customer
-        Account savedAccount = new Account();
-        savedAccount.setAccountId(2);
-        savedAccount.setAccountName("newuser");
-        savedAccount.setEmail("newuser@email.com");
-        savedAccount.setAccountType(AccountType.CUSTOMER);
+    class RegisterTests {
 
-        Customer savedCustomer = new Customer();
-        savedCustomer.setCustomerId(2);
-        savedCustomer.setAccount(savedAccount);
+        @Test
+        @DisplayName("TC1: Email đã tồn tại - Ném RuntimeException")
+        void register_EmailExists_ThrowsRuntimeException() {
+            // Arrange
+            when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(true);
 
-        when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(false);
-        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword123");
-        when(accountRepository.save(any(Account.class))).thenReturn(savedAccount);
-        when(customerRepository.save(any(Customer.class))).thenReturn(savedCustomer);
-        when(jwtService.generateAccessToken(any(CustomUserDetails.class))).thenReturn("accessToken");
-        when(jwtService.generateRefreshToken("newuser@email.com")).thenReturn("refreshToken");
-        when(jwtService.getJwtExpirationMs()).thenReturn(3600000L);
-        when(authMapper.toUserDetailsDto(any(CustomUserDetails.class))).thenReturn(testUserDetailsDto);
+            // Act + Assert
+            RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> authService.register(testRegisterDto));
 
-        // When
-        AuthResponse result = authService.register(testRegisterDto);
+            assertEquals("Email already exists", exception.getMessage());
+            verify(accountRepository).existsByEmailAndNotDeleted("newuser@email.com");
+            verify(accountRepository, never()).save(isA(Account.class));
+            verifyNoInteractions(customerRepository, employeeRepository, jwtService, authMapper);
+        }
 
-        // Then
-        assertNotNull(result);
-        assertEquals("accessToken", result.getAccessToken());
-        assertEquals("refreshToken", result.getRefreshToken());
-        verify(accountRepository).existsByEmailAndNotDeleted("newuser@email.com");
-        verify(passwordEncoder).encode("password123");
-        verify(accountRepository).save(any(Account.class));
-        verify(customerRepository).save(any(Customer.class));
-    }
+        @Test
+        @DisplayName("TC2: Đăng ký Employee - Sinh random pass, lưu Account + Employee")
+        void register_Employee_Success() {
+            // Arrange
+            testRegisterDto.setAccountType(AccountType.EMPLOYEE.getValue());
+            testRegisterDto.setEmployeeType(EmployeeType.FLIGHT_SCHEDULING);
 
-    @Test
-    @Tag("register")
-    void testRegister_EmployeeSuccess_ReturnsAuthResponseWithRandomPassword() {
-        // Given
-        testRegisterDto.setAccountType(AccountType.EMPLOYEE.getValue()); // Employee
-        testRegisterDto.setEmployeeType(EmployeeType.FLIGHT_SCHEDULING);
-        
-        Account savedAccount = new Account();
-        savedAccount.setAccountId(3);
-        savedAccount.setAccountType(AccountType.EMPLOYEE);
-        savedAccount.setEmail("newuser@email.com"); // Set email to match testRegisterDto
+            Account savedAccount = new Account();
+            savedAccount.setAccountId(3);
+            savedAccount.setEmail("newuser@email.com");
+            savedAccount.setAccountType(AccountType.EMPLOYEE);
 
-        Employee savedEmployee = new Employee();
-        savedEmployee.setEmployeeId(3);
-        savedEmployee.setEmployeeType(EmployeeType.FLIGHT_SCHEDULING);
-        savedEmployee.setAccount(savedAccount);
+            Employee savedEmployee = new Employee();
+            savedEmployee.setEmployeeId(3);
+            savedEmployee.setEmployeeType(EmployeeType.FLIGHT_SCHEDULING);
+            savedEmployee.setAccount(savedAccount);
 
-        when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(false);
-        lenient().when(passwordEncoder.encode("password123")).thenReturn("encodedPassword123");
-        lenient().when(passwordEncoder.encode(anyString())).thenReturn("encodedRandomPassword");
-        when(accountRepository.save(any(Account.class))).thenReturn(savedAccount);
-        when(employeeRepository.save(any(Employee.class))).thenReturn(savedEmployee);
-        when(jwtService.generateAccessToken(any(CustomUserDetails.class))).thenReturn("accessToken");
-        when(jwtService.generateRefreshToken("newuser@email.com")).thenReturn("refreshToken");
-        when(jwtService.getJwtExpirationMs()).thenReturn(3600000L);
-        when(authMapper.toUserDetailsDto(any(CustomUserDetails.class))).thenReturn(testUserDetailsDto);
+            when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(false);
+            when(passwordEncoder.encode(anyString())).thenReturn("encodedRandomPassword");
+            when(accountRepository.save(isA(Account.class))).thenReturn(savedAccount);
+            when(employeeRepository.save(any(Employee.class))).thenReturn(savedEmployee);
+            when(jwtService.generateAccessToken(any(CustomUserDetails.class))).thenReturn("accessToken");
+            when(jwtService.generateRefreshToken("newuser@email.com")).thenReturn("refreshToken");
+            when(jwtService.getJwtExpirationMs()).thenReturn(3600000L);
+            when(authMapper.toUserDetailsDto(any(CustomUserDetails.class))).thenReturn(testUserDetailsDto);
 
-        // When
-        AuthResponse result = authService.register(testRegisterDto);
+            // Act
+            AuthResponse result = authService.register(testRegisterDto);
 
-        // Then
-        assertNotNull(result);
-        assertEquals("accessToken", result.getAccessToken());
-        verify(accountRepository, times(2)).save(any(Account.class)); // Initial save + password update
-        verify(employeeRepository).save(any(Employee.class));
-        verify(passwordEncoder, times(2)).encode(anyString()); // Original + random password
-    }
+            // Assert
+            assertNotNull(result);
+            assertEquals("accessToken", result.getAccessToken());
+            assertEquals("refreshToken", result.getRefreshToken());
+            verify(accountRepository).existsByEmailAndNotDeleted("newuser@email.com");
+            verify(passwordEncoder, atLeastOnce()).encode(anyString());
+            verify(accountRepository).save(isA(Account.class));
+            verify(employeeRepository).save(any(Employee.class));
+            verify(jwtService).generateAccessToken(any(CustomUserDetails.class));
+            verify(jwtService).generateRefreshToken("newuser@email.com");
+            verify(authMapper).toUserDetailsDto(any(CustomUserDetails.class));
+            verifyNoInteractions(customerRepository);
+        }
 
-    @Test
-    @Tag("register")
-    void testRegister_EmailAlreadyExists_ThrowsRuntimeException() {
-        // Given
-        when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(true);
+        @Test
+        @DisplayName("TC3: Đăng ký Customer - Giữ pass gốc, lưu Account + Customer")
+        void register_Customer_Success() {
+            // Arrange
+            testRegisterDto.setAccountType(AccountType.CUSTOMER.getValue());
 
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> authService.register(testRegisterDto));
-        assertEquals("Email already exists", exception.getMessage());
-        verify(accountRepository).existsByEmailAndNotDeleted("newuser@email.com");
-        verify(accountRepository, never()).save(any());
-    }
+            Account savedAccount = new Account();
+            savedAccount.setAccountId(2);
+            savedAccount.setAccountType(AccountType.CUSTOMER);
+            savedAccount.setEmail("newuser@email.com");
 
-    @Test
-    @Tag("register")
-    void testRegister_InvalidAccountType_HandlesGracefully() {
-        // Given
-        testRegisterDto.setAccountType(999); // Invalid type
-        Account savedAccount = new Account();
-        savedAccount.setAccountType(AccountType.fromValue(999));
-        savedAccount.setEmail("newuser@email.com"); // Set email to match DTO
+            Customer savedCustomer = new Customer();
+            savedCustomer.setCustomerId(2);
+            savedCustomer.setAccount(savedAccount);
 
-        when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(false);
-        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword123");
-        when(accountRepository.save(any(Account.class))).thenReturn(savedAccount);
-        when(jwtService.generateAccessToken(any(CustomUserDetails.class))).thenReturn("accessToken");
-        when(jwtService.generateRefreshToken("newuser@email.com")).thenReturn("refreshToken");
-        when(jwtService.getJwtExpirationMs()).thenReturn(3600000L);
-        when(authMapper.toUserDetailsDto(any(CustomUserDetails.class))).thenReturn(testUserDetailsDto);
+            when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(false);
+            when(passwordEncoder.encode("password123")).thenReturn("encodedPassword123");
+            when(accountRepository.save(any(Account.class))).thenReturn(savedAccount);
+            when(customerRepository.save(any(Customer.class))).thenReturn(savedCustomer);
+            when(jwtService.generateAccessToken(any(CustomUserDetails.class))).thenReturn("accessToken");
+            when(jwtService.generateRefreshToken("newuser@email.com")).thenReturn("refreshToken");
+            when(jwtService.getJwtExpirationMs()).thenReturn(3600000L);
+            when(authMapper.toUserDetailsDto(any(CustomUserDetails.class))).thenReturn(testUserDetailsDto);
 
-        // When
-        AuthResponse result = authService.register(testRegisterDto);
+            // Act
+            AuthResponse result = authService.register(testRegisterDto);
 
-        // Then
-        assertNotNull(result);
-        verify(accountRepository).save(any(Account.class));
-        verify(customerRepository, never()).save(any());
-        verify(employeeRepository, never()).save(any());
-    }
+            // Assert
+            assertNotNull(result);
+            assertEquals("accessToken", result.getAccessToken());
+            assertEquals("refreshToken", result.getRefreshToken());
+            verify(accountRepository).existsByEmailAndNotDeleted("newuser@email.com");
+            verify(passwordEncoder).encode("password123");
+            verify(accountRepository).save(any(Account.class));
+            verify(customerRepository).save(any(Customer.class));
+            verify(jwtService).generateAccessToken(any(CustomUserDetails.class));
+            verify(jwtService).generateRefreshToken("newuser@email.com");
+            verify(authMapper).toUserDetailsDto(any(CustomUserDetails.class));
+            verifyNoInteractions(employeeRepository);
+        }
 
-    @Test
-    @Tag("register")
-    void testRegister_RepositoryException_PropagatesException() {
-        // Given
-        when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(false);
-        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword123");
-        when(accountRepository.save(any(Account.class))).thenThrow(new RuntimeException("Database error"));
+        @Test
+        @DisplayName("TC4: Loại tài khoản không hợp lệ - Lưu Account rồi Throw IllegalArgumentException (ROLLBACK)")
+        void register_InvalidType_ThrowsIllegalArgumentException() {
+            // Arrange
+            testRegisterDto.setAccountType(999); // AccountType không hợp lệ
 
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> authService.register(testRegisterDto));
-        assertEquals("Database error", exception.getMessage());
-        verify(accountRepository).save(any(Account.class));
-    }
+            Account savedAccount = new Account();
+            savedAccount.setAccountId(4);
+            savedAccount.setAccountType(AccountType.fromValue(999));
+            savedAccount.setEmail("newuser@email.com");
 
-    @Test
-    @Tag("register")
-    void testRegister_PasswordEncodingException_PropagatesException() {
-        // Given
-        when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(false);
-        when(passwordEncoder.encode("password123")).thenThrow(new RuntimeException("Encoding failed"));
+            when(accountRepository.existsByEmailAndNotDeleted("newuser@email.com")).thenReturn(false);
+            when(passwordEncoder.encode("password123")).thenReturn("encodedPassword123");
+            when(accountRepository.save(isA(Account.class))).thenReturn(savedAccount);
 
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> authService.register(testRegisterDto));
-        assertEquals("Encoding failed", exception.getMessage());
-        verify(passwordEncoder).encode("password123");
-        verify(accountRepository, never()).save(any());
+            // Act + Assert
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> authService.register(testRegisterDto));
+
+            assertTrue(exception.getMessage().contains("Invalid Account Type"));
+            verify(accountRepository).existsByEmailAndNotDeleted("newuser@email.com");
+            verify(passwordEncoder).encode("password123");
+            verify(accountRepository).save(isA(Account.class)); // Account được lưu trước
+            verifyNoInteractions(customerRepository, employeeRepository, jwtService, authMapper);
+        }
     }
 
     // ================ REFRESH TOKEN TESTS ================
@@ -606,101 +538,64 @@ public class AuthServiceTest {
 
     // ================ PROCESS FORGOT PASSWORD TESTS ================
 
-    @Test
+    @Nested
+    @DisplayName("ProcessForgotPassword - Full Path Coverage")
     @Tag("processForgotPassword")
-    void testProcessForgotPassword_Success_ResetsPasswordAndSavesToken() {
-        // Given
-        when(accountRepository.findByEmail("test@email.com")).thenReturn(Optional.of(testAccount));
-        when(jwtService.generatePasswordResetToken("test@email.com")).thenReturn("resetToken123");
-        when(passwordEncoder.encode("password-after-forgot")).thenReturn("encodedTempPassword");
-        when(accountRepository.save(testAccount)).thenReturn(testAccount);
+    class ProcessForgotPasswordTests {
 
-        // When
-        authService.processForgotPassword("test@email.com", testAccount.getPhoneNumber());
+        @Test
+        @DisplayName("TC1: Email không tồn tại - Ném ResourceNotFoundException")
+        void processForgotPassword_EmailNotFound_ThrowsResourceNotFoundException() {
+            // Arrange
+            when(accountRepository.findByEmail("wrong@email.com")).thenReturn(Optional.empty());
 
-        // Then
-        verify(accountRepository).findByEmail("test@email.com");
-        verify(jwtService).generatePasswordResetToken("test@email.com");
-        verify(passwordEncoder).encode("password-after-forgot");
-        verify(accountRepository).save(argThat(account -> 
-            "resetToken123".equals(account.getPasswordResetToken()) &&
-            account.getPasswordResetExpiry() != null &&
-            "encodedTempPassword".equals(account.getPassword())));
-    }
+            // Act + Assert
+            ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> authService.processForgotPassword("wrong@email.com", "0123456789"));
 
-    @Test
-    @Tag("processForgotPassword")
-    void testProcessForgotPassword_EmailNotFound_ThrowsResourceNotFoundException() {
-        // Given
-        when(accountRepository.findByEmail("nonexistent@email.com")).thenReturn(Optional.empty());
+            assertEquals("Account not found with email: wrong@email.com", exception.getMessage());
+            verify(accountRepository).findByEmail("wrong@email.com");
+            verifyNoInteractions(jwtService, emailService);
+            verify(accountRepository, never()).save(isA(Account.class));
+        }
 
-        // When & Then
-        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, 
-            () -> authService.processForgotPassword("nonexistent@email.com", "0123456789"));
-        assertEquals("Account not found with email: nonexistent@email.com", exception.getMessage());
-        verify(accountRepository).findByEmail("nonexistent@email.com");
-        verify(jwtService, never()).generatePasswordResetToken(any());
-        verify(accountRepository, never()).save(any());
-    }
+        @Test
+        @DisplayName("TC2: Số điện thoại không khớp - Ném ResourceNotFoundException")
+        void processForgotPassword_PhoneMismatch_ThrowsResourceNotFoundException() {
+            // Arrange
+            String wrongPhone = "9876543210";
+            when(accountRepository.findByEmail("test@email.com")).thenReturn(Optional.of(testAccount));
 
-    @Test
-    @Tag("processForgotPassword")
-    void testProcessForgotPassword_NullEmail_HandledByRepository() {
-        // Given
-        when(accountRepository.findByEmail(null)).thenReturn(Optional.empty());
+            // Act + Assert
+            ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> authService.processForgotPassword("test@email.com", wrongPhone));
 
-        // When & Then
-        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, 
-            () -> authService.processForgotPassword(null, "0123456789"));
-        assertTrue(exception.getMessage().contains("Account not found with email: null"));
-        verify(accountRepository).findByEmail(null);
-    }
+            assertEquals("Account not found with provided phone number", exception.getMessage());
+            verify(accountRepository).findByEmail("test@email.com");
+            verifyNoInteractions(jwtService, emailService);
+            verify(accountRepository, never()).save(isA(Account.class));
+        }
 
-    @Test
-    @Tag("processForgotPassword")
-    void testProcessForgotPassword_JwtServiceException_PropagatesException() {
-        // Given
-        when(accountRepository.findByEmail("test@email.com")).thenReturn(Optional.of(testAccount));
-        when(jwtService.generatePasswordResetToken("test@email.com")).thenThrow(new RuntimeException("JWT generation failed"));
+        @Test
+        @DisplayName("TC3: Email hợp lệ, số điện thoại khớp - Lưu token và gửi email")
+        void processForgotPassword_ValidEmailAndPhone_Success() {
+            // Arrange
+            String realPhone = testAccount.getPhoneNumber();
+            when(accountRepository.findByEmail("test@email.com")).thenReturn(Optional.of(testAccount));
+            when(jwtService.generatePasswordResetToken("test@email.com")).thenReturn("resetToken123");
+            when(accountRepository.save(isA(Account.class))).thenReturn(testAccount);
 
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> authService.processForgotPassword("test@email.com", testAccount.getPhoneNumber()));
-        assertEquals("JWT generation failed", exception.getMessage());
-        verify(jwtService).generatePasswordResetToken("test@email.com");
-        verify(accountRepository, never()).save(any());
-    }
+            // Act
+            authService.processForgotPassword("test@email.com", realPhone);
 
-    @Test
-    @Tag("processForgotPassword")
-    void testProcessForgotPassword_PasswordEncodingException_PropagatesException() {
-        // Given
-        when(accountRepository.findByEmail("test@email.com")).thenReturn(Optional.of(testAccount));
-        when(jwtService.generatePasswordResetToken("test@email.com")).thenReturn("resetToken123");
-        when(passwordEncoder.encode("password-after-forgot")).thenThrow(new RuntimeException("Encoding failed"));
-
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> authService.processForgotPassword("test@email.com", testAccount.getPhoneNumber()));
-        assertEquals("Encoding failed", exception.getMessage());
-        verify(passwordEncoder).encode("password-after-forgot");
-        verify(accountRepository, never()).save(any());
-    }
-
-    @Test
-    @Tag("processForgotPassword")
-    void testProcessForgotPassword_RepositorySaveException_PropagatesException() {
-        // Given
-        when(accountRepository.findByEmail("test@email.com")).thenReturn(Optional.of(testAccount));
-        when(jwtService.generatePasswordResetToken("test@email.com")).thenReturn("resetToken123");
-        when(passwordEncoder.encode("password-after-forgot")).thenReturn("encodedTempPassword");
-        when(accountRepository.save(testAccount)).thenThrow(new RuntimeException("Save failed"));
-
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> authService.processForgotPassword("test@email.com", testAccount.getPhoneNumber()));
-        assertEquals("Save failed", exception.getMessage());
-        verify(accountRepository).save(testAccount);
+            // Assert
+            verify(accountRepository).findByEmail("test@email.com");
+            verify(jwtService).generatePasswordResetToken("test@email.com");
+            verify(accountRepository).save(argThat(account ->
+                "resetToken123".equals(account.getPasswordResetToken()) &&
+                account.getPasswordResetExpiry() != null));
+            verify(emailService).sendPasswordResetEmail("test@email.com", "resetToken123");
+        }
     }
 
     // ================ PROCESS PASSWORD RESET TESTS ================

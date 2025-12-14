@@ -31,6 +31,13 @@ import {
   UpdateFlightTicketClassRequest,
   Parameter,
 } from "../../models";
+
+// Internal draft type so we can queue create/update/delete before saving
+type FlightTicketClassDraft = FlightTicketClass & {
+  tempId?: number;
+  isNew?: boolean;
+  isDeleted?: boolean;
+};
 import { usePermissions } from "../../hooks/useAuth";
 import { useFlights } from "../../hooks/useFlights";
 import { useFlightDetails } from "../../hooks/useFlightDetails";
@@ -85,14 +92,18 @@ const FlightManagement: React.FC<{
     useState<Flight | null>(null);
   const [showTicketClassModal, setShowTicketClassModal] = useState(false);
   const [flightTicketClasses, setFlightTicketClasses] = useState<
-    FlightTicketClass[]
+    FlightTicketClassDraft[]
+  >([]);
+  const [originalTicketClasses, setOriginalTicketClasses] = useState<
+    FlightTicketClassDraft[]
   >([]);
   const [modifiedTicketClasses, setModifiedTicketClasses] = useState<
-    Map<number, Partial<FlightTicketClass>>
+    Map<number, Partial<FlightTicketClassDraft>>
   >(new Map());
+  const [nextTempId, setNextTempId] = useState(-1);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingAssociation, setEditingAssociation] =
-    useState<FlightTicketClass | null>(null);
+    useState<FlightTicketClassDraft | null>(null);
   const [ticketClassValidationError, setTicketClassValidationError] =
     useState<string>("");
   const [cardValidationErrors, setCardValidationErrors] = useState<
@@ -274,7 +285,10 @@ const FlightManagement: React.FC<{
         await flightTicketClassService.getFlightTicketClassesByFlightId(
           flightId
         );
+      setOriginalTicketClasses(data);
       setFlightTicketClasses(data);
+      setModifiedTicketClasses(new Map());
+      setCardValidationErrors(new Map());
     } catch (error) {
       setError("Failed to load flight ticket classes");
       console.log("Error loading flight ticket classes:", error);
@@ -286,7 +300,6 @@ const FlightManagement: React.FC<{
       setSelectedFlightForClasses(flight);
       await loadFlightTicketClasses(flight.flightId!);
       setShowTicketClassModal(true);
-      setModifiedTicketClasses(new Map());
       setTicketClassValidationError("");
     } catch (error) {
       setError("Failed to load ticket class data");
@@ -296,14 +309,32 @@ const FlightManagement: React.FC<{
 
   const handleTicketClassUpdate = (
     ticketClassId: number,
-    data: Partial<FlightTicketClass>
+    data: Partial<FlightTicketClassDraft>
   ) => {
-    const originalAssociation = flightTicketClasses.find(
+    setFlightTicketClasses((prev) =>
+      prev.map((ftc) =>
+        ftc.ticketClassId === ticketClassId
+          ? { ...ftc, ...data, isDeleted: false }
+          : ftc
+      )
+    );
+
+    const originalAssociation = originalTicketClasses.find(
       (ftc) => ftc.ticketClassId === ticketClassId
     );
-    if (!originalAssociation) return;
 
-    const changedFields: Partial<FlightTicketClass> = {};
+    // New rows do not need diff-tracking against originals
+    if (!originalAssociation) {
+      setModifiedTicketClasses((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(ticketClassId, data);
+        return newMap;
+      });
+      setEditingAssociation(null);
+      return;
+    }
+
+    const changedFields: Partial<FlightTicketClassDraft> = {};
 
     if (
       data.ticketQuantity !== undefined &&
@@ -327,21 +358,13 @@ const FlightManagement: React.FC<{
       changedFields.remainingTicketQuantity = data.remainingTicketQuantity;
     }
 
-    if (Object.keys(changedFields).length === 0) {
-      if (modifiedTicketClasses.has(ticketClassId)) {
-        setModifiedTicketClasses((prev) => {
-          const newMap = new Map(prev);
-          newMap.delete(ticketClassId);
-          return newMap;
-        });
-      }
-      setEditingAssociation(null);
-      return;
-    }
-
     setModifiedTicketClasses((prev) => {
       const newMap = new Map(prev);
-      newMap.set(ticketClassId, changedFields);
+      if (Object.keys(changedFields).length === 0) {
+        newMap.delete(ticketClassId);
+      } else {
+        newMap.set(ticketClassId, changedFields);
+      }
       return newMap;
     });
 
@@ -364,7 +387,32 @@ const FlightManagement: React.FC<{
   };
 
   const handleUndoTicketClassChanges = (ticketClassId: number) => {
+    setFlightTicketClasses((prev) => {
+      const draft = prev.find((ftc) => ftc.ticketClassId === ticketClassId);
+      if (!draft) return prev;
+
+      // Remove newly added rows entirely
+      if (draft.isNew) {
+        return prev.filter((ftc) => ftc.ticketClassId !== ticketClassId);
+      }
+
+      const original = originalTicketClasses.find(
+        (ftc) => ftc.ticketClassId === ticketClassId
+      );
+      if (!original) return prev;
+
+      return prev.map((ftc) =>
+        ftc.ticketClassId === ticketClassId ? { ...original } : ftc
+      );
+    });
+
     setModifiedTicketClasses((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(ticketClassId);
+      return newMap;
+    });
+
+    setCardValidationErrors((prev) => {
       const newMap = new Map(prev);
       newMap.delete(ticketClassId);
       return newMap;
@@ -383,57 +431,85 @@ const FlightManagement: React.FC<{
         return;
       }
 
-      let totalAssignedSeats = 0;
+      const activeClasses = flightTicketClasses.filter((ftc) => !ftc.isDeleted);
+      const totalAssignedSeats = activeClasses.reduce(
+        (total, ftc) => total + (ftc.ticketQuantity || 0),
+        0
+      );
 
-      flightTicketClasses.forEach((ftc) => {
-        const modified = modifiedTicketClasses.get(ftc.ticketClassId!);
-        const quantity =
-          modified?.ticketQuantity !== undefined
-            ? modified.ticketQuantity
-            : ftc.ticketQuantity!;
-        totalAssignedSeats += quantity;
-      });
-
-      if (plane.seatQuantity !== totalAssignedSeats) {
+      if (totalAssignedSeats > plane.seatQuantity) {
         setTicketClassValidationError(
-          `Tổng số ghế của các hạng vé (${totalAssignedSeats}) phải bằng sức chứa của máy bay (${plane.seatQuantity})`
+          `Tổng số ghế của các hạng vé (${totalAssignedSeats}) không thể vượt quá sức chứa của máy bay (${plane.seatQuantity}).`
         );
         return;
       }
 
-      const updatePromises = Array.from(modifiedTicketClasses.entries()).map(
-        ([ticketClassId, changedFields]) => {
-          const original = flightTicketClasses.find(
-            (ftc) => ftc.ticketClassId === ticketClassId
-          );
-          if (!original) return Promise.resolve();
+      if (cardValidationErrors.size > 0) {
+        setTicketClassValidationError(
+          "Vui lòng sửa lỗi trên các thẻ hạng vé trước khi lưu."
+        );
+        return;
+      }
 
-          const updateRequest: UpdateFlightTicketClassRequest = {
-            ticketQuantity:
-              changedFields.ticketQuantity !== undefined
-                ? changedFields.ticketQuantity
-                : original.ticketQuantity!,
-
-            specifiedFare:
-              changedFields.specifiedFare !== undefined
-                ? changedFields.specifiedFare
-                : original.specifiedFare!,
-
-            remainingTicketQuantity:
-              changedFields.remainingTicketQuantity !== undefined
-                ? changedFields.remainingTicketQuantity
-                : original.remainingTicketQuantity!,
-          };
-
-          return flightTicketClassService.updateFlightTicketClass(
-            selectedFlightForClasses!.flightId!,
-            ticketClassId,
-            updateRequest
-          );
-        }
+      const originalMap = new Map(
+        originalTicketClasses.map((ftc) => [ftc.ticketClassId, ftc])
       );
 
-      await Promise.all(updatePromises);
+      const creates = flightTicketClasses.filter(
+        (ftc) => ftc.isNew && !ftc.isDeleted
+      );
+      const deletes = flightTicketClasses.filter(
+        (ftc) => ftc.isDeleted && !ftc.isNew
+      );
+      const updates = flightTicketClasses.filter((ftc) => {
+        if (ftc.isNew || ftc.isDeleted) return false;
+        const original = originalMap.get(ftc.ticketClassId);
+        if (!original) return false;
+        return (
+          ftc.ticketQuantity !== original.ticketQuantity ||
+          ftc.specifiedFare !== original.specifiedFare ||
+          ftc.remainingTicketQuantity !== original.remainingTicketQuantity
+        );
+      });
+
+      const requests: Promise<unknown>[] = [];
+
+      creates.forEach((ftc) => {
+        const request: FlightTicketClassRequest = {
+          flightId: selectedFlightForClasses.flightId!,
+          ticketClassId: ftc.ticketClassId,
+          ticketQuantity: ftc.ticketQuantity,
+          remainingTicketQuantity: ftc.remainingTicketQuantity,
+          specifiedFare: ftc.specifiedFare,
+        };
+        requests.push(flightTicketClassService.createFlightTicketClass(request));
+      });
+
+      updates.forEach((ftc) => {
+        const updateRequest: UpdateFlightTicketClassRequest = {
+          ticketQuantity: ftc.ticketQuantity,
+          specifiedFare: ftc.specifiedFare,
+          remainingTicketQuantity: ftc.remainingTicketQuantity,
+        };
+        requests.push(
+          flightTicketClassService.updateFlightTicketClass(
+            selectedFlightForClasses.flightId!,
+            ftc.ticketClassId,
+            updateRequest
+          )
+        );
+      });
+
+      deletes.forEach((ftc) => {
+        requests.push(
+          flightTicketClassService.deleteFlightTicketClass(
+            ftc.flightId,
+            ftc.ticketClassId
+          )
+        );
+      });
+
+      await Promise.all(requests);
 
       await loadFlightTicketClasses(selectedFlightForClasses.flightId!);
       setModifiedTicketClasses(new Map());
@@ -444,32 +520,36 @@ const FlightManagement: React.FC<{
     }
   };
 
-  const handleCreateAssociation = async (data: {
+  const handleCreateAssociation = (data: {
     ticketClassId: number;
     ticketQuantity: number;
     specifiedFare: number;
   }) => {
     if (!selectedFlightForClasses) return;
 
-    try {
-      const flightTicketClassRequest: FlightTicketClassRequest = {
-        flightId: selectedFlightForClasses.flightId!,
-        ticketClassId: data.ticketClassId,
+    const newDraft: FlightTicketClassDraft = {
+      flightId: selectedFlightForClasses.flightId!,
+      ticketClassId: data.ticketClassId,
+      ticketQuantity: data.ticketQuantity,
+      remainingTicketQuantity: data.ticketQuantity,
+      specifiedFare: data.specifiedFare,
+      isNew: true,
+      tempId: nextTempId,
+    };
+
+    setNextTempId((prev) => prev - 1);
+    setFlightTicketClasses((prev) => [...prev, newDraft]);
+    setModifiedTicketClasses((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(newDraft.ticketClassId, {
         ticketQuantity: data.ticketQuantity,
         remainingTicketQuantity: data.ticketQuantity,
         specifiedFare: data.specifiedFare,
-      };
-
-      await flightTicketClassService.createFlightTicketClass(
-        flightTicketClassRequest
-      );
-      await loadFlightTicketClasses(selectedFlightForClasses.flightId!);
-      setShowCreateForm(false);
-      setError("");
-    } catch (error) {
-      setError("Failed to create association");
-      console.error("Error creating association:", error);
-    }
+      });
+      return newMap;
+    });
+    setShowCreateForm(false);
+    setError("");
   };
 
   const handleDeleteAssociationClick = (
@@ -481,24 +561,48 @@ const FlightManagement: React.FC<{
     setShowDeleteAssociationModal(true);
   };
 
-  const handleConfirmDeleteAssociation = async () => {
+  const handleConfirmDeleteAssociation = () => {
     if (!associationToDelete) return;
 
-    try {
-      setDeletingAssociation(true);
-      await flightTicketClassService.deleteFlightTicketClass(
-        associationToDelete.flightId,
-        associationToDelete.ticketClassId
+    setDeletingAssociation(true);
+
+    setFlightTicketClasses((prev) => {
+      const draft = prev.find(
+        (ftc) => ftc.ticketClassId === associationToDelete.ticketClassId
       );
-      await loadFlightTicketClasses(associationToDelete.flightId);
-      setShowDeleteAssociationModal(false);
-      setAssociationToDelete(null);
-    } catch (error) {
-      console.error("Error deleting association:", error);
-      setError("Failed to delete association");
-    } finally {
-      setDeletingAssociation(false);
-    }
+      if (!draft) return prev;
+
+      // Remove unsaved new draft entirely
+      if (draft.isNew) {
+        return prev.filter(
+          (ftc) => ftc.ticketClassId !== associationToDelete.ticketClassId
+        );
+      }
+
+      return prev.map((ftc) =>
+        ftc.ticketClassId === associationToDelete.ticketClassId
+          ? { ...ftc, isDeleted: true }
+          : ftc
+      );
+    });
+
+    setModifiedTicketClasses((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(associationToDelete.ticketClassId, {
+        ticketQuantity: 0,
+      });
+      return newMap;
+    });
+
+    setCardValidationErrors((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(associationToDelete.ticketClassId);
+      return newMap;
+    });
+
+    setShowDeleteAssociationModal(false);
+    setAssociationToDelete(null);
+    setDeletingAssociation(false);
   };
 
   const getTicketClassName = (ticketClassId: number) => {
@@ -518,10 +622,11 @@ const FlightManagement: React.FC<{
   const handleCancelTicketClasses = () => {
     setShowTicketClassModal(false);
     setSelectedFlightForClasses(null);
-    setFlightTicketClasses([]);
+    setFlightTicketClasses(originalTicketClasses);
     setShowCreateForm(false);
     setEditingAssociation(null);
     setCardValidationErrors(new Map());
+    setModifiedTicketClasses(new Map());
     setError("");
   };
 
@@ -537,10 +642,25 @@ const FlightManagement: React.FC<{
     ? ticketClasses.filter(
         (tc) =>
           !flightTicketClasses.some(
-            (ftc) => ftc.ticketClassId === tc.ticketClassId
+            (ftc) => !ftc.isDeleted && ftc.ticketClassId === tc.ticketClassId
           )
       )
     : [];
+
+  const activeTicketClasses = flightTicketClasses.filter((ftc) => !ftc.isDeleted);
+  const totalAssignedSeats = activeTicketClasses.reduce(
+    (total, ftc) => total + (ftc.ticketQuantity || 0),
+    0
+  );
+  const planeCapacity = selectedFlightForClasses
+    ? planes.find((p) => p.planeId === selectedFlightForClasses.planeId)
+        ?.seatQuantity
+    : undefined;
+  const isPlaneFull =
+    planeCapacity !== undefined && totalAssignedSeats >= planeCapacity;
+  const hasPendingChanges =
+    modifiedTicketClasses.size > 0 ||
+    flightTicketClasses.some((ftc) => ftc.isNew || ftc.isDeleted);
 
   if (loading) {
     return (
@@ -666,41 +786,11 @@ const FlightManagement: React.FC<{
               {!readOnly && availableTicketClasses.length > 0 && (
                 <Button
                   variant="primary"
-                  disabled={
-                    !selectedFlightForClasses ||
-                    planes.find(
-                      (p) => p.planeId === selectedFlightForClasses.planeId
-                    )?.seatQuantity ===
-                      flightTicketClasses.reduce((total, ftc) => {
-                        const modified = modifiedTicketClasses.get(
-                          ftc.ticketClassId!
-                        );
-                        const quantity =
-                          modified?.ticketQuantity !== undefined
-                            ? modified.ticketQuantity
-                            : ftc.ticketQuantity!;
-                        return total + quantity;
-                      }, 0)
-                  }
+                  disabled={!selectedFlightForClasses || isPlaneFull}
                   onClick={() => setShowCreateForm(true)}
                 >
                   <i className="bi bi-plus-circle me-2"></i>
-                  {selectedFlightForClasses &&
-                  planes.find(
-                    (p) => p.planeId === selectedFlightForClasses.planeId
-                  )?.seatQuantity ===
-                    flightTicketClasses.reduce((total, ftc) => {
-                      const modified = modifiedTicketClasses.get(
-                        ftc.ticketClassId!
-                      );
-                      const quantity =
-                        modified?.ticketQuantity !== undefined
-                          ? modified.ticketQuantity
-                          : ftc.ticketQuantity!;
-                      return total + quantity;
-                    }, 0)
-                    ? "Máy bay đã đầy"
-                    : "Thêm hạng vé"}
+                  {isPlaneFull ? "Máy bay đã đầy" : "Thêm hạng vé"}
                 </Button>
               )}
             </Col>
@@ -712,7 +802,6 @@ const FlightManagement: React.FC<{
               selectedFlight={selectedFlightForClasses}
               planes={planes}
               flightTicketClasses={flightTicketClasses}
-              modifiedTicketClasses={modifiedTicketClasses}
             />
           )}
 
@@ -725,11 +814,10 @@ const FlightManagement: React.FC<{
           )}
 
           {/* Pending Changes Alert */}
-          {!readOnly && modifiedTicketClasses.size > 0 && (
+          {!readOnly && hasPendingChanges && (
             <Alert variant="warning" className="mb-3">
               <i className="bi bi-info-circle-fill me-2"></i>
-              Bạn có {modifiedTicketClasses.size} thay đổi chưa lưu. Nhấn "Lưu
-              thay đổi" để áp dụng.
+              Bạn có thay đổi chưa lưu. Nhấn "Lưu thay đổi" để áp dụng.
             </Alert>
           )}
 
@@ -747,7 +835,9 @@ const FlightManagement: React.FC<{
 
           {/* Ticket Class Cards */}
           <Row className="g-3 mt-2">
-            {flightTicketClasses.map((association) => (
+            {flightTicketClasses
+              .filter((ftc) => !ftc.isDeleted)
+              .map((association) => (
               <Col
                 md={6}
                 key={`${association.flightId}-${association.ticketClassId}`}
@@ -776,9 +866,10 @@ const FlightManagement: React.FC<{
                   onUndo={() =>
                     handleUndoTicketClassChanges(association.ticketClassId!)
                   }
-                  isModified={modifiedTicketClasses.has(
-                    association.ticketClassId!
-                  )}
+                  isModified={
+                    association.isNew ||
+                    modifiedTicketClasses.has(association.ticketClassId!)
+                  }
                   modifiedTicketClasses={modifiedTicketClasses}
                   selectedFlightForClasses={selectedFlightForClasses}
                   planes={planes}
@@ -793,7 +884,7 @@ const FlightManagement: React.FC<{
           </Row>
 
           {/* No Ticket Classes Message */}
-          {flightTicketClasses.length === 0 && (
+          {activeTicketClasses.length === 0 && (
             <Alert variant="info" className="text-center">
               <Alert.Heading>Chưa có hạng vé nào</Alert.Heading>
               <p className="mb-0">
@@ -812,10 +903,7 @@ const FlightManagement: React.FC<{
             <Button
               variant="success"
               onClick={handleSaveAllTicketClasses}
-              disabled={
-                modifiedTicketClasses.size === 0 ||
-                cardValidationErrors.size > 0
-              }
+              disabled={!hasPendingChanges || cardValidationErrors.size > 0}
             >
               <i className="bi bi-save me-2"></i>
               Lưu thay đổi
@@ -989,29 +1077,22 @@ const FlightManagement: React.FC<{
 interface PlaneInfoCardProps {
   selectedFlight: Flight;
   planes: Plane[];
-  flightTicketClasses: FlightTicketClass[];
-  modifiedTicketClasses: Map<number, Partial<FlightTicketClass>>;
+  flightTicketClasses: FlightTicketClassDraft[];
 }
 
 const PlaneInfoCard: React.FC<PlaneInfoCardProps> = ({
   selectedFlight,
   planes,
   flightTicketClasses,
-  modifiedTicketClasses,
 }) => {
   const planeInfo = useMemo(() => {
     const plane = planes.find((p) => p.planeId === selectedFlight.planeId);
     if (!plane) return null;
 
     // Calculate assigned seats including pending modifications
-    const totalAssignedSeats = flightTicketClasses.reduce((total, ftc) => {
-      const modified = modifiedTicketClasses.get(ftc.ticketClassId!);
-      const quantity =
-        modified?.ticketQuantity !== undefined
-          ? modified.ticketQuantity
-          : ftc.ticketQuantity!;
-      return total + quantity;
-    }, 0);
+    const totalAssignedSeats = flightTicketClasses
+      .filter((ftc) => !ftc.isDeleted)
+      .reduce((total, ftc) => total + (ftc.ticketQuantity || 0), 0);
 
     const availableSeats = plane.seatQuantity - totalAssignedSeats;
     const utilizationRate = (
@@ -1027,7 +1108,7 @@ const PlaneInfoCard: React.FC<PlaneInfoCardProps> = ({
       availableSeats: availableSeats,
       utilizationRate: utilizationRate,
     };
-  }, [selectedFlight, planes, flightTicketClasses, modifiedTicketClasses]);
+  }, [selectedFlight, planes, flightTicketClasses]);
 
   if (!planeInfo) return null;
 
@@ -1111,7 +1192,7 @@ interface CreateAssociationFormProps {
   onCancel: () => void;
   selectedFlightForClasses: Flight | null;
   planes: Plane[];
-  flightTicketClasses: FlightTicketClass[];
+  flightTicketClasses: FlightTicketClassDraft[];
 }
 
 const CreateAssociationFormWithTypeAhead: React.FC<
@@ -1148,10 +1229,9 @@ const CreateAssociationFormWithTypeAhead: React.FC<
     );
     if (!plane) return 0;
 
-    const totalAssignedSeats = flightTicketClasses.reduce(
-      (total, ftc) => total + (ftc.ticketQuantity || 0),
-      0
-    );
+    const totalAssignedSeats = flightTicketClasses
+      .filter((ftc) => !ftc.isDeleted)
+      .reduce((total, ftc) => total + (ftc.ticketQuantity || 0), 0);
 
     return plane.seatQuantity - totalAssignedSeats;
   }, [selectedFlightForClasses, planes, flightTicketClasses]);
@@ -1306,11 +1386,6 @@ const CreateAssociationFormWithTypeAhead: React.FC<
                 <Form.Control.Feedback type="invalid">
                   {fieldErrors.ticketQuantity}
                 </Form.Control.Feedback>
-                {availableSeats > 0 && !fieldErrors.ticketQuantity && (
-                  <Form.Text className="text-muted">
-                    Còn {availableSeats} ghế trống
-                  </Form.Text>
-                )}
               </Form.Group>
             </Col>
 
@@ -1359,20 +1434,20 @@ const CreateAssociationFormWithTypeAhead: React.FC<
 
 // Ticket Class Card Component - Updated to show plane capacity info
 interface TicketClassCardProps {
-  association: FlightTicketClass;
+  association: FlightTicketClassDraft;
   className: string;
   classColor: string;
   isEditing: boolean;
   onEdit: () => void;
-  onSave: (data: Partial<FlightTicketClass>) => void;
+  onSave: (data: Partial<FlightTicketClassDraft>) => void;
   onCancel: () => void;
   onDelete: () => void;
   onUndo: () => void;
   isModified?: boolean;
-  modifiedTicketClasses: Map<number, Partial<FlightTicketClass>>;
+  modifiedTicketClasses: Map<number, Partial<FlightTicketClassDraft>>;
   selectedFlightForClasses: Flight | null;
   planes: Plane[];
-  flightTicketClasses: FlightTicketClass[];
+  flightTicketClasses: FlightTicketClassDraft[];
   onValidationChange: (error: string | null) => void;
   readOnly?: boolean;
 }
@@ -1402,6 +1477,15 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
   });
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  // Sync editData with association prop changes (e.g., after undo)
+  useEffect(() => {
+    setEditData({
+      ticketQuantity: association.ticketQuantity || 0,
+      specifiedFare: association.specifiedFare || 0,
+      remainingTicketQuantity: association.remainingTicketQuantity || 0,
+    });
+  }, [association.ticketQuantity, association.specifiedFare, association.remainingTicketQuantity]);
+
   const soldSeats =
     (association.ticketQuantity || 0) -
     (association.remainingTicketQuantity || 0);
@@ -1421,15 +1505,11 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
     if (!plane) return null;
 
     const otherClassesTotalSeats = flightTicketClasses
-      .filter((ftc) => ftc.ticketClassId !== association.ticketClassId)
-      .reduce((total, ftc) => {
-        const modified = modifiedTicketClasses.get(ftc.ticketClassId!);
-        const quantity =
-          modified?.ticketQuantity !== undefined
-            ? modified.ticketQuantity
-            : ftc.ticketQuantity!;
-        return total + quantity;
-      }, 0);
+      .filter(
+        (ftc) =>
+          !ftc.isDeleted && ftc.ticketClassId !== association.ticketClassId
+      )
+      .reduce((total, ftc) => total + (ftc.ticketQuantity || 0), 0);
 
     const currentClassSeats = isEditing
       ? editData.ticketQuantity
@@ -1511,8 +1591,8 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
             {className}
           </Card.Title>
           {isModified && !readOnly && (
-            <Badge bg="warning" className="ms-2">
-              Đã thay đổi
+            <Badge bg={association.isNew ? "success" : "warning"} className="ms-2">
+              {association.isNew ? "Mới" : "Đã thay đổi"}
             </Badge>
           )}
         </div>
@@ -1557,24 +1637,8 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
       </Card.Header>
 
       <Card.Body>
-        {/* Show plane capacity info when editing */}
-        {!readOnly && isEditing && planeInfo && (
-          <Alert variant="info" className="mb-3 small">
-            <div className="d-flex justify-content-between">
-              <span>
-                <i className="bi bi-airplane me-1"></i>
-                Máy bay: {planeInfo.totalSeats} ghế
-              </span>
-              <span>
-                <i className="bi bi-circle text-primary me-1"></i>
-                Còn trống: <strong>{planeInfo.availableSeats}</strong> ghế
-              </span>
-            </div>
-          </Alert>
-        )}
-
-        {readOnly ? (
-          // View mode
+        {!isEditing ? (
+          // View mode (both readOnly and non-editing states)
           <>
             <Row className="g-2 mb-3">
               <Col xs={6}>
@@ -1716,6 +1780,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                   min={minTotalQuantity}
                   max={planeInfo ? planeInfo.totalSeats : undefined}
                   isInvalid={!!validationError}
+                  disabled={!isEditing}
                 />
                 <Form.Control.Feedback type="invalid">
                   {validationError}
@@ -1743,6 +1808,7 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
                       }))
                     }
                     min="0"
+                    disabled={!isEditing}
                   />
                   <InputGroup.Text>VND</InputGroup.Text>
                 </InputGroup>
