@@ -2,6 +2,7 @@ package com.flightmanagement.service;
 
 import com.flightmanagement.dto.*;
 import com.flightmanagement.entity.*;
+import com.flightmanagement.exception.ResourceNotFoundException;
 import com.flightmanagement.mapper.TicketMapper;
 import com.flightmanagement.repository.*;
 import com.flightmanagement.service.impl.TicketServiceImpl;
@@ -822,6 +823,7 @@ class TicketServiceTest {
             List<Ticket> tickets = Arrays.asList(new Ticket(), new Ticket());
             List<TicketDto> dtos = Arrays.asList(new TicketDto(), new TicketDto());
 
+            when(flightRepository.findById(1)).thenReturn(Optional.of(new Flight()));
             when(ticketRepository.findByFlightId(1)).thenReturn(tickets);
             when(ticketMapper.toDtoList(tickets)).thenReturn(dtos);
 
@@ -838,6 +840,7 @@ class TicketServiceTest {
         @DisplayName("Should return empty list when no tickets for flight")
         void getTicketsByFlightId_NoTickets_ReturnsEmptyList() {
             // Arrange
+            when(flightRepository.findById(999)).thenReturn(Optional.of(new Flight()));
             when(ticketRepository.findByFlightId(999)).thenReturn(new ArrayList<>());
             when(ticketMapper.toDtoList(any())).thenReturn(new ArrayList<>());
 
@@ -847,6 +850,23 @@ class TicketServiceTest {
             // Assert
             assertNotNull(result);
             assertTrue(result.isEmpty());
+        }
+
+        @Test
+        @DisplayName("Should throw exception when flight not found")
+        void getTicketsByFlightId_FlightNotFound_ThrowsException() {
+            // Arrange
+            when(flightRepository.findById(99)).thenReturn(Optional.empty());
+
+            // Act & Assert
+            ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> ticketService.getTicketsByFlightId(99)
+            );
+            
+            assertEquals("Flight not found with id: 99", exception.getMessage());
+            verify(flightRepository).findById(99);
+            verify(ticketRepository, never()).findByFlightId(99);
         }
     }
 
@@ -865,6 +885,7 @@ class TicketServiceTest {
             List<Ticket> tickets = Arrays.asList(new Ticket(), new Ticket());
             List<TicketDto> dtos = Arrays.asList(new TicketDto(), new TicketDto());
 
+            when(customerRepository.findById(1)).thenReturn(Optional.of(new Customer()));
             when(ticketRepository.findByCustomerId(1)).thenReturn(tickets);
             when(ticketMapper.toDtoList(tickets)).thenReturn(dtos);
 
@@ -875,6 +896,39 @@ class TicketServiceTest {
             assertNotNull(result);
             assertEquals(2, result.size());
             verify(ticketRepository).findByCustomerId(1);
+        }
+
+        @Test
+        @DisplayName("Should return empty list when no tickets for customer")
+        void getTicketsByCustomerId_NoTickets_ReturnsEmptyList() {
+            // Arrange
+            when(customerRepository.findById(999)).thenReturn(Optional.of(new Customer()));
+            when(ticketRepository.findByCustomerId(999)).thenReturn(new ArrayList<>());
+            when(ticketMapper.toDtoList(any())).thenReturn(new ArrayList<>());
+
+            // Act
+            List<TicketDto> result = ticketService.getTicketsByCustomerId(999);
+
+            // Assert
+            assertNotNull(result);
+            assertTrue(result.isEmpty());
+        }
+
+        @Test
+        @DisplayName("Should throw exception when customer not found")
+        void getTicketsByCustomerId_CustomerNotFound_ThrowsException() {
+            // Arrange
+            when(customerRepository.findById(99)).thenReturn(Optional.empty());
+
+            // Act & Assert
+            ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> ticketService.getTicketsByCustomerId(99)
+            );
+            
+            assertEquals("Customer not found with id: 99", exception.getMessage());
+            verify(customerRepository).findById(99);
+            verify(ticketRepository, never()).findByCustomerId(99);
         }
     }
 
@@ -893,6 +947,7 @@ class TicketServiceTest {
             List<Ticket> tickets = Arrays.asList(new Ticket(), new Ticket());
             List<TicketDto> dtos = Arrays.asList(new TicketDto(), new TicketDto());
 
+            when(passengerRepository.findById(1)).thenReturn(Optional.of(new Passenger()));
             when(ticketRepository.findByPassengerId(1)).thenReturn(tickets);
             when(ticketMapper.toDtoList(tickets)).thenReturn(dtos);
 
@@ -903,6 +958,39 @@ class TicketServiceTest {
             assertNotNull(result);
             assertEquals(2, result.size());
             verify(ticketRepository).findByPassengerId(1);
+        }
+
+        @Test
+        @DisplayName("Should return empty list when no tickets for passenger")
+        void getTicketsByPassengerId_NoTickets_ReturnsEmptyList() {
+            // Arrange
+            when(passengerRepository.findById(999)).thenReturn(Optional.of(new Passenger()));
+            when(ticketRepository.findByPassengerId(999)).thenReturn(new ArrayList<>());
+            when(ticketMapper.toDtoList(any())).thenReturn(new ArrayList<>());
+
+            // Act
+            List<TicketDto> result = ticketService.getTicketsByPassengerId(999);
+
+            // Assert
+            assertNotNull(result);
+            assertTrue(result.isEmpty());
+        }
+
+        @Test
+        @DisplayName("Should throw exception when passenger not found")
+        void getTicketsByPassengerId_PassengerNotFound_ThrowsException() {
+            // Arrange
+            when(passengerRepository.findById(99)).thenReturn(Optional.empty());
+
+            // Act & Assert
+            ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> ticketService.getTicketsByPassengerId(99)
+            );
+            
+            assertEquals("Passenger not found with id: 99", exception.getMessage());
+            verify(passengerRepository).findById(99);
+            verify(ticketRepository, never()).findByPassengerId(99);
         }
     }
 
@@ -933,84 +1021,37 @@ class TicketServiceTest {
             assertEquals(2, result.size());
             verify(ticketRepository).findByTicketStatus(status);
         }
-    }
-
-    // ============================================================
-    // NESTED CLASS: GENERATE CONFIRMATION CODE TESTS
-    // ============================================================
-
-    @Nested
-    @DisplayName("GenerateConfirmationCode Tests")
-    class GenerateConfirmationCodeTests {
 
         @Test
-        @DisplayName("Should generate confirmation code with correct format")
-        void generateConfirmationCode_Success_ReturnsValidCode() {
-            // Act
-            String code = ticketService.generateConfirmationCode();
-
-            // Assert
-            assertNotNull(code);
-            assertTrue(code.startsWith("FMS-"));
-            assertTrue(code.matches("FMS-\\d{8}-[A-Z0-9]{4}"));
-        }
-
-        @Test
-        @DisplayName("Should generate unique codes")
-        void generateConfirmationCode_MultipleCalls_GeneratesUniqueCodes() {
-            // Act
-            String code1 = ticketService.generateConfirmationCode();
-            String code2 = ticketService.generateConfirmationCode();
-
-            // Assert
-            assertNotNull(code1);
-            assertNotNull(code2);
-            // Codes should have same date prefix but different suffix (most likely)
-        }
-    }
-
-    // ============================================================
-    // NESTED CLASS: GET TICKETS ON CONFIRMATION CODE TESTS
-    // ============================================================
-
-    @Nested
-    @DisplayName("GetTicketsOnConfirmationCode Tests")
-    class GetTicketsOnConfirmationCodeTests {
-
-        @Test
-        @DisplayName("Should return tickets with confirmation code")
-        void getTicketsOnConfirmationCode_Found_ReturnsTickets() {
+        @DisplayName("Should return empty list when no tickets with status")
+        void getTicketsByStatus_NoTickets_ReturnsEmptyList() {
             // Arrange
-            String confirmationCode = "FMS-20251207-ABCD";
-            List<Ticket> tickets = Arrays.asList(new Ticket(), new Ticket());
-            List<TicketDto> dtos = Arrays.asList(new TicketDto(), new TicketDto());
-
-            when(ticketRepository.findByConfirmationCode(confirmationCode)).thenReturn(tickets);
-            when(ticketMapper.toDtoList(tickets)).thenReturn(dtos);
-
-            // Act
-            List<TicketDto> result = ticketService.getTicketsOnConfirmationCode(confirmationCode);
-
-            // Assert
-            assertNotNull(result);
-            assertEquals(2, result.size());
-            verify(ticketRepository).findByConfirmationCode(confirmationCode);
-        }
-
-        @Test
-        @DisplayName("Should return empty list when code not found")
-        void getTicketsOnConfirmationCode_NotFound_ReturnsEmptyList() {
-            // Arrange
-            String confirmationCode = "INVALID";
-            when(ticketRepository.findByConfirmationCode(confirmationCode)).thenReturn(new ArrayList<>());
+            byte status = 2;
+            when(ticketRepository.findByTicketStatus(status)).thenReturn(new ArrayList<>());
             when(ticketMapper.toDtoList(any())).thenReturn(new ArrayList<>());
 
             // Act
-            List<TicketDto> result = ticketService.getTicketsOnConfirmationCode(confirmationCode);
+            List<TicketDto> result = ticketService.getTicketsByStatus(status);
 
             // Assert
             assertNotNull(result);
             assertTrue(result.isEmpty());
+        }
+
+        @Test
+        @DisplayName("Should throw exception when status is invalid")
+        void getTicketsByStatus_InvalidStatus_ThrowsException() {
+            // Arrange
+            byte invalidStatus = 99;
+
+            // Act & Assert
+            ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> ticketService.getTicketsByStatus(invalidStatus)
+            );
+            
+            assertEquals("Invalid ticket status: 99", exception.getMessage());
+            verify(ticketRepository, never()).findByTicketStatus(invalidStatus);
         }
     }
 

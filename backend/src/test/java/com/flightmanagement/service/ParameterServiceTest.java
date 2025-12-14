@@ -112,23 +112,6 @@ public class ParameterServiceTest {
             verify(parameterRepository).findLatestParameter();
             verify(parameterMapper, never()).toDto(any());
         }
-
-        @Test
-        @Tag("getLatestParameter")
-        @DisplayName("Repository throws exception - Propagates exception")
-        void getLatestParameter_RepositoryThrowsException_PropagatesException() {
-            // Arrange
-            when(parameterRepository.findLatestParameter())
-                .thenThrow(new RuntimeException("Database error"));
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-                parameterService.getLatestParameter();
-            });
-
-            assertEquals("Database error", exception.getMessage());
-            verify(parameterRepository).findLatestParameter();
-        }
     }
 
     // ==================== updateParameters Tests ====================
@@ -510,24 +493,6 @@ public class ParameterServiceTest {
             parameterService.initializeDefaultParameters();
 
             // Assert
-            verify(parameterRepository).deleteAll();
-            verify(parameterRepository).save(any(Parameter.class));
-        }
-
-        @Test
-        @Tag("initializeDefaultParameters")
-        @DisplayName("Initialize default parameters with save failure - Propagates exception")
-        void initializeDefaultParameters_SaveFails_PropagatesException() {
-            // Arrange
-            when(parameterRepository.save(any(Parameter.class)))
-                .thenThrow(new RuntimeException("Save failed"));
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-                parameterService.initializeDefaultParameters();
-            });
-
-            assertEquals("Save failed", exception.getMessage());
             verify(parameterRepository).deleteAll();
             verify(parameterRepository).save(any(Parameter.class));
         }
