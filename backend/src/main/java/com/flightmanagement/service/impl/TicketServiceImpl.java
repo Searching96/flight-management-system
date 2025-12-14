@@ -2,7 +2,7 @@ package com.flightmanagement.service.impl;
 
 import com.flightmanagement.dto.*;
 import com.flightmanagement.entity.*;
-import com.flightmanagement.enums.AccountType;
+import com.flightmanagement.exception.ResourceNotFoundException;
 import com.flightmanagement.mapper.TicketMapper;
 import com.flightmanagement.repository.*;
 import com.flightmanagement.service.*;
@@ -151,24 +151,41 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public List<TicketDto> getTicketsByFlightId(Integer flightId) {
+        // Check if flight exists
+        flightRepository.findById(flightId)
+                .orElseThrow(() -> new ResourceNotFoundException("Flight not found with id: " + flightId));
+        
         List<Ticket> tickets = ticketRepository.findByFlightId(flightId);
         return ticketMapper.toDtoList(tickets);
     }
 
     @Override
     public List<TicketDto> getTicketsByCustomerId(Integer customerId) {
+        // Check if customer exists
+        customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + customerId));
+        
         List<Ticket> tickets = ticketRepository.findByCustomerId(customerId);
         return ticketMapper.toDtoList(tickets);
     }
 
     @Override
     public List<TicketDto> getTicketsByPassengerId(Integer passengerId) {
+        // Check if passenger exists
+        passengerRepository.findById(passengerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Passenger not found with id: " + passengerId));
+        
         List<Ticket> tickets = ticketRepository.findByPassengerId(passengerId);
         return ticketMapper.toDtoList(tickets);
     }
 
     @Override
     public List<TicketDto> getTicketsByStatus(Byte ticketStatus) {
+        // Validate status (assuming valid statuses are 0, 1, 2)
+        if (ticketStatus == null || ticketStatus < 0 || ticketStatus > 2) {
+            throw new ResourceNotFoundException("Invalid ticket status: " + ticketStatus);
+        }
+        
         List<Ticket> tickets = ticketRepository.findByTicketStatus(ticketStatus);
         return ticketMapper.toDtoList(tickets);
     }

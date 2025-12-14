@@ -1,7 +1,6 @@
 package com.flightmanagement.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.flightmanagement.repository.AccountRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -10,7 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
@@ -31,8 +29,8 @@ public class AuthControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private AccountRepository accountRepository;
+//    @Autowired
+//    private AccountRepository accountRepository;
 
     @BeforeEach
     void cleanup() {
