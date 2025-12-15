@@ -278,13 +278,14 @@ const FlightForm: React.FC<FlightFormProps> = ({
       (1000 * 60);
     const minDuration = parameters?.minFlightDuration || 30;
 
-    if (durationMinutes < minDuration) {
-      setFormErrors((prev) => ({
-        ...prev,
-        flightDuration: `Thời gian bay tối thiểu là ${minDuration} phút theo quy định.`,
-      }));
-      return;
-    }
+    // [UNCOMMENT FOR DEPARTURE - ARRIVAL TIME CHECK]
+    // if (durationMinutes < minDuration) {
+    //   setFormErrors((prev) => ({
+    //     ...prev,
+    //     flightDuration: `Thời gian bay tối thiểu là ${minDuration} phút theo quy định.`,
+    //   }));
+    //   return;
+    // }
 
     onSubmit(data);
   };
@@ -425,13 +426,14 @@ const FlightForm: React.FC<FlightFormProps> = ({
                       "Thời gian khởi hành không thể trong quá khứ."
                     );
                   },
-                  beforeArrival: (value) => {
-                    if (!watchArrivalTime) return true;
-                    return (
-                      new Date(value) < new Date(watchArrivalTime) ||
-                      "Thời gian đến phải sau thời gian khởi hành."
-                    );
-                  },
+                  // [UNCOMMENT FOR DEPARTURE - ARRIVAL TIME CHECK]
+                  // beforeArrival: (value) => {
+                  //   if (!watchArrivalTime) return true;
+                  //   return (
+                  //     new Date(value) < new Date(watchArrivalTime) ||
+                  //     "Thời gian đến phải sau thời gian khởi hành."
+                  //   );
+                  // },
                 },
               })}
               isInvalid={!!errors.departureTime}
@@ -450,25 +452,27 @@ const FlightForm: React.FC<FlightFormProps> = ({
               {...register("arrivalTime", {
                 required: "Thời gian đến là bắt buộc",
                 validate: {
-                  afterDeparture: (value) => {
-                    if (!watchDepartureTime) return true;
-                    return (
-                      new Date(value) > new Date(watchDepartureTime) ||
-                      "Thời gian đến phải sau thời gian khởi hành."
-                    );
-                  },
-                  minFlightDuration: (value) => {
-                    if (!watchDepartureTime) return true;
-                    const durationMinutes =
-                      (new Date(value).getTime() -
-                        new Date(watchDepartureTime).getTime()) /
-                      (1000 * 60);
-                    const minDuration = parameters?.minFlightDuration || 30;
-                    return (
-                      durationMinutes >= minDuration ||
-                      `Thời gian bay tối thiểu là ${minDuration} phút theo quy định.`
-                    );
-                  },
+                  // [UNCOMMENT FOR DEPARTURE - ARRIVAL TIME CHECK]
+                  // afterDeparture: (value) => {
+                  //   if (!watchDepartureTime) return true;
+                  //   return (
+                  //     new Date(value) > new Date(watchDepartureTime) ||
+                  //     "Thời gian đến phải sau thời gian khởi hành."
+                  //   );
+                  // },
+                  // [UNCOMMENT FOR DEPARTURE - ARRIVAL TIME CHECK]
+                  // minFlightDuration: (value) => {
+                  //   if (!watchDepartureTime) return true;
+                  //   const durationMinutes =
+                  //     (new Date(value).getTime() -
+                  //       new Date(watchDepartureTime).getTime()) /
+                  //     (1000 * 60);
+                  //   const minDuration = parameters?.minFlightDuration || 30;
+                  //   return (
+                  //     durationMinutes >= minDuration ||
+                  //     `Thời gian bay tối thiểu là ${minDuration} phút theo quy định.`
+                  //   );
+                  // },
                 },
               })}
               isInvalid={!!errors.arrivalTime}

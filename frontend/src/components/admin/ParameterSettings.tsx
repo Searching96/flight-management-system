@@ -361,12 +361,13 @@ export const ParameterSettings: React.FC<ParameterSettingsProps> = ({
                     <Form.Control
                       type="number"
                       min="0"
-                      max="720"
+                      // max="720"
                       readOnly={readOnly}
                       disabled={readOnly}
                       {...register("maxBookingHoldDuration", {
                         required:
                           !readOnly && "Thời gian giữ chỗ tối đa là bắt buộc",
+                        // [UNCOMMENT FOR MAX BOOKING HOLD CHECK]
                         max: {
                           value: 720,
                           message:
