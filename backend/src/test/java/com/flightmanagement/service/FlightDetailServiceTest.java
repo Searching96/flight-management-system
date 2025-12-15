@@ -326,16 +326,21 @@ public class FlightDetailServiceTest {
         @Test
         @DisplayName("TC1: Null DTO - Throws IllegalArgumentException")
         void createFlightDetail_NullDto_ThrowsIllegalArgumentException() {
-            assertThrows(IllegalArgumentException.class, () -> flightDetailService.createFlightDetail(null));
+            // Act & Assert
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> flightDetailService.createFlightDetail(null));
+            assertEquals("FlightDetail payload is missing required fields", exception.getMessage());
             verify(flightDetailRepository, never()).save(any(FlightDetail.class));
         }
 
         @Test
         @DisplayName("TC2: Missing flightId - Throws IllegalArgumentException")
         void createFlightDetail_MissingFlightId_ThrowsIllegalArgumentException() {
+            // Arrange
             validFlightDetailDto.setFlightId(null);
 
-            assertThrows(IllegalArgumentException.class, () -> flightDetailService.createFlightDetail(validFlightDetailDto));
+            // Act & Assert
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> flightDetailService.createFlightDetail(validFlightDetailDto));
+            assertEquals("FlightDetail payload is missing required fields", exception.getMessage());
             verify(flightDetailRepository, never()).save(any(FlightDetail.class));
         }
 

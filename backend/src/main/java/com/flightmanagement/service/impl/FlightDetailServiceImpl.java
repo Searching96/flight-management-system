@@ -47,6 +47,13 @@ public class FlightDetailServiceImpl implements FlightDetailService {
     @Override
     @Transactional(readOnly = true)
     public FlightDetailDto createFlightDetail(FlightDetailDto flightDetailDto) {
+        // if (flightDetailDto == null
+        //     || flightDetailDto.getFlightId() == null
+        //     || flightDetailDto.getMediumAirportId() == null
+        //     || flightDetailDto.getArrivalTime() == null
+        //     || flightDetailDto.getLayoverDuration() == null) {
+        //     throw new IllegalArgumentException("FlightDetail payload is missing required fields");
+        // }
         FlightDetail flightDetail = flightDetailMapper.toEntity(flightDetailDto);
         flightDetail.setDeletedAt(null);
         FlightDetail savedFlightDetail = flightDetailRepository.save(flightDetail);
