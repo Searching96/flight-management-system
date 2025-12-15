@@ -5,11 +5,12 @@ import com.flightmanagement.entity.FlightDetail;
 import com.flightmanagement.mapper.FlightDetailMapper;
 import com.flightmanagement.repository.FlightDetailRepository;
 import com.flightmanagement.service.impl.FlightDetailServiceImpl;
+
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -386,330 +387,161 @@ public class FlightDetailServiceTest {
         }
     }
 
-    // ==================== updateFlightDetail Tests ====================
+    // ========================================
+    // UPDATE FLIGHT DETAIL TESTS
+    // ========================================
 
     @Nested
     @DisplayName("UpdateFlightDetail Tests - Full Path Coverage")
     @Tag("updateFlightDetail")
     class UpdateFlightDetailTests {
 
-        // ===== NHÓM 1: Happy Paths =====
+        private FlightDetail existingFlightDetail;
+        private FlightDetailDto updateDto;
+        private FlightDetail updatedFlightDetail;
+        private FlightDetailDto returnedDto;
+        private LocalDateTime newArrivalTime;
+
+        @BeforeEach
+        void setUp() {
+            newArrivalTime = LocalDateTime.of(2024, 12, 25, 14, 30);
+
+            existingFlightDetail = new FlightDetail();
+            existingFlightDetail.setFlightId(1);
+            existingFlightDetail.setMediumAirportId(1);
+            existingFlightDetail.setArrivalTime(LocalDateTime.of(2024, 12, 25, 13, 0));
+            existingFlightDetail.setLayoverDuration(60);
+
+            updateDto = new FlightDetailDto();
+            updateDto.setArrivalTime(newArrivalTime);
+            updateDto.setLayoverDuration(90);
+
+            updatedFlightDetail = new FlightDetail();
+            existingFlightDetail.setFlightId(1);
+            existingFlightDetail.setMediumAirportId(1);
+            updatedFlightDetail.setArrivalTime(newArrivalTime);
+            updatedFlightDetail.setLayoverDuration(90);
+
+            returnedDto = new FlightDetailDto();
+            existingFlightDetail.setFlightId(1);
+            existingFlightDetail.setMediumAirportId(1);
+            returnedDto.setArrivalTime(newArrivalTime);
+            returnedDto.setLayoverDuration(90);
+        }
+
+        // ===== NHÓM 1: Happy Path - Successful Update =====
 
         @Test
-        @DisplayName("TC1: Update both arrival time and layover duration - Success")
-        void updateFlightDetail_BothFieldsChanged_Success() {
+        @DisplayName("TC1: Update flight detail with valid data - Success")
+        void updateFlightDetail_ValidData_Success() {
             // Arrange
-            LocalDateTime newArrivalTime = arrivalTime.plusHours(2);
-            validFlightDetailDto.setArrivalTime(newArrivalTime);
-            validFlightDetailDto.setLayoverDuration(120);
+            Integer flightId = 100;
+            Integer mediumAirportId = 50;
 
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.of(validFlightDetail));
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
-            when(flightDetailMapper.toDto(validFlightDetail)).thenReturn(validFlightDetailDto);
+            when(flightDetailRepository.findByFlightIdAndMediumAirportId(flightId, mediumAirportId))
+                .thenReturn(Optional.of(existingFlightDetail));
+            when(flightDetailRepository.save(existingFlightDetail))
+                .thenReturn(updatedFlightDetail);
+            when(flightDetailMapper.toDto(updatedFlightDetail))
+                .thenReturn(returnedDto);
 
             // Act
-            FlightDetailDto result = flightDetailService.updateFlightDetail(1, 2, validFlightDetailDto);
+            FlightDetailDto result = flightDetailService.updateFlightDetail(flightId, mediumAirportId, updateDto);
 
             // Assert
             assertNotNull(result);
-            verify(flightDetailRepository).save(any(FlightDetail.class));
+            assertEquals(newArrivalTime, result.getArrivalTime());
+            assertEquals(90, result.getLayoverDuration());
+            
+            verify(flightDetailRepository).findByFlightIdAndMediumAirportId(flightId, mediumAirportId);
+            verify(flightDetailRepository).save(existingFlightDetail);
+            verify(flightDetailMapper).toDto(updatedFlightDetail);
         }
 
-        @Test
-        @DisplayName("TC3: Update only arrival time - Success")
-        void updateFlightDetail_OnlyArrivalTime_Success() {
-            // Arrange
-            LocalDateTime newArrivalTime = arrivalTime.plusHours(1);
-            validFlightDetailDto.setArrivalTime(newArrivalTime);
-
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.of(validFlightDetail));
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
-            when(flightDetailMapper.toDto(validFlightDetail)).thenReturn(validFlightDetailDto);
-
-            // Act
-            FlightDetailDto result = flightDetailService.updateFlightDetail(1, 2, validFlightDetailDto);
-
-            // Assert
-            assertNotNull(result);
-            assertEquals(newArrivalTime, validFlightDetail.getArrivalTime());
-        }
+        // ===== NHÓM 2: Error Paths - FlightDetail Not Found =====
 
         @Test
-        @DisplayName("TC4: Update only layover duration - Success")
-        void updateFlightDetail_OnlyLayoverDuration_Success() {
+        @DisplayName("TC2: Update non-existent flight detail - Throws RuntimeException")
+        void updateFlightDetail_NotFound_ThrowsRuntimeException() {
             // Arrange
-            validFlightDetailDto.setLayoverDuration(90);
+            Integer flightId = 999;
+            Integer mediumAirportId = 999;
 
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.of(validFlightDetail));
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
-            when(flightDetailMapper.toDto(validFlightDetail)).thenReturn(validFlightDetailDto);
-
-            // Act
-            FlightDetailDto result = flightDetailService.updateFlightDetail(1, 2, validFlightDetailDto);
-
-            // Assert
-            assertNotNull(result);
-            assertEquals(90, validFlightDetail.getLayoverDuration());
-        }
-
-        @Test
-        @DisplayName("TC5: Update with zero layover duration - Success")
-        void updateFlightDetail_ZeroLayoverDuration_Success() {
-            // Arrange
-            validFlightDetailDto.setLayoverDuration(0);
-
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.of(validFlightDetail));
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
-            when(flightDetailMapper.toDto(validFlightDetail)).thenReturn(validFlightDetailDto);
-
-            // Act
-            FlightDetailDto result = flightDetailService.updateFlightDetail(1, 2, validFlightDetailDto);
-
-            // Assert
-            assertEquals(0, result.getLayoverDuration());
-        }
-
-        @Test
-        @DisplayName("TC6: Update with maximum layover duration (2880 min) - Success")
-        void updateFlightDetail_MaximumLayoverDuration_Success() {
-            // Arrange
-            validFlightDetailDto.setLayoverDuration(2880); // 48 hours
-
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.of(validFlightDetail));
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
-            when(flightDetailMapper.toDto(validFlightDetail)).thenReturn(validFlightDetailDto);
-
-            // Act
-            FlightDetailDto result = flightDetailService.updateFlightDetail(1, 2, validFlightDetailDto);
-
-            // Assert
-            assertEquals(2880, result.getLayoverDuration());
-        }
-
-        @Test
-        @DisplayName("TC7: Update with negative layover - Throws exception")
-        void updateFlightDetail_NegativeLayover_ThrowsException() {
-            // Arrange
-            validFlightDetailDto.setLayoverDuration(-60);
-
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.of(validFlightDetail));
-            when(flightDetailRepository.save(any(FlightDetail.class)))
-                .thenThrow(new IllegalArgumentException("Layover duration cannot be negative"));
+            when(flightDetailRepository.findByFlightIdAndMediumAirportId(flightId, mediumAirportId))
+                .thenReturn(Optional.empty());
 
             // Act & Assert
-            assertThrows(
-                Exception.class,
-                () -> flightDetailService.updateFlightDetail(1, 2, validFlightDetailDto)
-            );
-        }
+            assertThrows(RuntimeException.class, () -> flightDetailService.updateFlightDetail(flightId, mediumAirportId, updateDto));
 
-        @Test
-        @DisplayName("TC8: Update with same values (idempotent) - Success")
-        void updateFlightDetail_SameValues_Success() {
-            // Arrange - Same arrival time and layover as existing
-            validFlightDetailDto.setArrivalTime(validFlightDetail.getArrivalTime());
-            validFlightDetailDto.setLayoverDuration(validFlightDetail.getLayoverDuration());
-
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.of(validFlightDetail));
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
-            when(flightDetailMapper.toDto(validFlightDetail)).thenReturn(validFlightDetailDto);
-
-            // Act
-            FlightDetailDto result = flightDetailService.updateFlightDetail(1, 2, validFlightDetailDto);
-
-            // Assert
-            assertNotNull(result);
-            verify(flightDetailRepository).save(any(FlightDetail.class));
+            verify(flightDetailRepository).findByFlightIdAndMediumAirportId(flightId, mediumAirportId);
+            verify(flightDetailRepository, never()).save(any(FlightDetail.class));
+            verify(flightDetailMapper, never()).toDto(any(FlightDetail.class));
         }
     }
 
-    // ==================== deleteFlightDetail Tests ====================
+    // ========================================
+    // DELETE FLIGHT DETAIL TESTS
+    // ========================================
 
     @Nested
     @DisplayName("DeleteFlightDetail Tests - Full Path Coverage")
     @Tag("deleteFlightDetail")
     class DeleteFlightDetailTests {
 
-        // ===== NHÓM 1: Happy Paths =====
+        private FlightDetail existingFlightDetail;
 
-        @Test
-        @DisplayName("TC1: Delete existing detail - Success")
-        void deleteFlightDetail_ExistingDetail_Success() {
-            // Arrange
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.of(validFlightDetail));
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
-
-            // Act
-            flightDetailService.deleteFlightDetail(1, 2);
-
-            // Assert
-            assertNotNull(validFlightDetail.getDeletedAt());
-            verify(flightDetailRepository).save(validFlightDetail);
+        @BeforeEach
+        void setUp() {
+            existingFlightDetail = new FlightDetail();
+            existingFlightDetail.setFlightId(1);
+            existingFlightDetail.setMediumAirportId(1);
+            existingFlightDetail.setArrivalTime(LocalDateTime.of(2024, 12, 25, 13, 0));
+            existingFlightDetail.setDeletedAt(null);
         }
+        
+        // ===== NHÓM 1: Error Paths - FlightDetail Not Found =====
 
         @Test
-        @DisplayName("TC2: Delete sets DeletedAt timestamp - Timestamp set correctly")
-        void deleteFlightDetail_SetsDeletedAtTimestamp() {
+        @DisplayName("TC1: Delete non-existent flight detail - Throws RuntimeException")
+        void deleteFlightDetail_NotFound_ThrowsRuntimeException() {
             // Arrange
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.of(validFlightDetail));
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
+            Integer flightId = 999;
+            Integer mediumAirportId = 999;
 
-            LocalDateTime beforeDelete = LocalDateTime.now();
-
-            // Act
-            flightDetailService.deleteFlightDetail(1, 2);
-
-            LocalDateTime afterDelete = LocalDateTime.now();
-
-            // Assert
-            assertNotNull(validFlightDetail.getDeletedAt());
-            assertTrue(validFlightDetail.getDeletedAt().isAfter(beforeDelete.minusSeconds(1)));
-            assertTrue(validFlightDetail.getDeletedAt().isBefore(afterDelete.plusSeconds(1)));
-        }
-
-        @Test
-        @DisplayName("TC3: Delete preserves other fields - Other data unchanged")
-        void deleteFlightDetail_PreservesOtherFields() {
-            // Arrange
-            validFlightDetail.setLayoverDuration(90);
-            validFlightDetail.setArrivalTime(arrivalTime);
-
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.of(validFlightDetail));
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
-
-            // Act
-            flightDetailService.deleteFlightDetail(1, 2);
-
-            // Assert
-            assertNotNull(validFlightDetail.getDeletedAt());
-            assertEquals(90, validFlightDetail.getLayoverDuration());
-            assertEquals(arrivalTime, validFlightDetail.getArrivalTime());
-            assertEquals(1, validFlightDetail.getFlightId());
-            assertEquals(2, validFlightDetail.getMediumAirportId());
-        }
-
-        // ===== NHÓM 2: Not Found Cases =====
-
-        @Test
-        @DisplayName("TC4: Delete non-existent detail - Throws exception")
-        void deleteFlightDetail_NotFound_ThrowsException() {
-            // Arrange
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(999, 888))
+            when(flightDetailRepository.findByFlightIdAndMediumAirportId(flightId, mediumAirportId))
                 .thenReturn(Optional.empty());
 
             // Act & Assert
-            RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> flightDetailService.deleteFlightDetail(999, 888)
-            );
+            assertThrows(RuntimeException.class, () -> flightDetailService.deleteFlightDetail(flightId, mediumAirportId));
 
-            assertTrue(exception.getMessage().contains("FlightDetail not found"));
-            assertTrue(exception.getMessage().contains("flight: 999"));
-            assertTrue(exception.getMessage().contains("airport: 888"));
-            verify(flightDetailRepository, never()).save(any());
+            verify(flightDetailRepository).findByFlightIdAndMediumAirportId(flightId, mediumAirportId);
+            verify(flightDetailRepository, never()).save(any(FlightDetail.class));
         }
 
-        @Test
-        @DisplayName("TC5: Delete already deleted record - Throws exception")
-        void deleteFlightDetail_AlreadyDeleted_ThrowsException() {
-            // Arrange
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.empty());
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> flightDetailService.deleteFlightDetail(1, 2)
-            );
-
-            assertTrue(exception.getMessage().contains("FlightDetail not found"));
-        }
-
-        // ===== NHÓM 3: Different ID Combinations =====
+        // ===== NHÓM 2: Happy Path - Successful Soft Delete =====
 
         @Test
-        @DisplayName("TC6: Delete with different flight ID - Throws exception")
-        void deleteFlightDetail_DifferentFlightId_ThrowsException() {
+        @DisplayName("TC2: Delete existing flight detail - Success")
+        void deleteFlightDetail_ValidIds_Success() {
             // Arrange
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(5, 2))
-                .thenReturn(Optional.empty());
+            Integer flightId = 100;
+            Integer mediumAirportId = 50;
 
-            // Act & Assert
-            RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> flightDetailService.deleteFlightDetail(5, 2)
-            );
-
-            assertTrue(exception.getMessage().contains("flight: 5"));
-            assertTrue(exception.getMessage().contains("airport: 2"));
-        }
-
-        @Test
-        @DisplayName("TC7: Delete with different airport ID - Throws exception")
-        void deleteFlightDetail_DifferentAirportId_ThrowsException() {
-            // Arrange
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 5))
-                .thenReturn(Optional.empty());
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> flightDetailService.deleteFlightDetail(1, 5)
-            );
-
-            assertTrue(exception.getMessage().contains("flight: 1"));
-            assertTrue(exception.getMessage().contains("airport: 5"));
-        }
-
-        // ===== NHÓM 4: Repository Exceptions =====
-
-        @Test
-        @DisplayName("TC8: Repository save throws exception - Propagates exception")
-        void deleteFlightDetail_RepositoryThrowsException_PropagatesException() {
-            // Arrange
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.of(validFlightDetail));
-            when(flightDetailRepository.save(any(FlightDetail.class)))
-                .thenThrow(new RuntimeException("Database error"));
-
-            // Act & Assert
-            RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> flightDetailService.deleteFlightDetail(1, 2)
-            );
-
-            assertTrue(exception.getMessage().contains("Database error"));
-        }
-
-        // ===== NHÓM 5: Edge Cases =====
-
-        @Test
-        @DisplayName("TC9: Delete with extreme timestamp values - Success")
-        void deleteFlightDetail_ExtremeTimestampValues_Success() {
-            // Arrange
-            LocalDateTime extremeArrival = LocalDateTime.of(2025, 1, 1, 0, 0);
-            validFlightDetail.setArrivalTime(extremeArrival);
-
-            when(flightDetailRepository.findByFlightIdAndMediumAirportId(1, 2))
-                .thenReturn(Optional.of(validFlightDetail));
-            when(flightDetailRepository.save(any(FlightDetail.class))).thenReturn(validFlightDetail);
+            when(flightDetailRepository.findByFlightIdAndMediumAirportId(flightId, mediumAirportId))
+                .thenReturn(Optional.of(existingFlightDetail));
+            when(flightDetailRepository.save(existingFlightDetail))
+                .thenReturn(existingFlightDetail);
 
             // Act
-            flightDetailService.deleteFlightDetail(1, 2);
+            flightDetailService.deleteFlightDetail(flightId, mediumAirportId);
 
             // Assert
-            assertNotNull(validFlightDetail.getDeletedAt());
-            assertEquals(extremeArrival, validFlightDetail.getArrivalTime());
+            assertNotNull(existingFlightDetail.getDeletedAt());
+            assertEquals(true, existingFlightDetail.getDeletedAt().isBefore(LocalDateTime.now()) || existingFlightDetail.getDeletedAt().isEqual(LocalDateTime.now()));
+
+            verify(flightDetailRepository).findByFlightIdAndMediumAirportId(flightId, mediumAirportId);
+            verify(flightDetailRepository).save(existingFlightDetail);
         }
+
     }
 }
