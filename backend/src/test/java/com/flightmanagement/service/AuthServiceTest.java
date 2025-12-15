@@ -103,6 +103,7 @@ public class AuthServiceTest {
         testAccount.setAccountId(1);
         testAccount.setAccountName("testuser");
         testAccount.setEmail("test@email.com");
+        testAccount.setPhoneNumber("0123456789");
         testAccount.setPassword("encodedPassword");
         testAccount.setAccountType(AccountType.CUSTOMER);
         testAccount.setDeletedAt(null);
