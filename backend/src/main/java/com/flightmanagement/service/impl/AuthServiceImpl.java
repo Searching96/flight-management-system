@@ -115,10 +115,11 @@ public class AuthServiceImpl implements AuthService {
             employee.setAccount(savedAccount);
             employee.setEmployeeType(request.getEmployeeType());
             employeeRepository.save(employee);
-        } else {
-            // NEW: Chặn các loại tài khoản không hợp lệ (VD: ADMIN, MOD, 999...)
-            throw new IllegalArgumentException("Invalid Account Type: " + request.getAccountType());
         }
+//        else {
+//            // NEW: Chặn các loại tài khoản không hợp lệ (VD: ADMIN, MOD, 999...)
+//            throw new IllegalArgumentException("Invalid Account Type: " + request.getAccountType());
+//        }
 
             // Get employee type name for email
 //            String employeeTypeName = getEmployeeTypeName(request.getEmployeeType());

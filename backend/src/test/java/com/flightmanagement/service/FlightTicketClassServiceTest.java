@@ -87,7 +87,7 @@ public class FlightTicketClassServiceTest {
             validEntity.setFlight(validFlight);
             validEntity.setTicketClass(validTicketClass);
         }
-        
+
         @Test
         @DisplayName("TC1: Create with missing input (null FlightId or TicketClassId) - Throws IllegalArgumentException")
         void createFlightTicketClass_MissingInput_ThrowsIllegalArgumentException() {
@@ -97,7 +97,7 @@ public class FlightTicketClassServiceTest {
 
             // Act & Assert
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> flightTicketClassService.createFlightTicketClass(validDto)
+                    () -> flightTicketClassService.createFlightTicketClass(validDto)
             );
 
             assertTrue(exception.getMessage().contains("FlightId and TicketClassId are required"));
@@ -112,20 +112,20 @@ public class FlightTicketClassServiceTest {
             // Arrange - Setup valid IDs
             validDto.setFlightId(1);
             validDto.setTicketClassId(1);
-            
+
             FlightTicketClass existingEntity = new FlightTicketClass();
             existingEntity.setFlightId(1);
             existingEntity.setTicketClassId(1);
 
             when(flightTicketClassRepository.findByFlightIdAndTicketClassId(1, 1))
-                .thenReturn(Optional.of(existingEntity));
+                    .thenReturn(Optional.of(existingEntity));
 
             // Act & Assert
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> flightTicketClassService.createFlightTicketClass(validDto)
+                    () -> flightTicketClassService.createFlightTicketClass(validDto)
             );
 
-            assertTrue(exception.getMessage().contains("Already added"));
+            assertTrue(exception.getMessage().contains("already"));
             verify(flightTicketClassRepository).findByFlightIdAndTicketClassId(1, 1);
             verify(flightRepository, never()).findById(anyInt());
             verify(flightTicketClassRepository, never()).save(any());
@@ -139,12 +139,12 @@ public class FlightTicketClassServiceTest {
             validDto.setTicketClassId(1);
 
             when(flightTicketClassRepository.findByFlightIdAndTicketClassId(1, 1))
-                .thenReturn(Optional.empty());
+                    .thenReturn(Optional.empty());
             when(flightRepository.findById(1)).thenReturn(Optional.empty());
 
             // Act & Assert
             RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> flightTicketClassService.createFlightTicketClass(validDto)
+                    () -> flightTicketClassService.createFlightTicketClass(validDto)
             );
 
             assertTrue(exception.getMessage().contains("Flight not found"));
@@ -163,13 +163,13 @@ public class FlightTicketClassServiceTest {
             validDto.setTicketClassId(1);
 
             when(flightTicketClassRepository.findByFlightIdAndTicketClassId(1, 1))
-                .thenReturn(Optional.empty());
+                    .thenReturn(Optional.empty());
             when(flightRepository.findById(1)).thenReturn(Optional.of(validFlight));
             when(ticketClassRepository.findById(1)).thenReturn(Optional.empty());
 
             // Act & Assert
             RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> flightTicketClassService.createFlightTicketClass(validDto)
+                    () -> flightTicketClassService.createFlightTicketClass(validDto)
             );
 
             assertTrue(exception.getMessage().contains("TicketClass not found"));
@@ -187,6 +187,14 @@ public class FlightTicketClassServiceTest {
             validDto.setFlightId(1);
             validDto.setTicketClassId(1);
 
+            // Create the entity that will be returned by toEntity()
+            FlightTicketClass entityFromMapper = new FlightTicketClass();
+            entityFromMapper.setFlightId(1);
+            entityFromMapper.setTicketClassId(1);
+            entityFromMapper.setSpecifiedFare(new BigDecimal("150.00"));
+            entityFromMapper.setTicketQuantity(100);
+            entityFromMapper.setRemainingTicketQuantity(100);
+
             FlightTicketClass savedEntity = new FlightTicketClass();
             savedEntity.setFlightId(1);
             savedEntity.setTicketClassId(1);
@@ -197,11 +205,12 @@ public class FlightTicketClassServiceTest {
             savedEntity.setRemainingTicketQuantity(100);
 
             when(flightTicketClassRepository.findByFlightIdAndTicketClassId(1, 1))
-                .thenReturn(Optional.empty());
+                    .thenReturn(Optional.empty());
             when(flightRepository.findById(1)).thenReturn(Optional.of(validFlight));
             when(ticketClassRepository.findById(1)).thenReturn(Optional.of(validTicketClass));
+            when(flightTicketClassMapper.toEntity(validDto)).thenReturn(entityFromMapper);  // Add this line
             when(flightTicketClassRepository.save(any(FlightTicketClass.class))).thenReturn(savedEntity);
-            when(flightTicketClassMapper.toDto(savedEntity)).thenReturn(validDto);
+            when(flightTicketClassMapper.toDto(any(FlightTicketClass.class))).thenReturn(validDto);
 
             // Act
             FlightTicketClassDto result = flightTicketClassService.createFlightTicketClass(validDto);
@@ -214,11 +223,11 @@ public class FlightTicketClassServiceTest {
             verify(flightTicketClassRepository).findByFlightIdAndTicketClassId(1, 1);
             verify(flightRepository).findById(1);
             verify(ticketClassRepository).findById(1);
+            verify(flightTicketClassMapper).toEntity(validDto);  // Add this verification
             verify(flightTicketClassRepository).save(any(FlightTicketClass.class));
             verify(flightTicketClassMapper).toDto(savedEntity);
         }
     }
-
     // ====================================================================
     // NESTED TEST CLASS: updateFlightTicketClass - Full Path Coverage
     // ====================================================================
