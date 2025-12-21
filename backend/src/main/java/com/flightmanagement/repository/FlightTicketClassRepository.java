@@ -1,6 +1,8 @@
 package com.flightmanagement.repository;
 
 import com.flightmanagement.entity.FlightTicketClass;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,6 +16,8 @@ public interface FlightTicketClassRepository extends JpaRepository<FlightTicketC
     
     @Query("SELECT ftc FROM FlightTicketClass ftc WHERE ftc.deletedAt IS NULL")
     List<FlightTicketClass> findAllActive();
+
+    Page<FlightTicketClass> findByDeletedAtIsNull(Pageable pageable);
     
     @Query("SELECT ftc FROM FlightTicketClass ftc WHERE ftc.flightId = :flightId AND ftc.ticketClassId = :ticketClassId AND ftc.deletedAt IS NULL")
     Optional<FlightTicketClass> findByFlightIdAndTicketClassId(@Param("flightId") Integer flightId, @Param("ticketClassId") Integer ticketClassId);

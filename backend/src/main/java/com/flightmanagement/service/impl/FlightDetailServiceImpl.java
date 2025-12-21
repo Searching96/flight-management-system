@@ -5,6 +5,8 @@ import com.flightmanagement.entity.FlightDetail;
 import com.flightmanagement.mapper.FlightDetailMapper;
 import com.flightmanagement.repository.FlightDetailRepository;
 import com.flightmanagement.service.FlightDetailService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,12 @@ public class FlightDetailServiceImpl implements FlightDetailService {
     public List<FlightDetailDto> getAllFlightDetails() {
         List<FlightDetail> flightDetails = flightDetailRepository.findAllActive();
         return flightDetailMapper.toDtoList(flightDetails);
+    }
+
+    @Override
+    public Page<FlightDetailDto> getAllFlightDetailsPaged(Pageable pageable) {
+        Page<FlightDetail> page = flightDetailRepository.findByDeletedAtIsNull(pageable);
+        return page.map(flightDetailMapper::toDto);
     }
     
     @Override

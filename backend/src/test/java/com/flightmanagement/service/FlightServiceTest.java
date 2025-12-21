@@ -79,35 +79,74 @@ public class FlightServiceTest {
     }
 
     // ==================== deleteFlight Tests ====================
-    @Tag("deleteFlight")
-    @Test
-    void deleteFlight_flightNotFound_throwsException() {
-        when(flightRepository.findActiveById(1)).thenReturn(Optional.empty());
+    @Nested
+    @DisplayName("DeleteFlights Test")
+    @Tag("deleteFlights")
+    class DeleteFlightsTests {
+        private FlightRequest validRequest;
+        private Flight validFlight;
+        private FlightDto validFlightDto;
+        private ParameterDto parameterDto;
 
-        RuntimeException exception = assertThrows(
-            RuntimeException.class,
-            () -> flightService.deleteFlight(1)
-        );
+        @BeforeEach
+        void setUp() {
+            LocalDateTime departureTime = LocalDateTime.now().plusDays(1);
+            LocalDateTime arrivalTime = departureTime.plusHours(2);
 
-        assertTrue(exception.getMessage().contains("Flight not found"));
-        verify(flightRepository, never()).save(any());
-    }
+            validRequest = new FlightRequest();
+            validRequest.setFlightCode("FL123");
+            validRequest.setDepartureTime(departureTime);
+            validRequest.setArrivalTime(arrivalTime);
+            validRequest.setPlaneId(1);
+            validRequest.setDepartureAirportId(1);
+            validRequest.setArrivalAirportId(2);
 
-    @Tag("deleteFlight")
-    @Test
-    void deleteFlight_setsDeletedAtTimestamp() {
-        when(flightRepository.findActiveById(1)).thenReturn(Optional.of(validFlight));
-        when(flightRepository.save(any(Flight.class))).thenReturn(validFlight);
+            validFlight = new Flight();
+            validFlight.setFlightId(1);
+            validFlight.setFlightCode("FL123");
+            validFlight.setDepartureTime(departureTime);
+            validFlight.setArrivalTime(arrivalTime);
 
-        LocalDateTime beforeDelete = LocalDateTime.now();
-        flightService.deleteFlight(1);
-        LocalDateTime afterDelete = LocalDateTime.now();
+            validFlightDto = new FlightDto();
+            validFlightDto.setFlightId(1);
+            validFlightDto.setFlightCode("FL123");
 
-        assertNotNull(validFlight.getDeletedAt());
-        assertTrue(validFlight.getDeletedAt().isAfter(beforeDelete.minusSeconds(1)));
-        assertTrue(validFlight.getDeletedAt().isBefore(afterDelete.plusSeconds(1)));
-        verify(flightRepository).findActiveById(1);
-        verify(flightRepository).save(validFlight);
+            parameterDto = new ParameterDto();
+            parameterDto.setMinFlightDuration(30);
+        }
+
+        @Tag("deleteFlight")
+        @DisplayName("Throw exception if flight not found")
+        @Test
+        void deleteFlight_flightNotFound_throwsException() {
+            when(flightRepository.findActiveById(1)).thenReturn(Optional.empty());
+
+            RuntimeException exception = assertThrows(
+                    RuntimeException.class,
+                    () -> flightService.deleteFlight(1)
+            );
+
+            assertTrue(exception.getMessage().contains("Flight not found"));
+            verify(flightRepository, never()).save(any());
+        }
+
+        @Tag("deleteFlight")
+        @DisplayName("Set delete timestamp")
+        @Test
+        void deleteFlight_setsDeletedAtTimestamp() {
+            when(flightRepository.findActiveById(1)).thenReturn(Optional.of(validFlight));
+            when(flightRepository.save(any(Flight.class))).thenReturn(validFlight);
+
+            LocalDateTime beforeDelete = LocalDateTime.now();
+            flightService.deleteFlight(1);
+            LocalDateTime afterDelete = LocalDateTime.now();
+
+            assertNotNull(validFlight.getDeletedAt());
+            assertTrue(validFlight.getDeletedAt().isAfter(beforeDelete.minusSeconds(1)));
+            assertTrue(validFlight.getDeletedAt().isBefore(afterDelete.plusSeconds(1)));
+            verify(flightRepository).findActiveById(1);
+            verify(flightRepository).save(validFlight);
+        }
     }
 
     // ==================== searchFlights Tests ====================

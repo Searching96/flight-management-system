@@ -5,6 +5,8 @@ import com.flightmanagement.entity.Customer;
 import com.flightmanagement.mapper.CustomerMapper;
 import com.flightmanagement.repository.CustomerRepository;
 import com.flightmanagement.service.CustomerService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +40,12 @@ public class CustomerServiceImpl implements CustomerService {
                 .stream()
                 .map(customerMapper::toDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<CustomerDto> getAllCustomersPaged(Pageable pageable) {
+        Page<Customer> page = customerRepository.findByDeletedAtIsNull(pageable);
+        return page.map(customerMapper::toDto);
     }
 
     @Override

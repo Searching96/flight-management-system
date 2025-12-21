@@ -5,6 +5,8 @@ import com.flightmanagement.entity.Passenger;
 import com.flightmanagement.mapper.PassengerMapper;
 import com.flightmanagement.repository.PassengerRepository;
 import com.flightmanagement.service.PassengerService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -27,6 +29,12 @@ public class PassengerServiceImpl implements PassengerService {
     public List<PassengerDto> getAllPassengers() {
         List<Passenger> passengers = passengerRepository.findAllActive();
         return passengerMapper.toDtoList(passengers);
+    }
+
+    @Override
+    public Page<PassengerDto> getAllPassengersPaged(Pageable pageable) {
+        Page<Passenger> page = passengerRepository.findByDeletedAtIsNull(pageable);
+        return page.map(passengerMapper::toDto);
     }
     
     @Override

@@ -5,6 +5,8 @@ import com.flightmanagement.entity.Airport;
 import com.flightmanagement.mapper.AirportMapper;
 import com.flightmanagement.repository.AirportRepository;
 import com.flightmanagement.service.AirportService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -27,7 +29,13 @@ public class AirportServiceImpl implements AirportService {
         List<Airport> airports = airportRepository.findAllActive();
         return airportMapper.toDtoList(airports);
     }
-    
+
+    @Override
+    public Page<AirportDto> getAllAirportsPaged(Pageable pageable) {
+        Page<Airport> page = airportRepository.findByDeletedAtIsNull(pageable);
+        return page.map(airportMapper::toDto);
+    }
+
     @Override
     public AirportDto getAirportById(Integer id) {
         Airport airport = airportRepository.findActiveById(id)

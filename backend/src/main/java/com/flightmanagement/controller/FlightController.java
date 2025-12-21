@@ -6,6 +6,9 @@ import com.flightmanagement.dto.FlightSearchCriteria;
 import com.flightmanagement.service.FlightService;
 import com.flightmanagement.entity.ApiResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,12 +33,15 @@ public class FlightController {
 
     @Operation(summary = "Get all flights")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<FlightDto>>> getAllFlights() {
-        List<FlightDto> flights = flightService.getAllFlights();
-        ApiResponse<List<FlightDto>> apiResponse = new ApiResponse<>(
+    public ResponseEntity<?> getAllFlights(
+            @PageableDefault(page = 0, size = 10)
+            Pageable pageable
+    ) {
+        Page<FlightDto> page = flightService.getAllFlightsPaged(pageable);
+        ApiResponse<?> apiResponse = new ApiResponse<>(
                 HttpStatus.OK,
-                "Flights retrieved successfully",
-                flights,
+                "Fetched all flights",
+                page,
                 null
         );
         return ResponseEntity.ok(apiResponse);

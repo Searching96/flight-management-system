@@ -1,6 +1,8 @@
 package com.flightmanagement.repository;
 
 import com.flightmanagement.entity.Account;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -13,6 +15,8 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
 
     @Query("SELECT a FROM Account a WHERE a.deletedAt IS NULL")
     List<Account> findAllActive();
+
+    Page<Account> findByDeletedAtIsNull(Pageable pageable);
 
     @Query("SELECT a FROM Account a WHERE a.accountId = ?1 AND a.deletedAt IS NULL")
     Optional<Account> findActiveById(Integer id);

@@ -6,6 +6,9 @@ import com.flightmanagement.service.TicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,12 +28,15 @@ public class TicketController {
 
     @Operation(summary = "Get all tickets")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<TicketDto>>> getAllTickets() {
-        List<TicketDto> tickets = ticketService.getAllTickets();
-        ApiResponse<List<TicketDto>> apiResponse = new ApiResponse<>(
+    public ResponseEntity<?> getAllTickets(
+            @PageableDefault(page = 0, size = 10)
+            Pageable pageable
+    ) {
+        Page<TicketDto> page = ticketService.getAllTicketsPaged(pageable);
+        ApiResponse<?> apiResponse = new ApiResponse<>(
                 HttpStatus.OK,
-                "Tickets retrieved successfully",
-                tickets,
+                "Fetched all tickets",
+                page,
                 null
         );
         return ResponseEntity.ok(apiResponse);

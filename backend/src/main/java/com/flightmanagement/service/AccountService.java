@@ -3,6 +3,8 @@ package com.flightmanagement.service;
 import com.flightmanagement.dto.AccountDto;
 import com.flightmanagement.dto.RegisterDto;
 import com.flightmanagement.entity.Account;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -17,6 +19,8 @@ public interface AccountService {
     Account getAccountByName(String accountName);
 
     List<AccountDto> getAllAccounts();
+
+    Page<AccountDto> getAllAccountsPaged(Pageable pageable);
 
     AccountDto updateAccount(Integer id, AccountDto dto);
 

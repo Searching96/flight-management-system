@@ -6,6 +6,8 @@ import com.flightmanagement.exception.ResourceNotFoundException;
 import com.flightmanagement.mapper.TicketMapper;
 import com.flightmanagement.repository.*;
 import com.flightmanagement.service.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +65,12 @@ public class TicketServiceImpl implements TicketService {
     public List<TicketDto> getAllTickets() {
         List<Ticket> tickets = ticketRepository.findAllActive();
         return ticketMapper.toDtoList(tickets);
+    }
+
+    @Override
+    public Page<TicketDto> getAllTicketsPaged(Pageable pageable) {
+        Page<Ticket> page = ticketRepository.findByDeletedAtIsNull(pageable);
+        return page.map(ticketMapper::toDto);
     }
 
     @Override

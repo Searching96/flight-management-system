@@ -5,6 +5,9 @@ import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.EmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -48,13 +51,16 @@ public class EmployeeController {
     @Operation(summary = "Get all employees")
     @GetMapping
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR') or hasRole('EMPLOYEE_HUMAN_RESOURCES')")
-    public ResponseEntity<ApiResponse<List<EmployeeDto>>> getAllEmployees() {
-        List<EmployeeDto> employees = employeeService.getAllEmployees();
+    public ResponseEntity<?> getAllEmployees(
+            @PageableDefault(page = 0, size = 10)
+            Pageable pageable
+    ) {
+        Page<EmployeeDto> page = employeeService.getAllEmployeesPaged(pageable);
 
-        ApiResponse<List<EmployeeDto>> apiResponse = new ApiResponse<>(
+        ApiResponse<?> apiResponse = new ApiResponse<>(
                 HttpStatus.OK,
-                "Employees retrieved successfully",
-                employees,
+                "Fetched all employees",
+                page,
                 null
         );
 

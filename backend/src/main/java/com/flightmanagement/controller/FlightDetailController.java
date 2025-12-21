@@ -5,6 +5,9 @@ import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.FlightDetailService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +27,15 @@ public class FlightDetailController {
     
     @Operation(summary = "Get all flight details")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<FlightDetailDto>>> getAllFlightDetails() {
-        List<FlightDetailDto> flightDetails = flightDetailService.getAllFlightDetails();
-        ApiResponse<List<FlightDetailDto>> apiResponse = new ApiResponse<>(
+    public ResponseEntity<?> getAllFlightDetails(
+            @PageableDefault(page = 0, size = 10)
+            Pageable pageable
+    ) {
+        Page<FlightDetailDto> page = flightDetailService.getAllFlightDetailsPaged(pageable);
+        ApiResponse<?> apiResponse = new ApiResponse<>(
                 HttpStatus.OK,
-                "Flight details retrieved successfully",
-                flightDetails,
+                "Fetched all flight details",
+                page,
                 null
         );
         return ResponseEntity.ok(apiResponse);

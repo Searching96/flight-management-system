@@ -8,6 +8,8 @@ import com.flightmanagement.mapper.EmployeeMapper;
 import com.flightmanagement.repository.EmployeeRepository;
 import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.service.EmployeeService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,6 +63,11 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Page<EmployeeDto> getAllEmployeesPaged(Pageable pageable) {
+        Page<Employee> page = employeeRepository.findByDeletedAtIsNull(pageable);
+        return page.map(employeeMapper::toDto);
+    }
 
     @Override
     @Transactional
