@@ -16,6 +16,7 @@ import {
 import { airportService } from "../../services";
 import { Airport } from "../../models";
 import TypeAhead from "../common/TypeAhead";
+import Pagination from "../common/Pagination";
 import { usePermissions } from "../../hooks/useAuth";
 
 interface AirportFormData {
@@ -41,16 +42,18 @@ const AirportManagement: React.FC<{
   const [airportToDelete, setAirportToDelete] = useState<Airport | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm<AirportFormData>();
-
-  useEffect(() => {
-    loadAirports();
-  }, []);
 
   useEffect(() => {
     if (showAddModal && !readOnly) {
@@ -92,11 +95,15 @@ const AirportManagement: React.FC<{
     { value: "Canada", label: "Canada" },
   ];
 
-  const loadAirports = async () => {
+  const loadAirports = async (page: number = currentPage) => {
     try {
       setLoading(true);
-      const data = await airportService.getAllAirports();
-      setAirports(data.data);
+      const response = await airportService.getAllAirportsPaged(page, pageSize);
+      setAirports(response.data.content);
+      setTotalPages(response.data.totalPages);
+      setTotalElements(response.data.totalElements);
+      setCurrentPage(response.data.number);
+      setError("");
     } catch (error) {
       console.error("Error loading airports:", error);
       setError("Không thể tải danh sách sân bay");
@@ -104,6 +111,31 @@ const AirportManagement: React.FC<{
       setLoading(false);
     }
   };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    loadAirports(page);
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(0);
+    loadAirports(0);
+  };
+
+  useEffect(() => {
+    loadAirports();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (currentPage === 0) {
+      loadAirports(0);
+    } else {
+      setCurrentPage(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageSize]);
 
   const onSubmit = async (data: AirportFormData) => {
     try {
@@ -202,9 +234,32 @@ const AirportManagement: React.FC<{
         <Col>
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <Card.Title className="mb-0">
-                🏢 {readOnly ? "Danh sách sân bay" : "Quản lý sân bay"}
-              </Card.Title>
+              <div className="d-flex align-items-center gap-3">
+                <Card.Title className="mb-0">
+                  🏢 {readOnly ? "Danh sách sân bay" : "Quản lý sân bay"}
+                </Card.Title>
+                <div className="d-flex align-items-center gap-2">
+                  <Form.Label className="mb-0 text-muted small">
+                    Kích thước trang:
+                  </Form.Label>
+                  <Form.Select
+                    size="sm"
+                    value={pageSize}
+                    onChange={(e) =>
+                      handlePageSizeChange(Number(e.target.value))
+                    }
+                    style={{ width: "auto" }}
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </Form.Select>
+                  <span className="text-muted small">
+                    ({totalElements} sân bay)
+                  </span>
+                </div>
+              </div>
               {!readOnly && (
                 <Button variant="primary" onClick={() => setShowForm(true)}>
                   Thêm sân bay mới
@@ -440,6 +495,19 @@ const AirportManagement: React.FC<{
           </Card>
         </Col>
       </Row>
+
+      {/* Pagination */}
+      {!loading && totalPages > 1 && (
+        <Row className="mt-4">
+          <Col className="d-flex justify-content-center">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </Col>
+        </Row>
+      )}
     </Container>
   );
 };

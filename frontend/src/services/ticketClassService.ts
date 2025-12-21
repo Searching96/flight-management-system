@@ -1,6 +1,7 @@
 import { apiClient } from "./api";
 import { TicketClass, TicketClassRequest } from "../models";
 import type { ApiResponse } from "../models/ApiResponse";
+import type { PaginatedResponse } from "../models";
 
 export class TicketClassService {
   private readonly baseUrl = "/ticket-classes";
@@ -8,6 +9,13 @@ export class TicketClassService {
   // Get all ticket classes
   async getAllTicketClasses(): Promise<ApiResponse<TicketClass[]>> {
     return apiClient.get(this.baseUrl);
+  }
+
+  async getAllTicketClassesPaged(
+    page: number = 0,
+    size: number = 10
+  ): Promise<ApiResponse<PaginatedResponse<TicketClass>>> {
+    return apiClient.get(`${this.baseUrl}?page=${page}&size=${size}`);
   }
 
   // Get ticket class by ID

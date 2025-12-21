@@ -1,17 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Badge, ListGroup, Spinner } from 'react-bootstrap';
-import { chatService, messageService } from '../../services';
-import { Chatbox, Message } from '../../models/Chat';
-import { useAuth } from '../../hooks/useAuth';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Alert,
+  Badge,
+  ListGroup,
+  Spinner,
+} from "react-bootstrap";
+import { chatService, messageService } from "../../services";
+import { Chatbox, Message } from "../../models/Chat";
+import { useAuth } from "../../hooks/useAuth";
 
 const ChatManagement: React.FC = () => {
   const { user } = useAuth();
   const [chatboxes, setChatboxes] = useState<Chatbox[]>([]);
   const [selectedChatbox, setSelectedChatbox] = useState<Chatbox | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -30,17 +41,29 @@ const ChatManagement: React.FC = () => {
   }, [messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const loadChatboxes = async () => {
     try {
       setLoading(true);
       // Load all chatboxes for employee management
-      const data = await chatService.getAllChatboxes();
-      setChatboxes(data);
+      const response = await chatService.getAllChatboxes();
+      // Handle both paginated and non-paginated responses
+      if (Array.isArray(response)) {
+        setChatboxes(response);
+      } else if (
+        response &&
+        typeof response === "object" &&
+        "content" in response &&
+        Array.isArray(response.content)
+      ) {
+        setChatboxes(response.content);
+      } else {
+        setChatboxes([]);
+      }
     } catch (err: any) {
-      setError('Failed to load chatboxes');
+      setError("Failed to load chatboxes");
     } finally {
       setLoading(false);
     }
@@ -50,20 +73,20 @@ const ChatManagement: React.FC = () => {
     try {
       const data = await messageService.getMessagesByChatboxId(chatboxId);
       // Map messages to include isFromCustomer based on employeeId
-      const formattedMessages = data.map(msg => ({
+      const formattedMessages = data.map((msg) => ({
         ...msg,
-        isFromCustomer: !msg.employeeId // If employeeId is null, it's from customer
+        isFromCustomer: !msg.employeeId, // If employeeId is null, it's from customer
       }));
       setMessages(formattedMessages);
       // Mark as read when loading messages
     } catch (err: any) {
-      setError('Failed to load messages');
+      setError("Failed to load messages");
     }
   };
 
   const handleChatboxSelect = (chatbox: Chatbox) => {
     setSelectedChatbox(chatbox);
-    setError('');
+    setError("");
   };
 
   const sendMessage = async (e: React.FormEvent) => {
@@ -72,21 +95,20 @@ const ChatManagement: React.FC = () => {
 
     try {
       setSendingMessage(true);
-      
+
       // Create employee message using messageService
       await messageService.createEmployeeMessage(
         selectedChatbox.chatboxId!,
         user.id!,
         newMessage.trim()
       );
-      
+
       // Reload messages to get the updated list
       await loadMessages(selectedChatbox.chatboxId!);
-      setNewMessage('');
-      
+      setNewMessage("");
     } catch (error) {
-      console.error('Failed to send message:', error);
-      setError('Failed to send message. Please try again.');
+      console.error("Failed to send message:", error);
+      setError("Failed to send message. Please try again.");
     } finally {
       setSendingMessage(false);
     }
@@ -101,7 +123,7 @@ const ChatManagement: React.FC = () => {
 
   const getAvatarLetter = (employeeName?: string, isFromCustomer?: boolean) => {
     if (employeeName && employeeName.trim()) {
-      const words = employeeName.trim().split(' ');
+      const words = employeeName.trim().split(" ");
       if (words.length >= 2) {
         // Lấy 2 từ cuối
         const lastTwo = words.slice(-2);
@@ -110,21 +132,21 @@ const ChatManagement: React.FC = () => {
         return words[0].charAt(0).toUpperCase();
       }
     }
-    return isFromCustomer ? 'C' : 'S';
+    return isFromCustomer ? "C" : "S";
   };
 
   const getAvatarColor = (employeeName?: string, isFromCustomer?: boolean) => {
     if (!employeeName && isFromCustomer) {
-      return '#007bff'; // Primary color for customer
+      return "#007bff"; // Primary color for customer
     }
-    
+
     // Generate color based on name
     let hash = 0;
-    const name = employeeName || 'Support';
+    const name = employeeName || "Support";
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
-    
+
     // Convert to HSL for better color distribution
     const hue = Math.abs(hash) % 360;
     return `hsl(${hue}, 60%, 50%)`;
@@ -149,8 +171,12 @@ const ChatManagement: React.FC = () => {
     <Container fluid className="py-4">
       <Card className="mb-4">
         <Card.Header>
-          <Card.Title as="h2" className="mb-0">💬 Quản lý Chat</Card.Title>
-          <p className="mb-0 text-muted">Quản lý các cuộc hội thoại hỗ trợ khách hàng</p>
+          <Card.Title as="h2" className="mb-0">
+            💬 Quản lý Chat
+          </Card.Title>
+          <p className="mb-0 text-muted">
+            Quản lý các cuộc hội thoại hỗ trợ khách hàng
+          </p>
         </Card.Header>
       </Card>
 
@@ -160,7 +186,7 @@ const ChatManagement: React.FC = () => {
         </Alert>
       )}
 
-      <Row style={{ height: '70vh' }}>
+      <Row style={{ height: "70vh" }}>
         {/* Chatbox List */}
         <Col md={4} className="border-end">
           <Card className="h-100">
@@ -170,9 +196,9 @@ const ChatManagement: React.FC = () => {
                 <Badge bg="info">{chatboxes.length} tổng cộng</Badge>
               </div>
             </Card.Header>
-            <Card.Body className="p-0" style={{ overflowY: 'auto' }}>
+            <Card.Body className="p-0" style={{ overflowY: "auto" }}>
               <ListGroup variant="flush">
-                {chatboxes.map(chatbox => (
+                {chatboxes.map((chatbox) => (
                   <ListGroup.Item
                     key={chatbox.chatboxId}
                     action
@@ -182,18 +208,19 @@ const ChatManagement: React.FC = () => {
                   >
                     <div className="flex-grow-1">
                       <div className="d-flex justify-content-between align-items-center mb-1">
-                        <strong>{chatbox.customerName || 'Customer'}</strong>
+                        <strong>{chatbox.customerName || "Customer"}</strong>
                         {getChatboxStatusBadge(chatbox)}
                       </div>
-                      
+
                       {chatbox.lastMessageContent && (
                         <p className="mb-1 text-muted small">
-                          {chatbox.lastMessageContent.length > 50 
-                            ? chatbox.lastMessageContent.substring(0, 50) + '...'
+                          {chatbox.lastMessageContent.length > 50
+                            ? chatbox.lastMessageContent.substring(0, 50) +
+                              "..."
                             : chatbox.lastMessageContent}
                         </p>
                       )}
-                      
+
                       {chatbox.lastMessageTime && (
                         <small className="text-muted">
                           {new Date(chatbox.lastMessageTime).toLocaleString()}
@@ -204,7 +231,9 @@ const ChatManagement: React.FC = () => {
                 ))}
                 {chatboxes.length === 0 && (
                   <ListGroup.Item>
-                    <p className="text-muted text-center mb-0">Không có chat khách hàng nào</p>
+                    <p className="text-muted text-center mb-0">
+                      Không có chat khách hàng nào
+                    </p>
                   </ListGroup.Item>
                 )}
               </ListGroup>
@@ -219,7 +248,9 @@ const ChatManagement: React.FC = () => {
               <Card.Header>
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
-                    <h5 className="mb-0">Chat với {selectedChatbox.customerName || 'Khách hàng'}</h5>
+                    <h5 className="mb-0">
+                      Chat với {selectedChatbox.customerName || "Khách hàng"}
+                    </h5>
                   </div>
                   {getChatboxStatusBadge(selectedChatbox)}
                 </div>
@@ -227,40 +258,59 @@ const ChatManagement: React.FC = () => {
 
               {/* Messages Container */}
               <Card.Body className="flex-grow-1 d-flex flex-column p-0">
-                <div className="flex-grow-1 p-3" style={{ overflowY: 'auto', maxHeight: 'calc(70vh - 200px)' }}>
+                <div
+                  className="flex-grow-1 p-3"
+                  style={{ overflowY: "auto", maxHeight: "calc(70vh - 200px)" }}
+                >
                   {messages.map((message, index) => (
                     <div
                       key={index}
-                      className={`mb-3 d-flex ${message.isFromCustomer ? 'justify-content-start' : 'justify-content-end'}`}
+                      className={`mb-3 d-flex ${
+                        message.isFromCustomer
+                          ? "justify-content-start"
+                          : "justify-content-end"
+                      }`}
                     >
                       <div
                         className={`px-3 py-2 rounded ${
-                          message.isFromCustomer 
-                            ? 'bg-light text-dark' 
-                            : 'bg-primary text-white'
+                          message.isFromCustomer
+                            ? "bg-light text-dark"
+                            : "bg-primary text-white"
                         }`}
-                        style={{ maxWidth: '70%' }}
+                        style={{ maxWidth: "70%" }}
                       >
                         <div className="fw-bold small mb-1">
-                            {message.employeeName || (message.isFromCustomer ? 'Khách hàng' : 'Hỗ trợ')}
+                          {message.employeeName ||
+                            (message.isFromCustomer ? "Khách hàng" : "Hỗ trợ")}
                         </div>
                         <div>{message.content}</div>
-                        <div className={`small mt-1 ${message.isFromCustomer ? 'text-muted' : 'text-light'}`}>
-                          {message.sendTime && new Date(message.sendTime).toLocaleTimeString()}
+                        <div
+                          className={`small mt-1 ${
+                            message.isFromCustomer ? "text-muted" : "text-light"
+                          }`}
+                        >
+                          {message.sendTime &&
+                            new Date(message.sendTime).toLocaleTimeString()}
                         </div>
                       </div>
                       {!message.isFromCustomer && (
-                        <div 
+                        <div
                           className="me-2 rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0"
-                          style={{ 
-                            width: '32px', 
-                            height: '32px', 
-                            fontSize: '12px', 
-                            fontWeight: 'bold',
-                            backgroundColor: getAvatarColor(message.employeeName, message.isFromCustomer)
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            backgroundColor: getAvatarColor(
+                              message.employeeName,
+                              message.isFromCustomer
+                            ),
                           }}
                         >
-                          {getAvatarLetter(message.employeeName, message.isFromCustomer)}
+                          {getAvatarLetter(
+                            message.employeeName,
+                            message.isFromCustomer
+                          )}
                         </div>
                       )}
                     </div>
@@ -279,18 +329,22 @@ const ChatManagement: React.FC = () => {
                         onChange={(e) => setNewMessage(e.target.value)}
                         disabled={sendingMessage}
                       />
-                      <Button 
-                        type="submit" 
+                      <Button
+                        type="submit"
                         variant="primary"
                         disabled={sendingMessage || !newMessage.trim()}
                       >
                         {sendingMessage ? (
                           <>
-                            <Spinner animation="border" size="sm" className="me-1" />
+                            <Spinner
+                              animation="border"
+                              size="sm"
+                              className="me-1"
+                            />
                             Đang gửi...
                           </>
                         ) : (
-                          'Gửi'
+                          "Gửi"
                         )}
                       </Button>
                     </div>
@@ -301,9 +355,12 @@ const ChatManagement: React.FC = () => {
           ) : (
             <Card className="h-100 d-flex align-items-center justify-content-center">
               <Card.Body className="text-center">
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💬</div>
+                <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>💬</div>
                 <h5>Chọn một chat để bắt đầu trả lời</h5>
-                <p className="text-muted">Chọn cuộc hội thoại khách hàng từ danh sách để bắt đầu cung cấp hỗ trợ.</p>
+                <p className="text-muted">
+                  Chọn cuộc hội thoại khách hàng từ danh sách để bắt đầu cung
+                  cấp hỗ trợ.
+                </p>
               </Card.Body>
             </Card>
           )}

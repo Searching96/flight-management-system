@@ -2,6 +2,7 @@ import { apiClient } from "./api";
 import { Employee, UpdateEmployeeRequest } from "../models";
 import { API_URL } from "./config";
 import type { ApiResponse } from "../models/ApiResponse";
+import type { PaginatedResponse } from "../models";
 
 class EmployeeService {
   private readonly baseUrl = API_URL.EMPLOYEES;
@@ -12,6 +13,13 @@ class EmployeeService {
 
   async getAllEmployees(): Promise<ApiResponse<Employee[]>> {
     return apiClient.get(this.baseUrl);
+  }
+
+  async getAllEmployeesPaged(
+    page: number = 0,
+    size: number = 10
+  ): Promise<ApiResponse<PaginatedResponse<Employee>>> {
+    return apiClient.get(`${this.baseUrl}?page=${page}&size=${size}`);
   }
 
   async getEmployeeById(id: number): Promise<ApiResponse<Employee>> {

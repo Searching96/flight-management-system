@@ -44,6 +44,7 @@ import { useFlightDetails } from "../../hooks/useFlightDetails";
 import FlightForm from "./flights/FlightForm";
 import TypeAhead from "../common/TypeAhead";
 import FlightTable from "./flights/FlightTable";
+import Pagination from "../common/Pagination";
 
 const FlightManagement: React.FC<{
   showAddModal?: boolean;
@@ -60,6 +61,12 @@ const FlightManagement: React.FC<{
     createFlight,
     updateFlight,
     deleteFlight,
+    currentPage,
+    pageSize,
+    totalPages,
+    totalElements,
+    setCurrentPage,
+    setPageSize,
   } = useFlights();
 
   const {
@@ -160,7 +167,7 @@ const FlightManagement: React.FC<{
 
   // Use custom hooks
 
-  const loadData = async () => {
+  const loadData = async (page: number = currentPage) => {
     try {
       const [airportData, planeData, ticketClassData, parameterData] =
         await Promise.all([
@@ -170,16 +177,30 @@ const FlightManagement: React.FC<{
           parameterService.getAllParameters(),
         ]);
 
-      setAirports(airportData.data);
-      setPlanes(planeData.data);
-      setTicketClasses(ticketClassData.data);
+      // Handle paginated responses
+      setAirports(airportData.data?.content || airportData.data || []);
+      setPlanes(planeData.data?.content || planeData.data || []);
+      setTicketClasses(
+        ticketClassData.data?.content || ticketClassData.data || []
+      );
       setParameters(parameterData); // Assuming first item contains all parameters
 
-      await loadFlights();
+      await loadFlights(page, pageSize);
     } catch (error) {
       console.log("Error loading data:", error);
       setError("Failed to load data");
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    loadFlights(page, pageSize);
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(0);
+    loadFlights(0, newSize);
   };
 
   // Flight form handlers
@@ -482,7 +503,9 @@ const FlightManagement: React.FC<{
           remainingTicketQuantity: ftc.remainingTicketQuantity,
           specifiedFare: ftc.specifiedFare,
         };
-        requests.push(flightTicketClassService.createFlightTicketClass(request));
+        requests.push(
+          flightTicketClassService.createFlightTicketClass(request)
+        );
       });
 
       updates.forEach((ftc) => {
@@ -647,7 +670,9 @@ const FlightManagement: React.FC<{
       )
     : [];
 
-  const activeTicketClasses = flightTicketClasses.filter((ftc) => !ftc.isDeleted);
+  const activeTicketClasses = flightTicketClasses.filter(
+    (ftc) => !ftc.isDeleted
+  );
   const totalAssignedSeats = activeTicketClasses.reduce(
     (total, ftc) => total + (ftc.ticketQuantity || 0),
     0
@@ -695,9 +720,32 @@ const FlightManagement: React.FC<{
         <Col>
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <Card.Title className="mb-0">
-                ✈️ {readOnly ? "Tra cứu chuyến bay" : "Quản lý chuyến bay"}
-              </Card.Title>
+              <div className="d-flex align-items-center gap-3">
+                <Card.Title className="mb-0">
+                  ✈️ {readOnly ? "Tra cứu chuyến bay" : "Quản lý chuyến bay"}
+                </Card.Title>
+                <div className="d-flex align-items-center gap-2">
+                  <Form.Label className="mb-0 text-muted small">
+                    Kích thước trang:
+                  </Form.Label>
+                  <Form.Select
+                    size="sm"
+                    value={pageSize}
+                    onChange={(e) =>
+                      handlePageSizeChange(Number(e.target.value))
+                    }
+                    style={{ width: "auto" }}
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </Form.Select>
+                  <span className="text-muted small">
+                    ({totalElements} chuyến bay)
+                  </span>
+                </div>
+              </div>
               {!readOnly && (
                 <Button variant="primary" onClick={() => setShowForm(true)}>
                   Thêm chuyến bay mới
@@ -838,49 +886,54 @@ const FlightManagement: React.FC<{
             {flightTicketClasses
               .filter((ftc) => !ftc.isDeleted)
               .map((association) => (
-              <Col
-                md={6}
-                key={`${association.flightId}-${association.ticketClassId}`}
-              >
-                <TicketClassCard
-                  association={association}
-                  className={getTicketClassName(association.ticketClassId!)}
-                  classColor={getTicketClassColor(association.ticketClassId!)}
-                  isEditing={
-                    !readOnly &&
-                    editingAssociation?.ticketClassId ===
-                      association.ticketClassId
-                  }
-                  onEdit={() => !readOnly && setEditingAssociation(association)}
-                  onSave={(data) =>
-                    handleTicketClassUpdate(association.ticketClassId!, data)
-                  }
-                  onCancel={() => setEditingAssociation(null)}
-                  onDelete={() =>
-                    !readOnly &&
-                    handleDeleteAssociationClick(
-                      association.flightId!,
-                      association.ticketClassId!
-                    )
-                  }
-                  onUndo={() =>
-                    handleUndoTicketClassChanges(association.ticketClassId!)
-                  }
-                  isModified={
-                    association.isNew ||
-                    modifiedTicketClasses.has(association.ticketClassId!)
-                  }
-                  modifiedTicketClasses={modifiedTicketClasses}
-                  selectedFlightForClasses={selectedFlightForClasses}
-                  planes={planes}
-                  flightTicketClasses={flightTicketClasses}
-                  onValidationChange={(error) =>
-                    handleCardValidationError(association.ticketClassId!, error)
-                  }
-                  readOnly={readOnly}
-                />
-              </Col>
-            ))}
+                <Col
+                  md={6}
+                  key={`${association.flightId}-${association.ticketClassId}`}
+                >
+                  <TicketClassCard
+                    association={association}
+                    className={getTicketClassName(association.ticketClassId!)}
+                    classColor={getTicketClassColor(association.ticketClassId!)}
+                    isEditing={
+                      !readOnly &&
+                      editingAssociation?.ticketClassId ===
+                        association.ticketClassId
+                    }
+                    onEdit={() =>
+                      !readOnly && setEditingAssociation(association)
+                    }
+                    onSave={(data) =>
+                      handleTicketClassUpdate(association.ticketClassId!, data)
+                    }
+                    onCancel={() => setEditingAssociation(null)}
+                    onDelete={() =>
+                      !readOnly &&
+                      handleDeleteAssociationClick(
+                        association.flightId!,
+                        association.ticketClassId!
+                      )
+                    }
+                    onUndo={() =>
+                      handleUndoTicketClassChanges(association.ticketClassId!)
+                    }
+                    isModified={
+                      association.isNew ||
+                      modifiedTicketClasses.has(association.ticketClassId!)
+                    }
+                    modifiedTicketClasses={modifiedTicketClasses}
+                    selectedFlightForClasses={selectedFlightForClasses}
+                    planes={planes}
+                    flightTicketClasses={flightTicketClasses}
+                    onValidationChange={(error) =>
+                      handleCardValidationError(
+                        association.ticketClassId!,
+                        error
+                      )
+                    }
+                    readOnly={readOnly}
+                  />
+                </Col>
+              ))}
           </Row>
 
           {/* No Ticket Classes Message */}
@@ -924,6 +977,19 @@ const FlightManagement: React.FC<{
           />
         </Col>
       </Row>
+
+      {/* Pagination */}
+      {!loading && totalPages > 1 && (
+        <Row className="mt-4">
+          <Col className="d-flex justify-content-center">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </Col>
+        </Row>
+      )}
 
       {/* Flight Delete Confirmation Modal */}
       {!readOnly && (
@@ -1484,7 +1550,11 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
       specifiedFare: association.specifiedFare || 0,
       remainingTicketQuantity: association.remainingTicketQuantity || 0,
     });
-  }, [association.ticketQuantity, association.specifiedFare, association.remainingTicketQuantity]);
+  }, [
+    association.ticketQuantity,
+    association.specifiedFare,
+    association.remainingTicketQuantity,
+  ]);
 
   const soldSeats =
     (association.ticketQuantity || 0) -
@@ -1591,7 +1661,10 @@ const TicketClassCard: React.FC<TicketClassCardProps> = ({
             {className}
           </Card.Title>
           {isModified && !readOnly && (
-            <Badge bg={association.isNew ? "success" : "warning"} className="ms-2">
+            <Badge
+              bg={association.isNew ? "success" : "warning"}
+              className="ms-2"
+            >
               {association.isNew ? "Mới" : "Đã thay đổi"}
             </Badge>
           )}

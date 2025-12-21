@@ -15,6 +15,7 @@ import {
 import { authService, employeeService } from "../../services";
 import { usePermissions } from "../../hooks/useAuth";
 import { Employee, RegisterRequest, UpdateEmployeeRequest } from "../../models";
+import Pagination from "../common/Pagination";
 import * as XLSX from "xlsx";
 
 interface EmployeeFormData {
@@ -64,6 +65,12 @@ const EmployeeManagement: React.FC<{
     useState<Employee | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(12);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
   const {
     register,
     handleSubmit,
@@ -73,7 +80,17 @@ const EmployeeManagement: React.FC<{
 
   useEffect(() => {
     loadEmployees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (currentPage === 0) {
+      loadEmployees(0);
+    } else {
+      setCurrentPage(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageSize]);
 
   // Effect to handle external modal trigger
   useEffect(() => {
@@ -143,12 +160,18 @@ const EmployeeManagement: React.FC<{
     },
   ];
 
-  const loadEmployees = async () => {
+  const loadEmployees = async (page: number = currentPage) => {
     try {
       setLoading(true);
       setError("");
-      const response = await employeeService.getAllEmployees();
-      setEmployees(response.data);
+      const response = await employeeService.getAllEmployeesPaged(
+        page,
+        pageSize
+      );
+      setEmployees(response.data.content);
+      setTotalPages(response.data.totalPages);
+      setTotalElements(response.data.totalElements);
+      setCurrentPage(response.data.number);
     } catch (err: any) {
       console.error("Load employees error:", err);
       setError(
@@ -158,6 +181,17 @@ const EmployeeManagement: React.FC<{
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    loadEmployees(page);
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(0);
+    loadEmployees(0);
   };
 
   const onSubmit = async (data: EmployeeFormData) => {
@@ -609,7 +643,31 @@ const EmployeeManagement: React.FC<{
         <Col>
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <Card.Title className="mb-0">👥 Quản lý nhân viên</Card.Title>
+              <div className="d-flex align-items-center gap-3">
+                <Card.Title className="mb-0">👥 Quản lý nhân viên</Card.Title>
+                <div className="d-flex align-items-center gap-2">
+                  <Form.Label className="mb-0 text-muted small">
+                    Kích thước trang:
+                  </Form.Label>
+                  <Form.Select
+                    size="sm"
+                    value={pageSize}
+                    onChange={(e) =>
+                      handlePageSizeChange(Number(e.target.value))
+                    }
+                    style={{ width: "auto" }}
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={12}>12</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </Form.Select>
+                  <span className="text-muted small">
+                    ({totalElements} nhân viên)
+                  </span>
+                </div>
+              </div>
               <div className="d-flex gap-2">
                 <Button
                   variant="outline-success"
@@ -1563,6 +1621,19 @@ const EmployeeManagement: React.FC<{
         )}
       </Row>
 
+      {/* Pagination */}
+      {!loading && totalPages > 1 && (
+        <Row className="mt-4">
+          <Col className="d-flex justify-content-center">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </Col>
+        </Row>
+      )}
+
       {/* Summary Footer */}
       <Row className="mt-4">
         <Col>
@@ -1570,7 +1641,7 @@ const EmployeeManagement: React.FC<{
             <Card.Footer className="text-center text-muted">
               <small>
                 <i className="bi bi-people me-1"></i>
-                Tổng {employees.length} nhân viên
+                Tổng {totalElements} nhân viên
                 <span className="mx-2">•</span>
                 <i className="bi bi-eye me-1"></i>
                 Hiển thị {filteredEmployees.length}

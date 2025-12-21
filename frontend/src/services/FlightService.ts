@@ -2,6 +2,7 @@ import { apiClient } from "./api";
 import { API_URL } from "./config";
 import { Flight, FlightSearchCriteria, FlightRequest } from "../models";
 import type { ApiResponse } from "../models/ApiResponse";
+import type { PaginatedResponse } from "../models";
 
 export class FlightService {
   private readonly baseUrl = API_URL.FLIGHTS;
@@ -10,8 +11,17 @@ export class FlightService {
     return apiClient.get(this.baseUrl);
   }
 
+  async getAllFlightsPaged(
+    page: number = 0,
+    size: number = 10
+  ): Promise<ApiResponse<PaginatedResponse<Flight>>> {
+    return apiClient.get(`${this.baseUrl}?page=${page}&size=${size}`);
+  }
+
   async getFlightById(id: number): Promise<Flight> {
-    const response = await apiClient.get<ApiResponse<Flight>>(`${this.baseUrl}/${id}`);
+    const response = await apiClient.get<ApiResponse<Flight>>(
+      `${this.baseUrl}/${id}`
+    );
     return response.data;
   }
 
