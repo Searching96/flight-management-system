@@ -19,7 +19,7 @@ import {
   ticketClassService,
   flightTicketClassService,
   parameterService,
-} from "../../services";
+} from "../../../services";
 import {
   Flight,
   Airport,
@@ -30,7 +30,7 @@ import {
   FlightTicketClassRequest,
   UpdateFlightTicketClassRequest,
   Parameter,
-} from "../../models";
+} from "../../../models";
 
 // Internal draft type so we can queue create/update/delete before saving
 type FlightTicketClassDraft = FlightTicketClass & {
@@ -38,13 +38,13 @@ type FlightTicketClassDraft = FlightTicketClass & {
   isNew?: boolean;
   isDeleted?: boolean;
 };
-import { usePermissions } from "../../hooks/useAuth";
-import { useFlights } from "../../hooks/useFlights";
-import { useFlightDetails } from "../../hooks/useFlightDetails";
-import FlightForm from "./flights/FlightForm";
-import TypeAhead from "../common/TypeAhead";
-import FlightTable from "./flights/FlightTable";
-import Pagination from "../common/Pagination";
+import { usePermissions } from "../../../hooks/useAuth";
+import { useFlights } from "../../../hooks/useFlights";
+import { useFlightDetails } from "../../../hooks/useFlightDetails";
+import FlightForm from "./children/FlightForm";
+import TypeAhead from "../../common/TypeAhead";
+import FlightTable from "./children/FlightTable";
+import Pagination from "../../common/Pagination";
 
 const FlightManagement: React.FC<{
   showAddModal?: boolean;
@@ -178,10 +178,10 @@ const FlightManagement: React.FC<{
         ]);
 
       // Handle paginated responses
-      setAirports(airportData.data?.content || airportData.data || []);
-      setPlanes(planeData.data?.content || planeData.data || []);
+      setAirports(Array.isArray(airportData.data) ? airportData.data : (typeof airportData.data === 'object' && airportData.data !== null && 'content' in airportData.data ? (airportData.data as any).content : []) || []);
+      setPlanes(Array.isArray(planeData.data) ? planeData.data : (typeof planeData.data === 'object' && planeData.data !== null && 'content' in planeData.data ? (planeData.data as any).content : []) || []);
       setTicketClasses(
-        ticketClassData.data?.content || ticketClassData.data || []
+        Array.isArray(ticketClassData.data) ? ticketClassData.data : (typeof ticketClassData.data === 'object' && ticketClassData.data !== null && 'content' in ticketClassData.data ? (ticketClassData.data as any).content : []) || []
       );
       setParameters(parameterData); // Assuming first item contains all parameters
 

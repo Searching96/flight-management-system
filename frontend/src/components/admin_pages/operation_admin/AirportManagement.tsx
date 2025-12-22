@@ -13,11 +13,11 @@ import {
   Modal,
   Table,
 } from "react-bootstrap";
-import { airportService } from "../../services";
-import { Airport } from "../../models";
-import TypeAhead from "../common/TypeAhead";
-import Pagination from "../common/Pagination";
-import { usePermissions } from "../../hooks/useAuth";
+import { airportService } from "../../../services";
+import { Airport } from "../../../models";
+import TypeAhead from "../../common/TypeAhead";
+import Pagination from "../../common/Pagination";
+import { usePermissions } from "../../../hooks/useAuth";
 
 interface AirportFormData {
   airportName: string;

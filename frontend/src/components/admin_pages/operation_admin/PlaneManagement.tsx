@@ -12,10 +12,10 @@ import {
   Badge,
   Modal,
 } from "react-bootstrap";
-import { planeService } from "../../services";
-import { Plane } from "../../models";
-import Pagination from "../common/Pagination";
-import { usePermissions } from "../../hooks/useAuth";
+import { planeService } from "../../../services";
+import { Plane } from "../../../models";
+import Pagination from "../../common/Pagination";
+import { usePermissions } from "../../../hooks/useAuth";
 
 interface PlaneFormData {
   planeCode: string;

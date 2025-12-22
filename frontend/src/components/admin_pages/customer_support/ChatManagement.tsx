@@ -11,9 +11,9 @@ import {
   ListGroup,
   Spinner,
 } from "react-bootstrap";
-import { chatService, messageService } from "../../services";
-import { Chatbox, Message } from "../../models/Chat";
-import { useAuth } from "../../hooks/useAuth";
+import { chatService, messageService } from "../../../services";
+import { Chatbox, Message } from "../../../models/Chat";
+import { useAuth } from "../../../hooks/useAuth";
 
 const ChatManagement: React.FC = () => {
   const { user } = useAuth();

@@ -10,9 +10,9 @@ import {
   Alert,
   Spinner,
 } from "react-bootstrap";
-import { parameterService } from "../../services";
-import { usePermissions } from "../../hooks/useAuth";
-import { ParameterUpdateRequest } from "../../models";
+import { parameterService } from "../../../services";
+import { usePermissions } from "../../../hooks/useAuth";
+import { ParameterUpdateRequest } from "../../../models";
 
 interface ParameterSettingsProps {
   readOnly?: boolean;

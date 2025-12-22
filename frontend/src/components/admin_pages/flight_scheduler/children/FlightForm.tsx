@@ -7,9 +7,9 @@ import {
   Airport,
   Plane,
   Parameter,
-} from "../../../models";
-import TypeAhead from "../../common/TypeAhead";
-import { FlightDetailWithIndex } from "../../../hooks/useFlightDetails";
+} from "../../../../models";
+import TypeAhead from "../../../common/TypeAhead";
+import { FlightDetailWithIndex } from "../../../../hooks/useFlightDetails";
 import FlightDetailsTable from "./FlightDetailsTable";
 
 interface FlightFormProps {

@@ -12,10 +12,10 @@ import {
   Badge,
   Modal,
 } from "react-bootstrap";
-import { ticketClassService } from "../../services";
-import { TicketClass } from "../../models";
-import Pagination from "../common/Pagination";
-import { usePermissions } from "../../hooks/useAuth";
+import { ticketClassService } from "../../../services";
+import { TicketClass } from "../../../models";
+import Pagination from "../../common/Pagination";
+import { usePermissions } from "../../../hooks/useAuth";
 
 interface TicketClassFormData {
   ticketClassName: string;

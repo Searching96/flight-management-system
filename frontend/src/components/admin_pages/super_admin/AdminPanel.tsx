@@ -1,14 +1,14 @@
 // components/admin/AdminPanel.tsx
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Nav, Alert, Button, Modal } from 'react-bootstrap';
-import FlightManagement from './FlightManagement';
-import AirportManagement from './AirportManagement';
+import FlightManagement from '../flight_scheduler/FlightManagement';
+import AirportManagement from '../operation_admin/AirportManagement';
 import ParameterSettings from './ParameterSettings';
-import PlaneManagement from './PlaneManagement';
-import TicketClassManagement from './TicketClassManagement';
+import PlaneManagement from '../operation_admin/PlaneManagement';
+import TicketClassManagement from '../operation_admin/TicketClassManagement';
 import EmployeeManagement from './EmployeeManagement';
-import { usePermissions } from '../../hooks/useAuth';
-import Statistics from '../_statistics/Statistics';
+import { usePermissions } from '../../../hooks/useAuth';
+import Statistics from '../../statistics/Statistics';
 
 type AdminTab = 'overview' | 'flights' | 'airports' | 'planes' | 'ticket-classes' | 'parameters' | 'employees' | 'reports';
 

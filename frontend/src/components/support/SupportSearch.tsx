@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Nav, Alert } from "react-bootstrap";
-import FlightManagement from "../admin/FlightManagement";
-import AirportManagement from "../admin/AirportManagement";
+import FlightManagement from "../admin_pages/flight_scheduler/FlightManagement";
+import AirportManagement from "../admin_pages/operation_admin/AirportManagement";
 import { usePermissions } from "../../hooks/useAuth";
-import ParameterSettings from "../admin/ParameterSettings";
+import ParameterSettings from "../admin_pages/super_admin/ParameterSettings";
 
 type SupportTab =
   | "overview"

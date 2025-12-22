@@ -8,12 +8,12 @@ import {
   Spinner,
   InputGroup,
 } from "react-bootstrap";
-import { chatService, messageService } from "../../services";
-import { Chatbox } from "../../models/Chat";
-import { useAuth } from "../../hooks/useAuth";
-import { webSocketService } from "../../services/websocketService";
-import { accountChatboxService } from "../../services/accountChatboxService";
-import "./CustomerSupport.css";
+import { chatService, messageService } from "../../../services";
+import { Chatbox } from "../../../models/Chat";
+import { useAuth } from "../../../hooks/useAuth";
+import { webSocketService } from "../../../services/websocketService";
+import { accountChatboxService } from "../../../services/accountChatboxService";
+import "./styles/CustomerSupport.css";
 
 interface FormattedMessage {
   messageId?: number;

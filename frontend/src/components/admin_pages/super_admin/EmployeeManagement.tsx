@@ -12,10 +12,10 @@ import {
   Badge,
   Modal,
 } from "react-bootstrap";
-import { authService, employeeService } from "../../services";
-import { usePermissions } from "../../hooks/useAuth";
-import { Employee, RegisterRequest, UpdateEmployeeRequest } from "../../models";
-import Pagination from "../common/Pagination";
+import { authService, employeeService } from "../../../services";
+import { usePermissions } from "../../../hooks/useAuth";
+import { Employee, RegisterRequest, UpdateEmployeeRequest } from "../../../models";
+import Pagination from "../../common/Pagination";
 import * as XLSX from "xlsx";
 
 interface EmployeeFormData {

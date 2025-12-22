@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Table, Badge, Button, Card, Row, Col, Form, InputGroup, Pagination } from 'react-bootstrap';
-import { Flight } from '../../../models';
+import { Flight } from '../../../../models';
 
 interface FlightTableProps {
     flights: Flight[];

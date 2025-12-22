@@ -1,8 +1,8 @@
 import React from 'react';
 import { Table, Button, InputGroup, Form, Card } from 'react-bootstrap';
-import { FlightDetailWithIndex } from '../../../hooks/useFlightDetails';
-import TypeAhead from '../../common/TypeAhead';
-import { Parameter } from '../../../models';
+import { FlightDetailWithIndex } from '../../../../hooks/useFlightDetails';
+import TypeAhead from '../../../common/TypeAhead';
+import { Parameter } from '../../../../models';
 
 interface FlightDetailsTableProps {
   flightDetails: FlightDetailWithIndex[];
