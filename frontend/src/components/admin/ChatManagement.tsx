@@ -52,13 +52,8 @@ const ChatManagement: React.FC = () => {
       // Handle both paginated and non-paginated responses
       if (Array.isArray(response)) {
         setChatboxes(response);
-      } else if (
-        response &&
-        typeof response === "object" &&
-        "content" in response &&
-        Array.isArray(response.content)
-      ) {
-        setChatboxes(response.content);
+      } else if (response && typeof response === "object" && "content" in response) {
+        setChatboxes((response as any).content);
       } else {
         setChatboxes([]);
       }
