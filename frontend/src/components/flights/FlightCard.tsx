@@ -258,10 +258,12 @@ const FlightCard: React.FC<FlightCardProps> = ({
                         : 'border-secondary'
                     }`}
                     style={{
-                      backgroundColor: selectedClassForBooking === classInfo.ticketClassId ? '#f8f9fa' : 'white'
+                      backgroundColor: selectedClassForBooking === classInfo.ticketClassId ? '#f8f9fa' : 'white',
+                      flexWrap: 'nowrap',
+                      gap: '1rem'
                     }}
                   >
-                    <div>
+                    <div style={{ flex: '1', minWidth: 0 }}>
                       <div
                         className="fw-bold"
                         style={{ color: classInfo.ticketClass?.color || '#333' }}
@@ -273,8 +275,8 @@ const FlightCard: React.FC<FlightCardProps> = ({
                         {classInfo.remainingTicketQuantity} ghế có sẵn
                       </small>
                     </div>
-                    <div className="text-end">
-                      <div className="fw-bold fs-5 text-primary">
+                    <div className="text-end" style={{ flexShrink: 0, minWidth: 'fit-content' }}>
+                      <div className="fw-bold fs-5 text-primary" style={{ whiteSpace: 'nowrap' }}>
                         {classInfo.price.toLocaleString('vi-VN')} VND
                       </div>
                     </div>

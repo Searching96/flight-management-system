@@ -336,7 +336,7 @@ const BookingForm: React.FC = () => {
               } catch (updateErr: any) {
                 setError(
                   "Lỗi cập nhật thông tin hành khách: " +
-                    (updateErr.message || "Lỗi không xác định")
+                  (updateErr.message || "Lỗi không xác định")
                 );
                 return;
               }
@@ -378,14 +378,14 @@ const BookingForm: React.FC = () => {
               } catch (createErr: any) {
                 setError(
                   "Lỗi tạo hành khách: " +
-                    (createErr.message || "Lỗi không xác định")
+                  (createErr.message || "Lỗi không xác định")
                 );
                 return;
               }
             } else {
               setError(
                 "Lỗi kiểm tra hành khách hiện có: " +
-                  (err.message || "Lỗi không xác định")
+                (err.message || "Lỗi không xác định")
               );
               return;
             }
@@ -405,8 +405,8 @@ const BookingForm: React.FC = () => {
           selectedClass?.ticketClassName === "Economy"
             ? "A"
             : selectedClass?.ticketClassName === "Business"
-            ? "B"
-            : "C";
+              ? "B"
+              : "C";
         return `${seatPrefix}${occupiedSeats + index + 1}`;
       });
 
@@ -601,6 +601,7 @@ const BookingForm: React.FC = () => {
   const renderPassengerForm = (index: number) => {
     // Get current values from form state
     const currentPhone = watch(`passengers.${index}.phoneNumber`) || "";
+    const currentCitizenId = watch(`passengers.${index}.citizenId`) || "";
     const isAccountPassenger =
       user?.accountTypeName === "Customer" && index === 0;
 
@@ -703,7 +704,7 @@ const BookingForm: React.FC = () => {
                 <div className="d-flex gap-2">
                   <Form.Control
                     type="tel"
-                    placeholder="Số điện thoại (10 chữ số)"
+                    placeholder="Nhập số điện thoại (10 chữ số)"
                     value={currentPhone.replace(/^\+\d+\s*/, "")}
                     onChange={(e) => {
                       const phoneNumber = `${e.target.value}`;
@@ -741,22 +742,37 @@ const BookingForm: React.FC = () => {
                 <Form.Label>Căn cước công dân *</Form.Label>
                 <Form.Control
                   type="text"
+                  placeholder="Nhập CCCD (12 chữ số)"
+                  value={currentCitizenId}
+                  onChange={(e) => {
+                    const citizenId = e.target.value;
+                    setValue(`passengers.${index}.citizenId`, citizenId, {
+                      shouldValidate: true,
+                    });
+                  }}
+                  disabled={isAccountPassenger}
+                  isInvalid={!!errors.passengers?.[index]?.citizenId}
+                />
+
+                <input
+                  type="hidden"
                   {...register(`passengers.${index}.citizenId`, {
                     required: "Căn cước công dân là bắt buộc",
                     pattern: {
-                      value: /^[0-9]{9}$|^[0-9]{12}$/,
-                      message: "CCCD phải là 9 hoặc 12 chữ số",
+                      value: /^0[0-9]{11}$/,
+                      message: "CCCD phải có 12 chữ số và bắt đầu bằng 0",
                     },
                   })}
-                  placeholder="Nhập số căn cước công dân"
-                  isInvalid={!!errors.passengers?.[index]?.citizenId}
-                  disabled={isAccountPassenger}
                 />
-                <Form.Control.Feedback type="invalid">
-                  {errors.passengers?.[index]?.citizenId?.message}
-                </Form.Control.Feedback>
+
+                {errors.passengers?.[index]?.citizenId && (
+                  <Form.Control.Feedback type="invalid" className="d-block">
+                    {errors.passengers?.[index]?.citizenId?.message}
+                  </Form.Control.Feedback>
+                )}
               </Form.Group>
             </Col>
+
           </Row>
         </Card.Body>
       </Card>
@@ -1088,33 +1104,38 @@ const BookingForm: React.FC = () => {
               )}
             </Modal.Body>
             <Modal.Footer>
-              <Button
-                variant="secondary"
-                onClick={handleCancelBooking}
-                disabled={submitting}
-                size="lg"
-              >
-                Hủy
-              </Button>
-              <Button
-                variant="success"
-                onClick={handleConfirmBooking}
-                disabled={submitting}
-                size="lg"
-              >
-                {submitting ? (
-                  <>
-                    <Spinner animation="border" size="sm" className="me-2" />
-                    Đang xử lý...
-                  </>
-                ) : (
-                  <>
-                    <i className="bi bi-check-circle me-2"></i>
-                    Xác nhận đặt vé -{" "}
-                    {calculateTotalPrice().toLocaleString("vi-VN")} VND
-                  </>
-                )}
-              </Button>
+              <div className="d-flex flex-column flex-md-row w-100 gap-3">
+                <Button
+                  variant="success"
+                  onClick={handleConfirmBooking}
+                  disabled={submitting}
+                  size="lg"
+                  className="w-100 order-1 order-md-2"
+                >
+                  {submitting ? (
+                    <>
+                      <Spinner animation="border" size="sm" className="me-2" />
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-check-circle me-2"></i>
+                      Xác nhận đặt vé -{" "}
+                      {calculateTotalPrice().toLocaleString("vi-VN")} VND
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  onClick={handleCancelBooking}
+                  disabled={submitting}
+                  size="lg"
+                  className="w-100 order-2 order-md-1"
+                >
+                  Hủy
+                </Button>
+              </div>
             </Modal.Footer>
           </Modal>
         </Col>

@@ -394,7 +394,7 @@ const BookingConfirmation: React.FC = () => {
                     className="w-100 mb-2"
                   >
                     <i className="bi bi-printer me-2"></i>
-                    In phiếu đặt chỗ
+                    Lưu phiếu đặt chỗ
                   </Button>
                 </Col>
                 <Col xs={12} lg={isPaid ? 4 : 3}>
@@ -434,7 +434,7 @@ const BookingConfirmation: React.FC = () => {
           {/* Next Steps - Hidden during print */}
           <Card className="bg-light no-print">
             <Card.Header>
-              <h4 className="mb-0">Tiếp theo là gì?</h4>
+              <h4 className="mb-0">Làm gì kế tiếp?</h4>
             </Card.Header>
             <Card.Body>
               <ul className="mb-0">
