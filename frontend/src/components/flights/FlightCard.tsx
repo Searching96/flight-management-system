@@ -276,7 +276,10 @@ const FlightCard: React.FC<FlightCardProps> = ({
                       </small>
                     </div>
                     <div className="text-end" style={{ flexShrink: 0, minWidth: 'fit-content' }}>
-                      <div className="fw-bold fs-5 text-primary" style={{ whiteSpace: 'nowrap' }}>
+                      <div className="fw-bold text-primary" style={{ 
+                        whiteSpace: 'nowrap',
+                        fontSize: 'clamp(1rem, 4vw, 1.25rem)'
+                      }}>
                         {classInfo.price.toLocaleString('vi-VN')} VND
                       </div>
                     </div>

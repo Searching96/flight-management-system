@@ -717,7 +717,11 @@ const ChatWidget: React.FC = () => {
         {isOpen && (
           <div
             className="position-fixed bottom-0 end-0 m-3"
-            style={{ zIndex: 1049, width: "350px" }}
+            style={{ 
+              zIndex: 1049, 
+              width: "min(350px, calc(100vw - 2rem))",
+              maxWidth: "100%"
+            }}
           >
             <Card className="shadow-lg border-0">
               <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
@@ -862,7 +866,11 @@ const ChatWidget: React.FC = () => {
       {isOpen && (
         <div
           className="position-fixed bottom-0 end-0 m-3"
-          style={{ zIndex: 1049, width: "350px" }}
+          style={{ 
+            zIndex: 1049, 
+            width: "min(350px, calc(100vw - 2rem))",
+            maxWidth: "100%"
+          }}
         >
           <Card className="shadow-lg border-0">
             <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
@@ -882,7 +890,10 @@ const ChatWidget: React.FC = () => {
             <div>
               <div
                 className="p-3 bg-light"
-                style={{ height: "300px", overflowY: "auto" }}
+                style={{ 
+                  height: "min(300px, 50vh)", 
+                  overflowY: "auto" 
+                }}
                 ref={messagesContainerRef}
                 onScroll={handleScroll}
               >
