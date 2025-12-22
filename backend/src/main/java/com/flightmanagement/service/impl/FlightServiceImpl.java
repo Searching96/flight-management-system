@@ -7,6 +7,8 @@ import com.flightmanagement.repository.FlightRepository;
 import com.flightmanagement.service.FlightService;
 import com.flightmanagement.service.FlightTicketClassService;
 import com.flightmanagement.service.ParameterService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +44,12 @@ public class FlightServiceImpl implements FlightService {
     public List<FlightDto> getAllFlights() {
         List<Flight> flights = flightRepository.findAllActive();
         return flightMapper.toDtoList(flights);
+    }
+
+    @Override
+    public Page<FlightDto> getAllFlightsPaged(Pageable pageable) {
+        Page<Flight> page = flightRepository.findByDeletedAtIsNull(pageable);
+        return page.map(flightMapper::toDto);
     }
     
     @Override

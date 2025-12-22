@@ -14,6 +14,7 @@ import {
 } from "react-bootstrap";
 import { planeService } from "../../services";
 import { Plane } from "../../models";
+import Pagination from "../common/Pagination";
 import { usePermissions } from "../../hooks/useAuth";
 
 interface PlaneFormData {
@@ -36,6 +37,12 @@ const PlaneManagement: React.FC<{
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(12);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
   const {
     register,
     handleSubmit,
@@ -45,7 +52,17 @@ const PlaneManagement: React.FC<{
 
   useEffect(() => {
     loadPlanes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (currentPage === 0) {
+      loadPlanes(0);
+    } else {
+      setCurrentPage(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageSize]);
 
   // Effect to handle external modal trigger
   useEffect(() => {
@@ -88,17 +105,32 @@ const PlaneManagement: React.FC<{
     { value: "Bombardier Q400", label: "Bombardier Q400" },
   ];
 
-  const loadPlanes = async () => {
+  const loadPlanes = async (page: number = currentPage) => {
     try {
       setLoading(true);
-      const data = await planeService.getAllPlanes();
-      setPlanes(data.data);
+      const response = await planeService.getAllPlanesPaged(page, pageSize);
+      setPlanes(response.data.content);
+      setTotalPages(response.data.totalPages);
+      setTotalElements(response.data.totalElements);
+      setCurrentPage(response.data.number);
+      setError("");
     } catch (error) {
       console.error("Error loading planes:", error);
       setError("Failed to load planes");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    loadPlanes(page);
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(0);
+    loadPlanes(0);
   };
 
   const onSubmit = async (data: PlaneFormData) => {
@@ -186,7 +218,31 @@ const PlaneManagement: React.FC<{
         <Col>
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <Card.Title className="mb-0">✈️ Quản lý đội bay</Card.Title>
+              <div className="d-flex align-items-center gap-3">
+                <Card.Title className="mb-0">✈️ Quản lý đội bay</Card.Title>
+                <div className="d-flex align-items-center gap-2">
+                  <Form.Label className="mb-0 text-muted small">
+                    Kích thước trang:
+                  </Form.Label>
+                  <Form.Select
+                    size="sm"
+                    value={pageSize}
+                    onChange={(e) =>
+                      handlePageSizeChange(Number(e.target.value))
+                    }
+                    style={{ width: "auto" }}
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={12}>12</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </Form.Select>
+                  <span className="text-muted small">
+                    ({totalElements} máy bay)
+                  </span>
+                </div>
+              </div>
               <Button variant="primary" onClick={() => setShowForm(true)}>
                 Thêm máy bay mới
               </Button>
@@ -471,6 +527,19 @@ const PlaneManagement: React.FC<{
           ))
         )}
       </Row>
+
+      {/* Pagination */}
+      {!loading && totalPages > 1 && (
+        <Row className="mt-4">
+          <Col className="d-flex justify-content-center">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </Col>
+        </Row>
+      )}
     </Container>
   );
 };

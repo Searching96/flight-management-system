@@ -1,24 +1,35 @@
 import { useState, useCallback } from "react";
-import { Flight, FlightRequest } from "../models";
+import { Flight, FlightRequest, PaginatedResponse } from "../models";
 import { flightService } from "../services";
 
 export function useFlights() {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
-  const loadFlights = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await flightService.getAllFlights();
-      setFlights(data.data);
-      setError("");
-    } catch (err: any) {
-      setError("Failed to load flights: " + (err.message || "Unknown error"));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const loadFlights = useCallback(
+    async (page: number = 0, size: number = 10) => {
+      try {
+        setLoading(true);
+        const response = await flightService.getAllFlightsPaged(page, size);
+        setFlights(response.data.content);
+        setTotalPages(response.data.totalPages);
+        setTotalElements(response.data.totalElements);
+        setCurrentPage(response.data.number);
+        setPageSize(size);
+        setError("");
+      } catch (err: any) {
+        setError("Failed to load flights: " + (err.message || "Unknown error"));
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
   const createFlight = useCallback(
     async (data: FlightRequest): Promise<Flight | null> => {
@@ -77,5 +88,11 @@ export function useFlights() {
     updateFlight,
     deleteFlight,
     clearError: () => setError(""),
+    currentPage,
+    pageSize,
+    totalPages,
+    totalElements,
+    setCurrentPage,
+    setPageSize,
   };
 }

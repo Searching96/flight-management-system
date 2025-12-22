@@ -1,11 +1,18 @@
 import { apiClient } from "./api";
-import { Airport, ApiResponse } from "../models";
+import { Airport, ApiResponse, PaginatedResponse } from "../models";
 
 export class AirportService {
   private readonly baseUrl = "/airports";
 
   async getAllAirports(): Promise<ApiResponse<Airport[]>> {
     return apiClient.get(this.baseUrl);
+  }
+
+  async getAllAirportsPaged(
+    page: number = 0,
+    size: number = 10
+  ): Promise<ApiResponse<PaginatedResponse<Airport>>> {
+    return apiClient.get(`${this.baseUrl}?page=${page}&size=${size}`);
   }
 
   async getAirportById(id: number): Promise<ApiResponse<Airport>> {

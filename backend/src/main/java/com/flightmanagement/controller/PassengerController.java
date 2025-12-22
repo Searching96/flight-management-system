@@ -5,6 +5,9 @@ import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.PassengerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +27,15 @@ public class PassengerController {
 
     @Operation(summary = "Get all passengers")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PassengerDto>>> getAllPassengers() {
-        List<PassengerDto> passengers = passengerService.getAllPassengers();
-        ApiResponse<List<PassengerDto>> apiResponse = new ApiResponse<>(
+    public ResponseEntity<?> getAllPassengers(
+            @PageableDefault(page = 0, size = 10)
+            Pageable pageable
+    ) {
+        Page<PassengerDto> page = passengerService.getAllPassengersPaged(pageable);
+        ApiResponse<?> apiResponse = new ApiResponse<>(
                 HttpStatus.OK,
-                "Passengers retrieved successfully",
-                passengers,
+                "Fetched all passengers",
+                page,
                 null
         );
         return ResponseEntity.ok(apiResponse);

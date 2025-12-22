@@ -4,6 +4,8 @@ import com.flightmanagement.dto.FlightRequest;
 import com.flightmanagement.dto.FlightDto;
 import com.flightmanagement.dto.FlightSearchCriteria;
 import com.flightmanagement.dto.FlightTicketClassDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,6 +13,8 @@ import java.util.List;
 public interface FlightService {
     
     List<FlightDto> getAllFlights();
+
+    Page<FlightDto> getAllFlightsPaged(Pageable pageable);
     
     FlightDto getFlightById(Integer id);
 

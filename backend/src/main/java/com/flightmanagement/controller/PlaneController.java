@@ -5,6 +5,9 @@ import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.PlaneService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +27,15 @@ public class PlaneController {
     
     @Operation(summary = "Get all planes")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PlaneDto>>> getAllPlanes() {
-        List<PlaneDto> planes = planeService.getAllPlanes();
-        ApiResponse<List<PlaneDto>> apiResponse = new ApiResponse<>(
+    public ResponseEntity<?> getAllPlanes(
+            @PageableDefault(page = 0, size = 10)
+            Pageable pageable
+    ) {
+        Page<PlaneDto> page = planeService.getAllPlanesPaged(pageable);
+        ApiResponse<?> apiResponse = new ApiResponse<>(
                 HttpStatus.OK,
-                "Planes retrieved successfully",
-                planes,
+                "Fetched all planes",
+                page,
                 null
         );
         return ResponseEntity.ok(apiResponse);

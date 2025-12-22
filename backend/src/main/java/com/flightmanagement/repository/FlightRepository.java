@@ -2,6 +2,8 @@ package com.flightmanagement.repository;
 
 import com.flightmanagement.entity.Airport;
 import com.flightmanagement.entity.Flight;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +19,8 @@ public interface FlightRepository extends JpaRepository<Flight, Integer> {
     
     @Query("SELECT f FROM Flight f WHERE f.deletedAt IS NULL")
     List<Flight> findAllActive();
+
+    Page<Flight> findByDeletedAtIsNull(Pageable pageable);
     
     @Query("SELECT f FROM Flight f WHERE f.flightId = ?1 AND f.deletedAt IS NULL")
     Optional<Flight> findActiveById(Integer id);

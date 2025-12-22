@@ -5,6 +5,9 @@ import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.FlightTicketClassService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +27,15 @@ public class FlightTicketClassController {
     
     @Operation(summary = "Get all flight ticket classes")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<FlightTicketClassDto>>> getAllFlightTicketClasses() {
-        List<FlightTicketClassDto> flightTicketClasses = flightTicketClassService.getAllFlightTicketClasses();
-        ApiResponse<List<FlightTicketClassDto>> apiResponse = new ApiResponse<>(
+    public ResponseEntity<?> getAllFlightTicketClasses(
+            @PageableDefault(page = 0, size = 10)
+            Pageable pageable
+    ) {
+        Page<FlightTicketClassDto> page = flightTicketClassService.getAllFlightTicketClassesPaged(pageable);
+        ApiResponse<?> apiResponse = new ApiResponse<>(
                 HttpStatus.OK,
-                "Flight ticket classes retrieved successfully",
-                flightTicketClasses,
+                "Fetched all flight ticket classes",
+                page,
                 null
         );
         return ResponseEntity.ok(apiResponse);

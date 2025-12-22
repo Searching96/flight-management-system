@@ -14,6 +14,7 @@ import {
 } from "react-bootstrap";
 import { ticketClassService } from "../../services";
 import { TicketClass } from "../../models";
+import Pagination from "../common/Pagination";
 import { usePermissions } from "../../hooks/useAuth";
 
 interface TicketClassFormData {
@@ -33,6 +34,12 @@ const TicketClassManagement: React.FC<{
   const [showForm, setShowForm] = useState(false);
   const [editingClass, setEditingClass] = useState<TicketClass | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
   const {
     register,
     handleSubmit,
@@ -42,7 +49,17 @@ const TicketClassManagement: React.FC<{
 
   useEffect(() => {
     loadTicketClasses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (currentPage === 0) {
+      loadTicketClasses(0);
+    } else {
+      setCurrentPage(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageSize]);
 
   // Effect to handle external modal trigger
   useEffect(() => {
@@ -66,17 +83,35 @@ const TicketClassManagement: React.FC<{
     );
   }
 
-  const loadTicketClasses = async () => {
+  const loadTicketClasses = async (page: number = currentPage) => {
     try {
       setLoading(true);
-      const data = await ticketClassService.getAllTicketClasses();
-      setTicketClasses(data.data);
+      const response = await ticketClassService.getAllTicketClassesPaged(
+        page,
+        pageSize
+      );
+      setTicketClasses(response.data.content);
+      setTotalPages(response.data.totalPages);
+      setTotalElements(response.data.totalElements);
+      setCurrentPage(response.data.number);
+      setError("");
     } catch (error) {
       console.error("Error loading ticket classes:", error);
       setError("Failed to load ticket classes");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    loadTicketClasses(page);
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(0);
+    loadTicketClasses(0);
   };
 
   const onSubmit = async (data: TicketClassFormData) => {
@@ -145,7 +180,30 @@ const TicketClassManagement: React.FC<{
         <Col>
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <Card.Title className="mb-0">🎫 Quản lý hạng vé</Card.Title>
+              <div className="d-flex align-items-center gap-3">
+                <Card.Title className="mb-0">🎫 Quản lý hạng vé</Card.Title>
+                <div className="d-flex align-items-center gap-2">
+                  <Form.Label className="mb-0 text-muted small">
+                    Kích thước trang:
+                  </Form.Label>
+                  <Form.Select
+                    size="sm"
+                    value={pageSize}
+                    onChange={(e) =>
+                      handlePageSizeChange(Number(e.target.value))
+                    }
+                    style={{ width: "auto" }}
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </Form.Select>
+                  <span className="text-muted small">
+                    ({totalElements} hạng vé)
+                  </span>
+                </div>
+              </div>
               <Button variant="primary" onClick={() => setShowForm(true)}>
                 Thêm hạng vé mới
               </Button>
@@ -299,6 +357,19 @@ const TicketClassManagement: React.FC<{
                 </div>
               </Card.Body>
             </Card>
+          </Col>
+        </Row>
+      )}
+
+      {/* Pagination */}
+      {!loading && totalPages > 1 && (
+        <Row className="mt-4">
+          <Col className="d-flex justify-content-center">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </Col>
         </Row>
       )}

@@ -832,7 +832,7 @@ class TicketServiceTest {
 
             // Assert
             assertNotNull(result);
-            assertEquals(2, result.size());
+            assertEquals(   2, result.size());
             verify(ticketRepository).findByFlightId(1);
         }
 

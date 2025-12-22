@@ -1,6 +1,8 @@
 package com.flightmanagement.repository;
 
 import com.flightmanagement.entity.Customer;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -13,6 +15,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
     
     @Query("SELECT c FROM Customer c WHERE c.deletedAt IS NULL")
     List<Customer> findAllActive();
+
+    Page<Customer> findByDeletedAtIsNull(Pageable pageable);
     
     @Query("SELECT c FROM Customer c WHERE c.customerId = ?1 AND c.deletedAt IS NULL")
     Optional<Customer> findActiveById(Integer id);

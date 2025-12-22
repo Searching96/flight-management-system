@@ -14,6 +14,8 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -94,6 +96,12 @@ public class AccountServiceImpl implements AccountService {
                 .stream()
                 .map(account -> accountMapper.toDto(account, account.getEmployee()))
                 .toList();
+    }
+
+    @Override
+    public Page<AccountDto> getAllAccountsPaged(Pageable pageable) {
+        Page<Account> page = accountRepository.findByDeletedAtIsNull(pageable);
+        return page.map(account -> accountMapper.toDto(account, account.getEmployee()));
     }
 
     @Override

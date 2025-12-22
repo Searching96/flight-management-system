@@ -5,6 +5,8 @@ import com.flightmanagement.entity.Plane;
 import com.flightmanagement.mapper.PlaneMapper;
 import com.flightmanagement.repository.PlaneRepository;
 import com.flightmanagement.service.PlaneService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,6 +28,12 @@ public class PlaneServiceImpl implements PlaneService {
     public List<PlaneDto> getAllPlanes() {
         List<Plane> planes = planeRepository.findAllActive();
         return planeMapper.toDtoList(planes);
+    }
+
+    @Override
+    public Page<PlaneDto> getAllPlanesPaged(Pageable pageable) {
+        Page<Plane> page = planeRepository.findByDeletedAtIsNull(pageable);
+        return page.map(planeMapper::toDto);
     }
     
     @Override

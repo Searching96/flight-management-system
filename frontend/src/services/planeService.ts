@@ -1,12 +1,20 @@
 import { apiClient } from "./api";
 import { Plane } from "../models";
 import type { ApiResponse } from "../models/ApiResponse";
+import type { PaginatedResponse } from "../models";
 
 export class PlaneService {
   private readonly baseUrl = "/planes";
 
   async getAllPlanes(): Promise<ApiResponse<Plane[]>> {
     return apiClient.get(this.baseUrl);
+  }
+
+  async getAllPlanesPaged(
+    page: number = 0,
+    size: number = 10
+  ): Promise<ApiResponse<PaginatedResponse<Plane>>> {
+    return apiClient.get(`${this.baseUrl}?page=${page}&size=${size}`);
   }
 
   async getPlaneById(id: number): Promise<ApiResponse<Plane>> {

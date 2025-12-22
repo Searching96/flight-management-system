@@ -4,6 +4,9 @@ import com.flightmanagement.dto.AccountDto;
 import com.flightmanagement.entity.ApiResponse;
 import com.flightmanagement.service.AccountService;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,13 +32,16 @@ public class AccountController {
     @Operation(summary = "Get all accounts")
     @GetMapping
     @PreAuthorize("hasRole('EMPLOYEE_ADMINISTRATOR')")
-    public ResponseEntity<ApiResponse<List<AccountDto>>> getAllAccounts() {
-        List<AccountDto> accountDtoList = accountService.getAllAccounts();
+    public ResponseEntity<?> getAllAccounts(
+            @PageableDefault(page = 0, size = 10)
+            Pageable pageable
+    ) {
+        Page<AccountDto> page = accountService.getAllAccountsPaged(pageable);
 
-        ApiResponse<List<AccountDto>> apiResponse = new ApiResponse<>(
+        ApiResponse<?> apiResponse = new ApiResponse<>(
                 HttpStatus.OK,
-                "Accounts retrieved successfully",
-                accountDtoList,
+                "Fetched all accounts",
+                page,
                 null
         );
         return ResponseEntity.ok(apiResponse);

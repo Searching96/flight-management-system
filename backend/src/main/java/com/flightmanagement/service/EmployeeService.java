@@ -1,6 +1,8 @@
 package com.flightmanagement.service;
 
 import com.flightmanagement.dto.EmployeeDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -21,6 +23,13 @@ public interface EmployeeService {
      * @return List of all active employee DTOs
      */
     List<EmployeeDto> getAllEmployees();
+
+    /**
+     * Get all active employees with pagination
+     * @param pageable Pagination parameters
+     * @return Page of employee DTOs
+     */
+    Page<EmployeeDto> getAllEmployeesPaged(Pageable pageable);
 
     /**
      * Get employee by ID

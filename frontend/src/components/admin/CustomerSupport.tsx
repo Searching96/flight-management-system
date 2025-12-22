@@ -140,15 +140,31 @@ const CustomerSupport: React.FC = () => {
       let data: Chatbox[];
 
       // Load chatboxes based on sort option
+      let response: any;
       if (sortOption === "Thời điểm yêu cầu tư vấn") {
-        data = await chatService.getAllChatboxesSortedByCustomerTime();
+        response = await chatService.getAllChatboxesSortedByCustomerTime();
       } else if (sortOption === "Số lượng nhân viên đã hỗ trợ") {
-        data = await chatService.getAllChatboxesSortedByEmployeeSupportCount();
+        response =
+          await chatService.getAllChatboxesSortedByEmployeeSupportCount();
       } else if (sortOption === "Hoạt động gần đây") {
-        data = await chatService.getAllChatboxesSortedByRecentActivity();
+        response = await chatService.getAllChatboxesSortedByRecentActivity();
       } else {
         // For other options, use the default API for now
-        data = await chatService.getAllChatboxes();
+        response = await chatService.getAllChatboxes();
+      }
+
+      // Handle both paginated and non-paginated responses
+      if (Array.isArray(response)) {
+        data = response;
+      } else if (
+        response &&
+        typeof response === "object" &&
+        "content" in response &&
+        Array.isArray(response.content)
+      ) {
+        data = response.content;
+      } else {
+        data = [];
       }
 
       setChatboxes(data);
@@ -255,15 +271,31 @@ const CustomerSupport: React.FC = () => {
         let data: Chatbox[];
 
         // Use the same sorting logic for polling - make sure all options are covered
+        let response: any;
         if (sortOption === "Thời điểm yêu cầu tư vấn") {
-          data = await chatService.getAllChatboxesSortedByCustomerTime();
+          response = await chatService.getAllChatboxesSortedByCustomerTime();
         } else if (sortOption === "Số lượng nhân viên đã hỗ trợ") {
-          data = await chatService.getAllChatboxesSortedByEmployeeSupportCount();
+          response =
+            await chatService.getAllChatboxesSortedByEmployeeSupportCount();
         } else if (sortOption === "Hoạt động gần đây") {
-          data = await chatService.getAllChatboxesSortedByRecentActivity();
+          response = await chatService.getAllChatboxesSortedByRecentActivity();
         } else {
           // Default fallback
-          data = await chatService.getAllChatboxes();
+          response = await chatService.getAllChatboxes();
+        }
+
+        // Handle both paginated and non-paginated responses
+        if (Array.isArray(response)) {
+          data = response;
+        } else if (
+          response &&
+          typeof response === "object" &&
+          "content" in response &&
+          Array.isArray(response.content)
+        ) {
+          data = response.content;
+        } else {
+          data = [];
         }
 
         // Only update if there are actually changes
