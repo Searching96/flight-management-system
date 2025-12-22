@@ -1,0 +1,106 @@
+/* Responsive styles for CustomerSupport component */
+
+/* Typing indicator animation */
+.typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  background-color: #999;
+  border-radius: 50%;
+  animation: typing 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  30% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  /* Reduce padding on mobile */
+  .container-fluid {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  /* Make chat items more compact */
+  .chat-list-item {
+    padding: 0.75rem !important;
+  }
+  
+  /* Optimize message bubbles for mobile */
+  .message-bubble {
+    max-width: 85% !important;
+    font-size: 0.9rem !important;
+  }
+  
+  /* Adjust avatar sizes */
+  .chat-avatar {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 0.75rem !important;
+  }
+  
+  /* Make input area more compact */
+  .message-input-area {
+    padding: 0.5rem !important;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) and (max-width: 991px) {
+  .sidebar-chat-list {
+    width: 280px !important;
+  }
+}
+
+/* Desktop optimizations */
+@media (min-width: 992px) {
+  .sidebar-chat-list {
+    width: 325px !important;
+  }
+}
+
+/* Smooth transitions for responsive changes */
+.sidebar-chat-list {
+  transition: width 0.3s ease, transform 0.3s ease;
+}
+
+/* Ensure proper scrolling on all devices */
+.messages-container {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Prevent text selection on double tap (mobile) */
+.chat-list-item {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Better touch targets for mobile */
+@media (max-width: 767px) {
+  button, .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

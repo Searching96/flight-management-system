@@ -8,7 +8,7 @@ import PlaneManagement from './PlaneManagement';
 import TicketClassManagement from './TicketClassManagement';
 import EmployeeManagement from './EmployeeManagement';
 import { usePermissions } from '../../hooks/useAuth';
-import Statistics from '../Statistics/Statistics';
+import Statistics from '../_statistics/Statistics';
 
 type AdminTab = 'overview' | 'flights' | 'airports' | 'planes' | 'ticket-classes' | 'parameters' | 'employees' | 'reports';
 

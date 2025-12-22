@@ -29,7 +29,7 @@ import TicketClassManagement from './components/admin/TicketClassManagement';
 import ParameterSettings from './components/admin/ParameterSettings';
 import AirportManagement from './components/admin/AirportManagement';
 import EmployeeManagement from './components/admin/EmployeeManagement';
-import Statistics from './components/Statistics/Statistics';
+import Statistics from './components/_statistics/Statistics';
 import SupportSearch from './components/support/SupportSearch';
 // import TicketingPanel from './components/employee/TicketingPanel';
 // import AccountingPanel from './components/employee/AccountingPanel';
@@ -73,7 +73,7 @@ const App: React.FC = () => {
             <Route path="/payment-result" element={<PaymentResult />} />
 
             {/* Debug Route */}
-            <Route path="/debug/log-me-in/:accountName" element={<DebugLogin />} />
+            <Route path="/debug/login/:accountName" element={<DebugLogin />} />
 
             {/* Employee Management Routes - CORRECTED Permissions 2025-06-11 08:51:48 UTC by user */}
 

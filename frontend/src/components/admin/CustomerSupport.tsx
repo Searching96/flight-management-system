@@ -13,6 +13,7 @@ import { Chatbox } from "../../models/Chat";
 import { useAuth } from "../../hooks/useAuth";
 import { webSocketService } from "../../services/websocketService";
 import { accountChatboxService } from "../../services/accountChatboxService";
+import "./CustomerSupport.css";
 
 interface FormattedMessage {
   messageId?: number;
@@ -45,6 +46,8 @@ const CustomerSupport: React.FC = () => {
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
@@ -58,7 +61,24 @@ const CustomerSupport: React.FC = () => {
   useEffect(() => {
     loadChatboxes();
     startChatboxPolling();
-    return () => stopChatboxPolling();
+    
+    // Check if mobile on mount and add resize listener
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // On mobile, hide sidebar when chat is selected
+      if (mobile && selectedChatbox) {
+        setShowSidebar(false);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      stopChatboxPolling();
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
 
   // Add this useEffect to reload when sort option changes
@@ -298,6 +318,11 @@ const CustomerSupport: React.FC = () => {
   const handleChatboxSelect = async (chatbox: Chatbox) => {
     setSelectedChatbox(chatbox);
     setError("");
+    
+    // On mobile, hide sidebar when chat is selected
+    if (isMobile) {
+      setShowSidebar(false);
+    }
 
     // Immediately set unread count to 0 for UI responsiveness
     setUnreadCounts((prev) => ({
@@ -933,18 +958,58 @@ const CustomerSupport: React.FC = () => {
   return (
     <div style={{ height: "90vh", display: "flex", flexDirection: "column" }}>
       {/* Header */}
-      <div className="bg-white border-bottom px-4 pb-2">
-        <h4 className="mb-0 d-flex align-items-center">
-          <i className="bi bi-headset me-2 text-primary"></i>
-          Hỗ trợ khách hàng
-        </h4>
+      <div className="bg-white border-bottom px-3 px-md-4 pb-2">
+        <div className="d-flex align-items-center justify-content-between">
+          <h4 className="mb-0 d-flex align-items-center">
+            {isMobile && (
+              <Button
+                variant="link"
+                className="p-0 me-2 text-dark"
+                onClick={() => setShowSidebar(!showSidebar)}
+                style={{ fontSize: "1.5rem", textDecoration: "none" }}
+              >
+                <i className={`bi ${showSidebar ? 'bi-x' : 'bi-list'}`}></i>
+              </Button>
+            )}
+            <i className="bi bi-headset me-2 text-primary"></i>
+            <span className="d-none d-sm-inline">Hỗ trợ khách hàng</span>
+            <span className="d-inline d-sm-none">Hỗ trợ KH</span>
+          </h4>
+          {isMobile && selectedChatbox && (
+            <div className="d-flex align-items-center">
+              <div
+                className="rounded-circle text-white d-flex align-items-center justify-content-center me-2"
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  backgroundColor: getAvatarColor(selectedChatbox.customerName, true),
+                }}
+              >
+                {getAvatarLetter(selectedChatbox.customerName, true)}
+              </div>
+              <h6 className="mb-0">{selectedChatbox.customerName || "Khách hàng"}</h6>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="flex-grow-1 d-flex" style={{ overflow: "hidden" }}>
+      <div className="flex-grow-1 d-flex position-relative" style={{ overflow: "hidden" }}>
         {/* Sidebar - Chat List */}
         <div
-          className="bg-white border-end"
-          style={{ width: "325px", display: "flex", flexDirection: "column" }}
+          className={`bg-white border-end sidebar-chat-list ${isMobile && !showSidebar ? 'd-none' : ''}`}
+          style={{
+            width: isMobile ? "100%" : "325px",
+            maxWidth: isMobile ? "100%" : "325px",
+            display: "flex",
+            flexDirection: "column",
+            position: isMobile ? "absolute" : "relative",
+            top: 0,
+            left: 0,
+            bottom: 0,
+            zIndex: isMobile ? 1000 : "auto",
+          }}
         >
           {/* Sort */}
           <div className="px-3 pb-2 border-bottom">
@@ -983,7 +1048,7 @@ const CustomerSupport: React.FC = () => {
                 {filteredChatboxes.map((chatbox) => (
                   <div
                     key={chatbox.chatboxId}
-                    className={`d-flex align-items-center p-3 border-bottom cursor-pointer ${
+                    className={`d-flex align-items-center p-2 p-md-3 border-bottom cursor-pointer chat-list-item ${
                       selectedChatbox?.chatboxId === chatbox.chatboxId
                         ? "bg-light"
                         : ""
@@ -1003,11 +1068,11 @@ const CustomerSupport: React.FC = () => {
                   >
                     {/* Avatar */}
                     <div
-                      className="rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0 me-3"
+                      className="rounded-circle text-white d-flex align-items-center justify-content-center flex-shrink-0 me-2 me-md-3"
                       style={{
-                        width: "50px",
-                        height: "50px",
-                        fontSize: "14px",
+                        width: isMobile ? "44px" : "50px",
+                        height: isMobile ? "44px" : "50px",
+                        fontSize: isMobile ? "12px" : "14px",
                         fontWeight: "bold",
                         backgroundColor: getAvatarColor(
                           chatbox.customerName,
@@ -1019,12 +1084,12 @@ const CustomerSupport: React.FC = () => {
                     </div>
 
                     {/* Chat Info */}
-                    <div className="flex-grow-1 min-width-0">
+                    <div className="flex-grow-1" style={{ minWidth: 0 }}>
                       <div className="d-flex justify-content-between align-items-center mb-1">
-                        <h6 className="mb-0 text-truncate">
+                        <h6 className="mb-0 text-truncate" style={{ fontSize: isMobile ? "0.95rem" : "1rem" }}>
                           {chatbox.customerName || "Khách hàng"}
                         </h6>
-                        <small className="text-muted">
+                        <small className="text-muted" style={{ fontSize: isMobile ? "0.7rem" : "0.875rem" }}>
                           {chatbox.lastMessageTime
                             ? formatTime(chatbox.lastMessageTime)
                             : "14:30"}
@@ -1034,11 +1099,12 @@ const CustomerSupport: React.FC = () => {
                       {chatbox.lastMessageContent && (
                         <div className="d-flex justify-content-between align-items-center">
                           <p
-                            className={`mb-0 text-muted small text-truncate flex-grow-1 me-2 ${
+                            className={`mb-0 text-muted text-truncate flex-grow-1 me-2 ${
                               (unreadCounts[chatbox.chatboxId!] || 0) > 0
                                 ? "fw-bold"
                                 : ""
                             }`}
+                            style={{ fontSize: isMobile ? "0.8rem" : "0.875rem" }}
                           >
                             {getLastMessagePrefix(chatbox)}
                             {truncateMessage(
@@ -1078,11 +1144,11 @@ const CustomerSupport: React.FC = () => {
         </div>
 
         {/* Main Chat Area */}
-        <div className="flex-grow-1 d-flex flex-column">
+        <div className="flex-grow-1 d-flex flex-column" style={{ minWidth: 0 }}>
           {selectedChatbox ? (
             <>
-              {/* Chat Header */}
-              <div className="bg-white border-bottom px-4 py-1 d-flex align-items-center">
+              {/* Chat Header - Hide on mobile as it's in main header */}
+              <div className={`bg-white border-bottom px-3 px-md-4 py-1 align-items-center ${isMobile ? 'd-none' : 'd-flex'}`}>
                 <div
                   className="rounded-circle text-white d-flex align-items-center justify-content-center me-3"
                   style={{
@@ -1108,7 +1174,7 @@ const CustomerSupport: React.FC = () => {
               {/* Messages */}
               <div
                 ref={messagesContainerRef}
-                className="flex-grow-1 p-3"
+                className="flex-grow-1 p-2 p-md-3 messages-container"
                 style={{ overflowY: "auto", backgroundColor: "#f5f5f5" }}
                 onScroll={handleScroll}
               >
@@ -1121,10 +1187,10 @@ const CustomerSupport: React.FC = () => {
                   return sortedDates.map((dateKey) => (
                     <div key={dateKey}>
                       {/* Date Separator */}
-                      <div className="d-flex justify-content-center my-3">
+                      <div className="d-flex justify-content-center my-2 my-md-3">
                         <div
-                          className="px-3 py-1 bg-white rounded-pill text-muted small"
-                          style={{ border: "1px solid #e0e0e0" }}
+                          className="px-2 px-md-3 py-1 bg-white rounded-pill text-muted"
+                          style={{ border: "1px solid #e0e0e0", fontSize: isMobile ? "0.75rem" : "0.875rem" }}
                         >
                           {formatDate(messageGroups[dateKey][0].sendTime)}
                         </div>
@@ -1140,7 +1206,7 @@ const CustomerSupport: React.FC = () => {
                         return (
                           <div
                             key={message.messageId || `${dateKey}-${index}`}
-                            className={`mb-3 d-flex ${
+                            className={`mb-2 mb-md-3 d-flex ${
                               shouldShowOnRight
                                 ? "justify-content-end"
                                 : "justify-content-start"
@@ -1148,11 +1214,11 @@ const CustomerSupport: React.FC = () => {
                           >
                             {!shouldShowOnRight && (
                               <div
-                                className="rounded-circle text-white d-flex align-items-center justify-content-center me-2 flex-shrink-0"
+                                className="rounded-circle text-white d-flex align-items-center justify-content-center me-2 flex-shrink-0 chat-avatar"
                                 style={{
-                                  width: "32px",
-                                  height: "32px",
-                                  fontSize: "12px",
+                                  width: isMobile ? "28px" : "32px",
+                                  height: isMobile ? "28px" : "32px",
+                                  fontSize: isMobile ? "11px" : "12px",
                                   fontWeight: "bold",
                                   backgroundColor: message.isFromCustomer
                                     ? getAvatarColor(
@@ -1177,7 +1243,7 @@ const CustomerSupport: React.FC = () => {
                               </div>
                             )}
 
-                            <div style={{ maxWidth: "70%" }}>
+                            <div className="message-bubble" style={{ maxWidth: isMobile ? "80%" : "70%" }}>
                               <div
                                 className={`p-2 rounded-3 ${
                                   isCurrentUser
@@ -1195,21 +1261,22 @@ const CustomerSupport: React.FC = () => {
                                   borderRadius: shouldShowOnRight
                                     ? "18px 18px 4px 18px"
                                     : "18px 18px 18px 4px",
+                                  fontSize: isMobile ? "0.9rem" : "1rem",
                                 }}
                               >
                                 {!isCurrentUser && (
-                                  <div className="small fw-bold text-muted">
+                                  <div className="fw-bold text-muted" style={{ fontSize: isMobile ? "0.75rem" : "0.875rem" }}>
                                     {message.isFromCustomer
                                       ? selectedChatbox.customerName
                                       : message.employeeName}
                                   </div>
                                 )}
-                                <div>{message.content}</div>
+                                <div style={{ wordBreak: "break-word" }}>{message.content}</div>
                                 <div
                                   className={`text-xs mt-1 ${
                                     isCurrentUser ? "text-light" : "text-muted"
                                   }`}
-                                  style={{ fontSize: "0.7rem" }}
+                                  style={{ fontSize: isMobile ? "0.65rem" : "0.7rem" }}
                                 >
                                   {formatTime(message.sendTime)}
                                 </div>
@@ -1263,12 +1330,12 @@ const CustomerSupport: React.FC = () => {
               </div>
 
               {/* Message Input */}
-              <div className="bg-white border-top p-3">
+              <div className="bg-white border-top p-2 p-md-3 message-input-area">
                 <Form onSubmit={sendMessage}>
-                  <InputGroup>
+                  <InputGroup size={isMobile ? "sm" : undefined}>
                     <Form.Control
                       type="text"
-                      placeholder="Nhập tin nhắn..."
+                      placeholder={isMobile ? "Nhập tin..." : "Nhập tin nhắn..."}
                       value={newMessage}
                       onChange={handleInputChange}
                       disabled={sendingMessage}
@@ -1277,6 +1344,7 @@ const CustomerSupport: React.FC = () => {
                         border: "1px solid #ddd",
                         outline: "none",
                         boxShadow: "none",
+                        fontSize: isMobile ? "0.9rem" : "1rem",
                       }}
                       onFocus={(e) => {
                         e.target.style.borderColor = "#ddd";
@@ -1289,7 +1357,8 @@ const CustomerSupport: React.FC = () => {
                       disabled={sendingMessage || !newMessage.trim()}
                       style={{
                         borderRadius: "0 20px 20px 0",
-                        minWidth: "60px",
+                        minWidth: isMobile ? "50px" : "60px",
+                        fontSize: isMobile ? "0.9rem" : "1rem",
                       }}
                     >
                       {sendingMessage ? (
