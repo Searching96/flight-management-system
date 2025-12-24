@@ -5,6 +5,7 @@ import com.flightmanagement.entity.Parameter;
 import com.flightmanagement.mapper.ParameterMapper;
 import com.flightmanagement.repository.ParameterRepository;
 import com.flightmanagement.service.ParameterService;
+import com.flightmanagement.service.AuditLogService;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,9 +15,12 @@ public class ParameterServiceImpl implements ParameterService {
     
     private final ParameterMapper parameterMapper;
 
-    public ParameterServiceImpl(ParameterRepository parameterRepository, ParameterMapper parameterMapper) {
+    private final AuditLogService auditLogService;
+
+    public ParameterServiceImpl(ParameterRepository parameterRepository, ParameterMapper parameterMapper, AuditLogService auditLogService) {
         this.parameterRepository = parameterRepository;
         this.parameterMapper = parameterMapper;
+        this.auditLogService = auditLogService;
     }
     
     @Override
@@ -28,6 +32,9 @@ public class ParameterServiceImpl implements ParameterService {
     
     @Override
     public ParameterDto updateParameters(ParameterDto parameterDto) {
+        // Get old values for audit
+        ParameterDto oldParams = getLatestParameter();
+        
         // Delete all existing parameters first
         deleteAllExistingParameters();
         
@@ -36,6 +43,27 @@ public class ParameterServiceImpl implements ParameterService {
         parameter.setId(null); // Ensure new record is created
         parameter.setDeletedAt(null);
         Parameter savedParameter = parameterRepository.save(parameter);
+        
+        // Audit log all changes
+        if (!oldParams.getMaxMediumAirport().equals(parameterDto.getMaxMediumAirport())) {
+            auditLogService.saveAuditLog("Parameter", savedParameter.getId().toString(), "UPDATE", "maxMediumAirport", oldParams.getMaxMediumAirport().toString(), parameterDto.getMaxMediumAirport().toString(), "system");
+        }
+        if (!oldParams.getMinFlightDuration().equals(parameterDto.getMinFlightDuration())) {
+            auditLogService.saveAuditLog("Parameter", savedParameter.getId().toString(), "UPDATE", "minFlightDuration", oldParams.getMinFlightDuration().toString(), parameterDto.getMinFlightDuration().toString(), "system");
+        }
+        if (!oldParams.getMinLayoverDuration().equals(parameterDto.getMinLayoverDuration())) {
+            auditLogService.saveAuditLog("Parameter", savedParameter.getId().toString(), "UPDATE", "minLayoverDuration", oldParams.getMinLayoverDuration().toString(), parameterDto.getMinLayoverDuration().toString(), "system");
+        }
+        if (!oldParams.getMaxLayoverDuration().equals(parameterDto.getMaxLayoverDuration())) {
+            auditLogService.saveAuditLog("Parameter", savedParameter.getId().toString(), "UPDATE", "maxLayoverDuration", oldParams.getMaxLayoverDuration().toString(), parameterDto.getMaxLayoverDuration().toString(), "system");
+        }
+        if (!oldParams.getMinBookingInAdvanceDuration().equals(parameterDto.getMinBookingInAdvanceDuration())) {
+            auditLogService.saveAuditLog("Parameter", savedParameter.getId().toString(), "UPDATE", "minBookingInAdvanceDuration", oldParams.getMinBookingInAdvanceDuration().toString(), parameterDto.getMinBookingInAdvanceDuration().toString(), "system");
+        }
+        if (!oldParams.getMaxBookingHoldDuration().equals(parameterDto.getMaxBookingHoldDuration())) {
+            auditLogService.saveAuditLog("Parameter", savedParameter.getId().toString(), "UPDATE", "maxBookingHoldDuration", oldParams.getMaxBookingHoldDuration().toString(), parameterDto.getMaxBookingHoldDuration().toString(), "system");
+        }
+        
         return parameterMapper.toDto(savedParameter);
     }
     

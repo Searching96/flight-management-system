@@ -5,6 +5,7 @@ import com.flightmanagement.entity.Plane;
 import com.flightmanagement.mapper.PlaneMapper;
 import com.flightmanagement.repository.PlaneRepository;
 import com.flightmanagement.service.PlaneService;
+import com.flightmanagement.service.AuditLogService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,9 +20,12 @@ public class PlaneServiceImpl implements PlaneService {
     
     private final PlaneMapper planeMapper;
 
-    public PlaneServiceImpl(PlaneRepository planeRepository, PlaneMapper planeMapper) {
+    private final AuditLogService auditLogService;
+
+    public PlaneServiceImpl(PlaneRepository planeRepository, PlaneMapper planeMapper, AuditLogService auditLogService) {
         this.planeRepository = planeRepository;
         this.planeMapper = planeMapper;
+        this.auditLogService = auditLogService;
     }
     
     @Override
@@ -48,6 +52,7 @@ public class PlaneServiceImpl implements PlaneService {
         Plane plane = planeMapper.toEntity(planeDto);
         plane.setDeletedAt(null);
         Plane savedPlane = planeRepository.save(plane);
+        auditLogService.saveAuditLog("Plane", savedPlane.getPlaneId().toString(), "CREATE", "plane", null, savedPlane.getPlaneCode() + " (" + savedPlane.getPlaneType() + ")", "system");
         return planeMapper.toDto(savedPlane);
     }
     
@@ -56,11 +61,29 @@ public class PlaneServiceImpl implements PlaneService {
         Plane existingPlane = planeRepository.findActiveById(id)
             .orElseThrow(() -> new RuntimeException("Plane not found with id: " + id));
         
+        // Store old values
+        String oldPlaneCode = existingPlane.getPlaneCode();
+        String oldPlaneType = existingPlane.getPlaneType();
+        Integer oldSeatQuantity = existingPlane.getSeatQuantity();
+        
+        // Update fields
         existingPlane.setPlaneCode(planeDto.getPlaneCode());
         existingPlane.setPlaneType(planeDto.getPlaneType());
         existingPlane.setSeatQuantity(planeDto.getSeatQuantity());
         
         Plane updatedPlane = planeRepository.save(existingPlane);
+        
+        // Audit log each changed field
+        if (!oldPlaneCode.equals(planeDto.getPlaneCode())) {
+            auditLogService.saveAuditLog("Plane", id.toString(), "UPDATE", "planeCode", oldPlaneCode, planeDto.getPlaneCode(), "system");
+        }
+        if (!oldPlaneType.equals(planeDto.getPlaneType())) {
+            auditLogService.saveAuditLog("Plane", id.toString(), "UPDATE", "planeType", oldPlaneType, planeDto.getPlaneType(), "system");
+        }
+        if (!oldSeatQuantity.equals(planeDto.getSeatQuantity())) {
+            auditLogService.saveAuditLog("Plane", id.toString(), "UPDATE", "seatQuantity", oldSeatQuantity.toString(), planeDto.getSeatQuantity().toString(), "system");
+        }
+        
         return planeMapper.toDto(updatedPlane);
     }
     
@@ -71,6 +94,7 @@ public class PlaneServiceImpl implements PlaneService {
         
         plane.setDeletedAt(LocalDateTime.now());
         planeRepository.save(plane);
+        auditLogService.saveAuditLog("Plane", id.toString(), "DELETE", "plane", plane.getPlaneCode() + " (" + plane.getPlaneType() + ")", null, "system");
     }
     
     @Override

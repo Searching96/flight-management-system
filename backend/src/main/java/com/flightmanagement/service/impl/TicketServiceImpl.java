@@ -6,6 +6,7 @@ import com.flightmanagement.exception.ResourceNotFoundException;
 import com.flightmanagement.mapper.TicketMapper;
 import com.flightmanagement.repository.*;
 import com.flightmanagement.service.*;
+import com.flightmanagement.service.AuditLogService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,8 @@ public class TicketServiceImpl implements TicketService {
 
     private final AccountRepository accountRepository;
 
+    private final AuditLogService auditLogService;
+
     public TicketServiceImpl(TicketRepository ticketRepository,
             TicketMapper ticketMapper,
             FlightTicketClassService flightTicketClassService,
@@ -48,7 +51,8 @@ public class TicketServiceImpl implements TicketService {
             CustomerRepository customerRepository,
             PassengerRepository passengerRepository,
             EmailService emailService,
-            AccountRepository accountRepository) {
+            AccountRepository accountRepository,
+            AuditLogService auditLogService) {
         this.ticketRepository = ticketRepository;
         this.ticketMapper = ticketMapper;
         this.flightTicketClassService = flightTicketClassService;
@@ -59,6 +63,7 @@ public class TicketServiceImpl implements TicketService {
         this.passengerRepository = passengerRepository;
         this.emailService = emailService;
         this.accountRepository = accountRepository;
+        this.auditLogService = auditLogService;
     }
 
     @Override
@@ -121,6 +126,10 @@ public class TicketServiceImpl implements TicketService {
         }
 
         Ticket savedTicket = ticketRepository.save(ticket);
+        
+        // Audit log for CREATE
+        String ticketDescription = "Ticket " + savedTicket.getConfirmationCode();
+        auditLogService.saveAuditLog("Ticket", savedTicket.getTicketId().toString(), "CREATE", "ticket", null, ticketDescription, "system");
 
         return ticketMapper.toDto(savedTicket);
     }
@@ -139,12 +148,41 @@ public class TicketServiceImpl implements TicketService {
                 .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
 
         System.out.println("Updating ticket with details: " + ticketDto);
+        
+        // Store old values for audit logging
+        String oldSeatNumber = existingTicket.getSeatNumber();
+        String oldTicketStatus = existingTicket.getTicketStatus() != null ? existingTicket.getTicketStatus().toString() : null;
+        String oldFare = existingTicket.getFare() != null ? existingTicket.getFare().toString() : null;
+        String oldPaymentTime = existingTicket.getPaymentTime() != null ? existingTicket.getPaymentTime().toString() : null;
+        
         existingTicket.setSeatNumber(ticketDto.getSeatNumber());
         existingTicket.setTicketStatus(ticketDto.getTicketStatus());
         existingTicket.setFare(ticketDto.getFare());
         existingTicket.setPaymentTime(ticketDto.getPaymentTime());
 
         Ticket updatedTicket = ticketRepository.save(existingTicket);
+        
+        // Audit log for changed fields
+        String newSeatNumber = updatedTicket.getSeatNumber();
+        if ((oldSeatNumber == null && newSeatNumber != null) || (oldSeatNumber != null && !oldSeatNumber.equals(newSeatNumber))) {
+            auditLogService.saveAuditLog("Ticket", id.toString(), "UPDATE", "seatNumber", oldSeatNumber, newSeatNumber, "system");
+        }
+        
+        String newTicketStatus = updatedTicket.getTicketStatus() != null ? updatedTicket.getTicketStatus().toString() : null;
+        if ((oldTicketStatus == null && newTicketStatus != null) || (oldTicketStatus != null && !oldTicketStatus.equals(newTicketStatus))) {
+            auditLogService.saveAuditLog("Ticket", id.toString(), "UPDATE", "ticketStatus", oldTicketStatus, newTicketStatus, "system");
+        }
+        
+        String newFare = updatedTicket.getFare() != null ? updatedTicket.getFare().toString() : null;
+        if ((oldFare == null && newFare != null) || (oldFare != null && !oldFare.equals(newFare))) {
+            auditLogService.saveAuditLog("Ticket", id.toString(), "UPDATE", "fare", oldFare, newFare, "system");
+        }
+        
+        String newPaymentTime = updatedTicket.getPaymentTime() != null ? updatedTicket.getPaymentTime().toString() : null;
+        if ((oldPaymentTime == null && newPaymentTime != null) || (oldPaymentTime != null && !oldPaymentTime.equals(newPaymentTime))) {
+            auditLogService.saveAuditLog("Ticket", id.toString(), "UPDATE", "paymentTime", oldPaymentTime, newPaymentTime, "system");
+        }
+        
         return ticketMapper.toDto(updatedTicket);
     }
 
@@ -152,9 +190,15 @@ public class TicketServiceImpl implements TicketService {
     public void deleteTicket(Integer id) {
         Ticket ticket = ticketRepository.findActiveById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
+        
+        // Capture entity info before delete
+        String ticketDescription = "Ticket " + ticket.getConfirmationCode();
 
         ticket.setDeletedAt(LocalDateTime.now());
         ticketRepository.save(ticket);
+        
+        // Audit log for DELETE
+        auditLogService.saveAuditLog("Ticket", id.toString(), "DELETE", "ticket", ticketDescription, null, "system");
     }
 
     @Override
