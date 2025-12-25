@@ -1,0 +1,25 @@
+List 01 - Add Flight Form (Updated)
+
+#,"SharePoint Column Column Name","Column Type","Label","Editable (Yes/No)","Mandatory (Yes/No)","Default Value","Description","Design Solution"
+1,FlightCode,"Single line Of Text","Mã chuyến bay",Yes,Yes,,"Flight identifier/code (e.g., VN-001).","Single-line text input with uniqueness validation; uppercase enforcement optional."
+2,DepartureAirport,"Drop-Down List","Sân bay đi",Yes,Yes,,"Departure airport selection.","Drop-down populated from Airports master data; store airport ID and display name."
+3,ArrivalAirport,"Drop-Down List","Sân bay đến",Yes,Yes,,"Arrival airport selection.","Drop-down populated from Airports master data; validate not equal to DepartureAirport."
+4,DepartureDateTime,"Date Time","Thời gian khởi hành",Yes,Yes,,"Scheduled departure date and time.","Date-time picker control (with timezone consistent across system)."
+5,ArrivalDateTime,"Date Time","Thời gian đến",Yes,Yes,,"Scheduled arrival date and time.","Date-time picker; must be after DepartureDateTime."
+6,Airplane,"Drop-Down List","Máy bay",Yes,Yes,,"Aircraft assigned (TailNumber - Model).","Drop-down listing tail number and model (e.g., VN-R004 - ATR 72-600). Validate availability."
+7,IntermediateStops,"Table","Sân bay trung gian",Yes,No,,"Zero or more intermediate stop rows (each row: Tuyến bay, Thời gian dừng, Thời gian đến).","Repeating table with columns: Tuyến bay (Drop-Down List), Thời gian dừng (Number, minutes), Thời gian đến (Date Time). UI shows current/max (e.g., 1/2)."
+8,AddIntermediateButton,"Button","Thêm sân bay trung gian",No,No,,"Adds a new intermediate stop row to the table.","Button to append a new table row; disabled when max rows reached."
+9,IntermediateRowDeleteButton,"Button","Xóa hàng (thùng rác)",No,No,,"Deletes a specific intermediate stop row after confirmation.","Per-row delete button with confirmation modal."
+10,CloseButton,"Button","Đóng",No,No,,"Closes the form/modal without saving.","Dismiss modal and discard unsaved changes."
+11,SubmitButton,"Button","Thêm chuyến bay",No,No,,"Creates and saves the new flight record.","Primary action button; disabled until form passes validation."
+12,IntermediateNotes,"Multi line of Text","Ghi chú",No,No,,"Helper notes: 'Sân bay trung gian là các điểm dừng giữa sân bay đi và sân bay đến.' 'Thời gian dừng phải trong khoảng từ 30 đến 90 phút.'","Inline helper text area below intermediate stops table."
+
+
+Custom Business Rules
+
+#,"Rule Name","Rule Description"
+1,Validation Rules,"If any mandatory field is left blank, system shows error message MSG 1."
+2,Creating Rule,"Only Administrator has permission to create \"Flight Management\" items."
+3,Updating Rule,"Only Administrator has permission to update \"Flight Management\" items."
+4,Deleting Rule,"Only Administrator has permission to delete \"Flight Management\" items."
+5,Reading Rule,"Only Administrator has permission to read \"Flight Management\" items."

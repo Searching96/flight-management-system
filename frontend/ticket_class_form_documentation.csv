@@ -1,0 +1,31 @@
+List 01 - Ticket Class Management Form
+
+#,"SharePoint Column Column Name","Column Type","Label","Editable (Yes/No)","Mandatory (Yes/No)","Default Value","Description","Design Solution"
+1,FlightCode,"Single line Of Text","Mã chuyến bay",No,Yes,,"Flight identifier (e.g., VN-001). Read-only in this dialog.","Display as read-only single-line text."
+2,Route,"Single line Of Text","Tuyến bay",No,No,,"Route name (e.g., Manila -> Jakarta).","Display as read-only label."
+3,Airplane,"Single line Of Text","Mã máy bay / Máy bay",No,No,,"Aircraft assigned (e.g., VN-R004 (ATR 72-600)).","Display as read-only label with capacity shown."
+4,ClassName,"Single line Of Text","Hạng vé",No,Yes,,"Class name (Economy, Premium Economy, Business, First Class).","Card/header label for each class."
+5,TotalSeats,"Number","Tổng số ghế",Yes,Yes,,"Total seats allocated to this class. Must be >= SeatsSold and <= AircraftCapacity.","Numeric input with validation; shows max based on aircraft capacity."
+6,Price,"Number","Giá vé",Yes,Yes,,"Price in VND for the class.","Numeric input with currency suffix 'VND'."
+7,SeatsSold,"Number","Số ghế đã bán",No,No,0,"Number of seats currently sold/booked for this class.","Read-only number populated from bookings."
+8,SeatsRemaining,"Number","Số ghế còn lại",No,No,,"Computed (TotalSeats - SeatsSold).","Read-only computed field; updates when TotalSeats changed; shows negative validation error if occurs."
+9,MinSeats,"Number","Tối thiểu",No,No,0,"Minimum allowed seats for this class.","Displayed in info text; validation ensures TotalSeats >= MinSeats."
+10,MaxSeats,"Number","Tối đa",No,No,78,"Maximum allowed seats for this class (flight capacity).","Displayed in info text; validation ensures TotalSeats <= MaxSeats."
+11,EditButton,"Button","Sửa",Yes,No,,"Opens the class card for editing TotalSeats and Price.","Per-card edit button; toggles editable state."
+12,DeleteButton,"Button","Xóa",Yes,No,,"Deletes the class allocation after confirmation.","Per-card delete action with confirmation dialog."
+13,UndoButton,"Button","Hoàn tác",Yes,No,,"Reverts unsaved changes to this class.","Per-card undo; restores previous values."
+14,SaveAllButton,"Button","Lưu thay đổi",Yes,No,,"Saves all pending changes across classes.","Primary action to submit all edits."
+15,StatusBadge,"Single line Of Text","Trạng thái",No,No,,"Displays change status (e.g., Đã thay đổi).","Badge label at card header."
+16,SummaryTotalSeats,"Number","Tổng ghế (tổng)",No,No,78,"Aggregate total seats for flight.","Top summary panel box; read-only."
+17,SummaryAllocated,"Number","Đã phân bổ",No,No,78,"Total seats allocated across classes.","Top summary panel box; read-only."
+18,SummaryAvailable,"Number","Còn trống",No,No,0,"Remaining seats available on aircraft.","Top summary panel box; read-only."
+
+
+Custom Business Rules
+
+#,"Rule Name","Rule Description"
+1,Validation Rules,"If any mandatory field is left blank, system shows error message MSG 1."
+2,Creating Rule,"Only Administrator has permission to create \"Ticket Class Management\" items."
+3,Updating Rule,"Only Administrator has permission to update \"Ticket Class Management\" items."
+4,Deleting Rule,"Only Administrator has permission to delete \"Ticket Class Management\" items."
+5,Reading Rule,"Only Administrator has permission to read \"Ticket Class Management\" items."

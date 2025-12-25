@@ -1,0 +1,20 @@
+List 01 - Edit Employee Form
+
+#,"SharePoint Column Column Name","Column Type","Label","Editable (Yes/No)","Mandatory (Yes/No)","Default Value","Description","Design Solution"
+1,FullName,"Single line Of Text","Họ và tên",Yes,Yes,,"Full name of the employee (e.g., Nguyễn Văn An).","Single-line text input with current value pre-filled; validate non-empty."
+2,Email,"Single line Of Text","Email",Yes,Yes,,"Employee email address used for login and notifications.","Single-line text email input; validate format and uniqueness."
+3,PhoneNumber,"Number","Số điện thoại",Yes,Yes,,"Employee phone number (e.g., +84901234001).","Numeric input with phone-format validation; allow '+' and country code where applicable."
+4,EmployeeType,"Drop-Down List","Loại nhân viên",Yes,Yes,,"Role or employee category selection (e.g., Lập lịch chuyến bay).","Drop-down populated from employee type master data; current selection pre-filled."
+5,CancelButton,"Button","Hủy",No,No,,"Closes the dialog without saving changes.","Footer left cancel button that dismisses modal and discards edits."
+6,SubmitButton,"Button","Cập nhật nhân viên",No,No,,"Saves updated employee record.","Primary action button in footer; disabled until required validations pass."
+7,EmployeeID,"Single line Of Text","ID nhân viên",No,Yes,,"Internal employee identifier (if present).","Optional read-only field or hidden; used for backend reference."
+
+
+Custom Business Rules
+
+#,"Rule Name","Rule Description"
+1,Validation Rules,"If any mandatory field is left blank, system shows error message MSG 1."
+2,Creating Rule,"Only Administrator has permission to create \"Employee Management\" items."
+3,Updating Rule,"Only Administrator has permission to update \"Employee Management\" items."
+4,Deleting Rule,"Only Administrator has permission to delete \"Employee Management\" items."
+5,Reading Rule,"Only Administrator has permission to read \"Employee Management\" items."
