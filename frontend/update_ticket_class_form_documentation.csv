@@ -1,0 +1,19 @@
+List 01 - Update Ticket Class Form (Cập nhật hạng vé)
+
+#,"SharePoint Column Column Name","Column Type","Label","Editable (Yes/No)","Mandatory (Yes/No)","Default Value","Description","Design Solution"
+1,ClassName,"Single line Of Text","Tên hạng",Yes,Yes,,"Name of the ticket class (e.g., Premium Economy).","Single-line text input; pre-filled with current value; validate non-empty."
+2,Color,"Color Picker","Màu sắc",Yes,No,#ffffff,"Color used for class badges and UI highlights.","Color picker control; store hex color value."
+3,CancelButton,"Button","Hủy",No,No,,"Closes the dialog without saving changes.","Footer left cancel button that dismisses modal and discards edits."
+4,SubmitButton,"Button","Cập nhật hạng vé",No,No,,"Saves updates to the ticket class.","Primary action button; disabled until required validations pass; shows success or error messages."
+5,HelperText,"Multi line of Text","Ghi chú",No,No,,"Optional helper text describing constraints and UI behavior.","Inline helper panel under inputs; read-only."
+6,HeaderLabel,"Single line Of Text","Cập nhật hạng vé",No,No,,"Dialog title.","Displayed as header at top of modal."
+
+
+Custom Business Rules
+
+#,"Rule Name","Rule Description"
+1,Validation Rules,"If any mandatory field is left blank, system shows error message MSG 1."
+2,Creating Rule,"Only Administrator has permission to create \"Ticket Class Management\" items."
+3,Updating Rule,"Only Administrator has permission to update \"Ticket Class Management\" items."
+4,Deleting Rule,"Only Administrator has permission to delete \"Ticket Class Management\" items."
+5,Reading Rule,"Only Administrator has permission to read \"Ticket Class Management\" items."

@@ -1,0 +1,18 @@
+List 01 - Add Ticket Class Form
+
+#,"SharePoint Column Column Name","Column Type","Label","Editable (Yes/No)","Mandatory (Yes/No)","Default Value","Description","Design Solution"
+1,ClassName,"Single line Of Text","Tên hạng",Yes,Yes,,"Name of the ticket class (e.g., Premium Economy).","Single-line text input with placeholder 'VD: Premium Economy'."
+2,Color,"Color Picker","Màu sắc",Yes,No,#ffffff,"Color representing the class for UI badges.","Color picker control; store hex color."
+3,CancelButton,"Button","Hủy",No,No,,"Closes the dialog without saving.","Footer left cancel button that dismisses modal and discards changes."
+4,SubmitButton,"Button","Thêm hạng vé",No,No,,"Creates and saves the new ticket class.","Primary action button; disabled until validation passes."
+5,HelperText,"Multi line of Text","Ghi chú",No,No,,"Optional helper text describing usage or constraints.","Inline helper area under inputs."
+
+
+Custom Business Rules
+
+#,"Rule Name","Rule Description"
+1,Validation Rules,"If any mandatory field is left blank, system shows error message MSG 1."
+2,Creating Rule,"Only Administrator has permission to create \"Ticket Class Management\" items."
+3,Updating Rule,"Only Administrator has permission to update \"Ticket Class Management\" items."
+4,Deleting Rule,"Only Administrator has permission to delete \"Ticket Class Management\" items."
+5,Reading Rule,"Only Administrator has permission to read \"Ticket Class Management\" items."

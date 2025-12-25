@@ -1,0 +1,19 @@
+List 01 - Add Airplane Form
+
+#,"SharePoint Column Column Name","Column Type","Label","Editable (Yes/No)","Mandatory (Yes/No)","Default Value","Description","Design Solution"
+1,AirplaneCode,"Single line Of Text","Mã máy bay",Yes,Yes,,"Unique airplane code (e.g., VN-A001).","Single-line text input with placeholder 'VD: VN-A001'; enforce uniqueness."
+2,AirplaneType,"Single line Of Text","Loại máy bay",Yes,Yes,,"Aircraft model/type (e.g., Airbus A320-200).","Single-line text input with placeholder 'VD: Airbus A320-200' or choose from master data if available."
+3,Capacity,"Number","Sức chứa",Yes,Yes,0,"Total seat capacity of the aircraft.","Numeric input with validation against sensible min/max (e.g., >0)."
+4,CancelButton,"Button","Hủy",No,No,,"Closes the dialog without saving.","Footer left cancel button that dismisses modal and discards changes."
+5,SubmitButton,"Button","Thêm máy bay",No,No,,"Creates and saves the new airplane record.","Primary action button; disabled until validation passes."
+6,HelperText,"Multi line of Text","Ghi chú","No","No","","Information panel: guidance on code format and capacity limits.","Inline helper text area under inputs."
+
+
+Custom Business Rules
+
+#,"Rule Name","Rule Description"
+1,Validation Rules,"If any mandatory field is left blank, system shows error message MSG 1."
+2,Creating Rule,"Only Administrator has permission to create \"Airplane Management\" items."
+3,Updating Rule,"Only Administrator has permission to update \"Airplane Management\" items."
+4,Deleting Rule,"Only Administrator has permission to delete \"Airplane Management\" items."
+5,Reading Rule,"Only Administrator has permission to read \"Airplane Management\" items."
