@@ -175,6 +175,22 @@ CREATE TABLE IF NOT EXISTS account_chatbox (
     INDEX idx_chatbox_last_visit (chatbox_id, last_visit_time)
 );
 
+create table audit_log
+(
+    audit_id    int auto_increment
+        primary key,
+    action      varchar(50)   not null,
+    changed_at  datetime(6)   not null,
+    changed_by  varchar(200)  null,
+    entity_id   varchar(255)  not null,
+    entity_name varchar(100)  not null,
+    field_name  varchar(100)  null,
+    ip_address  varchar(50)   null,
+    new_value   varchar(1000) null,
+    old_value   varchar(1000) null,
+    user_agent  varchar(500)  null
+);
+
 -- insert into customer values (3, 0, null);
 -- select * from account;
 -- select * from airport;

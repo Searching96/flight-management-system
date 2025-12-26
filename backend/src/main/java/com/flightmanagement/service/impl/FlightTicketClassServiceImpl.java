@@ -8,6 +8,7 @@ import com.flightmanagement.mapper.FlightTicketClassMapper;
 import com.flightmanagement.repository.FlightTicketClassRepository;
 import com.flightmanagement.repository.FlightRepository;
 import com.flightmanagement.repository.TicketClassRepository;
+import com.flightmanagement.service.AuditLogService;
 import com.flightmanagement.service.FlightTicketClassService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,14 +29,18 @@ public class FlightTicketClassServiceImpl implements FlightTicketClassService {
 
     private final TicketClassRepository ticketClassRepository;
 
+    private final AuditLogService auditLogService;
+
     public FlightTicketClassServiceImpl(FlightTicketClassRepository flightTicketClassRepository,
                                         FlightTicketClassMapper flightTicketClassMapper,
                                         FlightRepository flightRepository,
-                                        TicketClassRepository ticketClassRepository) {
+                                        TicketClassRepository ticketClassRepository,
+                                        AuditLogService auditLogService) {
         this.flightTicketClassRepository = flightTicketClassRepository;
         this.flightTicketClassMapper = flightTicketClassMapper;
         this.flightRepository = flightRepository;
         this.ticketClassRepository = ticketClassRepository;
+        this.auditLogService = auditLogService;
     }
 
     @Override
@@ -98,6 +103,11 @@ public class FlightTicketClassServiceImpl implements FlightTicketClassService {
 
         // 5. Save & Return
         FlightTicketClass savedEntity = flightTicketClassRepository.save(entity);
+        
+        // Audit log for CREATE
+        String entityId = savedEntity.getFlightId() + "-" + savedEntity.getTicketClassId();
+        auditLogService.saveAuditLog("FlightTicketClass", entityId, "CREATE", "flightTicketClass", null, "FlightTicketClass", "system");
+        
         return flightTicketClassMapper.toDto(savedEntity);
     }
 
@@ -106,11 +116,34 @@ public class FlightTicketClassServiceImpl implements FlightTicketClassService {
         FlightTicketClass existingFlightTicketClass = flightTicketClassRepository.findByFlightIdAndTicketClassId(flightId, ticketClassId)
                 .orElseThrow(() -> new RuntimeException("FlightTicketClass not found for flight: " + flightId + " and class: " + ticketClassId));
 
+        // Store old values for audit logging
+        String oldSpecifiedFare = existingFlightTicketClass.getSpecifiedFare() != null ? existingFlightTicketClass.getSpecifiedFare().toString() : null;
+        String oldTicketQuantity = existingFlightTicketClass.getTicketQuantity() != null ? existingFlightTicketClass.getTicketQuantity().toString() : null;
+        String oldRemainingTicketQuantity = existingFlightTicketClass.getRemainingTicketQuantity() != null ? existingFlightTicketClass.getRemainingTicketQuantity().toString() : null;
+        
         existingFlightTicketClass.setSpecifiedFare(flightTicketClassDto.getSpecifiedFare());
         existingFlightTicketClass.setTicketQuantity(flightTicketClassDto.getTicketQuantity());
         existingFlightTicketClass.setRemainingTicketQuantity(flightTicketClassDto.getRemainingTicketQuantity());
 
         FlightTicketClass updatedFlightTicketClass = flightTicketClassRepository.save(existingFlightTicketClass);
+        
+        // Audit log for changed fields
+        String entityId = flightId + "-" + ticketClassId;
+        String newSpecifiedFare = updatedFlightTicketClass.getSpecifiedFare() != null ? updatedFlightTicketClass.getSpecifiedFare().toString() : null;
+        if ((oldSpecifiedFare == null && newSpecifiedFare != null) || (oldSpecifiedFare != null && !oldSpecifiedFare.equals(newSpecifiedFare))) {
+            auditLogService.saveAuditLog("FlightTicketClass", entityId, "UPDATE", "specifiedFare", oldSpecifiedFare, newSpecifiedFare, "system");
+        }
+        
+        String newTicketQuantity = updatedFlightTicketClass.getTicketQuantity() != null ? updatedFlightTicketClass.getTicketQuantity().toString() : null;
+        if ((oldTicketQuantity == null && newTicketQuantity != null) || (oldTicketQuantity != null && !oldTicketQuantity.equals(newTicketQuantity))) {
+            auditLogService.saveAuditLog("FlightTicketClass", entityId, "UPDATE", "ticketQuantity", oldTicketQuantity, newTicketQuantity, "system");
+        }
+        
+        String newRemainingTicketQuantity = updatedFlightTicketClass.getRemainingTicketQuantity() != null ? updatedFlightTicketClass.getRemainingTicketQuantity().toString() : null;
+        if ((oldRemainingTicketQuantity == null && newRemainingTicketQuantity != null) || (oldRemainingTicketQuantity != null && !oldRemainingTicketQuantity.equals(newRemainingTicketQuantity))) {
+            auditLogService.saveAuditLog("FlightTicketClass", entityId, "UPDATE", "remainingTicketQuantity", oldRemainingTicketQuantity, newRemainingTicketQuantity, "system");
+        }
+        
         return flightTicketClassMapper.toDto(updatedFlightTicketClass);
     }
 
@@ -118,9 +151,15 @@ public class FlightTicketClassServiceImpl implements FlightTicketClassService {
     public void deleteFlightTicketClass(Integer flightId, Integer ticketClassId) {
         FlightTicketClass flightTicketClass = flightTicketClassRepository.findByFlightIdAndTicketClassId(flightId, ticketClassId)
                 .orElseThrow(() -> new RuntimeException("FlightTicketClass not found for flight: " + flightId + " and class: " + ticketClassId));
+        
+        // Capture entity info before delete
+        String entityId = flightId + "-" + ticketClassId;
 
         flightTicketClass.setDeletedAt(LocalDateTime.now());
         flightTicketClassRepository.save(flightTicketClass);
+        
+        // Audit log for DELETE
+        auditLogService.saveAuditLog("FlightTicketClass", entityId, "DELETE", "flightTicketClass", "FlightTicketClass", null, "system");
     }
 
     @Override

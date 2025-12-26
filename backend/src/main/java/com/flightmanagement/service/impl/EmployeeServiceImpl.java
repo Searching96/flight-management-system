@@ -7,6 +7,7 @@ import com.flightmanagement.entity.Account;
 import com.flightmanagement.mapper.EmployeeMapper;
 import com.flightmanagement.repository.EmployeeRepository;
 import com.flightmanagement.repository.AccountRepository;
+import com.flightmanagement.service.AuditLogService;
 import com.flightmanagement.service.EmployeeService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,10 +27,13 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeMapper employeeMapper;
 
-    public EmployeeServiceImpl(EmployeeRepository employeeRepository, AccountRepository accountRepository, EmployeeMapper employeeMapper) {
+    private final AuditLogService auditLogService;
+
+    public EmployeeServiceImpl(EmployeeRepository employeeRepository, AccountRepository accountRepository, EmployeeMapper employeeMapper, AuditLogService auditLogService) {
         this.employeeRepository = employeeRepository;
         this.accountRepository = accountRepository;
         this.employeeMapper = employeeMapper;
+        this.auditLogService = auditLogService;
     }
 
     @Override
@@ -77,13 +81,19 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee existingEmployee = employeeRepository.findActiveById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
 
+        // Store old values for audit logging
+        String oldEmployeeType = existingEmployee.getEmployeeType() != null ? existingEmployee.getEmployeeType().toString() : null;
+        Account account = existingEmployee.getAccount();
+        String oldAccountName = account != null ? account.getAccountName() : null;
+        String oldEmail = account != null ? account.getEmail() : null;
+        String oldPhoneNumber = account != null ? account.getPhoneNumber() : null;
+
         // Update employee fields
         if (updateRequest.getEmployeeType() != null) {
             existingEmployee.setEmployeeType(EmployeeType.fromValue(updateRequest.getEmployeeType()));
         }
 
         // Update account fields if provided
-        Account account = existingEmployee.getAccount();
         if (account != null) {
             if (updateRequest.getAccountName() != null) {
                 account.setAccountName(updateRequest.getAccountName());
@@ -98,6 +108,31 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
         Employee updatedEmployee = employeeRepository.save(existingEmployee);
+        
+        // Audit log for changed fields
+        String newEmployeeType = updatedEmployee.getEmployeeType() != null ? updatedEmployee.getEmployeeType().toString() : null;
+        if ((oldEmployeeType == null && newEmployeeType != null) || (oldEmployeeType != null && !oldEmployeeType.equals(newEmployeeType))) {
+            auditLogService.saveAuditLog("Employee", id.toString(), "UPDATE", "employeeType", oldEmployeeType, newEmployeeType, "system");
+        }
+        
+        Account updatedAccount = updatedEmployee.getAccount();
+        if (updatedAccount != null) {
+            String newAccountName = updatedAccount.getAccountName();
+            if ((oldAccountName == null && newAccountName != null) || (oldAccountName != null && !oldAccountName.equals(newAccountName))) {
+                auditLogService.saveAuditLog("Employee", id.toString(), "UPDATE", "accountName", oldAccountName, newAccountName, "system");
+            }
+            
+            String newEmail = updatedAccount.getEmail();
+            if ((oldEmail == null && newEmail != null) || (oldEmail != null && !oldEmail.equals(newEmail))) {
+                auditLogService.saveAuditLog("Employee", id.toString(), "UPDATE", "email", oldEmail, newEmail, "system");
+            }
+            
+            String newPhoneNumber = updatedAccount.getPhoneNumber();
+            if ((oldPhoneNumber == null && newPhoneNumber != null) || (oldPhoneNumber != null && !oldPhoneNumber.equals(newPhoneNumber))) {
+                auditLogService.saveAuditLog("Employee", id.toString(), "UPDATE", "phoneNumber", oldPhoneNumber, newPhoneNumber, "system");
+            }
+        }
+        
         return employeeMapper.toDto(updatedEmployee);
     }
 
@@ -108,9 +143,15 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Employee employee = employeeRepository.findActiveById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
+        
+        // Capture entity info before delete
+        String employeeDescription = employee.getAccount() != null ? employee.getAccount().getAccountName() : "Employee";
 
         employee.setDeletedAt(LocalDateTime.now());
         employeeRepository.save(employee);
+        
+        // Audit log for DELETE
+        auditLogService.saveAuditLog("Employee", id.toString(), "DELETE", "employee", employeeDescription, null, "system");
     }
 
     @Override
@@ -168,8 +209,18 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findActiveById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
 
+        // Store old value for audit logging
+        String oldEmployeeType = employee.getEmployeeType() != null ? employee.getEmployeeType().toString() : null;
+        
         employee.setEmployeeType(EmployeeType.fromValue(newRole));
         Employee updatedEmployee = employeeRepository.save(employee);
+        
+        // Audit log for changed role
+        String newEmployeeType = updatedEmployee.getEmployeeType() != null ? updatedEmployee.getEmployeeType().toString() : null;
+        if ((oldEmployeeType == null && newEmployeeType != null) || (oldEmployeeType != null && !oldEmployeeType.equals(newEmployeeType))) {
+            auditLogService.saveAuditLog("Employee", id.toString(), "UPDATE", "employeeType", oldEmployeeType, newEmployeeType, "system");
+        }
+        
         return employeeMapper.toDto(updatedEmployee);
     }
 }

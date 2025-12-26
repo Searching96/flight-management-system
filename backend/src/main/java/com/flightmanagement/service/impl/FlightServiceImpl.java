@@ -4,6 +4,7 @@ import com.flightmanagement.dto.*;
 import com.flightmanagement.entity.Flight;
 import com.flightmanagement.mapper.FlightMapper;
 import com.flightmanagement.repository.FlightRepository;
+import com.flightmanagement.service.AuditLogService;
 import com.flightmanagement.service.FlightService;
 import com.flightmanagement.service.FlightTicketClassService;
 import com.flightmanagement.service.ParameterService;
@@ -30,14 +31,18 @@ public class FlightServiceImpl implements FlightService {
     
     private final ParameterService parameterService;
 
+    private final AuditLogService auditLogService;
+
     public FlightServiceImpl(FlightRepository flightRepository,
                              FlightMapper flightMapper,
                              ParameterService parameterService,
-                             FlightTicketClassService flightTicketClassService) {
+                             FlightTicketClassService flightTicketClassService,
+                             AuditLogService auditLogService) {
         this.flightRepository = flightRepository;
         this.flightMapper = flightMapper;
         this.parameterService = parameterService;
         this.flightTicketClassService = flightTicketClassService;
+        this.auditLogService = auditLogService;
     }
     
     @Override
@@ -66,6 +71,10 @@ public class FlightServiceImpl implements FlightService {
         Flight flight = flightMapper.toEntityFromCreateRequest(request);
         flight.setDeletedAt(null);
         Flight savedFlight = flightRepository.save(flight);
+        
+        // Audit log for CREATE
+        auditLogService.saveAuditLog("Flight", savedFlight.getFlightId().toString(), "CREATE", "flight", null, savedFlight.getFlightCode(), "system");
+        
         return flightMapper.toDto(savedFlight);
     }
     
@@ -74,12 +83,29 @@ public class FlightServiceImpl implements FlightService {
         Flight existingFlight = flightRepository.findActiveById(id)
             .orElseThrow(() -> new RuntimeException("Flight not found with id: " + id));
         
+        // Store old values for audit logging
+        String oldFlightCode = existingFlight.getFlightCode();
+        LocalDateTime oldDepartureTime = existingFlight.getDepartureTime();
+        LocalDateTime oldArrivalTime = existingFlight.getArrivalTime();
+        
         validateFlightDataForUpdate(id, updateRequest);
         existingFlight.setFlightCode(updateRequest.getFlightCode());
         existingFlight.setDepartureTime(updateRequest.getDepartureTime());
         existingFlight.setArrivalTime(updateRequest.getArrivalTime());
         
         Flight updatedFlight = flightRepository.save(existingFlight);
+        
+        // Audit log for changed fields
+        if (!oldFlightCode.equals(updatedFlight.getFlightCode())) {
+            auditLogService.saveAuditLog("Flight", id.toString(), "UPDATE", "flightCode", oldFlightCode, updatedFlight.getFlightCode(), "system");
+        }
+        if (!oldDepartureTime.equals(updatedFlight.getDepartureTime())) {
+            auditLogService.saveAuditLog("Flight", id.toString(), "UPDATE", "departureTime", oldDepartureTime.toString(), updatedFlight.getDepartureTime().toString(), "system");
+        }
+        if (!oldArrivalTime.equals(updatedFlight.getArrivalTime())) {
+            auditLogService.saveAuditLog("Flight", id.toString(), "UPDATE", "arrivalTime", oldArrivalTime.toString(), updatedFlight.getArrivalTime().toString(), "system");
+        }
+        
         return flightMapper.toDto(updatedFlight);
     }
     
@@ -88,8 +114,14 @@ public class FlightServiceImpl implements FlightService {
         Flight flight = flightRepository.findActiveById(id)
             .orElseThrow(() -> new RuntimeException("Flight not found with id: " + id));
         
+        // Capture entity info before delete
+        String flightDescription = flight.getFlightCode();
+        
         flight.setDeletedAt(LocalDateTime.now());
         flightRepository.save(flight);
+        
+        // Audit log for DELETE
+        auditLogService.saveAuditLog("Flight", id.toString(), "DELETE", "flight", flightDescription, null, "system");
     }
     
     @Override

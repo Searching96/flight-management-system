@@ -5,6 +5,7 @@ import com.flightmanagement.entity.Airport;
 import com.flightmanagement.mapper.AirportMapper;
 import com.flightmanagement.repository.AirportRepository;
 import com.flightmanagement.service.AirportService;
+import com.flightmanagement.service.AuditLogService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,9 +20,12 @@ public class AirportServiceImpl implements AirportService {
     
     private final AirportMapper airportMapper;
 
-    public AirportServiceImpl(AirportRepository airportRepository, AirportMapper airportMapper) {
+    private final AuditLogService auditLogService;
+
+    public AirportServiceImpl(AirportRepository airportRepository, AirportMapper airportMapper, AuditLogService auditLogService) {
         this.airportRepository = airportRepository;
         this.airportMapper = airportMapper;
+        this.auditLogService = auditLogService;
     }
     
     @Override
@@ -48,6 +52,7 @@ public class AirportServiceImpl implements AirportService {
         Airport airport = airportMapper.toEntity(airportDto);
         airport.setDeletedAt(null);
         Airport savedAirport = airportRepository.save(airport);
+        auditLogService.saveAuditLog("Airport", savedAirport.getAirportId().toString(), "CREATE", "airport", null, savedAirport.getAirportName() + " (" + savedAirport.getCityName() + ")", "system");
         return airportMapper.toDto(savedAirport);
     }
     
@@ -56,11 +61,29 @@ public class AirportServiceImpl implements AirportService {
         Airport existingAirport = airportRepository.findActiveById(id)
             .orElseThrow(() -> new RuntimeException("Airport not found with id: " + id));
         
+        // Store old values
+        String oldAirportName = existingAirport.getAirportName();
+        String oldCityName = existingAirport.getCityName();
+        String oldCountryName = existingAirport.getCountryName();
+        
+        // Update fields
         existingAirport.setAirportName(airportDto.getAirportName());
         existingAirport.setCityName(airportDto.getCityName());
         existingAirport.setCountryName(airportDto.getCountryName());
         
         Airport updatedAirport = airportRepository.save(existingAirport);
+        
+        // Audit log each changed field
+        if (!oldAirportName.equals(airportDto.getAirportName())) {
+            auditLogService.saveAuditLog("Airport", id.toString(), "UPDATE", "airportName", oldAirportName, airportDto.getAirportName(), "system");
+        }
+        if (!oldCityName.equals(airportDto.getCityName())) {
+            auditLogService.saveAuditLog("Airport", id.toString(), "UPDATE", "cityName", oldCityName, airportDto.getCityName(), "system");
+        }
+        if (!oldCountryName.equals(airportDto.getCountryName())) {
+            auditLogService.saveAuditLog("Airport", id.toString(), "UPDATE", "countryName", oldCountryName, airportDto.getCountryName(), "system");
+        }
+        
         return airportMapper.toDto(updatedAirport);
     }
     
@@ -71,6 +94,7 @@ public class AirportServiceImpl implements AirportService {
         
         airport.setDeletedAt(LocalDateTime.now());
         airportRepository.save(airport);
+        auditLogService.saveAuditLog("Airport", id.toString(), "DELETE", "airport", airport.getAirportName() + " (" + airport.getCityName() + ")", null, "system");
     }
     
     @Override

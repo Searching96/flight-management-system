@@ -9,6 +9,7 @@ import com.flightmanagement.enums.AccountType;
 import com.flightmanagement.mapper.AccountMapper;
 import com.flightmanagement.repository.AccountRepository;
 import com.flightmanagement.service.AccountService;
+import com.flightmanagement.service.AuditLogService;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -31,10 +32,13 @@ public class AccountServiceImpl implements AccountService {
 
     private final PasswordEncoder passwordEncoder;
 
-    public AccountServiceImpl(AccountRepository accountRepository, AccountMapper accountMapper, PasswordEncoder passwordEncoder) {
+    private final AuditLogService auditLogService;
+
+    public AccountServiceImpl(AccountRepository accountRepository, AccountMapper accountMapper, PasswordEncoder passwordEncoder, AuditLogService auditLogService) {
         this.accountRepository = accountRepository;
         this.accountMapper = accountMapper;
         this.passwordEncoder = passwordEncoder;
+        this.auditLogService = auditLogService;
     }
 
     @Override
@@ -61,10 +65,12 @@ public class AccountServiceImpl implements AccountService {
             employee.setEmployeeType(dto.getEmployeeType());
             account.setEmployee(employee); // Attach to account
             Account savedAccount = accountRepository.save(account); // Cascades save to Customer/Employee
+            auditLogService.saveAuditLog("Account", savedAccount.getAccountId().toString(), "CREATE", "account", null, savedAccount.getAccountName() + " (" + savedAccount.getEmail() + ")", savedAccount.getEmail());
             return accountMapper.toDto(savedAccount, employee);
         }
 
         Account savedAccount = accountRepository.save(account); // Cascades save to Customer/Employee
+        auditLogService.saveAuditLog("Account", savedAccount.getAccountId().toString(), "CREATE", "account", null, savedAccount.getAccountName() + " (" + savedAccount.getEmail() + ")", savedAccount.getEmail());
         return accountMapper.toDto(savedAccount, null);
     }
 
@@ -110,18 +116,27 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findActiveById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
 
-        // Update only the allowed fields
-        if (dto.getAccountName() != null) {
+        // Store old values and update only the allowed fields
+        String oldAccountName = account.getAccountName();
+        String oldEmail = account.getEmail();
+        String oldPhoneNumber = account.getPhoneNumber();
+        String oldCitizenId = account.getCitizenId();
+        
+        if (dto.getAccountName() != null && !dto.getAccountName().equals(oldAccountName)) {
             account.setAccountName(dto.getAccountName());
+            auditLogService.saveAuditLog("Account", id.toString(), "UPDATE", "accountName", oldAccountName, dto.getAccountName(), dto.getEmail() != null ? dto.getEmail() : oldEmail);
         }
-        if (dto.getEmail() != null) {
+        if (dto.getEmail() != null && !dto.getEmail().equals(oldEmail)) {
             account.setEmail(dto.getEmail());
+            auditLogService.saveAuditLog("Account", id.toString(), "UPDATE", "email", oldEmail, dto.getEmail(), dto.getEmail());
         }
-        if (dto.getPhoneNumber() != null) {
+        if (dto.getPhoneNumber() != null && !dto.getPhoneNumber().equals(oldPhoneNumber)) {
             account.setPhoneNumber(dto.getPhoneNumber());
+            auditLogService.saveAuditLog("Account", id.toString(), "UPDATE", "phoneNumber", oldPhoneNumber, dto.getPhoneNumber(), account.getEmail());
         }
-        if (dto.getCitizenId() != null) {
+        if (dto.getCitizenId() != null && !dto.getCitizenId().equals(oldCitizenId)) {
             account.setCitizenId(dto.getCitizenId());
+            auditLogService.saveAuditLog("Account", id.toString(), "UPDATE", "citizenId", oldCitizenId, dto.getCitizenId(), account.getEmail());
         }
         // Don't update accountType, password, or other sensitive fields
 
@@ -135,6 +150,7 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
         account.setDeletedAt(LocalDateTime.now());
         accountRepository.save(account);
+        auditLogService.saveAuditLog("Account", id.toString(), "DELETE", "account", account.getAccountName() + " (" + account.getEmail() + ")", null, "system");
     }
 
     @Override

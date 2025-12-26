@@ -4,6 +4,7 @@ import com.flightmanagement.dto.CustomerDto;
 import com.flightmanagement.entity.Customer;
 import com.flightmanagement.mapper.CustomerMapper;
 import com.flightmanagement.repository.CustomerRepository;
+import com.flightmanagement.service.AuditLogService;
 import com.flightmanagement.service.CustomerService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,9 +22,12 @@ public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerMapper customerMapper;
 
-    public CustomerServiceImpl(CustomerRepository customerRepository, CustomerMapper customerMapper) {
+    private final AuditLogService auditLogService;
+
+    public CustomerServiceImpl(CustomerRepository customerRepository, CustomerMapper customerMapper, AuditLogService auditLogService) {
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;
+        this.auditLogService = auditLogService;
     }
 
     @Override
@@ -55,6 +59,11 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setDeletedAt(null);
         customer.setScore(0); // default score
         Customer savedCustomer = customerRepository.save(customer);
+        
+        // Audit log for CREATE
+        String customerDescription = savedCustomer.getAccount() != null ? savedCustomer.getAccount().getAccountName() : "Customer";
+        auditLogService.saveAuditLog("Customer", savedCustomer.getCustomerId().toString(), "CREATE", "customer", null, customerDescription, "system");
+        
         return customerMapper.toDto(savedCustomer);
     }
 
@@ -64,11 +73,21 @@ public class CustomerServiceImpl implements CustomerService {
         Customer existingCustomer = customerRepository.findActiveById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
 
+        // Store old values for audit logging
+        String oldScore = existingCustomer.getScore() != null ? existingCustomer.getScore().toString() : null;
+        
         // Update only allowed fields (e.g., score, phone, etc.)
         existingCustomer.setScore(dto.getScore());
         // Add more fields as needed
 
         Customer updatedCustomer = customerRepository.save(existingCustomer);
+        
+        // Audit log for changed fields
+        String newScore = updatedCustomer.getScore() != null ? updatedCustomer.getScore().toString() : null;
+        if ((oldScore == null && newScore != null) || (oldScore != null && !oldScore.equals(newScore))) {
+            auditLogService.saveAuditLog("Customer", id.toString(), "UPDATE", "score", oldScore, newScore, "system");
+        }
+        
         return customerMapper.toDto(updatedCustomer);
     }
 
@@ -77,8 +96,15 @@ public class CustomerServiceImpl implements CustomerService {
     public void deleteCustomer(Integer id) {
         Customer customer = customerRepository.findActiveById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
+        
+        // Capture entity info before delete
+        String customerDescription = customer.getAccount() != null ? customer.getAccount().getAccountName() : "Customer";
+        
         customer.setDeletedAt(LocalDateTime.now());
         customerRepository.save(customer);
+        
+        // Audit log for DELETE
+        auditLogService.saveAuditLog("Customer", id.toString(), "DELETE", "customer", customerDescription, null, "system");
     }
 
     @Override

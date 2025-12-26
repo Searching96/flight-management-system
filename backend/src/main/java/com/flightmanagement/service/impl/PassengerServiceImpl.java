@@ -4,6 +4,7 @@ import com.flightmanagement.dto.PassengerDto;
 import com.flightmanagement.entity.Passenger;
 import com.flightmanagement.mapper.PassengerMapper;
 import com.flightmanagement.repository.PassengerRepository;
+import com.flightmanagement.service.AuditLogService;
 import com.flightmanagement.service.PassengerService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,9 +21,12 @@ public class PassengerServiceImpl implements PassengerService {
     
     private final PassengerMapper passengerMapper;
 
-    public PassengerServiceImpl(PassengerRepository passengerRepository, PassengerMapper passengerMapper) {
+    private final AuditLogService auditLogService;
+
+    public PassengerServiceImpl(PassengerRepository passengerRepository, PassengerMapper passengerMapper, AuditLogService auditLogService) {
         this.passengerRepository = passengerRepository;
         this.passengerMapper = passengerMapper;
+        this.auditLogService = auditLogService;
     }
     
     @Override
@@ -66,6 +70,10 @@ public class PassengerServiceImpl implements PassengerService {
         passenger.setDeletedAt(null);
         
         Passenger savedPassenger = passengerRepository.save(passenger);
+        
+        // Audit log for CREATE
+        auditLogService.saveAuditLog("Passenger", savedPassenger.getPassengerId().toString(), "CREATE", "passenger", null, savedPassenger.getPassengerName(), "system");
+        
         return passengerMapper.toDto(savedPassenger);
     }
     
@@ -74,11 +82,28 @@ public class PassengerServiceImpl implements PassengerService {
         Passenger existingPassenger = passengerRepository.findActiveById(id)
             .orElseThrow(() -> new RuntimeException("Passenger not found with id: " + id));
         
+        // Store old values for audit logging
+        String oldPassengerName = existingPassenger.getPassengerName();
+        String oldEmail = existingPassenger.getEmail();
+        String oldPhoneNumber = existingPassenger.getPhoneNumber();
+        
         existingPassenger.setPassengerName(passengerDto.getPassengerName());
         existingPassenger.setEmail(passengerDto.getEmail());
         existingPassenger.setPhoneNumber(passengerDto.getPhoneNumber());
         
         Passenger updatedPassenger = passengerRepository.save(existingPassenger);
+        
+        // Audit log for changed fields
+        if ((oldPassengerName == null && updatedPassenger.getPassengerName() != null) || (oldPassengerName != null && !oldPassengerName.equals(updatedPassenger.getPassengerName()))) {
+            auditLogService.saveAuditLog("Passenger", id.toString(), "UPDATE", "passengerName", oldPassengerName, updatedPassenger.getPassengerName(), "system");
+        }
+        if ((oldEmail == null && updatedPassenger.getEmail() != null) || (oldEmail != null && !oldEmail.equals(updatedPassenger.getEmail()))) {
+            auditLogService.saveAuditLog("Passenger", id.toString(), "UPDATE", "email", oldEmail, updatedPassenger.getEmail(), "system");
+        }
+        if ((oldPhoneNumber == null && updatedPassenger.getPhoneNumber() != null) || (oldPhoneNumber != null && !oldPhoneNumber.equals(updatedPassenger.getPhoneNumber()))) {
+            auditLogService.saveAuditLog("Passenger", id.toString(), "UPDATE", "phoneNumber", oldPhoneNumber, updatedPassenger.getPhoneNumber(), "system");
+        }
+        
         return passengerMapper.toDto(updatedPassenger);
     }
     
@@ -87,8 +112,14 @@ public class PassengerServiceImpl implements PassengerService {
         Passenger passenger = passengerRepository.findActiveById(id)
             .orElseThrow(() -> new RuntimeException("Passenger not found with id: " + id));
         
+        // Capture entity info before delete
+        String passengerDescription = passenger.getPassengerName();
+        
         passenger.setDeletedAt(LocalDateTime.now());
         passengerRepository.save(passenger);
+        
+        // Audit log for DELETE
+        auditLogService.saveAuditLog("Passenger", id.toString(), "DELETE", "passenger", passengerDescription, null, "system");
     }
     
     @Override

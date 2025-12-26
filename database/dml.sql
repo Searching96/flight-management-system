@@ -580,3 +580,7 @@ LIMIT 150;
 insert into flight (flight_id, plane_id, departure_airport_id, arrival_airport_id, flight_code, departure_time,
                     arrival_time, deleted_at)
 values (101, 44, 1, 2, 'VN-101', '2026-02-01 00:00:00', '2026-02-01 03:00:00', null);
+
+INSERT INTO flight_ticket_class (flight_id, ticket_class_id, ticket_quantity, remaining_ticket_quantity, specified_fare, deleted_at) VALUES (101, 1, 50, 46, 1000000.00, null);
+INSERT INTO flight_ticket_class (flight_id, ticket_class_id, ticket_quantity, remaining_ticket_quantity, specified_fare, deleted_at) VALUES (101, 2, 100, 100, 2000000.00, null);
+INSERT INTO flight_ticket_class (flight_id, ticket_class_id, ticket_quantity, remaining_ticket_quantity, specified_fare, deleted_at) VALUES (101, 3, 20, 20, 3000000.00, null);
