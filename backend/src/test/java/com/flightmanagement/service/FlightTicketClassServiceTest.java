@@ -258,7 +258,7 @@ public class FlightTicketClassServiceTest {
         }
 
         @Test
-        @DisplayName("TC2: Happy Path - Update existing FlightTicketClass then save and return DTO")
+        @DisplayName("TC1: Happy Path - Update existing FlightTicketClass then save and return DTO")
         void updateFlightTicketClass_HappyPath_SaveAndReturnDto() {
             // Arrange
             when(flightTicketClassRepository.findByFlightIdAndTicketClassId(1, 1))
@@ -280,7 +280,7 @@ public class FlightTicketClassServiceTest {
         }
 
         @Test
-        @DisplayName("TC1: Entity Not Found - findBy... returns Empty then orElseThrow triggers RuntimeException")
+        @DisplayName("TC2: Entity Not Found - findBy... returns Empty then orElseThrow triggers RuntimeException")
         void updateFlightTicketClass_EntityNotFound_ThrowsRuntimeException() {
             // Arrange
             when(flightTicketClassRepository.findByFlightIdAndTicketClassId(1, 1))
