@@ -1,4 +1,4 @@
-# Tài Liệu Design Patterns (Mẫu Thiết Kế)
+# Tài Liệu Design Patterns
 
 ## Hệ Thống Quản Lý Chuyến Bay (Flight Management System)
 
@@ -10,17 +10,7 @@ Tài liệu này mô tả các mẫu thiết kế (Design Patterns) được áp
 
 **Design Pattern (Mẫu thiết kế)** là các giải pháp tái sử dụng được đúc kết để giải quyết các vấn đề phổ biến trong thiết kế phần mềm.
 
-Hệ thống này sử dụng phân loại theo **Gang of Four (GoF)**, chia thành 3 nhóm chính:
-
-### 📦 Nhóm Khởi tạo (Creational Patterns)
-
-Giải quyết các vấn đề liên quan đến việc khởi tạo đối tượng, giúp hệ thống độc lập với cách các đối tượng được tạo ra.
-
-### 🏗️ Nhóm Cấu trúc (Structural Patterns)
-
-Tập trung vào cách các class và đối tượng được tổ chức và kết hợp để tạo thành các cấu trúc lớn hơn.
-
-### 🔄 Nhóm Hành vi (Behavioral Patterns)
+Hệ thống này sử dụng phân loại theo **Gang of Four (GoF)**, chia thành 3 nhóm chính.
 
 Quan tâm đến giao tiếp và phân công trách nhiệm giữa các đối tượng.
 
@@ -36,7 +26,7 @@ Nhóm các mẫu thiết kế giải quyết vấn đề khởi tạo đối tư
 
 ### 🎯 Mẫu Thiết Kế Áp Dụng
 
-**Singleton** - Đảm bảo một class chỉ có duy nhất một instance (thể hiện) và cung cấp một điểm truy cập toàn cục đến nó.
+**Singleton** - Đảm bảo một class chỉ có duy nhất một instance và cung cấp một điểm truy cập toàn cục đến nó.
 
 ### 💻 Triển Khai Trong Code
 
@@ -226,7 +216,7 @@ Nhóm các mẫu thiết kế tập trung vào cách tổ chức và kết hợp
 
 ---
 
-## 4. Facade Pattern (OK) (đã bịp thành công)
+## 4. Facade Pattern
 
 ### 🎯 Mẫu Thiết Kế Áp Dụng
 
@@ -294,169 +284,7 @@ public class FlightServiceImpl implements FlightService {
 
 ---
 
-## 5. Repository Pattern
-
-### 🎯 Mẫu Thiết Kế Áp Dụng
-
-**Repository** - Trừu tượng hóa logic truy cập dữ liệu và cung cấp interface giống collection để truy cập domain objects.
-
-### 💻 Triển Khai Trong Code
-
-```java
-// File: backend/src/main/java/com/flightmanagement/repository/FlightRepository.java
-@Repository
-public interface FlightRepository extends JpaRepository<Flight, Integer> {
-
-    @Query("SELECT f FROM Flight f WHERE f.deletedAt IS NULL")
-    List<Flight> findAllActive();
-
-    Page<Flight> findByDeletedAtIsNull(Pageable pageable);
-
-    @Query("SELECT f FROM Flight f WHERE f.flightId = ?1 AND f.deletedAt IS NULL")
-    Optional<Flight> findActiveById(Integer id);
-
-    @Query("SELECT f FROM Flight f WHERE f.flightCode = ?1 AND f.deletedAt IS NULL")
-    Optional<Flight> findByFlightCode(String flightCode);
-}
-```
-
-### 📝 Ý Nghĩa Trong Dự Án
-
-- **Trừu tượng hóa data access**: Ẩn đi độ phức tạp của các thao tác database khỏi business logic
-- **Tập trung queries**: Tất cả các query cho Flight entities ở một nơi
-- **Tích hợp JPA**: Tận dụng Spring Data JPA để tự động tạo các thao tác CRUD
-- **Custom Query**: Cho phép định nghĩa query tùy chỉnh bằng JPQL hoặc method naming
-- **Soft Delete**: Triển khai business rule lọc các bản ghi đã xóa mà không lộ implementation
-
----
-
-## 6. Service Layer Pattern
-
-### 🎯 Mẫu Thiết Kế Áp Dụng
-
-**Service Layer** - Định nghĩa ranh giới business logic của ứng dụng và đóng gói các business rules.
-
-### 💻 Triển Khai Trong Code
-
-**Service Interface**
-
-```java
-// File: backend/src/main/java/com/flightmanagement/service/FlightService.java
-public interface FlightService {
-    List<FlightDto> getAllFlights();
-    Page<FlightDto> getAllFlightsPaged(Pageable pageable);
-    FlightDto getFlightById(Integer id);
-    FlightDto createFlight(FlightRequest request);
-    FlightDto updateFlight(Integer id, FlightRequest request);
-    void deleteFlight(Integer id);
-    FlightDto getFlightByCode(String flightCode);
-    List<FlightDto> searchFlights(FlightSearchCriteria searchDto);
-}
-```
-
-**Service Implementation**
-
-```java
-// File: backend/src/main/java/com/flightmanagement/service/impl/FlightServiceImpl.java
-@Service
-@Transactional
-public class FlightServiceImpl implements FlightService {
-
-    private final FlightRepository flightRepository;
-    private final FlightMapper flightMapper;
-    private final ParameterService parameterService;
-
-    public FlightServiceImpl(FlightRepository flightRepository,
-                             FlightMapper flightMapper,
-                             ParameterService parameterService) {
-        this.flightRepository = flightRepository;
-        this.flightMapper = flightMapper;
-        this.parameterService = parameterService;
-    }
-
-    @Override
-    public List<FlightDto> getAllFlights() {
-        List<Flight> flights = flightRepository.findAllActive();
-        return flightMapper.toDtoList(flights);
-    }
-}
-```
-
-### 📝 Ý Nghĩa Trong Dự Án
-
-- **Đóng gói business logic**: Tất cả logic nghiệp vụ về flight tập trung trong FlightService
-- **Quản lý transaction**: `@Transactional` đảm bảo tính nhất quán dữ liệu qua nhiều thao tác database
-- **Loose coupling**: Controller phụ thuộc vào service interface, không phải implementation
-- **Tái sử dụng**: Các method service có thể được gọi từ nhiều controller hoặc service khác
-- **Validation**: Service validate business rules trước khi persist data
-
----
-
-## 7. Data Transfer Object (DTO) Pattern
-
-### 🎯 Mẫu Thiết Kế Áp Dụng
-
-**DTO** - Truyền tải dữ liệu giữa các lớp mà không lộ cấu trúc entity nội bộ.
-
-### 💻 Triển Khai Trong Code
-
-**DTO Class**
-
-```java
-// File: backend/src/main/java/com/flightmanagement/dto/FlightDto.java
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class FlightDto {
-    private Integer flightId;
-    private String flightCode;
-    private LocalDateTime departureTime;
-    private LocalDateTime arrivalTime;
-    private Integer planeId;
-    private Integer departureAirportId;
-    private Integer arrivalAirportId;
-
-    // Các trường bổ sung cho mục đích hiển thị
-    private String planeCode;
-    private String departureAirportName;
-    private String departureCityName;
-    private String arrivalAirportName;
-    private String arrivalCityName;
-}
-```
-
-**Entity Class (để so sánh)**
-
-```java
-// File: backend/src/main/java/com/flightmanagement/entity/Flight.java
-@Entity
-@Table(name = "flight")
-public class Flight {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer flightId;
-
-    @ManyToOne
-    @JoinColumn(name = "plane_id", nullable = false)
-    private Plane plane;  // Entity liên quan, không expose trong DTO
-
-    @Column(name = "deletedAt")
-    private LocalDateTime deletedAt;  // Trường nội bộ, không có trong DTO
-}
-```
-
-### 📝 Ý Nghĩa Trong Dự Án
-
-- **Bảo mật**: Các trường nhạy cảm như `deletedAt` không được expose ra API client
-- **Decoupling**: Thay đổi cấu trúc entity không bắt buộc phải thay đổi API contract
-- **Performance**: DTO có thể flatten các mối quan hệ phức tạp (vd: `departureAirportName` thay vì toàn bộ Airport object)
-- **Thiết kế API**: DTO cung cấp cấu trúc dữ liệu sạch, phù hợp với từng use case
-- **Validation**: Các DTO khác nhau có thể có validation rules khác nhau (vd: `FlightRequest` vs `FlightDto`)
-
----
-
-## 8. Mapper Pattern (Object Conversion)
+## 5. Mapper Pattern (Object Conversion)
 
 ### 🎯 Mẫu Thiết Kế Áp Dụng
 
@@ -533,7 +361,7 @@ Nhóm các mẫu thiết kế quan tâm đến giao tiếp và phân công trác
 
 ---
 
-## 9. Strategy Pattern (OK) (đã bịp thành công)
+## 6. Strategy Pattern
 
 ### 🎯 Mẫu Thiết Kế Áp Dụng
 
@@ -603,7 +431,7 @@ public class AuthServiceImpl implements AuthService {
 
 ---
 
-## 10. Observer Pattern (OK) (bé thịnh không chắc lắm về pattern này nếu bị hỏi sâu)
+## 7. Observer Pattern
 
 ### 🎯 Mẫu Thiết Kế Áp Dụng
 
@@ -698,7 +526,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
 ---
 
-## 11. Chain of Responsibility Pattern (OK)
+## 8. Chain of Responsibility Pattern
 
 ### 🎯 Mẫu Thiết Kế Áp Dụng
 
@@ -787,7 +615,7 @@ public class SecurityConfig {
 
 ---
 
-## 12. Template Method Pattern (OK)
+## 9. Template Method Pattern
 
 ### 🎯 Mẫu Thiết Kế Áp Dụng
 
@@ -828,65 +656,12 @@ public interface BaseMapper<E, D> {
 
 ---
 
-## 13. Command Pattern (OK) (Không đáng cho vào báo cáo)
+## 10. Aspect Oriented Programming
 
 ### 🎯 Mẫu Thiết Kế Áp Dụng
 
-**Command** - Chuyển đổi một yêu cầu thành một đối tượng độc lập, cho phép tham số hóa các phương thức với các yêu cầu khác nhau.
-
-### 💻 Triển Khai Trong Code
-
-```java
-// File: backend/src/main/java/com/flightmanagement/config/DataInitializer.java
-@Component
-public class DataInitializer implements CommandLineRunner {
-
-    private final ParameterService parameterService;
-    private final FlightService flightService;
-    private final TicketClassService ticketClassService;
-    // ... các services khác
-
-    public DataInitializer(ParameterService parameterService,
-                          FlightService flightService,
-                          TicketClassService ticketClassService) {
-        this.parameterService = parameterService;
-        this.flightService = flightService;
-        this.ticketClassService = ticketClassService;
-    }
-
-    @Override
-    public void run(String... args) throws Exception {
-        // Thực thi command: Khởi tạo database với dữ liệu mặc định
-
-        // Khởi tạo system parameters
-        parameterService.initializeDefaultParameters();
-
-        // Tạo ticket classes
-        ticketClassService.createTicketClass(economyClass);
-        ticketClassService.createTicketClass(businessClass);
-
-        // Tạo flights
-        flightService.createFlight(flightRequest);
-
-        System.out.println("Database initialized successfully");
-    }
-}
-```
-
-### 📝 Ý Nghĩa Trong Dự Án
-
-- **Startup Command**: Thực thi logic khởi tạo khi ứng dụng khởi động
-- **Đóng gói**: Tất cả logic initialization được đóng gói trong một command object
-- **Tái sử dụng**: Có thể được thực thi thủ công hoặc tự động
-- **Tích hợp Spring**: Spring tự động thực thi tất cả CommandLineRunner beans
-
----
-
-## 14. Centralized Exception Handling Pattern (OK) (Không biết phải pattern không nhưng nghe hay mà đúng)
-
-### 🎯 Mẫu Thiết Kế Áp Dụng
-
-**Centralized Exception Handling** - Xử lý tất cả exceptions ở một nơi sử dụng AOP (Aspect-Oriented Programming).
+**Aspect Oriented Programming** - Không phải một design pattern mà là một paradigm.
+Nó giúp tách các “mối quan tâm cắt ngang” (như logging, bảo mật, giao dịch) ra khỏi logic chính để code rõ ràng và dễ bảo trì hơn.
 
 ### 💻 Triển Khai Trong Code
 
@@ -962,104 +737,6 @@ public class GlobalExceptionHandler {
 
 ---
 
-## 15. Layered Architecture (MVC) (KO) (BỊP VL, SPRING BOOT LÀM GÌ CÓ VIEW)
-
-### 🎯 Mẫu Thiết Kế Áp Dụng
-
-**Model-View-Controller (MVC)** - Tách ứng dụng thành ba lớp kết nối: Model (dữ liệu), View (giao diện), Controller (xử lý logic).
-
-### 💻 Triển Khai Trong Code
-
-**Model (Entity Layer - Dữ liệu)**
-
-```java
-// File: backend/src/main/java/com/flightmanagement/entity/Flight.java
-@Entity
-@Table(name = "flight")
-public class Flight {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "flight_id")
-    private Integer flightId;
-
-    @ManyToOne
-    @JoinColumn(name = "plane_id", nullable = false)
-    private Plane plane;
-
-    @ManyToOne
-    @JoinColumn(name = "departure_airport_id", nullable = false)
-    private Airport departureAirport;
-
-    @Column(name = "flight_code", nullable = false, length = 200)
-    private String flightCode;
-
-    @Column(name = "departure_time", nullable = false)
-    private LocalDateTime departureTime;
-}
-```
-
-**Controller (Xử lý Request)**
-
-```java
-// File: backend/src/main/java/com/flightmanagement/controller/FlightController.java
-@RestController
-@RequestMapping("/api/flights")
-@Tag(name = "Flight", description = "Operations related to flights")
-public class FlightController {
-    private final FlightService flightService;
-
-    public FlightController(FlightService flightService) {
-        this.flightService = flightService;
-    }
-
-    @Operation(summary = "Get all flights")
-    @GetMapping
-    public ResponseEntity<?> getAllFlights(@PageableDefault(page = 0, size = 10) Pageable pageable) {
-        Page<FlightDto> page = flightService.getAllFlightsPaged(pageable);
-        ApiResponse<?> apiResponse = new ApiResponse<>(
-            HttpStatus.OK,
-            "Fetched all flights",
-            page,
-            null
-        );
-        return ResponseEntity.ok(apiResponse);
-    }
-}
-```
-
-### 📝 Ý Nghĩa Trong Dự Án
-
-- **Tách biệt trách nhiệm**: Giữ model dữ liệu (entities), business logic (services), và xử lý request (controllers) độc lập
-- **Dễ bảo trì**: Thay đổi ở một lớp không ảnh hưởng lớp khác (vd: đổi database schema không cần sửa controller)
-- **Khả năng kiểm thử**: Mỗi lớp có thể được test độc lập
-- **Khả năng mở rộng**: Dễ dàng thêm tính năng mới mà không sửa đổi cấu trúc code hiện có
-
----
-
-# 📊 BẢNG TỔNG KẾT
-
-## Phân Loại Theo Nhóm GoF
-
-| STT | Design Pattern                     | Nhóm GoF      | Vị Trí Chính                            | Mục Đích Trong Dự Án                                       |
-| --- | ---------------------------------- | ------------- | --------------------------------------- | ---------------------------------------------------------- |
-| 1   | **Singleton**                      | Creational    | Spring beans (`@Service`, `@Component`) | Đảm bảo single instance của services, quản lý shared state |
-| 2   | **Builder**                        | Creational    | DTO construction, API responses         | Xây dựng đối tượng phức tạp theo từng bước                 |
-| 3   | **Dependency Injection**           | Creational    | Tất cả `@Service`, `@Controller`        | Quản lý dependencies, loose coupling, testability          |
-| 4   | **Facade**                         | Structural    | Service layer, Controllers              | Đơn giản hóa các thao tác subsystem phức tạp               |
-| 5   | **Repository**                     | Structural    | `backend/repository/`                   | Trừu tượng hóa data access operations                      |
-| 6   | **Service Layer**                  | Structural    | `backend/service/`                      | Đóng gói business logic, quản lý transactions              |
-| 7   | **DTO**                            | Structural    | `backend/dto/`                          | Truyền tải dữ liệu giữa các lớp                            |
-| 8   | **Mapper**                         | Structural    | `backend/mapper/`                       | Chuyển đổi giữa entities và DTOs                           |
-| 9   | **Strategy**                       | Behavioral    | Password encoding, authentication       | Làm algorithms có thể thay thế lẫn nhau                    |
-| 10  | **Observer**                       | Behavioral    | WebSocket chat handler                  | Thông báo connected clients về messages mới                |
-| 11  | **Chain of Responsibility**        | Behavioral    | Security filter chain                   | Xử lý requests qua authentication/authorization filters    |
-| 12  | **Template Method**                | Behavioral    | `BaseMapper` interface                  | Định nghĩa algorithm skeleton cho collection conversions   |
-| 13  | **Command**                        | Behavioral    | `DataInitializer`                       | Đóng gói database initialization như executable command    |
-| 14  | **Centralized Exception Handling** | Behavioral    | `GlobalExceptionHandler`                | Xử lý tất cả exceptions đồng nhất sử dụng AOP              |
-| 15  | **Layered Architecture (MVC)**     | Architectural | Toàn bộ cấu trúc ứng dụng               | Tách concerns thành Model, View, Controller                |
-
----
-
 ## 🎯 Lợi Ích Đạt Được
 
 ### 🔧 Khả Năng Bảo Trì (Maintainability)
@@ -1096,7 +773,7 @@ public class FlightController {
 
 ## 💡 Kết Luận
 
-Hệ thống Quản lý Chuyến bay này thể hiện việc áp dụng chuyên nghiệp **15 design patterns khác nhau** trong kiến trúc của nó. Mỗi pattern phục vụ một mục đích cụ thể:
+Hệ thống Quản lý Chuyến bay này thể hiện việc áp dụng chuyên nghiệp **những design patterns khác nhau** trong kiến trúc của nó. Mỗi pattern phục vụ một mục đích cụ thể:
 
 ### 📦 Creational Patterns (Nhóm Khởi tạo)
 
@@ -1115,7 +792,3 @@ Hệ thống Quản lý Chuyến bay này thể hiện việc áp dụng chuyên
 - **Layered Architecture (MVC), Centralized Exception Handling** - Cấu trúc tổng thể hệ thống
 
 Sự kết hợp của các patterns này tạo ra một hệ thống quản lý chuyến bay **robust, maintainable, và scalable** theo các best practices của ngành và tuân thủ các nguyên tắc SOLID.
-
----
-
-_Tài liệu này được tạo để hỗ trợ hiểu rõ về các design patterns được sử dụng trong dự án Flight Management System._

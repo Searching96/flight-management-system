@@ -52,7 +52,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh",
                                     "/api/auth/validate", "/api/auth/forget-password", "/api/auth/reset-password",
                                     "/api/auth/employee/register",
-                                                    "/api/demo/**",
+                                    "/api/demo/**",
                                     "/api/flights/**",
                                     "/api/airports/**",
                                     "/api/planes/**",

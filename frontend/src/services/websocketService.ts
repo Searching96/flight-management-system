@@ -63,7 +63,7 @@ class WebSocketService {
       });
     };
 
-    this.socket.onerror = (error) => {
+    this.socket.onerror = () => {
       console.log(`WebSocket failed for ${endpoint}, trying next...`);
       this.tryConnect(endpoints, index + 1, chatboxId, userId, userType, userName);
     };

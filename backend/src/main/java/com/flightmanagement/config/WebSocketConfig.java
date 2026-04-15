@@ -7,6 +7,8 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 
 import com.flightmanagement.websocket.ChatWebSocketHandler;
 
+import io.micrometer.common.lang.NonNull;
+
 @Configuration
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
@@ -18,7 +20,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     }
 
     @Override
-    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+    public void registerWebSocketHandlers(@NonNull WebSocketHandlerRegistry registry) {
         registry.addHandler(chatWebSocketHandler, "/ws/chat")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
