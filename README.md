@@ -1,4 +1,4 @@
-# ✈️ Flight Management System
+# Flight Management System
 
 <div align="center">
 A comprehensive, enterprise-grade flight management system built with Java and TypeScript
@@ -6,44 +6,44 @@ A comprehensive, enterprise-grade flight management system built with Java and T
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [Overview](#-overview)
-- [Features](#-features)
+- [Overview](#overview)
+- [Features](#features)
 - [Core Features](#core-features)
 - [Advanced Features](#advanced-features)
-- [Technology Stack](#-technology-stack)
-- [Project Structure](#-project-structure)
-- [Architecture](#-architecture)
-- [Installation](#-installation)
+- [Technology Stack](#technology-stack)
+- [Project Structure](#project-structure)
+- [Architecture](#architecture)
+- [Installation](#installation)
 - [Prerequisites](#prerequisites)
 - [Step-by-Step Installation](#step-by-step-installation)
 - [Docker Installation](#docker-installation-alternative)
-- [Configuration](#️-configuration)
-- [Usage](#-usage)
-- [API Reference](#-api-reference)
-- [Testing](#-testing)
-- [Performance](#-performance)
-- [Security](#-security)
-- [Deployment](#-deployment)
-- [Troubleshooting](#-troubleshooting)
-- [Team](#-team)
-- [Acknowledgments](#-acknowledgments)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [API Reference](#api-reference)
+- [Testing](#testing)
+- [Performance](#performance)
+- [Security](#security)
+- [Deployment](#deployment)
+- [Troubleshooting](#troubleshooting)
+- [Team](#team)
+- [Acknowledgments](#acknowledgments)
 
 ---
 
-## 🌟 Overview
+## Overview
 
 The **Flight Management System** is a robust, scalable, and feature-rich application designed to handle all aspects of modern airline operations. Built with Java and following industry best practices, this system provides a complete solution for managing flights, passengers, bookings, crew, aircraft, and airline operations.
 
 ### Key Highlights
 
-- 🎯 **Enterprise-Ready**: Designed for scalability and high availability
-- 🔒 **Secure**: Implements industry-standard security practices
-- 📊 **Data-Driven**: Comprehensive analytics and reporting capabilities
-- 🚀 **High Performance**: Optimized for handling large volumes of transactions
-- 🔧 **Maintainable**: Clean code architecture with extensive documentation
-- 🧪 **Well-Tested**: Comprehensive unit and integration test coverage
+-  **Enterprise-Ready**: Designed for scalability and high availability
+-  **Secure**: Implements industry-standard security practices
+-  **Data-Driven**: Comprehensive analytics and reporting capabilities
+-  **High Performance**: Optimized for handling large volumes of transactions
+-  **Maintainable**: Clean code architecture with extensive documentation
+-  **Well-Tested**: Comprehensive unit and integration test coverage
 
 ### Use Cases
 
@@ -54,11 +54,11 @@ The **Flight Management System** is a robust, scalable, and feature-rich applica
 
 ---
 
-## ✨ Features
+## Features
 
 ### Core Features
 
-#### 🛫 Flight Management
+#### Flight Management
 
 - **Flight Scheduling**: Create, update, and manage flight schedules
 - **Route Management**: Define and optimize flight routes
@@ -67,7 +67,7 @@ The **Flight Management System** is a robust, scalable, and feature-rich applica
 - **Cancellation Handling**: Process flight cancellations and rebookings
 - **Schedule Optimization**: Analyze and optimize flight schedules
 
-#### 👥 Passenger Management
+#### Passenger Management
 
 - **Passenger Profiles**: Comprehensive passenger information management
 - **Frequent Flyer Programs**: Loyalty program integration
@@ -76,7 +76,7 @@ The **Flight Management System** is a robust, scalable, and feature-rich applica
 - **Preferences Management**: Store and apply passenger preferences
 - **Document Verification**: Passport and visa validation
 
-#### 📝 Booking & Reservation System
+#### Booking & Reservation System
 
 - **Flight Search**: Advanced search with multiple filters
 - **Seat Selection**: Interactive seat map and selection
@@ -87,7 +87,7 @@ The **Flight Management System** is a robust, scalable, and feature-rich applica
 - **Ticket Generation**: Generate e-tickets and boarding passes
 - **Booking Confirmation**: Email and SMS notifications
 
-#### ✈️ Airline Management
+#### Airline Management
 
 - **Airline Registration**: Onboard new airline partners
 - **Fleet Management**: Track airline fleet and aircraft
@@ -96,7 +96,7 @@ The **Flight Management System** is a robust, scalable, and feature-rich applica
 - **Baggage Policies**: Define and enforce baggage rules
 - **Service Class Management**: Manage economy, business, first class
 
-#### 🏢 Airport Management
+#### Airport Management
 
 - **Airport Information**: Maintain airport details and facilities
 - **Terminal Management**: Track terminals and gates
@@ -105,7 +105,7 @@ The **Flight Management System** is a robust, scalable, and feature-rich applica
 - **Lounge Management**: Track airport lounge access
 - **Facility Management**: Monitor airport amenities
 
-#### 👨‍✈️ Crew Management
+#### ‍ Crew Management
 
 - **Crew Scheduling**: Assign crew members to flights
 - **Qualification Tracking**: Monitor certifications and training
@@ -114,7 +114,7 @@ The **Flight Management System** is a robust, scalable, and feature-rich applica
 - **Emergency Replacements**: Handle last-minute crew changes
 - **Performance Tracking**: Monitor crew performance metrics
 
-#### 🛩️ Aircraft Management
+#### Aircraft Management
 
 - **Fleet Tracking**: Monitor aircraft location and status
 - **Maintenance Scheduling**: Plan and track maintenance
@@ -123,7 +123,7 @@ The **Flight Management System** is a robust, scalable, and feature-rich applica
 - **Utilization Reports**: Analyze aircraft usage patterns
 - **Compliance Tracking**: Ensure regulatory compliance
 
-#### 💺 Seat Management
+#### Seat Management
 
 - **Seat Mapping**: Create and manage seat configurations
 - **Availability Tracking**: Real-time seat availability
@@ -134,7 +134,7 @@ The **Flight Management System** is a robust, scalable, and feature-rich applica
 
 ### Advanced Features
 
-#### 📊 Analytics & Reporting
+#### Analytics & Reporting
 
 - **Revenue Analytics**: Track revenue by route, class, and period
 - **Occupancy Reports**: Analyze seat occupancy rates
@@ -143,7 +143,7 @@ The **Flight Management System** is a robust, scalable, and feature-rich applica
 - **Predictive Analytics**: Forecast demand and optimize pricing
 - **Custom Reports**: Generate customizable reports
 
-#### 🔔 Notification System
+#### Notification System
 
 - **Email Notifications**: Automated email communications
 - **SMS Alerts**: Text message notifications for time-sensitive updates
@@ -152,13 +152,13 @@ The **Flight Management System** is a robust, scalable, and feature-rich applica
 - **Flight Updates**: Real-time flight status changes
 - **Promotional Communications**: Marketing campaigns
 
-#### 🔐 Security Features
+#### Security Features
 
 - **User Authentication**: Secure login with multi-factor authentication
 - **Role-Based Access Control**: Granular permission management
 - **Data Encryption**: Encrypt sensitive data at rest and in transit
 
-#### 🌐 Integration Capabilities (in the future)
+#### Integration Capabilities (in the future)
 
 - **Payment Gateways**: Multiple payment provider integrations
 - **GDS Systems**: Connect with Global Distribution Systems
@@ -169,7 +169,7 @@ The **Flight Management System** is a robust, scalable, and feature-rich applica
 
 ---
 
-## 🛠 Technology Stack
+## Technology Stack
 
 ### Core Technologies
 
@@ -198,7 +198,7 @@ The **Flight Management System** is a robust, scalable, and feature-rich applica
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 flight-management-system/
@@ -563,7 +563,7 @@ flight-management-system/
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 ### System Architecture
 
@@ -631,7 +631,7 @@ The Flight Management System follows a **layered architecture** pattern:
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### Prerequisites
 
@@ -807,7 +807,7 @@ docker run -p 8080:8080 \
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 ### Application Configuration
 
@@ -876,7 +876,7 @@ security.strict=true
 
 ---
 
-## 📖 Usage
+## Usage
 
 ### Basic Usage Examples
 
@@ -1032,7 +1032,7 @@ java -jar flight-management.jar report --type revenue --start 2024-01-01 --end 2
 
 ---
 
-## 📡 API Reference
+## API Reference
 
 ### Base URL
 
@@ -1287,7 +1287,7 @@ Common HTTP Status Codes:
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Running Tests
 
@@ -1332,7 +1332,7 @@ public void testCreateBooking_Success() {
 
 ---
 
-## ⚡ Performance
+## Performance
 
 ### Optimization Strategies
 
@@ -1351,7 +1351,7 @@ public void testCreateBooking_Success() {
 
 ---
 
-## 🔐 Security
+## Security
 
 ### Security Features
 
@@ -1379,7 +1379,7 @@ String token = JWT.create()
 
 ---
 
-## 🚢 Deployment
+## Deployment
 
 ### Production Deployment
 
@@ -1445,7 +1445,7 @@ spec:
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -1485,7 +1485,7 @@ Solution:
 
 ---
 
-## 👥 Team
+## Team
 
 This project was developed by students from the **Faculty of Software Technology, University of Information Technology, VNU-HCM**.
 
@@ -1499,19 +1499,19 @@ This project was developed by students from the **Faculty of Software Technology
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Thanks to all contributors who have helped this project
 - Inspired by real-world airline reservation systems
-- Built with ❤️ using Java and open-source technologies
+- Built with  using Java and open-source technologies
 - Special thanks to the open-source community
 
 ---
 
 <div align="center">
 
-**⭐ If you find this project useful, please consider giving it a star! ⭐**
+** If you find this project useful, please consider giving it a star! **
 
-[⬆ Back to Top](#-flight-management-system)
+[⬆ Back to Top](#flight-management-system)
 
 </div>
